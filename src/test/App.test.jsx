@@ -1,0 +1,167 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
+import App from '../App'
+
+// Mock the api module
+vi.mock('../api', () => ({
+  fetchLeaderboard: vi.fn(),
+  fetchRoomsAll: vi.fn(),
+}))
+
+// Import the mocks after vi.mock so we get the mocked versions
+import { fetchLeaderboard, fetchRoomsAll } from '../api'
+
+const LEADERBOARD_DATA = {
+  total_records: 1,
+  entries: [
+    {
+      np_id: 'p1',
+      rank: 1,
+      online_name: 'TestPlayer',
+      score: 5000,
+      player_info: {
+        main_char_info: { name: 'Jin' },
+        sub_char_info: { name: 'Heihachi' },
+      },
+    },
+  ],
+}
+
+const ROOMS_DATA = {
+  total: 1,
+  rooms: [
+    { room_id: 'r1', owner_online_name: 'RoomOwner', rank: 'Platinum', max_slots: 6 },
+  ],
+}
+
+async function renderApp() {
+  await act(async () => {
+    render(<App />)
+  })
+}
+
+beforeEach(() => {
+  fetchLeaderboard.mockResolvedValue(LEADERBOARD_DATA)
+  fetchRoomsAll.mockResolvedValue(ROOMS_DATA)
+})
+
+afterEach(() => {
+  vi.clearAllMocks()
+  vi.useRealTimers()
+})
+
+describe('App', () => {
+  it('calls fetchLeaderboard and fetchRoomsAll on mount', async () => {
+    await renderApp()
+
+    expect(fetchLeaderboard).toHaveBeenCalledOnce()
+    expect(fetchRoomsAll).toHaveBeenCalledOnce()
+  })
+
+  it('default tab is Leaderboard and shows leaderboard content', async () => {
+    await renderApp()
+
+    expect(screen.getByText('TestPlayer')).toBeInTheDocument()
+    expect(screen.queryByText('RoomOwner')).not.toBeInTheDocument()
+  })
+
+  it('clicking Rooms tab switches to rooms view', async () => {
+    await renderApp()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Rooms' }))
+    })
+
+    expect(screen.getByText('RoomOwner')).toBeInTheDocument()
+    expect(screen.queryByText('TestPlayer')).not.toBeInTheDocument()
+  })
+
+  it('clicking Refresh on Leaderboard tab calls fetchLeaderboard again', async () => {
+    await renderApp()
+
+    // Leaderboard tab is default
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+    })
+
+    // Called once on mount and once on Refresh click
+    expect(fetchLeaderboard).toHaveBeenCalledTimes(2)
+    expect(fetchRoomsAll).toHaveBeenCalledTimes(1)
+  })
+
+  it('clicking Refresh on Rooms tab calls fetchRoomsAll again', async () => {
+    await renderApp()
+
+    // Switch to Rooms tab first
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Rooms' }))
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+    })
+
+    expect(fetchRoomsAll).toHaveBeenCalledTimes(2)
+    expect(fetchLeaderboard).toHaveBeenCalledTimes(1)
+  })
+
+  it('auto-refresh: advancing timer by 60s triggers another fetch', async () => {
+    vi.useFakeTimers()
+
+    await renderApp()
+
+    expect(fetchLeaderboard).toHaveBeenCalledTimes(1)
+    expect(fetchRoomsAll).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      vi.advanceTimersByTime(60_000)
+    })
+
+    expect(fetchLeaderboard).toHaveBeenCalledTimes(2)
+    expect(fetchRoomsAll).toHaveBeenCalledTimes(2)
+  })
+
+  it('cleans up interval on unmount', async () => {
+    vi.useFakeTimers()
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
+
+    let unmount
+    await act(async () => {
+      const result = render(<App />)
+      unmount = result.unmount
+    })
+
+    unmount()
+
+    expect(clearIntervalSpy).toHaveBeenCalled()
+    clearIntervalSpy.mockRestore()
+  })
+
+  it('renders app title', async () => {
+    await renderApp()
+
+    expect(screen.getByText('Tekken Tag Tournament 2 — Live')).toBeInTheDocument()
+  })
+
+  it('shows loading state initially when fetch is slow', async () => {
+    // Make fetch never resolve during this test
+    fetchLeaderboard.mockReturnValue(new Promise(() => {}))
+    fetchRoomsAll.mockReturnValue(new Promise(() => {}))
+
+    render(<App />)
+
+    expect(screen.getByText('Loading leaderboard...')).toBeInTheDocument()
+  })
+
+  it('shows error when fetchLeaderboard rejects', async () => {
+    fetchLeaderboard.mockRejectedValue(new Error('Leaderboard fetch failed: 500'))
+
+    await act(async () => {
+      render(<App />)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Error: Leaderboard fetch failed: 500')).toBeInTheDocument()
+    })
+  })
+})
