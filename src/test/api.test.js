@@ -41,15 +41,15 @@ describe('fetchLeaderboard', () => {
 })
 
 describe('fetchRoomsAll', () => {
-  it('calls GET /api/rooms/all and returns parsed JSON', async () => {
-    const payload = { total: 3, rooms: [] }
-    mockFetch(payload)
+  it('calls GET /api/rooms/all and returns normalised { rooms, total }', async () => {
+    const rawPayload = { '1': [{ id: 1 }], '2': [{ id: 2 }, { id: 3 }] }
+    mockFetch(rawPayload)
 
     const result = await fetchRoomsAll()
 
     expect(fetch).toHaveBeenCalledOnce()
     expect(fetch).toHaveBeenCalledWith('/api/rooms/all')
-    expect(result).toEqual(payload)
+    expect(result).toEqual({ rooms: [{ id: 1 }, { id: 2 }, { id: 3 }], total: 3 })
   })
 
   it('throws on non-OK response', async () => {
