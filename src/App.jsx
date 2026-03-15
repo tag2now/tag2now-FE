@@ -7,24 +7,20 @@ const REFRESH_INTERVAL = 60_000 // 60 seconds
 
 const TABS = ['Leaderboard', 'Rooms']
 
+function load(fetcher, setState) {
+  setState((s) => ({ ...s, loading: true, error: null }))
+  fetcher()
+    .then((data) => setState({ data, loading: false, error: null }))
+    .catch((e) => setState((s) => ({ ...s, loading: false, error: e.message })))
+}
+
 export default function App() {
   const [tab, setTab] = useState('Leaderboard')
   const [lb, setLb] = useState({ data: null, loading: true, error: null })
   const [rooms, setRooms] = useState({ data: null, loading: true, error: null })
 
-  const loadLeaderboard = useCallback(() => {
-    setLb((s) => ({ ...s, loading: true, error: null }))
-    fetchLeaderboard(20)
-      .then((data) => setLb({ data, loading: false, error: null }))
-      .catch((e) => setLb({ data: null, loading: false, error: e.message }))
-  }, [])
-
-  const loadRooms = useCallback(() => {
-    setRooms((s) => ({ ...s, loading: true, error: null }))
-    fetchRoomsAll()
-      .then((data) => setRooms({ data, loading: false, error: null }))
-      .catch((e) => setRooms({ data: null, loading: false, error: e.message }))
-  }, [])
+  const loadLeaderboard = useCallback(() => load(() => fetchLeaderboard(20), setLb), [])
+  const loadRooms = useCallback(() => load(fetchRoomsAll, setRooms), [])
 
   useEffect(() => {
     loadLeaderboard()
@@ -37,23 +33,33 @@ export default function App() {
   }, [loadLeaderboard, loadRooms])
 
   return (
-    <div style={{ fontFamily: 'sans-serif', maxWidth: 900, margin: '0 auto', padding: 24 }}>
-      <h1>Tekken Tag Tournament 2 — Live</h1>
+    <div className="app">
+      <header className="app-header">
+        <h1>Tekken Tag Tournament 2</h1>
+        <div className="live-badge">
+          <span className="live-dot" />
+          Live
+        </div>
+      </header>
 
-      <div style={{ marginBottom: 16 }}>
+      <nav className="tab-bar">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            style={{ marginRight: 8, fontWeight: tab === t ? 'bold' : 'normal' }}
+            className={`tab-btn${tab === t ? ' active' : ''}`}
           >
             {t}
           </button>
         ))}
-        <button onClick={tab === 'Leaderboard' ? loadLeaderboard : loadRooms}>
-          Refresh
+        <button
+          className="refresh-btn"
+          aria-label="Refresh"
+          onClick={tab === 'Leaderboard' ? loadLeaderboard : loadRooms}
+        >
+          ↻ Refresh
         </button>
-      </div>
+      </nav>
 
       {tab === 'Leaderboard' && <Leaderboard {...lb} />}
       {tab === 'Rooms' && <Rooms {...rooms} />}

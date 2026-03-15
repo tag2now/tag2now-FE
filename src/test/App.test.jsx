@@ -140,7 +140,8 @@ describe('App', () => {
   it('renders app title', async () => {
     await renderApp()
 
-    expect(screen.getByText('Tekken Tag Tournament 2 — Live')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tekken Tag Tournament 2' })).toBeInTheDocument()
+    expect(screen.getByText('Live')).toBeInTheDocument()
   })
 
   it('shows loading state initially when fetch is slow', async () => {
