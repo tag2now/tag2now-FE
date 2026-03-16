@@ -1,4 +1,4 @@
-const BASE = '/api'
+const BASE = window.__ENV__?.API_BASE ?? '/api'
 
 export const fetchLeaderboard = (top = 20) =>
   fetch(`${BASE}/leaderboard?top=${top}`).then((r) => {
@@ -14,6 +14,9 @@ export const fetchRoomsAll = () =>
     if (!r.ok) throw new Error(`Rooms fetch failed: ${r.status}`)
     return r.json()
   }).then((raw) => {
-    const rooms = Object.values(raw).flat()
-    return { rooms, total: rooms.length }
+    const groups = Object.fromEntries(
+      Object.entries(raw).filter(([, v]) => Array.isArray(v))
+    )
+    const total = Object.values(groups).reduce((sum, arr) => sum + arr.length, 0)
+    return { groups, total }
   })

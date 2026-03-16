@@ -1,6 +1,6 @@
 import { panelStatus } from '../panelStatus'
 
-export default function Rooms({ data, loading, error }) {
+export default function Rooms({ data, loading, error, onRefresh }) {
   const s = panelStatus(loading, error, 'Loading rooms...')
   if (s) return s
   if (!data) return null
@@ -9,7 +9,14 @@ export default function Rooms({ data, loading, error }) {
 
   return (
     <div className="panel">
-      <p className="panel-meta">Total rooms: {data.total ?? rooms.length}</p>
+      <div className="panel-meta flex items-center justify-between">
+        <span>{rooms.length} room{rooms.length !== 1 ? 's' : ''}</span>
+        {onRefresh && (
+          <button className="refresh-btn" aria-label="Refresh" onClick={onRefresh}>
+            ↻ Refresh
+          </button>
+        )}
+      </div>
       {rooms.length === 0 ? (
         <p className="state-msg">No active rooms.</p>
       ) : (

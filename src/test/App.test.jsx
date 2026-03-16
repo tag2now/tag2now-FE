@@ -29,9 +29,11 @@ const LEADERBOARD_DATA = {
 
 const ROOMS_DATA = {
   total: 1,
-  rooms: [
-    { room_id: 'r1', owner_online_name: 'RoomOwner', rank_info: { name: 'Platinum' }, max_slots: 6 },
-  ],
+  groups: {
+    rank_match: [
+      { room_id: 'r1', owner_online_name: 'RoomOwner', rank_info: { name: 'Platinum' }, max_slots: 6 },
+    ],
+  },
 }
 
 async function renderApp() {
@@ -58,9 +60,10 @@ describe('App', () => {
     expect(fetchRoomsAll).toHaveBeenCalledOnce()
   })
 
-  it('default tab is Matching and shows rooms content', async () => {
+  it('default tab is first room group and shows rooms content', async () => {
     await renderApp()
 
+    expect(screen.getByText('랭크매치 (1)')).toBeInTheDocument()
     expect(screen.getByText('RoomOwner')).toBeInTheDocument()
     expect(screen.queryByText('TestPlayer')).not.toBeInTheDocument()
   })
@@ -76,10 +79,9 @@ describe('App', () => {
     expect(screen.queryByText('RoomOwner')).not.toBeInTheDocument()
   })
 
-  it('clicking Refresh on Matching tab calls fetchRoomsAll again', async () => {
+  it('clicking Refresh on room tab calls fetchRoomsAll again', async () => {
     await renderApp()
 
-    // Matching tab is default
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
     })

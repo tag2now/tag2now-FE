@@ -19,31 +19,20 @@ describe('Rooms', () => {
   })
 
   it('shows "No active rooms." when rooms array is empty', () => {
-    const data = { total: 0, rooms: [] }
+    const data = { rooms: [] }
     render(<Rooms loading={false} data={data} error={null} />)
 
-    expect(screen.getByText('Total rooms: 0')).toBeInTheDocument()
     expect(screen.getByText('No active rooms.')).toBeInTheDocument()
   })
 
-  it('uses rooms.length as total when data.total is absent', () => {
-    const data = { rooms: [{ room_id: 'r1', owner_online_name: 'Alice', rank_info: { name: 'Gold' }, max_slots: 4 }] }
-    render(<Rooms loading={false} data={data} error={null} />)
-
-    expect(screen.getByText('Total rooms: 1')).toBeInTheDocument()
-  })
-
-  it('renders table headers and room rows when rooms exist', () => {
+  it('renders table headers and room rows', () => {
     const data = {
-      total: 2,
       rooms: [
-        { room_id: 'room-001', owner_online_name: 'Alice', rank_info: { name: 'Gold' }, max_slots: 4 },
-        { room_id: 'room-002', owner_online_name: 'Bob', rank_info: { name: 'Silver' }, max_slots: 8 },
+        { room_id: 'room-001', owner_online_name: 'Alice', rank_info: { name: 'Gold' } },
+        { room_id: 'room-002', owner_online_name: 'Bob', rank_info: { name: 'Silver' } },
       ],
     }
     render(<Rooms loading={false} data={data} error={null} />)
-
-    expect(screen.getByText('Total rooms: 2')).toBeInTheDocument()
 
     expect(screen.getByText('Room ID')).toBeInTheDocument()
     expect(screen.getByText('Owner')).toBeInTheDocument()
@@ -59,7 +48,7 @@ describe('Rooms', () => {
   })
 
   it('falls back to empty array when data.rooms is undefined', () => {
-    const data = { total: 0 }
+    const data = {}
     render(<Rooms loading={false} data={data} error={null} />)
 
     expect(screen.getByText('No active rooms.')).toBeInTheDocument()

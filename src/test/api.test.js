@@ -49,7 +49,7 @@ describe('fetchRoomsAll', () => {
 
     expect(fetch).toHaveBeenCalledOnce()
     expect(fetch).toHaveBeenCalledWith('/api/rooms/all')
-    expect(result).toEqual({ rooms: [{ id: 1 }, { id: 2 }, { id: 3 }], total: 3 })
+    expect(result).toEqual({ groups: { '1': [{ id: 1 }], '2': [{ id: 2 }, { id: 3 }] }, total: 3 })
   })
 
   it('throws on non-OK response', async () => {

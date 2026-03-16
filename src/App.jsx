@@ -1,11 +1,20 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Leaderboard from './components/Leaderboard'
 import Rooms from './components/Rooms'
 import { fetchLeaderboard, fetchRoomsAll } from './api'
 
 const REFRESH_INTERVAL = 60_000 // 60 seconds
 
-const TABS = ['Matching', 'Leaderboard']
+const GROUP_LABELS = {
+  player_match: '플매',
+  rank_match: '랭크매치',
+}
+
+const GROUP_ORDER = ['rank_match', 'player_match']
+
+function formatGroupName(key) {
+  return GROUP_LABELS[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
 
 function load(fetcher, setState) {
   setState((s) => ({ ...s, loading: true, error: null }))
@@ -15,7 +24,7 @@ function load(fetcher, setState) {
 }
 
 export default function App() {
-  const [tab, setTab] = useState('Matching')
+  const [tab, setTab] = useState(null)
   const [lb, setLb] = useState({ data: null, loading: true, error: null })
   const [rooms, setRooms] = useState({ data: null, loading: true, error: null })
 
@@ -32,6 +41,27 @@ export default function App() {
     return () => clearInterval(timer)
   }, [loadLeaderboard, loadRooms])
 
+  const groups = rooms.data?.groups ?? {}
+  const groupKeys = useMemo(() => {
+    const known = GROUP_ORDER.filter((k) => k in groups)
+    const rest = Object.keys(groups).filter((k) => !GROUP_ORDER.includes(k))
+    return [...known, ...rest]
+  }, [groups])
+
+  const tabs = useMemo(
+    () => [...groupKeys.map((k) => ({ key: k, label: `${formatGroupName(k)} (${groups[k].length})` })),
+           { key: 'leaderboard', label: 'Leaderboard' }],
+    [groupKeys, groups],
+  )
+
+  // Default to first room group tab, or leaderboard if no groups
+  const activeTab = tab && tabs.some((t) => t.key === tab) ? tab : tabs[0]?.key ?? 'leaderboard'
+  const isRoomTab = activeTab !== 'leaderboard'
+
+  const activeRoomsData = isRoomTab
+    ? { rooms: groups[activeTab] ?? [] }
+    : null
+
   return (
     <div className="mx-auto max-w-[960px] px-4 pb-12">
       <header className="app-header relative border-b-2 border-primary pt-7 pb-5 mb-1">
@@ -44,27 +74,30 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="flex items-end flex-wrap gap-0.5 mt-5 border-b border-border-light pb-0">
-        {TABS.map((t) => (
+      <nav className="flex items-end flex-nowrap gap-0.5 mt-5 border-b border-border-light pb-0 overflow-x-auto overflow-y-hidden whitespace-nowrap">
+        {tabs.map((t) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`tab-btn${tab === t ? ' active' : ''}`}
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`tab-btn${activeTab === t.key ? ' active' : ''}`}
           >
-            {t}
+            {t.label}
           </button>
         ))}
-        <button
-          className="refresh-btn"
-          aria-label="Refresh"
-          onClick={tab === 'Matching' ? loadRooms : loadLeaderboard}
-        >
-          ↻ Refresh
-        </button>
       </nav>
 
-      {tab === 'Matching' && <Rooms {...rooms} />}
-      {tab === 'Leaderboard' && <Leaderboard {...lb} />}
+      {isRoomTab && (
+        <Rooms
+          data={activeRoomsData}
+          loading={rooms.loading}
+          error={rooms.error}
+          onRefresh={loadRooms}
+        />
+      )}
+      {!isRoomTab && (rooms.loading || rooms.error) && groupKeys.length === 0 && (
+        <Rooms data={null} loading={rooms.loading} error={rooms.error} onRefresh={loadRooms} />
+      )}
+      {activeTab === 'leaderboard' && <Leaderboard {...lb} onRefresh={loadLeaderboard} />}
     </div>
   )
 }
