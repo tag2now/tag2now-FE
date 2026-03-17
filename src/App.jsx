@@ -35,7 +35,7 @@ export default function App() {
   const [lb, setLb] = useState({ data: null, loading: true, refreshing: false, error: null })
   const [rooms, setRooms] = useState({ data: null, loading: true, refreshing: false, error: null })
 
-  const loadLeaderboard = useCallback(() => load(() => fetchLeaderboard(20), setLb), [])
+  const loadLeaderboard = useCallback(() => load(() => fetchLeaderboard(100), setLb), [])
   const loadRooms = useCallback(() => load(fetchRoomsAll, setRooms), [])
 
   useEffect(() => {
@@ -68,13 +68,13 @@ export default function App() {
     : null
 
   return (
-    <div className="mx-auto max-w-[960px] pb-12">
+    <div className="mx-auto max-w-240 pb-12">
       <header className="app-header relative border-b-2 border-accent pt-7 pb-5 mb-1 flex items-baseline gap-3 px-4">
-        <h1 className="font-display text-[clamp(1.05rem,4vw,1.8rem)] font-[900] m-0 tracking-wide uppercase">
+        <h1 className="font-display text-[clamp(1.05rem,4vw,1.8rem)] font-black m-0 tracking-wide uppercase">
           Tag<span className="header-accent">2</span>Now
         </h1>
         <div className="inline-flex items-center gap-1.5 text-[0.72rem] font-bold tracking-[0.2em] uppercase text-primary">
-          <span className="w-[7px] h-[7px] rounded-full bg-primary animate-[blink_1.6s_ease-in-out_infinite]" />
+          <span className="w-1.75 h-1.75 rounded-full bg-primary animate-[blink_1.6s_ease-in-out_infinite]" />
           Live
         </div>
       </header>
