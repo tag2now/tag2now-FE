@@ -1,13 +1,14 @@
 import { charImageUrl } from '../characterImage'
 import { panelStatus } from '../panelStatus'
+import { TIER_STYLES } from '../tierColors'
 
-function CharCell({ name, rank }) {
+function CharCell({ name, rankInfo }) {
   if (!name) return <td className="char-td">—</td>
   const url = charImageUrl(name)
   return (
     <td className="char-td">
       <span className="inline-flex flex-col items-center gap-1">
-        {rank && <span className="char-rank">{rank}</span>}
+        {rankInfo?.name && <span className="char-rank" style={TIER_STYLES[rankInfo.tier]}>{rankInfo.name}</span>}
         {url && <img src={url} alt={name} className="w-8 h-8 object-contain shrink-0" />}
       </span>
     </td>
@@ -48,8 +49,8 @@ export default function Leaderboard({ data, loading, error, onRefresh }) {
                   {e.rank}
                 </td>
                 <td className="player-name">{e.online_name}</td>
-                <CharCell name={e.player_info?.main_char_info?.name} rank={e.player_info?.main_char_info?.rank_info?.name} />
-                <CharCell name={e.player_info?.sub_char_info?.name} rank={e.player_info?.sub_char_info?.rank_info?.name} />
+                <CharCell name={e.player_info?.main_char_info?.name} rankInfo={e.player_info?.main_char_info?.rank_info} />
+                <CharCell name={e.player_info?.sub_char_info?.name} rankInfo={e.player_info?.sub_char_info?.rank_info} />
               </tr>
             ))}
           </tbody>

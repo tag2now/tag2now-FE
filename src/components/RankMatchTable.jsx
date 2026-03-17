@@ -1,15 +1,5 @@
 import { Fragment } from 'react'
-
-const TIER_COLORS = {
-  '액자단': 'var(--color-primary)',
-  '녹단': '#4ade80',
-  '노랑단': '#facc15',
-  '주황단': '#fb923c',
-  '빨강단': '#f87171',
-  '파랑단': '#60a5fa',
-  '보라단': '#c084fc',
-  'God': 'var(--color-secondary)',
-}
+import { TIER_STYLES } from '../tierColors'
 
 export default function RankMatchTable({ rooms }) {
   const sorted = [...rooms].sort((a, b) => (a.rank_info?.id ?? 0) - (b.rank_info?.id ?? 0)).reverse()
@@ -36,7 +26,7 @@ export default function RankMatchTable({ rooms }) {
           {tierGroups.map(([tier, tierRooms]) => (
             <Fragment key={tier}>
               <tr className="tier-separator">
-                <td colSpan={4} className="tier-heading py-2 px-1" style={TIER_COLORS[tier] ? { color: TIER_COLORS[tier] } : undefined}>{tier}</td>
+                <td colSpan={4} className="tier-heading py-2 px-1" style={TIER_STYLES[tier]}>{tier}</td>
               </tr>
               {tierRooms.map((r) => (
                 <tr key={r.room_id} className="tbl-row">
