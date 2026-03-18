@@ -42,8 +42,8 @@ expect(screen.getByText('Main')).toBeInTheDocument()
           online_name: 'KazuyaFan',
           score: 9999,
           player_info: {
-            main_char_info: { name: 'Kazuya', rank_info: { name: 'Destroyer' } },
-            sub_char_info: { name: 'Devil', rank_info: { name: 'Vanquisher' } },
+            main_char_info: { name: 'Kazuya', rank_info: { name: 'Destroyer' }, wins: 120, losses: 30 },
+            sub_char_info: { name: 'Devil', rank_info: { name: 'Vanquisher' }, wins: 80, losses: 20 },
           },
         },
       ],
@@ -97,6 +97,36 @@ expect(screen.getByText('Main')).toBeInTheDocument()
 
     const dashes = screen.getAllByText('—')
     expect(dashes).toHaveLength(2)
+  })
+
+  it('renders win/loss stats for characters', () => {
+    const data = {
+      total_records: 1,
+      entries: [
+        {
+          np_id: 'player1',
+          rank: 1,
+          online_name: 'StatPlayer',
+          score: 9999,
+          player_info: {
+            main_char_info: { name: 'Kazuya', rank_info: { name: 'Destroyer' }, wins: 75, losses: 25 },
+            sub_char_info: { name: 'Devil', rank_info: { name: 'Vanquisher' }, wins: 60, losses: 40 },
+          },
+        },
+      ],
+    }
+    render(<Leaderboard loading={false} data={data} error={null} />)
+
+    // Win rate: 75/(75+25)=75%, 60/(60+40)=60%
+    // Text is split across child elements, so use a function matcher
+    const statDivs = document.querySelectorAll('.hidden.md\\:block')
+    expect(statDivs).toHaveLength(2)
+    expect(statDivs[0].textContent).toContain('75')
+    expect(statDivs[0].textContent).toContain('25')
+    expect(statDivs[0].textContent).toContain('75%')
+    expect(statDivs[1].textContent).toContain('60')
+    expect(statDivs[1].textContent).toContain('40')
+    expect(statDivs[1].textContent).toContain('60%')
   })
 
   it('shows loading bar when refreshing=true', () => {
