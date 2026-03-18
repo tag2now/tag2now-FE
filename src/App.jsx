@@ -73,9 +73,16 @@ export default function App() {
         <h1 className="font-display text-[clamp(1.05rem,4vw,1.8rem)] font-black m-0 tracking-wide uppercase">
           Tag<span className="header-accent">2</span>Now
         </h1>
-        <div className="inline-flex items-center gap-1.5 text-[0.72rem] font-bold tracking-[0.2em] uppercase text-primary">
-          <span className="w-1.75 h-1.75 rounded-full bg-primary animate-[blink_1.6s_ease-in-out_infinite]" />
-          Live
+        <div className="inline-flex items-center gap-3 text-[0.95rem] font-bold">
+          <div className="inline-flex items-center gap-1.5 tracking-[0.2em] uppercase text-primary">
+            <span className="w-1.75 h-1.75 rounded-full bg-primary animate-[blink_1.6s_ease-in-out_infinite]" />
+            Live
+          </div>
+          {rooms.data?.totalUsers > 0 && (
+            <span className="tracking-wide text-cyan-400">
+              {rooms.data.totalUsers} online
+            </span>
+          )}
         </div>
       </header>
 

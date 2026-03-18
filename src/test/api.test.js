@@ -42,14 +42,20 @@ describe('fetchLeaderboard', () => {
 
 describe('fetchRoomsAll', () => {
   it('calls GET /api/rooms/all and returns normalised { rooms, total }', async () => {
-    const rawPayload = { '1': [{ id: 1 }], '2': [{ id: 2 }, { id: 3 }] }
+    const rawPayload = {
+      '1': [{ id: 1, users: [{ online_name: 'A', user_id: 'a' }] }],
+      '2': [
+        { id: 2, users: [{ online_name: 'B', user_id: 'b' }, { online_name: 'C', user_id: 'c' }] },
+        { id: 3, users: [] },
+      ],
+    }
     mockFetch(rawPayload)
 
     const result = await fetchRoomsAll()
 
     expect(fetch).toHaveBeenCalledOnce()
     expect(fetch).toHaveBeenCalledWith('/api/rooms/all')
-    expect(result).toEqual({ groups: { '1': [{ id: 1 }], '2': [{ id: 2 }, { id: 3 }] }, total: 3 })
+    expect(result).toEqual({ groups: rawPayload, total: 3, totalUsers: 3 })
   })
 
   it('throws on non-OK response', async () => {

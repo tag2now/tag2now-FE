@@ -29,6 +29,7 @@ const LEADERBOARD_DATA = {
 
 const ROOMS_DATA = {
   total: 1,
+  totalUsers: 2,
   groups: {
     rank_match: [
       {
@@ -157,11 +158,12 @@ describe('App', () => {
     clearIntervalSpy.mockRestore()
   })
 
-  it('renders app title', async () => {
+  it('renders app title and online user count', async () => {
     await renderApp()
 
     expect(screen.getByRole('heading', { name: 'Tag 2 Now' })).toBeInTheDocument()
     expect(screen.getByText('Live')).toBeInTheDocument()
+    expect(screen.getByText(/2 online/)).toBeInTheDocument()
   })
 
   it('shows loading state initially when fetch is slow', async () => {

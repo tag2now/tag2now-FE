@@ -17,6 +17,11 @@ export const fetchRoomsAll = () =>
     const groups = Object.fromEntries(
       Object.entries(raw).filter(([, v]) => Array.isArray(v))
     )
-    const total = Object.values(groups).reduce((sum, arr) => sum + arr.length, 0)
-    return { groups, total }
+    const { total, totalUsers } = Object.values(groups).reduce(
+      (acc, arr) => ({
+        total: acc.total + arr.length,
+        totalUsers: acc.totalUsers + arr.reduce((s, r) => s + (r.users?.length ?? 0), 0),
+      }), { total: 0, totalUsers: 0 }
+    )
+    return { groups, total, totalUsers }
   })
