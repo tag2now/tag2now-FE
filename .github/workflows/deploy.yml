@@ -69,5 +69,5 @@ jobs:
           aws ecs update-service \
             --cluster ${{ vars.ECS_CLUSTER }} \
             --service ${{ vars.ECS_SERVICE }} \
-            --task-definition ${{ steps.task-def.outputs.revision }} \
+            --task-definition ${{ steps.update-task-def.outputs.task-definition }} \
             --force-new-deployment
