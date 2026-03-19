@@ -6,6 +6,8 @@ on:
       - master
     tags:
       - 'v*'
+runs:
+  using: 'node24'
 
 jobs:
   build:
@@ -61,7 +63,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition-family: ${{ vars.ECS_TASK_DEFINITION_FAMILY }}
-          container-name: ${{ vars.ECS_CONTAINER_NAME }}
+          container-name: ${{ vars.ECS_TASK_CONTAINER_NAME }}
           image: ${{ needs.build.outputs.image }}
 
       - name: Update ECS service
