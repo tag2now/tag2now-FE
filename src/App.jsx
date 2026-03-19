@@ -1,50 +1,15 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import Leaderboard from './components/Leaderboard'
 import Rooms from './components/Rooms'
-import { fetchLeaderboard, fetchRoomsAll } from './api'
-
-const ROOMS_REFRESH_INTERVAL = 10_000
-const LEADERBOARD_REFRESH_INTERVAL = 60_000
-
-const GROUP_LABELS = {
-  player_match: '플매',
-  rank_match: '랭크매치',
-}
-
-const GROUP_ORDER = ['rank_match', 'player_match']
-
-function formatGroupName(key) {
-  return GROUP_LABELS[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
-function load(fetcher, setState) {
-  setState((s) => s.data
-    ? { ...s, refreshing: true, error: null }
-    : { ...s, loading: true, error: null }
-  )
-  fetcher()
-    .then((data) => setState((s) => {
-      if (s.data === data) return s.refreshing ? { ...s, refreshing: false } : s
-      return { data, loading: false, refreshing: false, error: null }
-    }))
-    .catch((e) => setState((s) => ({ ...s, loading: false, refreshing: false, error: e.message })))
-}
+import Header from './components/Header'
+import { GROUP_ORDER, formatGroupName } from './tabConfig'
+import useLeaderboard from './hooks/useLeaderboard'
+import useRooms from './hooks/useRooms'
 
 export default function App() {
   const [tab, setTab] = useState(null)
-  const [lb, setLb] = useState({ data: null, loading: true, refreshing: false, error: null })
-  const [rooms, setRooms] = useState({ data: null, loading: true, refreshing: false, error: null })
-
-  const loadLeaderboard = useCallback(() => load(() => fetchLeaderboard(100), setLb), [])
-  const loadRooms = useCallback(() => load(fetchRoomsAll, setRooms), [])
-
-  useEffect(() => {
-    loadLeaderboard()
-    loadRooms()
-    const roomsTimer = setInterval(loadRooms, ROOMS_REFRESH_INTERVAL)
-    const lbTimer = setInterval(loadLeaderboard, LEADERBOARD_REFRESH_INTERVAL)
-    return () => { clearInterval(roomsTimer); clearInterval(lbTimer) }
-  }, [loadLeaderboard, loadRooms])
+  const lb = useLeaderboard()
+  const rooms = useRooms()
 
   const groups = rooms.data?.groups ?? {}
   const groupKeys = useMemo(() => {
@@ -69,22 +34,7 @@ export default function App() {
 
   return (
     <div className="mx-auto max-w-240 pb-12">
-      <header className="app-header relative border-b-2 border-accent pt-7 pb-5 mb-1 flex items-baseline gap-3 px-4">
-        <h1 className="font-display text-[clamp(1.05rem,4vw,1.8rem)] font-black m-0 tracking-wide uppercase">
-          Tag<span className="header-accent">2</span>Now
-        </h1>
-        <div className="inline-flex items-center gap-3 text-[0.95rem] font-bold">
-          <div className="inline-flex items-center gap-1.5 tracking-[0.2em] uppercase text-primary">
-            <span className="w-1.75 h-1.75 rounded-full bg-primary animate-[blink_1.6s_ease-in-out_infinite]" />
-            Live
-          </div>
-          {rooms.data?.totalUsers > 0 && (
-            <span className="tracking-wide text-cyan-400">
-              {rooms.data.totalUsers} online
-            </span>
-          )}
-        </div>
-      </header>
+      <Header totalUsers={rooms.data?.totalUsers} />
 
       <nav className="flex items-end flex-nowrap gap-0.5 mt-5 border-b border-border-light pb-0 overflow-x-auto overflow-y-hidden whitespace-nowrap">
         {tabs.map((t) => (
@@ -105,14 +55,14 @@ export default function App() {
             loading={rooms.loading}
             refreshing={rooms.refreshing}
             error={rooms.error}
-            onRefresh={loadRooms}
+            onRefresh={rooms.refresh}
             groupKey={activeTab}
           />
         )}
         {!isRoomTab && (rooms.loading || rooms.error) && groupKeys.length === 0 && (
-          <Rooms data={null} loading={rooms.loading} error={rooms.error} onRefresh={loadRooms} />
+          <Rooms data={null} loading={rooms.loading} error={rooms.error} onRefresh={rooms.refresh} />
         )}
-        {activeTab === 'leaderboard' && <Leaderboard {...lb} onRefresh={loadLeaderboard} />}
+        {activeTab === 'leaderboard' && <Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />}
       </div>
     </div>
   )
