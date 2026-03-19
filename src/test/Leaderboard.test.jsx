@@ -119,7 +119,7 @@ expect(screen.getByText('Main')).toBeInTheDocument()
 
     // Win rate: 75/(75+25)=75%, 60/(60+40)=60%
     // Text is split across child elements, so use a function matcher
-    const statDivs = document.querySelectorAll('.hidden.md\\:block')
+    const statDivs = document.querySelectorAll('.hidden.sm\\:block')
     expect(statDivs).toHaveLength(2)
     expect(statDivs[0].textContent).toContain('75')
     expect(statDivs[0].textContent).toContain('25')

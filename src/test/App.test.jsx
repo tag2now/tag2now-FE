@@ -139,7 +139,7 @@ describe('App', () => {
     })
 
     expect(fetchRoomsAll).toHaveBeenCalledTimes(7)
-    expect(fetchLeaderboard).toHaveBeenCalledTimes(2)
+    expect(fetchLeaderboard).toHaveBeenCalledTimes(1)
   })
 
   it('cleans up interval on unmount', async () => {
@@ -154,7 +154,7 @@ describe('App', () => {
 
     unmount()
 
-    expect(clearIntervalSpy).toHaveBeenCalledTimes(2)
+    expect(clearIntervalSpy).toHaveBeenCalledTimes(1)
     clearIntervalSpy.mockRestore()
   })
 

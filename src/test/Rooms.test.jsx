@@ -52,7 +52,7 @@ describe('Rooms', () => {
       ],
     }
     render(<Rooms loading={false} data={data} error={null} groupKey="rank_match" />)
-    expect(screen.getByText('상태')).toBeInTheDocument()
+    expect(screen.getByText('Status')).toBeInTheDocument()
     expect(screen.getByTitle('게임 중')).toBeInTheDocument()
   })
 

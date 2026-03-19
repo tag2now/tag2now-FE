@@ -19,7 +19,7 @@ describe('RankMatchTable', () => {
 
     expect(screen.getByText('나무단')).toBeInTheDocument()
     expect(screen.getByText('Rank')).toBeInTheDocument()
-    expect(screen.getByText('상태')).toBeInTheDocument()
+    expect(screen.getByText('Status')).toBeInTheDocument()
     expect(screen.getByText('User 1')).toBeInTheDocument()
     expect(screen.getByText('User 2')).toBeInTheDocument()
 
