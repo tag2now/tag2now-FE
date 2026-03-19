@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
-import { TIER_STYLES } from '../tierColors'
+import { TIER_STYLES } from '@/shared/tierColors'
+import type { Room } from '@/types'
 
 const IconGamepad = (
   <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -14,14 +15,18 @@ const IconSearch = (
   </svg>
 )
 
-export default function RankMatchTable({ rooms }) {
+interface RankMatchTableProps {
+  rooms: Room[]
+}
+
+export default function RankMatchTable({ rooms }: RankMatchTableProps) {
   const sorted = [...rooms].sort((a, b) => (a.rank_info?.id ?? 0) - (b.rank_info?.id ?? 0)).reverse()
-  const tierGroups = []
-  const seen = new Map()
+  const tierGroups: [string, Room[]][] = []
+  const seen = new Map<string, Room[]>()
   for (const r of sorted) {
     const tier = r.rank_info?.tier ?? '—'
-    if (!seen.has(tier)) { seen.set(tier, []); tierGroups.push([tier, seen.get(tier)]) }
-    seen.get(tier).push(r)
+    if (!seen.has(tier)) { seen.set(tier, []); tierGroups.push([tier, seen.get(tier)!]) }
+    seen.get(tier)!.push(r)
   }
 
   return (
@@ -45,7 +50,7 @@ export default function RankMatchTable({ rooms }) {
                 const inGame = r.users?.length === 2
                 return (
                 <tr key={r.room_id} className="tbl-row">
-                  <td className="tbl-td font-bold max-w-18 overflow-hidden text-ellipsis" style={TIER_STYLES[r.rank_info?.tier]}>{r.rank_info?.name}</td>
+                  <td className="tbl-td font-bold max-w-18 overflow-hidden text-ellipsis" style={TIER_STYLES[r.rank_info?.tier ?? '']}>{r.rank_info?.name}</td>
                   <td className="tbl-td">
                     <span className={`flex items-center justify-center ${inGame ? 'text-green-400' : 'text-yellow-400'}`} title={inGame ? '게임 중' : '찾는 중'} aria-label={inGame ? '게임 중' : '찾는 중'}>
                       {inGame ? IconGamepad : IconSearch}

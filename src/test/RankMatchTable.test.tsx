@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import RankMatchTable from '../components/RankMatchTable'
+import type { Room } from '@/types'
 
 describe('RankMatchTable', () => {
   it('renders grouped by tier with User 1 / User 2 columns', () => {
-    const rooms = [
+    const rooms: Room[] = [
       {
         room_id: 3381,
         owner_online_name: 'Longuring',
-        rank_info: { name: '1st 나무단', tier: '나무단' },
+        rank_info: { id: 1, name: '1st 나무단', tier: '나무단' },
         users: [
           { online_name: 'Longuring', user_id: 'Longuring' },
           { online_name: 'DuelMan', user_id: 'DuelMan' },
@@ -30,11 +31,11 @@ describe('RankMatchTable', () => {
   })
 
   it('shows — when room has only one user', () => {
-    const rooms = [
+    const rooms: Room[] = [
       {
         room_id: 3382,
         owner_online_name: 'SoloPlayer',
-        rank_info: { name: '2nd 나무단', tier: '나무단' },
+        rank_info: { id: 2, name: '2nd 나무단', tier: '나무단' },
         users: [{ online_name: 'SoloPlayer', user_id: 'SoloPlayer' }],
       },
     ]
@@ -46,7 +47,7 @@ describe('RankMatchTable', () => {
   })
 
   it('sorts rooms by rank_info.id and groups by tier', () => {
-    const rooms = [
+    const rooms: Room[] = [
       {
         room_id: 1,
         rank_info: { id: 20, name: '2nd 돌단', tier: '돌단' },

@@ -1,16 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchLeaderboard, fetchRoomsAll } from '../api'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { fetchLeaderboard, fetchRoomsAll } from '@/shared/api'
 
 afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function mockFetch(body, ok = true, status = 200) {
+function mockFetch(body: unknown, ok = true, status = 200) {
   global.fetch = vi.fn().mockResolvedValue({
     ok,
     status,
     json: () => Promise.resolve(body),
-  })
+  }) as unknown as typeof fetch
 }
 
 describe('fetchLeaderboard', () => {

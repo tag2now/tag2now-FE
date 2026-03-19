@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import PlayerMatchTable from '../components/PlayerMatchTable'
+import type { Room } from '@/types'
 
 describe('PlayerMatchTable', () => {
   it('renders room separator with owner name and user count', () => {
-    const rooms = [
+    const rooms: Room[] = [
       {
         room_id: 1,
         owner_online_name: 'Alice',
@@ -23,7 +24,7 @@ describe('PlayerMatchTable', () => {
   })
 
   it('renders each user as a separate row', () => {
-    const rooms = [
+    const rooms: Room[] = [
       {
         room_id: 1,
         owner_online_name: 'Host',
@@ -43,7 +44,7 @@ describe('PlayerMatchTable', () => {
   })
 
   it('renders multiple rooms with their users', () => {
-    const rooms = [
+    const rooms: Room[] = [
       {
         room_id: 1,
         owner_online_name: 'Room1Owner',
@@ -70,7 +71,7 @@ describe('PlayerMatchTable', () => {
   })
 
   it('handles rooms with no users gracefully', () => {
-    const rooms = [
+    const rooms: Room[] = [
       {
         room_id: 1,
         owner_online_name: 'EmptyRoom',

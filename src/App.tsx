@@ -7,7 +7,7 @@ import useLeaderboard from './hooks/useLeaderboard'
 import useRooms from './hooks/useRooms'
 
 export default function App() {
-  const [tab, setTab] = useState(null)
+  const [tab, setTab] = useState<string | null>(null)
   const lb = useLeaderboard()
   const rooms = useRooms()
 

@@ -1,9 +1,19 @@
-import { panelStatus } from '../panelStatus'
+import { panelStatus } from '@/panelStatus'
+import type { Room } from '@/types'
 import LoadingBar from './LoadingBar'
 import RankMatchTable from './RankMatchTable'
 import PlayerMatchTable from './PlayerMatchTable'
 
-export default function Rooms({ data, loading, refreshing, error, onRefresh, groupKey }) {
+interface RoomsProps {
+  data: { rooms?: Room[] } | null
+  loading: boolean
+  refreshing?: boolean
+  error: string | null
+  onRefresh?: () => void
+  groupKey?: string
+}
+
+export default function Rooms({ data, loading, refreshing, error, onRefresh, groupKey }: RoomsProps) {
   const s = panelStatus(loading, error, 'Loading rooms...')
   if (s) return s
   if (!data) return null

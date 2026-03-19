@@ -2,7 +2,7 @@
  * Maps backend character names (from TTT2_CHARACTERS in data.py)
  * to their portrait filenames under /characters/*.webp
  */
-const NAME_TO_FILE = {
+const NAME_TO_FILE: Record<string, string> = {
   'Paul':         'Paul',
   'Law':          'Law',
   'Lei':          'Lei',
@@ -63,10 +63,8 @@ const NAME_TO_FILE = {
 
 /**
  * Returns the public URL for a character portrait, or null if unknown.
- * @param {string} name - character name as returned by the backend
- * @returns {string|null}
  */
-export function charImageUrl(name) {
+export function charImageUrl(name: string): string | null {
   const file = NAME_TO_FILE[name]
   return file ? `/characters/${file}.webp` : null
 }

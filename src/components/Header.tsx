@@ -1,4 +1,8 @@
-export default function Header({ totalUsers }) {
+interface HeaderProps {
+  totalUsers?: number
+}
+
+export default function Header({ totalUsers }: HeaderProps) {
   return (
     <header className="app-header relative border-b-2 border-accent pt-7 pb-5 mb-1 flex justify-between items-baseline px-4">
       <div className="flex items-center gap-3">
@@ -10,7 +14,7 @@ export default function Header({ totalUsers }) {
             <span className="w-1.75 h-1.75 rounded-full bg-red-500 animate-[blink_1.6s_ease-in-out_infinite]" />
             Live
           </div>
-          {totalUsers > 0 && (
+          {totalUsers != null && totalUsers > 0 && (
             <span className="tracking-wide text-red-500">
               {totalUsers} online
             </span>

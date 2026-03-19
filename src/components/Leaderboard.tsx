@@ -1,9 +1,17 @@
-import { charImageUrl } from '../characterImage'
-import { panelStatus } from '../panelStatus'
+import { charImageUrl } from '@/shared/characterImage'
+import { panelStatus } from '@/panelStatus'
+import { TIER_STYLES } from '@/shared/tierColors'
+import type { LeaderboardData, CharRankInfo } from '@/types'
 import LoadingBar from './LoadingBar'
-import { TIER_STYLES } from '../tierColors'
 
-function CharCell({ name, rankInfo, wins, losses }) {
+interface CharCellProps {
+  name?: string
+  rankInfo?: CharRankInfo
+  wins?: number
+  losses?: number
+}
+
+function CharCell({ name, rankInfo, wins, losses }: CharCellProps) {
   if (!name) return <td className="char-td">—</td>
   const url = charImageUrl(name)
   const total = (wins ?? 0) + (losses ?? 0)
@@ -27,9 +35,17 @@ function CharCell({ name, rankInfo, wins, losses }) {
   )
 }
 
-const RANK_COLORS = { 1: 'text-secondary-light', 2: 'text-silver', 3: 'text-bronze' }
+const RANK_COLORS: Record<number, string> = { 1: 'text-secondary-light', 2: 'text-silver', 3: 'text-bronze' }
 
-export default function Leaderboard({ data, loading, refreshing, error, onRefresh }) {
+interface LeaderboardProps {
+  data: LeaderboardData | null
+  loading: boolean
+  refreshing?: boolean
+  error: string | null
+  onRefresh?: () => void
+}
+
+export default function Leaderboard({ data, loading, refreshing, error, onRefresh }: LeaderboardProps) {
   const s = panelStatus(loading, error, 'Loading leaderboard...')
   if (s) return s
   if (!data) return null

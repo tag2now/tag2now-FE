@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import App from '../App'
+import {fetchRoomsAll} from "@/hooks/useRooms";
+import {fetchLeaderboard} from "@/hooks/useLeaderboard";
 
 // Mock the api module
 vi.mock('../api', () => ({
@@ -9,7 +11,9 @@ vi.mock('../api', () => ({
 }))
 
 // Import the mocks after vi.mock so we get the mocked versions
-import { fetchLeaderboard, fetchRoomsAll } from '../api'
+
+const mockedFetchLeaderboard = vi.mocked(fetchLeaderboard)
+const mockedFetchRoomsAll = vi.mocked(fetchRoomsAll)
 
 const LEADERBOARD_DATA = {
   total_records: 1,
@@ -18,14 +22,13 @@ const LEADERBOARD_DATA = {
       np_id: 'p1',
       rank: 1,
       online_name: 'TestPlayer',
-      score: 5000,
       player_info: {
-        main_char_info: { name: 'Jin', rank_info: { name: 'Destroyer' } },
-        sub_char_info: { name: 'Heihachi', rank_info: { name: 'Vanquisher' } },
+        main_char_info: { name: 'Jin', rank_info: { name: 'Destroyer', tier: 'Destroyer' } },
+        sub_char_info: { name: 'Heihachi', rank_info: { name: 'Vanquisher', tier: 'Vanquisher' } },
       },
     },
   ],
-}
+} as const
 
 const ROOMS_DATA = {
   total: 1,
@@ -35,7 +38,7 @@ const ROOMS_DATA = {
       {
         room_id: 'r1',
         owner_online_name: 'RoomOwner',
-        rank_info: { name: 'Platinum', tier: 'Platinum' },
+        rank_info: { id: 1, name: 'Platinum', tier: 'Platinum' },
         max_slots: 6,
         users: [
           { online_name: 'RoomOwner', user_id: 'RoomOwner' },
@@ -44,7 +47,7 @@ const ROOMS_DATA = {
       },
     ],
   },
-}
+} as const
 
 async function renderApp() {
   await act(async () => {
@@ -53,8 +56,8 @@ async function renderApp() {
 }
 
 beforeEach(() => {
-  fetchLeaderboard.mockResolvedValue(LEADERBOARD_DATA)
-  fetchRoomsAll.mockResolvedValue(ROOMS_DATA)
+  mockedFetchLeaderboard.mockResolvedValue(LEADERBOARD_DATA as any)
+  mockedFetchRoomsAll.mockResolvedValue(ROOMS_DATA as any)
 })
 
 afterEach(() => {
@@ -66,8 +69,8 @@ describe('App', () => {
   it('calls fetchLeaderboard and fetchRoomsAll on mount', async () => {
     await renderApp()
 
-    expect(fetchLeaderboard).toHaveBeenCalledOnce()
-    expect(fetchRoomsAll).toHaveBeenCalledOnce()
+    expect(mockedFetchLeaderboard).toHaveBeenCalledOnce()
+    expect(mockedFetchRoomsAll).toHaveBeenCalledOnce()
   })
 
   it('default tab is first room group and shows rooms content', async () => {
@@ -97,8 +100,8 @@ describe('App', () => {
     })
 
     // Called once on mount and once on Refresh click
-    expect(fetchRoomsAll).toHaveBeenCalledTimes(2)
-    expect(fetchLeaderboard).toHaveBeenCalledTimes(1)
+    expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(2)
+    expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(1)
   })
 
   it('clicking Refresh on Leaderboard tab calls fetchLeaderboard again', async () => {
@@ -113,8 +116,8 @@ describe('App', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
     })
 
-    expect(fetchLeaderboard).toHaveBeenCalledTimes(2)
-    expect(fetchRoomsAll).toHaveBeenCalledTimes(1)
+    expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(2)
+    expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(1)
   })
 
   it('auto-refresh: rooms refresh every 10s, leaderboard every 60s', async () => {
@@ -122,37 +125,37 @@ describe('App', () => {
 
     await renderApp()
 
-    expect(fetchLeaderboard).toHaveBeenCalledTimes(1)
-    expect(fetchRoomsAll).toHaveBeenCalledTimes(1)
+    expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(1)
+    expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(1)
 
     // After 10s: rooms refreshes, leaderboard does not
     await act(async () => {
       vi.advanceTimersByTime(10_000)
     })
 
-    expect(fetchRoomsAll).toHaveBeenCalledTimes(2)
-    expect(fetchLeaderboard).toHaveBeenCalledTimes(1)
+    expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(2)
+    expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(1)
 
     // After 60s total: rooms has refreshed 6 times + 1 mount, leaderboard 1 + 1 mount
     await act(async () => {
       vi.advanceTimersByTime(50_000)
     })
 
-    expect(fetchRoomsAll).toHaveBeenCalledTimes(7)
-    expect(fetchLeaderboard).toHaveBeenCalledTimes(1)
+    expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(7)
+    expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(1)
   })
 
   it('cleans up interval on unmount', async () => {
     vi.useFakeTimers()
     const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
 
-    let unmount
+    let unmount: () => void
     await act(async () => {
       const result = render(<App />)
       unmount = result.unmount
     })
 
-    unmount()
+    unmount!()
 
     expect(clearIntervalSpy).toHaveBeenCalledTimes(1)
     clearIntervalSpy.mockRestore()
@@ -168,8 +171,8 @@ describe('App', () => {
 
   it('shows loading state initially when fetch is slow', async () => {
     // Make fetch never resolve during this test
-    fetchLeaderboard.mockReturnValue(new Promise(() => {}))
-    fetchRoomsAll.mockReturnValue(new Promise(() => {}))
+    mockedFetchLeaderboard.mockReturnValue(new Promise(() => {}))
+    mockedFetchRoomsAll.mockReturnValue(new Promise(() => {}))
 
     render(<App />)
 
@@ -186,7 +189,7 @@ describe('App', () => {
     expect(screen.queryByText('Loading rooms...')).not.toBeInTheDocument()
 
     // Make the next fetch hang so we can observe the refreshing state
-    fetchRoomsAll.mockReturnValue(new Promise(() => {}))
+    mockedFetchRoomsAll.mockReturnValue(new Promise(() => {}))
 
     // Trigger auto-refresh
     await act(async () => {
@@ -199,13 +202,13 @@ describe('App', () => {
 
     // Loading bar should be visible
     const panel = screen.getByText('RoomOwner').closest('.panel')
-    const bar = panel.querySelector('.loading-bar')
+    const bar = panel!.querySelector('.loading-bar')
     expect(bar).toBeInTheDocument()
     expect(bar).not.toHaveClass('loading-bar-hidden')
   })
 
   it('shows error when fetchLeaderboard rejects', async () => {
-    fetchLeaderboard.mockRejectedValue(new Error('Leaderboard fetch failed: 500'))
+    mockedFetchLeaderboard.mockRejectedValue(new Error('Leaderboard fetch failed: 500'))
 
     await act(async () => {
       render(<App />)

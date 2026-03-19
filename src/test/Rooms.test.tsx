@@ -19,7 +19,7 @@ describe('Rooms', () => {
   })
 
   it('shows "No active rooms." when rooms array is empty', () => {
-    const data = { rooms: [] }
+    const data = { rooms: [] as any[] }
     render(<Rooms loading={false} data={data} error={null} />)
     expect(screen.getByText('No active rooms.')).toBeInTheDocument()
   })
@@ -46,7 +46,7 @@ describe('Rooms', () => {
       rooms: [
         {
           room_id: 1,
-          rank_info: { name: '1st 나무단', tier: '나무단' },
+          rank_info: { id: 1, name: '1st 나무단', tier: '나무단' },
           users: [{ online_name: 'A' }, { online_name: 'B' }],
         },
       ],
@@ -57,13 +57,13 @@ describe('Rooms', () => {
   })
 
   it('falls back to empty array when data.rooms is undefined', () => {
-    const data = {}
+    const data = {} as { rooms?: any[] }
     render(<Rooms loading={false} data={data} error={null} />)
     expect(screen.getByText('No active rooms.')).toBeInTheDocument()
   })
 
   it('shows loading bar when refreshing=true', () => {
-    const data = { rooms: [] }
+    const data = { rooms: [] as any[] }
     const { container } = render(<Rooms loading={false} refreshing={true} data={data} error={null} />)
     const bar = container.querySelector('.loading-bar')
     expect(bar).toBeInTheDocument()
@@ -71,7 +71,7 @@ describe('Rooms', () => {
   })
 
   it('hides loading bar when refreshing=false', () => {
-    const data = { rooms: [] }
+    const data = { rooms: [] as any[] }
     const { container } = render(<Rooms loading={false} refreshing={false} data={data} error={null} />)
     expect(container.querySelector('.loading-bar')).toHaveClass('loading-bar-hidden')
   })

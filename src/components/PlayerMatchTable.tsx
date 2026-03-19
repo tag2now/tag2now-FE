@@ -1,9 +1,14 @@
 import { Fragment } from 'react'
+import type { Room } from '@/types'
 
-export default function PlayerMatchTable({ rooms }) {
+interface PlayerMatchTableProps {
+  rooms: Room[]
+}
+
+export default function PlayerMatchTable({ rooms }: PlayerMatchTableProps) {
   return (
     <div className="w-full overflow-x-auto">
-      <table className="border-collapse w-full min-w-[340px]">
+      <table className="border-collapse w-full min-w-85">
         <thead>
           <tr>
             <th className="tbl-th">#</th>

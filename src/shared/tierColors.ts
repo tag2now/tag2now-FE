@@ -1,4 +1,6 @@
-const TIER_COLORS = {
+import type { CSSProperties } from 'react'
+
+const TIER_COLORS: Record<string, string> = {
   '액자단': 'var(--color-primary)',
   '녹단': '#4ade80',
   '노랑단': '#facc15',
@@ -9,6 +11,6 @@ const TIER_COLORS = {
   'God': 'var(--color-secondary)',
 }
 
-export const TIER_STYLES = Object.fromEntries(
+export const TIER_STYLES: Record<string, CSSProperties> = Object.fromEntries(
   Object.entries(TIER_COLORS).map(([k, v]) => [k, { color: v }]),
 )
