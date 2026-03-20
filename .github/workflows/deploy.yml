@@ -66,7 +66,7 @@ jobs:
 
       - name: Update ECS service
         run: |
-          cat ${{ steps.update-task-def.outputs.task-definition }} >> "$GITHUB_OUTPUT"
+          cat ${{ steps.update-task-def.outputs.task-definition }}
           
           aws ecs update-service \
             --cluster ${{ vars.ECS_CLUSTER }} \
