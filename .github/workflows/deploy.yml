@@ -2,8 +2,8 @@ name: Deploy to AWS ECS
 
 on:
   push:
-    branches:
-      - master
+#    branches:
+#      - master
     tags:
       - 'v*'
 
@@ -57,19 +57,17 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Update ECS task definition with new image
-        id: update-task-def
+        id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition-family: ${{ vars.ECS_TASK_DEFINITION_FAMILY }}
           container-name: ${{ vars.ECS_TASK_CONTAINER_NAME }}
           image: ${{ needs.build.outputs.image }}
 
-      - name: Update ECS service
-        run: |
-          cat ${{ steps.update-task-def.outputs.task-definition }}
-          
-          aws ecs update-service \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --service ${{ vars.ECS_SERVICE }} \
-            --task-definition ${{ steps.update-task-def.outputs.task-definition }} \
-            --force-new-deployment
+      - name: Deploy ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          service: ${{ vars.ECS_SERVICE }}
+          wait-for-service-stability: true
