@@ -20,7 +20,7 @@ function CharCell({ name, rankInfo, wins, losses }: CharCellProps) {
     <td className="char-td">
       <div className="flex flex-col sm:flex-row items-center sm:justify-center gap-1 sm:gap-2 sm:w-auto mx-auto">
         <div className="flex flex-1 justify-center flex-col sm:flex-row items-center gap-1">
-          <RankImage rankInfo={rankInfo} className="char-rank sm:max-w-none sm:w-3/10 h-auto" />
+          <RankImage rankInfo={rankInfo} className="char-rank sm:max-w-none w-6/10 sm:w-3/10 h-auto" />
           {url && <img src={url} alt={name} className="w-13 h-13 sm:w-15 sm:h-15 object-contain" />}
         {winRate != null && (
             <div className="hidden w-3/10 sm:block text-[1rem] leading-tight whitespace-nowrap text-left">
@@ -66,7 +66,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
           <thead>
             <tr>
               <th className="tbl-th w-1/20 sm:w-2/20">#</th>
-              <th className="tbl-th w-7/20 sm:w-5/20">Player</th>
+              <th className="tbl-th w-7/20 sm:w-4/20">Player</th>
               <th className="tbl-th sm:w-7/20 text-center">Main</th>
               <th className="tbl-th sm:w-7/20 text-center">Sub</th>
             </tr>

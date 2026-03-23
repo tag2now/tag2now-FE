@@ -128,7 +128,7 @@
   }
 
   .char-td {
-    @apply text-secondary text-[0.88rem] font-semibold max-w-[70px] md:max-w-none text-center;
+    @apply text-secondary text-[0.88rem] font-semibold max-w-17.5 md:max-w-none text-center py-2;
   }
 
   .char-rank {

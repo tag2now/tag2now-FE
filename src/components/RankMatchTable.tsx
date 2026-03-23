@@ -45,9 +45,7 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
           {tierGroups.map(([tier, tierRooms]) => (
             <Fragment key={tier}>
               <tr className="tier-separator">
-                <td colSpan={4} className="tier-heading py-2 px-1" style={TIER_STYLES[tier]}>
-                  <RankImage rankInfo={tierRooms[0]?.rank_info} className="h-6 w-auto" />
-                </td>
+                <td colSpan={4} className="tier-heading py-2 px-1" style={TIER_STYLES[tier]}>{tier}</td>
               </tr>
               {tierRooms.map((r) => {
                 const inGame = r.users?.length === 2
