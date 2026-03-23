@@ -92,14 +92,14 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
               </button>
             </div>
             {entry && (
-                <div className="flex sm:flex-col gap-1 leading-none">
+                <div className="flex flex-col gap-1 leading-none">
                   {[mainChar, subChar].map(char => char &&
                     <div key={char.name} className="flex items-center">
                       {char.rank_info && (
-                        <RankImage rankInfo={char.rank_info} className="hidden sm:inline h-11 w-auto" />
+                        <RankImage rankInfo={char.rank_info} className="h-7 sm:h-11 w-auto" />
                       )}
-                      <img src={charImageUrl(char.name)!} alt={char.name} className="w-11 h-11 rounded" />
-                      <div className="flex flex-col items-start font-semibold">
+                      <img src={charImageUrl(char.name)!} alt={char.name} className="h-7 sm:h-11 rounded" />
+                      <div className="hidden sm:flex flex-col items-start font-semibold">
                         <span>W{char.wins}</span>
                         <span>L{char.losses}</span>
                       </div>
