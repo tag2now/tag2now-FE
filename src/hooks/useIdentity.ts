@@ -10,7 +10,7 @@ export default function useIdentity() {
 
   const ensureIdentity = useCallback(async () => {
     const name = localStorage.getItem(LS_KEY)
-    if (!name) throw new Error('Username not set. Please set your username in the header first.')
+    if (!name) throw new Error('유저명이 설정되지 않았습니다. 상단바에서 유저명을 설정해주세요')
     if (!identitySet.current) {
       await setIdentity(name)
       identitySet.current = true
