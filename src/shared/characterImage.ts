@@ -64,8 +64,6 @@ const NAME_TO_FILE: Record<string, string> = {
   'Panda':        'Panda',
 }
 
-export const CHARACTER_NAMES = Object.keys(NAME_TO_FILE)
-
 /** Characters arranged in a grid matching the TTT2 character select screen layout (10 columns) */
 export const CHARACTER_GRID: string[][] = [
     ['','','','Unknown','Dr.','Slim Bob','Ancient Ogre','Kunimitsu','Forest Law','P-Jack','Combot','','Tiger','Alex','Angel','Michelle','Sebastian','Miharu', 'Violet','','','',''],

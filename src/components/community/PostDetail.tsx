@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { relativeTime } from '@/shared/timeFormat'
 import { thumbPost, createComment, deletePost } from '@/shared/communityApi'
-import { charImageUrl } from '@/shared/characterImage'
+import PostTypeBadge from './PostTypeBadge'
 import CommentTree from './CommentTree'
 import type { PostDetail as PostDetailType } from '@/types'
 
@@ -68,13 +68,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
 
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
-          {charImageUrl(post.post_type) ? (
-            <img src={charImageUrl(post.post_type)!} alt={post.post_type} className="h-6 w-6 object-cover rounded" title={post.post_type} />
-          ) : (
-            <span className="text-[0.75rem] font-bold uppercase tracking-wider px-2 py-0.5 bg-primary-dim text-primary rounded">
-              {post.post_type}
-            </span>
-          )}
+          <PostTypeBadge postType={post.post_type} size="md" />
           <span className="text-[0.8rem] text-txt-dim">{relativeTime(post.created_at)}</span>
           {username && post.author === username && (
             <button

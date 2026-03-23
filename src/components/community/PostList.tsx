@@ -1,5 +1,6 @@
 import { relativeTime } from '@/shared/timeFormat'
-import { CHARACTER_NAMES, CHARACTER_GRID, charImageUrl } from '@/shared/characterImage'
+import CharacterGridPicker from './CharacterGridPicker'
+import PostTypeBadge from './PostTypeBadge'
 import type { PostSummary } from '@/types'
 
 interface PostListProps {
@@ -48,26 +49,7 @@ export default function PostList({
       </div>
 
       <div className="mb-4">
-        {CHARACTER_GRID.map((row, ri) => (
-          <div key={ri} className="flex gap-0.5 mb-0.5">
-            {row.map((name) => {
-              const active = postType === name
-              const url = charImageUrl(name)
-              return (
-                <button
-                  key={name}
-                  onClick={() => onPostTypeChange(active ? '' : name)}
-                  className={`w-1/23 h-9 p-0 border rounded cursor-pointer transition-all ${
-                    url && active ? 'border-primary shadow-[0_0_6px_var(--color-primary-glow)]' : 'border-transparent hover:border-primary-dim'
-                  } ${url && 'disabled'}`}
-                  title={name}
-                >
-                  {url && <img src={url} alt={name} className={`h-full object-cover rounded block ${active ? '' : 'opacity-60 hover:opacity-100'}`} />}
-                </button>
-              )
-            })}
-          </div>
-        ))}
+        <CharacterGridPicker value={postType} onChange={onPostTypeChange} defaultValue="" />
       </div>
 
       {loading && <p className="state-msg">Loading...</p>}
@@ -86,13 +68,7 @@ export default function PostList({
               className="w-full text-left bg-bg-row border border-border rounded px-3 py-2 cursor-pointer transition-colors hover:bg-[rgba(0,200,212,0.07)] hover:border-primary-dim flex items-center gap-2"
             >
               <span className="w-14 shrink-0 flex items-center justify-center">
-                {charImageUrl(post.post_type) ? (
-                  <img src={charImageUrl(post.post_type)!} alt={post.post_type} className="h-5 w-5 object-cover rounded" title={post.post_type} />
-                ) : (
-                  <span className="text-[0.7rem] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-primary-dim text-primary rounded truncate max-w-full text-center">
-                    {post.post_type}
-                  </span>
-                )}
+                <PostTypeBadge postType={post.post_type} />
               </span>
               <span className="flex-1 min-w-0 text-[0.9rem] text-white font-bold truncate">
                 {post.title}
