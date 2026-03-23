@@ -46,9 +46,12 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
   return (
     <header className="app-header relative border-b-2 border-accent pt-2 pb-2 px-3 mb-1 flex justify-between items-center">
       <div className="flex items-center sm:items-baseline gap-3">
-        <h1 className="font-display text-[clamp(1.05rem,4vw,1.8rem)] font-black m-0 tracking-wide uppercase">
-          Tag<span className="header-accent">2</span>Now
-        </h1>
+        <div className="relative">
+          <h1 className="font-display text-[clamp(1.05rem,4vw,1.8rem)] font-black m-0 tracking-wide uppercase">
+            Tag<span className="header-accent">2</span>Now
+          </h1>
+          <span className="absolute top-[76%] right-[4%]">v1.0.5</span>
+        </div>
         <div className="inline-flex items-center flex-col sm:flex-row sm:gap-2 text-[0.95rem] font-bold">
           <div className="inline-flex items-center gap-1.5 tracking-[0.2em] uppercase text-red-500">
             <span className="w-1.75 h-1.75 rounded-full bg-red-500 animate-[blink_1.6s_ease-in-out_infinite]" />
@@ -93,9 +96,9 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
                   {[mainChar, subChar].map(char => char &&
                     <div key={char.name} className="flex items-center">
                       {char.rank_info && (
-                        <RankImage rankInfo={char.rank_info} className="hidden sm:inline w-2/3 h-auto" />
+                        <RankImage rankInfo={char.rank_info} className="hidden sm:inline w-1/3 h-auto" />
                       )}
-                      <img src={charImageUrl(char.name)!} alt={char.name} className="w-7 h-7 rounded" />
+                      <img src={charImageUrl(char.name)!} alt={char.name} className="w-11 h-11 rounded" />
                       <div className="flex flex-col items-start font-semibold">
                         <span>W{char.wins}</span>
                         <span>L{char.losses}</span>
