@@ -5,10 +5,12 @@ const LS_KEY = 'ttt2-patch-dismissed'
 
 const NOTES: { version: string; items: string[] }[] = [
   {
+    version: '1.0.7',
+    items: ['글쓰기 에러 수정'],
+  },
+  {
     version: '1.0.6',
-    items: [
-      '커뮤니티 게시판 추가\n(글쓰기, 댓글, 추천/비추천, 현재는 단순 텍스트만 가능)',
-    ],
+    items: ['커뮤니티 게시판 추가\n(글쓰기, 댓글, 추천/비추천, 현재는 단순 텍스트만 가능)'],
   },
   {
     version: '1.0.5',
@@ -19,9 +21,7 @@ const NOTES: { version: string; items: string[] }[] = [
   },
   {
     version: '1.0.4',
-    items: [
-      '상단바에 유저 설정 가능, 설정 시 해당 유저 계급 표시',
-    ],
+    items: ['상단바에 유저 설정 가능, 설정 시 해당 유저 계급 표시'],
   }
 ]
 
