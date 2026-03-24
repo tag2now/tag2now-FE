@@ -3,8 +3,8 @@ import { charImageUrl } from '@/shared/characterImage'
 import { APP_VERSION } from '@/version'
 import type { LeaderboardEntry } from '@/types'
 import RankImage from './RankImage'
-
-const LS_KEY = 'ttt2-username'
+import { getUsername as getSavedUsername, saveUsername, clearUsername } from '@/shared/cookie'
+import { setIdentity } from '@/shared/communityApi'
 
 interface HeaderProps {
   totalUsers?: number
@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) {
-  const [username, setUsername] = useState(() => localStorage.getItem(LS_KEY) ?? '')
+  const [username, setUsername] = useState(() => getSavedUsername() ?? '')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -26,15 +26,22 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
     setEditing(true)
   }
 
-  function commitEdit() {
+  async function commitUsername() {
     const trimmed = draft.trim()
+    const prev = username
     setUsername(trimmed)
-    if (trimmed) {
-      localStorage.setItem(LS_KEY, trimmed)
-    } else {
-      localStorage.removeItem(LS_KEY)
-    }
     setEditing(false)
+    if (trimmed) {
+      try {
+        await setIdentity(trimmed)
+        saveUsername(trimmed)
+      } catch (e) {
+        setUsername(prev)
+        throw e
+      }
+    } else {
+      clearUsername()
+    }
   }
 
   const entry = username
@@ -73,8 +80,8 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
             type="text"
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') commitEdit() }}
-            onBlur={commitEdit}
+            onKeyDown={e => { if (e.key === 'Enter') commitUsername().then() }}
+            onBlur={commitUsername}
             placeholder="Enter username"
             className="bg-surface border border-border-light rounded px-2 py-0.5 mt-1 text-text-primary text-base w-36 outline-none focus:border-accent"
           />
