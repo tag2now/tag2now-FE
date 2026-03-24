@@ -27,8 +27,15 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
 
   return (
     <div className="p-4">
-      <h3 className="m-0 mb-3 text-secondary font-bold text-[1rem] uppercase tracking-wider">새 글 작성</h3>
-
+        <div className="flex mb-3 gap-6 items-center">
+            <h3 className="m-0 text-secondary font-bold text-[1rem] uppercase tracking-wider">새 글 작성</h3>
+            <button
+                onClick={onCancel}
+                className="bg-transparent border-0 text-primary text-[0.85rem] font-bold uppercase tracking-wider cursor-pointer hover:text-white"
+            >
+                &larr; 목록
+            </button>
+        </div>
       <div className="mb-3 flex gap-2">
         {['자유', '랭매구인'].map((t) => (
           <button
@@ -69,7 +76,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
       <div className="flex justify-end gap-2 mt-3">
         <button
           onClick={onCancel}
-          className="px-4 py-1.5 bg-transparent border border-border-light text-txt-dim font-bold text-[0.85rem] uppercase tracking-wider rounded cursor-pointer hover:text-txt"
+          className="px-4 py-1.5 bg-red-600 text-gray-200 border border-border-light font-bold text-[0.85rem] uppercase tracking-wider rounded cursor-pointer hover:text-txt"
         >
           취소
         </button>
