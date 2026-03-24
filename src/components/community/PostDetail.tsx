@@ -26,7 +26,9 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
       await ensureIdentity()
       await thumbPost(post.id, direction)
       onRefresh()
-    } catch (_) {}
+    } catch (e: any) {
+      alert(e.message)
+    }
     setThumbing(false)
   }
 
@@ -38,7 +40,9 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
       await createComment(post.id, commentText.trim())
       setCommentText('')
       onRefresh()
-    } catch (_) {}
+    } catch (e: any) {
+      alert(e.message)
+    }
     setSubmitting(false)
   }
 
@@ -49,7 +53,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
   }
 
   const handleDelete = async () => {
-    if (!confirm('Delete this post?')) return
+    if (!confirm('이 게시글을 삭제하시겠습니까?')) return
     try {
       await ensureIdentity()
       await deletePost(post.id)
@@ -63,7 +67,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
         onClick={onBack}
         className="mb-4 bg-transparent border-0 text-primary text-[0.85rem] font-bold uppercase tracking-wider cursor-pointer hover:text-white"
       >
-        &larr; Back
+        &larr; 목록
       </button>
 
       <div className="mb-4">
@@ -75,13 +79,13 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
               onClick={handleDelete}
               className="ml-auto bg-transparent border border-error text-error text-[0.75rem] font-bold uppercase tracking-wider px-2 py-0.5 rounded cursor-pointer hover:bg-error hover:text-white"
             >
-              Delete
+              삭제
             </button>
           )}
         </div>
         <p className="text-[0.8rem] font-bold text-primary mb-2">{post.author}</p>
         <h3 className="m-0 mb-2 text-[1.1rem] font-bold text-white">{post.title}</h3>
-        <p className="m-0 text-[0.95rem] text-txt whitespace-pre-wrap break-words">{post.body}</p>
+        <p className="m-0 text-[0.95rem] text-txt whitespace-pre-wrap wrap-break-word">{post.body}</p>
       </div>
 
       <div className="flex gap-3 mb-4 pb-4 border-b border-border-light">
@@ -102,7 +106,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
       </div>
 
       <h4 className="m-0 mb-3 text-[0.85rem] font-bold uppercase tracking-wider text-txt-dim">
-        Comments ({post.comments.length})
+        댓글 ({post.comments.length})
       </h4>
 
       {post.comments.length > 0 && (
@@ -114,7 +118,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           type="text"
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
-          placeholder="Write a comment..."
+          placeholder="댓글을 입력하세요..."
           className="flex-1 bg-bg-row border border-border-light rounded px-3 py-2 text-[0.85rem] text-txt font-sans outline-none focus:border-primary"
           onKeyDown={(e) => e.key === 'Enter' && handleComment()}
         />
@@ -123,7 +127,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           disabled={submitting || !commentText.trim()}
           className="px-4 py-2 bg-primary text-white text-[0.85rem] font-bold border-0 rounded cursor-pointer disabled:opacity-50"
         >
-          {submitting ? '...' : 'Send'}
+          {submitting ? '...' : '작성'}
         </button>
       </div>
     </div>

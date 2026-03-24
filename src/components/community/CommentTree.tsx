@@ -44,7 +44,7 @@ function CommentNode({ comment, onReply, depth }: CommentNodeProps) {
         onClick={() => setReplying(!replying)}
         className="mt-1 bg-transparent border-0 text-txt-dim text-[0.75rem] font-bold uppercase tracking-wider cursor-pointer hover:text-primary"
       >
-        {replying ? 'Cancel' : 'Reply'}
+        {replying ? '취소' : '답글'}
       </button>
 
       {replying && (
@@ -53,7 +53,7 @@ function CommentNode({ comment, onReply, depth }: CommentNodeProps) {
             type="text"
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
-            placeholder="Reply..."
+            placeholder="답글을 입력하세요..."
             className="flex-1 bg-bg-row border border-border-light rounded px-2 py-1 text-[0.85rem] text-txt font-sans outline-none focus:border-primary"
             onKeyDown={(e) => e.key === 'Enter' && handleSubmitReply()}
           />
@@ -62,7 +62,7 @@ function CommentNode({ comment, onReply, depth }: CommentNodeProps) {
             disabled={submitting || !replyText.trim()}
             className="px-3 py-1 bg-primary text-white text-[0.8rem] font-bold border-0 rounded cursor-pointer disabled:opacity-50"
           >
-            {submitting ? '...' : 'Send'}
+            {submitting ? '...' : '작성'}
           </button>
         </div>
       )}

@@ -67,7 +67,7 @@ export default function Community() {
       )}
 
       {view === 'detail' && community.detailLoading && (
-        <p className="state-msg">Loading...</p>
+        <p className="state-msg">로딩 중...</p>
       )}
       {view === 'detail' && community.detailError && (
         <p className="state-msg error">{community.detailError}</p>

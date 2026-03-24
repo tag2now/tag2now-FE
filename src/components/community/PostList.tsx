@@ -52,11 +52,11 @@ export default function PostList({
         <CharacterGridPicker value={postType} onChange={onPostTypeChange} defaultValue="" />
       </div>
 
-      {loading && <p className="state-msg">Loading...</p>}
+      {loading && <p className="state-msg">로딩 중...</p>}
       {error && <p className="state-msg error">{error}</p>}
 
       {!loading && !error && posts.length === 0 && (
-        <p className="state-msg">No posts yet</p>
+        <p className="state-msg">게시글이 없습니다</p>
       )}
 
       {!loading && posts.length > 0 && (
@@ -92,7 +92,7 @@ export default function PostList({
             disabled={page <= 1}
             className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-[0.8rem] font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
           >
-            Prev
+            이전
           </button>
           <span className="text-[0.8rem] text-txt-dim">
             {page} / {totalPages}
@@ -102,7 +102,7 @@ export default function PostList({
             disabled={page >= totalPages}
             className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-[0.8rem] font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
           >
-            Next
+            다음
           </button>
         </div>
       )}
