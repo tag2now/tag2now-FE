@@ -22,27 +22,19 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
   const handleThumb = async (direction: 'up' | 'down') => {
     if (thumbing) return
     setThumbing(true)
-    try {
-      await ensureIdentity()
-      await thumbPost(post.id, direction)
-      onRefresh()
-    } catch (e: any) {
-      alert(e.message)
-    }
+    await ensureIdentity()
+    await thumbPost(post.id, direction)
+    onRefresh()
     setThumbing(false)
   }
 
   const handleComment = async () => {
     if (!commentText.trim()) return
     setSubmitting(true)
-    try {
-      await ensureIdentity()
-      await createComment(post.id, commentText.trim())
-      setCommentText('')
-      onRefresh()
-    } catch (e: any) {
-      alert(e.message)
-    }
+    await ensureIdentity()
+    await createComment(post.id, commentText.trim())
+    setCommentText('')
+    onRefresh()
     setSubmitting(false)
   }
 
