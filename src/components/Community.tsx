@@ -5,10 +5,15 @@ import PostList from './community/PostList'
 import PostDetail from './community/PostDetail'
 import CreatePostForm from './community/CreatePostForm'
 import { createPost } from '@/shared/communityApi'
+import type { LeaderboardEntry } from '@/types'
 
 type View = 'list' | 'detail' | 'create'
 
-export default function Community() {
+interface CommunityProps {
+  leaderboardEntries?: LeaderboardEntry[]
+}
+
+export default function Community({ leaderboardEntries }: CommunityProps) {
   const community = useCommunity()
   const { getUsername, ensureIdentity } = useIdentity()
   const [view, setView] = useState<View>('list')
@@ -26,6 +31,7 @@ export default function Community() {
   const handleBack = () => {
     community.closePost()
     setView('list')
+    community.loadPosts(community.page, postType || undefined).then()
   }
 
   const handlePostTypeChange = (type: string) => {
@@ -63,6 +69,7 @@ export default function Community() {
           onPageChange={handlePageChange}
           onSelectPost={handleSelectPost}
           onWrite={() => setView('create')}
+          leaderboardEntries={leaderboardEntries}
         />
       )}
 
@@ -80,6 +87,7 @@ export default function Community() {
           onRefresh={community.refreshDetail}
           ensureIdentity={ensureIdentity}
           onDeleted={handleDeleted}
+          leaderboardEntries={leaderboardEntries}
         />
       )}
 

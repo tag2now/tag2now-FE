@@ -3,7 +3,8 @@ import { relativeTime } from '@/shared/timeFormat'
 import { thumbPost, createComment, deletePost } from '@/shared/communityApi'
 import PostTypeBadge from './PostTypeBadge'
 import CommentTree from './CommentTree'
-import type { PostDetail as PostDetailType } from '@/types'
+import type { PostDetail as PostDetailType, LeaderboardEntry } from '@/types'
+import AuthorBadge from './AuthorBadge'
 
 interface PostDetailProps {
   post: PostDetailType
@@ -12,9 +13,10 @@ interface PostDetailProps {
   onRefresh: () => void
   ensureIdentity: () => Promise<string>
   onDeleted: () => void
+  leaderboardEntries?: LeaderboardEntry[]
 }
 
-export default function PostDetail({ post, username, onBack, onRefresh, ensureIdentity, onDeleted }: PostDetailProps) {
+export default function PostDetail({ post, username, onBack, onRefresh, ensureIdentity, onDeleted, leaderboardEntries }: PostDetailProps) {
   const [commentText, setCommentText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [thumbing, setThumbing] = useState(false)
@@ -75,7 +77,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
             </button>
           )}
         </div>
-        <p className="text-[0.8rem] font-bold text-primary mb-2">{post.author}</p>
+        <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-[0.8rem] mb-2" />
         <h3 className="m-0 mb-2 text-[1.1rem] font-bold text-white">{post.title}</h3>
         <p className="m-0 text-[0.95rem] text-txt whitespace-pre-wrap wrap-break-word">{post.body}</p>
       </div>
@@ -84,7 +86,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
         <button
           onClick={() => handleThumb('up')}
           disabled={thumbing}
-          className="flex items-center gap-1 bg-transparent border border-border-light text-txt-dim px-3 py-1 rounded cursor-pointer text-[0.85rem] font-bold hover:border-primary hover:text-primary disabled:opacity-50"
+          className="flex items-center gap-1 bg-transparent border border-primary text-primary px-3 py-1 rounded cursor-pointer text-[0.85rem] font-bold disabled:opacity-50"
         >
           <span>&#9650;</span> {post.thumbs_up}
         </button>
@@ -102,7 +104,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
       </h4>
 
       {post.comments.length > 0 && (
-        <CommentTree comments={post.comments} onReply={handleReply} />
+        <CommentTree comments={post.comments} onReply={handleReply} leaderboardEntries={leaderboardEntries} />
       )}
 
       <div className="mt-4 flex gap-2">

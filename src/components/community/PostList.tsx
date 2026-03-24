@@ -1,7 +1,8 @@
 import { relativeTime } from '@/shared/timeFormat'
 import CharacterGridPicker from './CharacterGridPicker'
 import PostTypeBadge from './PostTypeBadge'
-import type { PostSummary } from '@/types'
+import type { PostSummary, LeaderboardEntry } from '@/types'
+import AuthorBadge from './AuthorBadge'
 
 interface PostListProps {
   posts: PostSummary[]
@@ -15,11 +16,12 @@ interface PostListProps {
   onPageChange: (page: number) => void
   onSelectPost: (id: number) => void
   onWrite: () => void
+  leaderboardEntries?: LeaderboardEntry[]
 }
 
 export default function PostList({
   posts, total, page, pageSize, loading, error,
-  postType, onPostTypeChange, onPageChange, onSelectPost, onWrite,
+  postType, onPostTypeChange, onPageChange, onSelectPost, onWrite, leaderboardEntries,
 }: PostListProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
@@ -73,9 +75,9 @@ export default function PostList({
               <span className="flex-1 min-w-0 text-[0.9rem] text-white font-bold truncate">
                 {post.title}
               </span>
-              <span className="text-[0.78rem] font-bold text-primary shrink-0">{post.author}</span>
+              <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-[0.78rem] shrink-0" />
               <span className="flex gap-2 text-[0.75rem] text-txt-dim shrink-0">
-                <span>&#9650; {post.thumbs_up}</span>
+                <span className="text-primary">&#9650; {post.thumbs_up}</span>
                 <span>&#9660; {post.thumbs_down}</span>
                 <span>&#128172; {post.comment_count}</span>
               </span>

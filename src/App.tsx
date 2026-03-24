@@ -68,7 +68,7 @@ export default function App() {
           <Rooms data={null} loading={rooms.loading} error={rooms.error} onRefresh={rooms.refresh} />
         )}
         {activeTab === 'leaderboard' && <Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />}
-        {activeTab === 'community' && <Community />}
+        {activeTab === 'community' && <Community leaderboardEntries={lb.data?.entries} />}
       </div>
 
       <Footer />

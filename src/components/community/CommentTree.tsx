@@ -1,20 +1,23 @@
 import { useState } from 'react'
 import { relativeTime } from '@/shared/timeFormat'
-import type { CommentOut } from '@/types'
+import type { CommentOut, LeaderboardEntry } from '@/types'
+import AuthorBadge from './AuthorBadge'
 
 interface CommentTreeProps {
   comments: CommentOut[]
   onReply: (parentId: number, body: string) => Promise<void>
   depth?: number
+  leaderboardEntries?: LeaderboardEntry[]
 }
 
 interface CommentNodeProps {
   comment: CommentOut
   onReply: (parentId: number, body: string) => Promise<void>
   depth: number
+  leaderboardEntries?: LeaderboardEntry[]
 }
 
-function CommentNode({ comment, onReply, depth }: CommentNodeProps) {
+function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNodeProps) {
   const [replying, setReplying] = useState(false)
   const [replyText, setReplyText] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -36,7 +39,7 @@ function CommentNode({ comment, onReply, depth }: CommentNodeProps) {
   return (
     <div style={{ marginLeft: visualDepth > 0 ? 20 : 0 }} className="border-l border-border-light pl-3 py-2">
       <div className="flex items-center gap-2 text-[0.8rem] text-txt-dim mb-1">
-        <span className="font-bold text-primary">{comment.author}</span>
+        <AuthorBadge name={comment.author} entries={leaderboardEntries} />
         <span>{relativeTime(comment.created_at)}</span>
       </div>
       <p className="m-0 text-[0.9rem] text-txt whitespace-pre-wrap break-words">{comment.body}</p>
@@ -68,17 +71,17 @@ function CommentNode({ comment, onReply, depth }: CommentNodeProps) {
       )}
 
       {comment.replies?.length > 0 && (
-        <CommentTree comments={comment.replies} onReply={onReply} depth={depth + 1} />
+        <CommentTree comments={comment.replies} onReply={onReply} depth={depth + 1} leaderboardEntries={leaderboardEntries} />
       )}
     </div>
   )
 }
 
-export default function CommentTree({ comments, onReply, depth = 0 }: CommentTreeProps) {
+export default function CommentTree({ comments, onReply, depth = 0, leaderboardEntries }: CommentTreeProps) {
   return (
     <div>
       {comments.map((c) => (
-        <CommentNode key={c.id} comment={c} onReply={onReply} depth={depth} />
+        <CommentNode key={c.id} comment={c} onReply={onReply} depth={depth} leaderboardEntries={leaderboardEntries} />
       ))}
     </div>
   )
