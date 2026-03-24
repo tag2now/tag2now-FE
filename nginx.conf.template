@@ -4,6 +4,22 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Gzip compression
+    gzip on;
+    gzip_types text/html text/css application/javascript application/json;
+    gzip_min_length 256;
+
+    # Security headers
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-Frame-Options "DENY";
+
+    # Health check for ALB/ECS
+    location = /health {
+        access_log off;
+        return 200 'ok';
+        add_header Content-Type text/plain;
+    }
+
     # Proxy API calls to the backend service
     location /api/ {
         proxy_pass ${BACKEND_URL}/;
@@ -11,8 +27,15 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
-    # SPA fallback — all other routes serve index.html
+    # Hashed assets — cache forever (Vite adds content hash to filenames)
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # SPA fallback — always revalidate index.html so new deploys take effect
     location / {
+        add_header Cache-Control "no-cache";
         try_files $uri $uri/ /index.html;
     }
 }
