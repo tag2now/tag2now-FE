@@ -7,7 +7,7 @@ const NOTES: { version: string; items: string[] }[] = [
   {
     version: '1.0.6',
     items: [
-      '커뮤니티 게시판 추가 (글쓰기, 댓글, 추천/비추천, 현재는 단순 텍스트만 가능)',
+      '커뮤니티 게시판 추가\n(글쓰기, 댓글, 추천/비추천, 현재는 단순 텍스트만 가능)',
     ],
   },
   {
@@ -65,7 +65,7 @@ export default function PatchNotes() {
             </h3>
             <ul className="list-disc pl-5 m-0 space-y-1">
               {note.items.map((item, i) => (
-                <li key={i} className="text-txt text-sm">{item}</li>
+                <li key={i} className="whitespace-pre-wrap text-txt text-sm">{item}</li>
               ))}
             </ul>
           </div>
