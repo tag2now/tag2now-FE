@@ -11,16 +11,13 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
   const [body, setBody] = useState('')
   const [postType, setPostType] = useState('자유')
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
     if (!title.trim() || !body.trim() || body.length > 1000) return
     setSubmitting(true)
-    setError(null)
     try {
       await onSubmit(title.trim(), body.trim(), postType)
-    } catch (e: any) {
-      setError(e.message)
+    } finally {
       setSubmitting(false)
     }
   }
@@ -70,8 +67,6 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         className="w-full bg-bg-row border border-border-light rounded p-3 text-[0.9rem] text-txt font-sans resize-vertical outline-none focus:border-primary"
       />
       <div className="text-right text-[0.75rem] text-txt-dim mt-1">{body.length}/1000</div>
-
-      {error && <p className="text-error text-[0.85rem] mt-1 mb-0">{error}</p>}
 
       <div className="flex justify-end gap-2 mt-3">
         <button
