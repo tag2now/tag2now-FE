@@ -15,11 +15,11 @@ export default function Community() {
   const [postType, setPostType] = useState('')
 
   useEffect(() => {
-    community.loadPosts(1, postType || undefined)
+    community.loadPosts(1, postType || undefined).then()
   }, [postType])
 
   const handleSelectPost = (id: number) => {
-    community.openPost(id)
+    community.openPost(id).then()
     setView('detail')
   }
 
@@ -33,19 +33,19 @@ export default function Community() {
   }
 
   const handlePageChange = (page: number) => {
-    community.loadPosts(page, postType || undefined)
+    community.loadPosts(page, postType || undefined).then()
   }
 
   const handleCreatePost = async (title: string, body: string, type: string) => {
     await ensureIdentity()
     await createPost(title, body, type)
     setView('list')
-    community.loadPosts(1, postType || undefined)
+    community.loadPosts(1, postType || undefined).then()
   }
 
   const handleDeleted = () => {
     setView('list')
-    community.loadPosts(community.page, postType || undefined)
+    community.loadPosts(community.page, postType || undefined).then()
   }
 
   return (
