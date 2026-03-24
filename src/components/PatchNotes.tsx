@@ -14,6 +14,7 @@ const NOTES: { version: string; items: string[] }[] = [
     version: '1.0.5',
     items: [
       '랭크 이미지 추가',
+      '1p 2p 랜덤 표시'
     ],
   },
   {
