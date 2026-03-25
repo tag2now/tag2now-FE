@@ -24,9 +24,9 @@ function CharCell({ name, rankInfo, wins, losses }: CharCellProps) {
           {url && <img src={url} alt={name} className="w-13 h-13 sm:w-15 sm:h-15 object-contain" />}
         {winRate != null && (
             <div className="hidden w-3/10 sm:block text-[1rem] leading-tight whitespace-nowrap text-left">
-                <span className="text-green-700">W </span>{wins} <span className="text-red-700">L </span>{losses}
+                <span className="text-primary">W </span>{wins} <span className="text-accent">L </span>{losses}
                 <br />
-                <span className="text-gray-600">WR:</span>{winRate}%
+                <span className="text-txt-dim">WR:</span>{winRate}%
             </div>
         )}
         </div>

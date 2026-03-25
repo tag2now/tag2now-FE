@@ -56,7 +56,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="제목"
-        className="w-full bg-bg-row border border-border-light rounded px-3 py-2 mb-3 text-[0.9rem] text-txt font-sans outline-none focus:border-primary"
+        className="w-full bg-bg-row border border-border-light rounded px-3 py-2 mb-3 text-[0.9rem] text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
       />
 
       <textarea
@@ -64,14 +64,14 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         onChange={(e) => setBody(e.target.value)}
         placeholder="내용을 입력하세요... (최대 1000자)"
         rows={6}
-        className="w-full bg-bg-row border border-border-light rounded p-3 text-[0.9rem] text-txt font-sans resize-vertical outline-none focus:border-primary"
+        className="w-full bg-bg-row border border-border-light rounded p-3 text-[0.9rem] text-txt font-sans resize-vertical outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
       />
       <div className="text-right text-[0.75rem] text-txt-dim mt-1">{body.length}/1000</div>
 
       <div className="flex justify-end gap-2 mt-3">
         <button
           onClick={onCancel}
-          className="px-4 py-1.5 bg-red-600 text-gray-200 border border-border-light font-bold text-[0.85rem] uppercase tracking-wider rounded cursor-pointer hover:text-txt"
+          className="px-4 py-1.5 bg-error text-txt border border-border-light font-bold text-[0.85rem] uppercase tracking-wider rounded cursor-pointer hover:text-txt"
         >
           취소
         </button>
