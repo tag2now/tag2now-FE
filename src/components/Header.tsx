@@ -60,7 +60,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
           </h1>
           <span className="absolute top-[76%] right-[4%]">v{APP_VERSION}</span>
         </div>
-        <div className="inline-flex items-center flex-col sm:flex-row sm:gap-2 text-[0.95rem] font-bold">
+        <div className="inline-flex items-center flex-col sm:flex-row sm:gap-2 text-base font-bold">
           <div className="inline-flex items-center gap-1.5 tracking-[0.2em] uppercase text-accent">
             <span className="w-1.75 h-1.75 rounded-full bg-accent animate-[blink_1.6s_ease-in-out_infinite]" />
             Live
@@ -107,7 +107,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
                         <RankImage rankInfo={char.rank_info} className="h-7 sm:h-8 w-auto" />
                       )}
                       <img src={charImageUrl(char.name)!} alt={char.name} className="h-7 sm:h-11 rounded" />
-                      <div className="hidden sm:flex flex-col items-start font-semibold text-[1.15rem]">
+                      <div className="hidden sm:flex flex-col items-start font-semibold text-lg">
                         <span>W{char.wins}</span>
                         <span>L{char.losses}</span>
                       </div>

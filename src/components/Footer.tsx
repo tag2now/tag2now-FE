@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="text-center text-sm text-txt-dim py-4 mt-4">
       버그/개선 제보<span className="font-bold">@doStudy</span>
         <br/>
-        <span className="text-[0.7rem]">doStudy 플레이 단점도 제보 가능</span>
+        <span className="text-2xs">doStudy 플레이 단점도 제보 가능</span>
     </footer>
   )
 }

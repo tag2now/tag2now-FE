@@ -13,12 +13,11 @@
   --color-secondary: #c9a84c;
   --color-secondary-light: #f0d070;
   --color-accent: #c8302e;
-  --color-error: #c8102e;
+  --color-error: #e8384f;
   --color-silver: #c0c0c0;
   --color-bronze: #cd7f32;
   --color-txt: #dde0f0;
-  --color-txt-dim: #6870a0;
-  --color-border: #1e1e32;
+  --color-txt-dim: #8088b8;
   --color-primary-hover: rgba(0, 200, 212, 0.07);
   --color-tier-green: #4ade80;
   --color-tier-yellow: #facc15;
@@ -26,7 +25,14 @@
   --color-tier-red: #f87171;
   --color-tier-blue: #60a5fa;
   --color-tier-purple: #c084fc;
+  --color-border: #1e1e32;
   --color-border-light: #2a2a42;
+  --font-size-2xs: 0.7rem;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.85rem;
+  --font-size-base: 0.95rem;
+  --font-size-md: 1.05rem;
+  --font-size-lg: 1.15rem;
   --font-sans: 'Rajdhani', sans-serif;
   --font-display: 'Orbitron', sans-serif;
 }
@@ -107,11 +113,11 @@
   }
 
   .panel-meta {
-    @apply m-0 mb-2 text-[0.78rem] font-semibold tracking-[0.12em] uppercase text-txt-dim;
+    @apply m-0 mb-2 text-xs font-semibold tracking-[0.12em] uppercase text-txt-dim;
   }
 
   .state-msg {
-    @apply m-0 py-7 text-center text-[0.88rem] font-semibold tracking-[0.12em] uppercase text-txt-dim;
+    @apply m-0 py-7 text-center text-sm font-semibold tracking-[0.12em] uppercase text-txt-dim;
   }
 
   .state-msg.error {
@@ -119,7 +125,7 @@
   }
 
   .tbl-th {
-    @apply bg-primary text-white font-sans text-[0.86rem] font-bold tracking-[0.14em] uppercase px-3.5 py-2 text-center whitespace-nowrap border-b-2 border-primary-dim;
+    @apply bg-primary text-white font-sans text-sm font-bold tracking-[0.14em] uppercase px-3.5 py-2 text-center whitespace-nowrap border-b-2 border-primary-dim;
   }
 
   .tbl-row {
@@ -127,19 +133,19 @@
   }
 
   .tbl-td {
-    @apply px-2.5 py-2 text-[0.95rem] text-txt whitespace-nowrap text-center;
+    @apply px-2.5 py-2 text-base text-txt whitespace-nowrap text-center;
   }
 
   .player-name {
-    @apply px-2.5 py-2 text-[0.95rem] font-bold text-white tracking-[0.03em] max-w-28 overflow-hidden text-ellipsis whitespace-nowrap text-center;
+    @apply px-2.5 py-2 text-base font-bold text-white tracking-[0.03em] max-w-28 overflow-hidden text-ellipsis whitespace-nowrap text-center;
   }
 
   .char-td {
-    @apply text-secondary text-[0.88rem] font-semibold max-w-17.5 md:max-w-none text-center py-2;
+    @apply text-secondary text-sm font-semibold max-w-17.5 md:max-w-none text-center py-2;
   }
 
   .char-rank {
-    @apply text-[0.90rem] font-bold text-txt-dim whitespace-nowrap overflow-hidden text-ellipsis ;
+    @apply text-base font-bold text-txt-dim whitespace-nowrap overflow-hidden text-ellipsis;
   }
 
   .tier-heading {
@@ -151,7 +157,7 @@
   }
 
   .tab-btn {
-    @apply relative px-[22px] py-[9px] bg-transparent border border-transparent border-b-0 font-sans text-[0.9rem] font-bold tracking-[0.12em] uppercase cursor-pointer transition-colors duration-150 -bottom-px text-txt-dim hover:text-txt;
+    @apply relative px-[22px] py-[9px] bg-transparent border border-transparent border-b-0 font-sans text-base font-bold tracking-[0.12em] uppercase cursor-pointer transition-colors duration-150 -bottom-px text-txt-dim hover:text-txt;
   }
 
   .tab-btn.active {
@@ -159,7 +165,7 @@
   }
 
   .refresh-btn {
-    @apply ml-auto mb-1 px-2.5 py-0.5 bg-transparent border border-primary-dim text-primary font-sans text-[0.8rem] font-bold tracking-[0.14em] uppercase cursor-pointer transition-all duration-150 hover:bg-primary-glow hover:border-primary hover:text-white hover:shadow-[0_0_8px_var(--color-primary-glow)];
+    @apply ml-auto mb-1 px-2.5 py-0.5 bg-transparent border border-primary-dim text-primary font-sans text-sm font-bold tracking-[0.14em] uppercase cursor-pointer transition-all duration-150 hover:bg-primary-glow hover:border-primary hover:text-white hover:shadow-[0_0_8px_var(--color-primary-glow)];
   }
 
   .loading-bar {

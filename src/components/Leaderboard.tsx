@@ -23,7 +23,7 @@ function CharCell({ name, rankInfo, wins, losses }: CharCellProps) {
           <RankImage rankInfo={rankInfo} className="char-rank sm:max-w-none w-6/10 sm:w-5/20 h-auto" />
           {url && <img src={url} alt={name} className="w-13 h-13 sm:w-15 sm:h-15 object-contain" />}
         {winRate != null && (
-            <div className="hidden w-3/10 sm:block text-[1rem] leading-tight whitespace-nowrap text-left">
+            <div className="hidden w-3/10 sm:block text-md leading-tight whitespace-nowrap text-left">
                 <span className="text-primary">W </span>{wins} <span className="text-accent">L </span>{losses}
                 <br />
                 <span className="text-txt-dim">WR:</span>{winRate}%
@@ -74,7 +74,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
           <tbody>
             {data.entries.map((e) => (
               <tr key={e.np_id} className="tbl-row">
-                <td className={`tbl-td font-display text-[0.78rem] font-bold w-11 ${RANK_COLORS[e.rank] ?? ''}`}>
+                <td className={`tbl-td font-display text-xs font-bold w-11 ${RANK_COLORS[e.rank] ?? ''}`}>
                   {e.rank}
                 </td>
                 <td className="player-name">{e.online_name}</td>
