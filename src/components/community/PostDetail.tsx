@@ -113,7 +113,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="댓글을 입력하세요..."
-          className="flex-1 bg-bg-row border border-border-light rounded px-3 py-2 text-[0.85rem] text-txt font-sans outline-none focus:border-primary"
+          className="flex-1 bg-bg-row border border-border-light rounded px-3 py-2 text-[0.85rem] text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           onKeyDown={(e) => e.key === 'Enter' && handleComment()}
         />
         <button

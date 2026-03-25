@@ -19,6 +19,13 @@
   --color-txt: #dde0f0;
   --color-txt-dim: #6870a0;
   --color-border: #1e1e32;
+  --color-primary-hover: rgba(0, 200, 212, 0.07);
+  --color-tier-green: #4ade80;
+  --color-tier-yellow: #facc15;
+  --color-tier-orange: #fb923c;
+  --color-tier-red: #f87171;
+  --color-tier-blue: #60a5fa;
+  --color-tier-purple: #c084fc;
   --color-border-light: #2a2a42;
   --font-sans: 'Rajdhani', sans-serif;
   --font-display: 'Orbitron', sans-serif;
@@ -116,7 +123,7 @@
   }
 
   .tbl-row {
-    @apply border-b border-border transition-colors duration-100 even:bg-bg-row-alt hover:bg-[rgba(0,200,212,0.07)];
+    @apply border-b border-border transition-colors duration-100 even:bg-bg-row-alt hover:bg-primary-hover;
   }
 
   .tbl-td {

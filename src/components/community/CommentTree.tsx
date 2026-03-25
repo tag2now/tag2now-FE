@@ -37,7 +37,7 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
   const visualDepth = Math.min(depth, 3)
 
   return (
-    <div style={{ marginLeft: visualDepth > 0 ? 20 : 0 }} className="border-l border-border-light pl-3 py-2">
+    <div className={`${visualDepth > 0 ? 'ml-5' : ''} border-l border-border-light pl-3 py-2`}>
       <div className="flex items-center gap-2 text-[0.8rem] text-txt-dim mb-1">
         <AuthorBadge name={comment.author} entries={leaderboardEntries} />
         <span>{relativeTime(comment.created_at)}</span>
@@ -57,7 +57,7 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="답글을 입력하세요..."
-            className="flex-1 bg-bg-row border border-border-light rounded px-2 py-1 text-[0.85rem] text-txt font-sans outline-none focus:border-primary"
+            className="flex-1 bg-bg-row border border-border-light rounded px-2 py-1 text-[0.85rem] text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
             onKeyDown={(e) => e.key === 'Enter' && handleSubmitReply()}
           />
           <button

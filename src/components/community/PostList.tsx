@@ -67,7 +67,7 @@ export default function PostList({
             <button
               key={post.id}
               onClick={() => onSelectPost(post.id)}
-              className="w-full text-left bg-bg-row border border-border rounded px-3 py-2 cursor-pointer transition-colors hover:bg-[rgba(0,200,212,0.07)] hover:border-primary-dim flex items-center gap-2"
+              className="w-full text-left bg-bg-row border border-border rounded px-3 py-2 cursor-pointer transition-colors hover:bg-primary-hover hover:border-primary-dim flex items-center gap-2"
             >
               <span className="w-14 shrink-0 flex items-center justify-center">
                 <PostTypeBadge postType={post.post_type} />
