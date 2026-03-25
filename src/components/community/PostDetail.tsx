@@ -59,7 +59,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
     <div className="p-4">
       <button
         onClick={onBack}
-        className="mb-4 bg-transparent border-0 text-primary text-[0.85rem] font-bold uppercase tracking-wider cursor-pointer hover:text-white"
+        className="mb-4 bg-transparent border-0 text-primary text-sm font-bold uppercase tracking-wider cursor-pointer hover:text-white"
       >
         &larr; 목록
       </button>
@@ -67,39 +67,39 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <PostTypeBadge postType={post.post_type} size="md" />
-          <span className="text-[0.8rem] text-txt-dim">{relativeTime(post.created_at)}</span>
+          <span className="text-sm text-txt-dim">{relativeTime(post.created_at)}</span>
           {username && post.author === username && (
             <button
               onClick={handleDelete}
-              className="ml-auto bg-transparent border border-error text-error text-[0.75rem] font-bold uppercase tracking-wider px-2 py-0.5 rounded cursor-pointer hover:bg-error hover:text-white"
+              className="ml-auto bg-transparent border border-error text-error text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded cursor-pointer hover:bg-error hover:text-white"
             >
               삭제
             </button>
           )}
         </div>
-        <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-[0.8rem] mb-2" />
-        <h3 className="m-0 mb-2 text-[1.1rem] font-bold text-white">{post.title}</h3>
-        <p className="m-0 text-[0.95rem] text-txt whitespace-pre-wrap wrap-break-word">{post.body}</p>
+        <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-sm mb-2" />
+        <h3 className="m-0 mb-2 text-md font-bold text-white break-words">{post.title}</h3>
+        <p className="m-0 text-base text-txt whitespace-pre-wrap wrap-break-word">{post.body}</p>
       </div>
 
       <div className="flex gap-3 mb-4 pb-4 border-b border-border-light">
         <button
           onClick={() => handleThumb('up')}
           disabled={thumbing}
-          className="flex items-center gap-1 bg-transparent border border-primary text-primary px-3 py-1 rounded cursor-pointer text-[0.85rem] font-bold disabled:opacity-50"
+          className="flex items-center gap-1 bg-transparent border border-primary text-primary px-3 py-1 rounded cursor-pointer text-sm font-bold disabled:opacity-50"
         >
           <span>&#9650;</span> {post.thumbs_up}
         </button>
         <button
           onClick={() => handleThumb('down')}
           disabled={thumbing}
-          className="flex items-center gap-1 bg-transparent border border-border-light text-txt-dim px-3 py-1 rounded cursor-pointer text-[0.85rem] font-bold hover:border-error hover:text-error disabled:opacity-50"
+          className="flex items-center gap-1 bg-transparent border border-border-light text-txt-dim px-3 py-1 rounded cursor-pointer text-sm font-bold hover:border-error hover:text-error disabled:opacity-50"
         >
           <span>&#9660;</span> {post.thumbs_down}
         </button>
       </div>
 
-      <h4 className="m-0 mb-3 text-[0.85rem] font-bold uppercase tracking-wider text-txt-dim">
+      <h4 className="m-0 mb-3 text-sm font-bold uppercase tracking-wider text-txt-dim">
         댓글 ({post.comments.length})
       </h4>
 
@@ -113,13 +113,13 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="댓글을 입력하세요..."
-          className="flex-1 bg-bg-row border border-border-light rounded px-3 py-2 text-[0.85rem] text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+          className="flex-1 bg-bg-row border border-border-light rounded px-3 py-2 text-sm text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           onKeyDown={(e) => e.key === 'Enter' && handleComment()}
         />
         <button
           onClick={handleComment}
           disabled={submitting || !commentText.trim()}
-          className="px-4 py-2 bg-primary text-white text-[0.85rem] font-bold border-0 rounded cursor-pointer disabled:opacity-50"
+          className="px-4 py-2 bg-primary text-white text-sm font-bold border-0 rounded cursor-pointer disabled:opacity-50"
         >
           {submitting ? '...' : '작성'}
         </button>

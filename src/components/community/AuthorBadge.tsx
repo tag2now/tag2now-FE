@@ -15,7 +15,7 @@ export default function AuthorBadge({ name, entries, className }: AuthorBadgePro
     <span className={`inline-flex items-center gap-1 ${className ?? ''}`}>
       <RankImage rankInfo={rankInfo} className="h-4 w-auto" />
       {entry && <span className="text-accent font-bold">#{entry.rank}</span>}
-      <span className="font-bold">{name}</span>
+      <span className="font-bold truncate max-w-20 sm:max-w-none">{name}</span>
     </span>
   )
 }

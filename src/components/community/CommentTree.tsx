@@ -37,15 +37,15 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
   const visualDepth = Math.min(depth, 3)
 
   return (
-    <div className={`${visualDepth > 0 ? 'ml-5' : ''} border-l border-border-light pl-3 py-2`}>
-      <div className="flex items-center gap-2 text-[0.8rem] text-txt-dim mb-1">
+    <div className={`${visualDepth > 0 ? 'ml-3 sm:ml-5' : ''} border-l border-border-light pl-3 py-2`}>
+      <div className="flex items-center gap-2 text-sm text-txt-dim mb-1">
         <AuthorBadge name={comment.author} entries={leaderboardEntries} />
         <span>{relativeTime(comment.created_at)}</span>
       </div>
-      <p className="m-0 text-[0.9rem] text-txt whitespace-pre-wrap break-words">{comment.body}</p>
+      <p className="m-0 text-base text-txt whitespace-pre-wrap break-words">{comment.body}</p>
       <button
         onClick={() => setReplying(!replying)}
-        className="mt-1 bg-transparent border-0 text-txt-dim text-[0.75rem] font-bold uppercase tracking-wider cursor-pointer hover:text-primary"
+        className="mt-1 bg-transparent border-0 text-txt-dim text-xs font-bold uppercase tracking-wider cursor-pointer hover:text-primary"
       >
         {replying ? '취소' : '답글'}
       </button>
@@ -57,13 +57,13 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="답글을 입력하세요..."
-            className="flex-1 bg-bg-row border border-border-light rounded px-2 py-1 text-[0.85rem] text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+            className="flex-1 bg-bg-row border border-border-light rounded px-2 py-1 text-sm text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
             onKeyDown={(e) => e.key === 'Enter' && handleSubmitReply()}
           />
           <button
             onClick={handleSubmitReply}
             disabled={submitting || !replyText.trim()}
-            className="px-3 py-1 bg-primary text-white text-[0.8rem] font-bold border-0 rounded cursor-pointer disabled:opacity-50"
+            className="px-3 py-1 bg-primary text-white text-sm font-bold border-0 rounded cursor-pointer disabled:opacity-50"
           >
             {submitting ? '...' : '작성'}
           </button>

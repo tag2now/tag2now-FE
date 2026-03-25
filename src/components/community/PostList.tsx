@@ -34,7 +34,7 @@ export default function PostList({
             <button
               key={t}
               onClick={() => onPostTypeChange(t === 'all' ? '' : t)}
-              className={`px-3 py-1 text-[0.78rem] font-bold uppercase tracking-wider border rounded cursor-pointer transition-colors ${
+              className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border rounded cursor-pointer transition-colors ${
                 active ? 'bg-primary text-white border-primary' : 'bg-transparent text-txt-dim border-border-light hover:text-txt'
               }`}
             >
@@ -44,7 +44,7 @@ export default function PostList({
         })}
         <button
           onClick={onWrite}
-          className="ml-auto px-3 py-1 bg-secondary text-bg-deep text-[0.8rem] font-bold uppercase tracking-wider border-0 rounded cursor-pointer hover:bg-secondary-light"
+          className="ml-auto px-3 py-1 bg-secondary text-bg-deep text-sm font-bold uppercase tracking-wider border-0 rounded cursor-pointer hover:bg-secondary-light"
         >
           글쓰기
         </button>
@@ -72,16 +72,16 @@ export default function PostList({
               <span className="w-14 shrink-0 flex items-center justify-center">
                 <PostTypeBadge postType={post.post_type} />
               </span>
-              <span className="flex-1 min-w-0 text-[0.9rem] text-white font-bold truncate">
+              <span className="flex-1 min-w-0 text-base text-white font-bold truncate">
                 {post.title}
               </span>
-              <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-[0.78rem] shrink-0" />
-              <span className="flex gap-2 text-[0.75rem] text-txt-dim shrink-0">
+              <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-xs shrink-0" />
+              <span className="hidden sm:flex gap-2 text-xs text-txt-dim shrink-0">
                 <span className="text-primary">&#9650; {post.thumbs_up}</span>
                 <span>&#9660; {post.thumbs_down}</span>
                 <span>&#128172; {post.comment_count}</span>
               </span>
-              <span className="text-[0.75rem] text-txt-dim shrink-0">{relativeTime(post.created_at)}</span>
+              <span className="hidden sm:inline text-xs text-txt-dim shrink-0">{relativeTime(post.created_at)}</span>
             </button>
           ))}
         </div>
@@ -92,17 +92,17 @@ export default function PostList({
           <button
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-[0.8rem] font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
+            className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-sm font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
           >
             이전
           </button>
-          <span className="text-[0.8rem] text-txt-dim">
+          <span className="text-sm text-txt-dim">
             {page} / {totalPages}
           </span>
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-[0.8rem] font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
+            className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-sm font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
           >
             다음
           </button>
