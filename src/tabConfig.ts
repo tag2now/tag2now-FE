@@ -1,6 +1,6 @@
 export const GROUP_LABELS: Record<string, string> = {
   player_match: '플매',
-  rank_match: '랭크매치',
+  rank_match: '랭매',
 }
 
 export const GROUP_ORDER: readonly string[] = ['rank_match', 'player_match']

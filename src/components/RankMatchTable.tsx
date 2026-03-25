@@ -36,7 +36,7 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
         <thead>
           <tr>
             <th className="tbl-th w-4/20 ">Rank</th>
-            <th className="tbl-th w-2/20 text-center">Status</th>
+            <th className="tbl-th w-2/20 text-center"></th>
             <th className="tbl-th w-6/20">User 1</th>
             <th className="tbl-th w-6/20">User 2</th>
           </tr>
@@ -52,7 +52,7 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
                 return (
                 <tr key={r.room_id} className="tbl-row">
                   <td className="tbl-td flex justify-center">
-                    <RankImage rankInfo={r.rank_info} className="h-9 w-auto" />
+                    <RankImage rankInfo={r.rank_info} className="min-w-19.75 h-9 w-auto" />
                   </td>
                   <td className="tbl-td">
                     <span className={`flex items-center justify-center ${inGame ? 'text-green-400' : 'text-yellow-400'}`} title={inGame ? '게임 중' : '찾는 중'} aria-label={inGame ? '게임 중' : '찾는 중'}>

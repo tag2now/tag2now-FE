@@ -26,7 +26,7 @@ export default function PostList({
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   return (
-    <div className="p-4">
+    <div>
       <div className="flex items-center gap-2 mb-3">
         {['all', '자유', '랭매구인'].map((t) => {
           const active = (t === 'all' && !postType) || postType === t
@@ -72,14 +72,15 @@ export default function PostList({
               <span className="w-14 shrink-0 flex items-center justify-center">
                 <PostTypeBadge postType={post.post_type} />
               </span>
-              <span className="flex-1 min-w-0 text-base text-white font-bold truncate">
-                {post.title}
-              </span>
-              <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-xs shrink-0" />
+              <div className="flex flex-1 min-w-0 items-center font-bold">
+                <span className="text-sm text-white truncate">{post.title}</span>
+                { post.comment_count > 0 && (<span className="text-gray-400">[{post.comment_count}]</span>)}
+              </div>
+              <AuthorBadge name={post.author} entries={leaderboardEntries} className="hidden! sm:flex!  shrink-0" />
+              <span className="sm:hidden text-xs truncate max-w-20 sm:max-w-none">{post.author}</span>
               <span className="hidden sm:flex gap-2 text-xs text-txt-dim shrink-0">
                 <span className="text-primary">&#9650; {post.thumbs_up}</span>
                 <span>&#9660; {post.thumbs_down}</span>
-                <span>&#128172; {post.comment_count}</span>
               </span>
               <span className="hidden sm:inline text-xs text-txt-dim shrink-0">{relativeTime(post.created_at)}</span>
             </button>

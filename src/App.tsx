@@ -23,7 +23,7 @@ export default function App() {
 
   const tabs = useMemo(
     () => [...groupKeys.map((k) => ({ key: k, label: `${formatGroupName(k)} (${groups[k].length})` })),
-           { key: 'leaderboard', label: 'Leaderboard' },
+           { key: 'leaderboard', label: '리더보드' },
            { key: 'community', label: '커뮤니티' }],
     [groupKeys, groups],
   )
@@ -41,7 +41,7 @@ export default function App() {
       <PatchNotes />
       <Header totalUsers={rooms.data?.totalUsers} leaderboardEntries={lb.data?.entries} />
 
-      <nav className="flex items-end flex-nowrap gap-0.5 mt-5 border-b border-border-light pb-0 overflow-x-auto overflow-y-hidden whitespace-nowrap">
+      <nav className="flex items-end flex-nowrap mt-5 border-b border-border-light pb-0 overflow-x-auto overflow-y-hidden whitespace-nowrap">
         {tabs.map((t) => (
           <button
             key={t.key}
