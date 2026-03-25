@@ -61,12 +61,12 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
           <span className="absolute top-[76%] right-[4%]">v{APP_VERSION}</span>
         </div>
         <div className="inline-flex items-center flex-col sm:flex-row sm:gap-2 text-[0.95rem] font-bold">
-          <div className="inline-flex items-center gap-1.5 tracking-[0.2em] uppercase text-red-500">
-            <span className="w-1.75 h-1.75 rounded-full bg-red-500 animate-[blink_1.6s_ease-in-out_infinite]" />
+          <div className="inline-flex items-center gap-1.5 tracking-[0.2em] uppercase text-accent">
+            <span className="w-1.75 h-1.75 rounded-full bg-accent animate-[blink_1.6s_ease-in-out_infinite]" />
             Live
           </div>
           {totalUsers != null && totalUsers > 0 && (
-            <span className="tracking-wide text-red-500">
+            <span className="tracking-wide text-accent">
               {totalUsers} online
             </span>
           )}
@@ -82,8 +82,8 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') commitUsername().then() }}
             onBlur={commitUsername}
-            placeholder="Enter username"
-            className="bg-surface border border-border-light rounded px-2 py-0.5 mt-1 text-text-primary text-base w-36 outline-none focus:border-accent"
+            placeholder="유저명 입력"
+            className="bg-bg-row border border-border-light rounded px-2 py-0.5 mt-1 text-txt text-base w-36 outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-primary"
           />
         ) : username ? (
           <div className="flex flex-col sm:flex-row sm:gap-2 items-center">
@@ -91,7 +91,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
               <span className="text-accent font-bold">#{entry?.rank || "Unranked"}</span>
               <button
                   onClick={startEditing}
-                  className="text-text-secondary hover:text-text-primary transition-colors cursor-pointer bg-transparent border-none p-0 flex items-center gap-1"
+                  className="text-txt-dim hover:text-txt transition-colors cursor-pointer bg-transparent border-none p-0 flex items-center gap-1"
               >
                 <span className="truncate max-w-24 sm:max-w-none font-semibold">{username}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
@@ -119,9 +119,9 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
         ) : (
           <button
             onClick={startEditing}
-            className="text-text-secondary text-xl font-semibold hover:text-text-primary transition-colors cursor-pointer bg-transparent border-2 rounded-sm mt-1 px-1"
+            className="text-txt-dim text-xl font-semibold hover:text-txt transition-colors cursor-pointer bg-transparent border-2 rounded-sm mt-1 px-1"
           >
-            Set username
+            유저명 설정
           </button>
         )}
       </div>
