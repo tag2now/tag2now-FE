@@ -33,6 +33,7 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
   return (
     <div className="w-full overflow-x-auto">
       <table className="border-collapse w-full min-w-85">
+        <caption className="sr-only">Rank match rooms</caption>
         <thead>
           <tr>
             <th className="tbl-th w-4/20 ">Rank</th>

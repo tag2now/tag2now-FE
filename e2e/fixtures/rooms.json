@@ -1,0 +1,35 @@
+{
+  "rank_match": [
+    {
+      "room_id": 1001,
+      "owner_online_name": "TTT2_Master",
+      "rank_info": { "id": 1, "name": "Tekken Lord", "tier": "S" },
+      "max_slots": 2,
+      "users": [
+        { "online_name": "TTT2_Master", "user_id": "u001" },
+        { "online_name": "KingOfIronFist", "user_id": "u002" }
+      ]
+    },
+    {
+      "room_id": 1002,
+      "owner_online_name": "TagComboKing",
+      "rank_info": { "id": 2, "name": "Warrior", "tier": "B" },
+      "max_slots": 2,
+      "users": [
+        { "online_name": "TagComboKing", "user_id": "u003" }
+      ]
+    }
+  ],
+  "player_match": [
+    {
+      "room_id": 2001,
+      "owner_online_name": "BearPunchPro",
+      "max_slots": 4,
+      "users": [
+        { "online_name": "BearPunchPro", "user_id": "u004" },
+        { "online_name": "NewChallenger", "user_id": "u005" },
+        { "online_name": "GuestPlayer1", "user_id": "u006" }
+      ]
+    }
+  ]
+}

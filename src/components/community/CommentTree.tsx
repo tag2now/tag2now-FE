@@ -57,13 +57,14 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="답글을 입력하세요..."
+            aria-label="답글 입력"
             className="flex-1 bg-bg-row border border-border-light rounded px-2 py-1 text-sm text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
             onKeyDown={(e) => e.key === 'Enter' && handleSubmitReply()}
           />
           <button
             onClick={handleSubmitReply}
             disabled={submitting || !replyText.trim()}
-            className="px-3 py-1 bg-primary text-white text-sm font-bold border-0 rounded cursor-pointer disabled:opacity-50"
+            className="btn-primary px-3 py-1"
           >
             {submitting ? '...' : '작성'}
           </button>

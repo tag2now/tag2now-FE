@@ -42,8 +42,11 @@ export default function PatchNotes() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={close}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={close} role="presentation">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="patch-notes-title"
         className="relative bg-bg-panel border border-border-light rounded-lg max-w-md w-[90%] p-6 shadow-lg"
         onClick={e => e.stopPropagation()}
       >
@@ -55,7 +58,7 @@ export default function PatchNotes() {
           &times;
         </button>
 
-        <h2 className="font-display text-lg font-bold text-secondary m-0 mb-4 tracking-wide uppercase">
+        <h2 id="patch-notes-title" className="font-display text-lg font-bold text-secondary m-0 mb-4 tracking-wide uppercase">
           Patch Notes
         </h2>
 

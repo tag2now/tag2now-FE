@@ -71,7 +71,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           {username && post.author === username && (
             <button
               onClick={handleDelete}
-              className="ml-auto bg-transparent border border-error text-error text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded cursor-pointer hover:bg-error hover:text-white"
+              className="btn-danger ml-auto uppercase tracking-wider"
             >
               삭제
             </button>
@@ -86,16 +86,18 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
         <button
           onClick={() => handleThumb('up')}
           disabled={thumbing}
+          aria-label={`Upvote (${post.thumbs_up})`}
           className="flex items-center gap-1 bg-transparent border border-primary text-primary px-3 py-1 rounded cursor-pointer text-sm font-bold disabled:opacity-50"
         >
-          <span>&#9650;</span> {post.thumbs_up}
+          <span aria-hidden="true">&#9650;</span> {post.thumbs_up}
         </button>
         <button
           onClick={() => handleThumb('down')}
           disabled={thumbing}
+          aria-label={`Downvote (${post.thumbs_down})`}
           className="flex items-center gap-1 bg-transparent border border-border-light text-txt-dim px-3 py-1 rounded cursor-pointer text-sm font-bold hover:border-error hover:text-error disabled:opacity-50"
         >
-          <span>&#9660;</span> {post.thumbs_down}
+          <span aria-hidden="true">&#9660;</span> {post.thumbs_down}
         </button>
       </div>
 
@@ -113,13 +115,14 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="댓글을 입력하세요..."
+          aria-label="댓글 입력"
           className="flex-1 bg-bg-row border border-border-light rounded px-3 py-2 text-sm text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           onKeyDown={(e) => e.key === 'Enter' && handleComment()}
         />
         <button
           onClick={handleComment}
           disabled={submitting || !commentText.trim()}
-          className="px-4 py-2 bg-primary text-white text-sm font-bold border-0 rounded cursor-pointer disabled:opacity-50"
+          className="btn-primary"
         >
           {submitting ? '...' : '작성'}
         </button>

@@ -41,10 +41,12 @@ export default function App() {
       <PatchNotes />
       <Header totalUsers={rooms.data?.totalUsers} leaderboardEntries={lb.data?.entries} />
 
-      <nav className="flex items-end flex-nowrap mt-5 border-b border-border-light pb-0 overflow-x-auto overflow-y-hidden whitespace-nowrap">
+      <nav className="flex items-end flex-nowrap mt-5 border-b border-border-light pb-0 overflow-x-auto overflow-y-hidden whitespace-nowrap" role="tablist" aria-label="Main navigation">
         {tabs.map((t) => (
           <button
             key={t.key}
+            role="tab"
+            aria-selected={activeTab === t.key}
             onClick={() => setTab(t.key)}
             className={`tab-btn${activeTab === t.key ? ' active' : ''}`}
           >

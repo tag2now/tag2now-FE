@@ -1,0 +1,90 @@
+{
+  "total_records": 5,
+  "entries": [
+    {
+      "np_id": "np_001",
+      "online_name": "TTT2_Master",
+      "player_info": {
+        "main_char_info": {
+          "name": "Jin",
+          "rank_info": { "name": "Tekken Lord", "tier": "S" },
+          "wins": 320,
+          "losses": 45
+        },
+        "sub_char_info": {
+          "name": "Devil Jin",
+          "rank_info": { "name": "Tekken Emperor", "tier": "S" },
+          "wins": 210,
+          "losses": 30
+        }
+      }
+    },
+    {
+      "np_id": "np_002",
+      "online_name": "KingOfIronFist",
+      "player_info": {
+        "main_char_info": {
+          "name": "Kazuya",
+          "rank_info": { "name": "Vanquisher", "tier": "A" },
+          "wins": 250,
+          "losses": 80
+        },
+        "sub_char_info": {
+          "name": "Heihachi",
+          "rank_info": { "name": "Destroyer", "tier": "A" },
+          "wins": 180,
+          "losses": 60
+        }
+      }
+    },
+    {
+      "np_id": "np_003",
+      "online_name": "TagComboKing",
+      "player_info": {
+        "main_char_info": {
+          "name": "Lars",
+          "rank_info": { "name": "Warrior", "tier": "B" },
+          "wins": 150,
+          "losses": 120
+        },
+        "sub_char_info": {
+          "name": "Alisa",
+          "rank_info": { "name": "Brawler", "tier": "B" },
+          "wins": 100,
+          "losses": 90
+        }
+      }
+    },
+    {
+      "np_id": "np_004",
+      "online_name": "BearPunchPro",
+      "player_info": {
+        "main_char_info": {
+          "name": "Kuma",
+          "rank_info": { "name": "Marauder", "tier": "C" },
+          "wins": 80,
+          "losses": 140
+        },
+        "sub_char_info": null
+      }
+    },
+    {
+      "np_id": "np_005",
+      "online_name": "NewChallenger",
+      "player_info": {
+        "main_char_info": {
+          "name": "Law",
+          "rank_info": { "name": "Initiate", "tier": "D" },
+          "wins": 10,
+          "losses": 25
+        },
+        "sub_char_info": {
+          "name": "Paul",
+          "rank_info": { "name": "Initiate", "tier": "D" },
+          "wins": 5,
+          "losses": 15
+        }
+      }
+    }
+  ]
+}

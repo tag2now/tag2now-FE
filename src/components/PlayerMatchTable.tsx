@@ -9,6 +9,7 @@ export default function PlayerMatchTable({ rooms }: PlayerMatchTableProps) {
   return (
     <div className="w-full overflow-x-auto">
       <table className="border-collapse w-full min-w-85">
+        <caption className="sr-only">Player match rooms</caption>
         <thead>
           <tr>
             <th className="tbl-th">#</th>

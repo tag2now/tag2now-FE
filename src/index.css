@@ -195,6 +195,30 @@
     pointer-events: none;
   }
 
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-primary text-white text-sm font-bold border-0 rounded cursor-pointer disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply px-3 py-1 bg-transparent border border-primary text-primary rounded cursor-pointer text-sm font-bold;
+  }
+
+  .btn-danger {
+    @apply px-2 py-0.5 bg-transparent border border-error text-error text-xs font-bold rounded cursor-pointer hover:bg-error hover:text-white;
+  }
+
   .loading-bar::after {
     content: '';
     position: absolute;

@@ -63,6 +63,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
       </div>
       <div className="w-full overflow-x-auto">
         <table className="border-collapse w-full min-w-74.25">
+          <caption className="sr-only">Leaderboard rankings</caption>
           <thead>
             <tr>
               <th className="tbl-th w-1/20 sm:w-2/20">#</th>

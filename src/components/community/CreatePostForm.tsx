@@ -56,6 +56,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="제목"
+        aria-label="게시글 제목"
         className="w-full bg-bg-row border border-border-light rounded px-3 py-2 mb-3 text-base text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
       />
 
@@ -63,6 +64,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder="내용을 입력하세요... (최대 1000자)"
+        aria-label="게시글 내용"
         rows={6}
         className="w-full bg-bg-row border border-border-light rounded p-3 text-base text-txt font-sans resize-vertical outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
       />
@@ -78,7 +80,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         <button
           onClick={handleSubmit}
           disabled={submitting || !title.trim() || !body.trim() || body.length > 1000}
-          className="px-4 py-1.5 bg-primary text-white font-bold text-sm uppercase tracking-wider border-0 rounded cursor-pointer disabled:opacity-50"
+          className="btn-primary px-4 py-1.5 uppercase tracking-wider"
         >
           {submitting ? '작성 중...' : '작성'}
         </button>
