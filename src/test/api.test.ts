@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { fetchLeaderboard, fetchRoomsAll } from '@/shared/api'
+import { fetchLeaderboard } from '@/hooks/useLeaderboard'
+import { fetchRoomsAll} from '@/hooks/useRooms'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -28,7 +29,7 @@ describe('fetchLeaderboard', () => {
   it('calls with top=5 when argument is 5', async () => {
     mockFetch({ total_records: 1, entries: [] })
 
-    await fetchLeaderboard(5)
+    await fetchLeaderboard()
 
     expect(fetch).toHaveBeenCalledWith('/api/leaderboard?top=5')
   })
