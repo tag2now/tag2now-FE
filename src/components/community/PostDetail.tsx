@@ -78,7 +78,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           )}
         </div>
         <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-sm mb-2" />
-        <h3 className="m-0 mb-2 text-md font-bold text-txt break-words">{post.title}</h3>
+        <h2 className="m-0 mb-2 text-md font-bold text-txt break-words">{post.title}</h2>
         <p className="m-0 text-base text-txt whitespace-pre-wrap wrap-break-word">{post.body}</p>
       </div>
 
@@ -86,7 +86,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
         <button
           onClick={() => handleThumb('up')}
           disabled={thumbing}
-          aria-label={`Upvote (${post.thumbs_up})`}
+          aria-label={`추천 ${post.thumbs_up}`}
           className="btn-ghost flex items-center gap-1 disabled:opacity-50"
         >
           <span aria-hidden="true">&#9650;</span> {post.thumbs_up}
@@ -94,16 +94,16 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
         <button
           onClick={() => handleThumb('down')}
           disabled={thumbing}
-          aria-label={`Downvote (${post.thumbs_down})`}
+          aria-label={`비추천 ${post.thumbs_down}`}
           className="flex items-center gap-1 bg-transparent border border-border-light text-txt-dim px-3 py-1 rounded cursor-pointer text-sm font-bold hover:border-error hover:text-error disabled:opacity-50"
         >
           <span aria-hidden="true">&#9660;</span> {post.thumbs_down}
         </button>
       </div>
 
-      <h4 className="m-0 mb-3 text-sm font-bold uppercase tracking-[0.12em] text-txt-dim">
+      <h3 className="m-0 mb-3 text-sm font-bold uppercase tracking-[0.12em] text-txt-dim">
         댓글 ({post.comments.length})
-      </h4>
+      </h3>
 
       {post.comments.length > 0 && (
         <CommentTree comments={post.comments} onReply={handleReply} leaderboardEntries={leaderboardEntries} />

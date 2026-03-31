@@ -34,8 +34,17 @@ export default function PatchNotes() {
 
   useEffect(() => {
     if (!visible) return
-    dialogRef.current?.focus()
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    const dialog = dialogRef.current
+    dialog?.focus()
+
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { close(); return }
+      if (e.key !== 'Tab' || !dialog) return
+      const focusable = dialog.querySelectorAll<HTMLElement>('button, [href], input, [tabindex]:not([tabindex="-1"])')
+      const first = focusable[0], last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() }
+    }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [visible])

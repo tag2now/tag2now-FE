@@ -21,7 +21,7 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
   const rooms = data.rooms ?? []
 
   return (
-    <div className="panel relative">
+    <div className="panel relative" aria-live="polite">
       <LoadingBar visible={refreshing} />
       <div className="panel-meta flex items-center justify-between px-4">
         <span>{rooms.length} room{rooms.length !== 1 ? 's' : ''}</span>

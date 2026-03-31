@@ -69,7 +69,7 @@ export default function App() {
         ))}
       </nav>
 
-      <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
+      <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`} tabIndex={0}>
         {isRoomTab && (
           <Rooms
             data={activeRoomsData}

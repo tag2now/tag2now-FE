@@ -67,6 +67,7 @@ export default function PostList({
             <button
               key={post.id}
               onClick={() => onSelectPost(post.id)}
+              aria-label={`${post.title} — ${post.post_type}`}
               className="w-full text-left bg-bg-row border border-border rounded px-3 py-2 cursor-pointer transition-colors hover:bg-primary-hover hover:border-primary-dim flex items-center gap-2"
             >
               <span className="w-14 shrink-0 flex items-center justify-center">
@@ -93,16 +94,18 @@ export default function PostList({
           <button
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
+            aria-label="이전 페이지"
             className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-sm font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
           >
             이전
           </button>
-          <span className="text-sm text-txt-dim">
+          <span className="text-sm text-txt-dim" aria-live="polite" aria-atomic="true">
             {page} / {totalPages}
           </span>
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
+            aria-label="다음 페이지"
             className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-sm font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
           >
             다음

@@ -51,7 +51,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
   if (!data) return null
 
   return (
-    <div className="panel relative">
+    <div className="panel relative" aria-live="polite">
       <LoadingBar visible={refreshing} />
       <div className="panel-meta flex items-center justify-between px-4">
         <span>Total records: {data.total_records}</span>

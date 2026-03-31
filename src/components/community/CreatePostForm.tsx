@@ -25,7 +25,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
   return (
     <div>
         <div className="flex mb-3 gap-6 items-center">
-            <h3 className="m-0 text-secondary font-bold text-md uppercase tracking-[0.12em]">새 글 작성</h3>
+            <h2 className="m-0 text-secondary font-bold text-md uppercase tracking-[0.12em]">새 글 작성</h2>
             <button
                 onClick={onCancel}
                 className="bg-transparent border-0 text-primary text-sm font-bold uppercase tracking-[0.12em] cursor-pointer hover:text-white"

@@ -80,10 +80,12 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
 
 export default function CommentTree({ comments, onReply, depth = 0, leaderboardEntries }: CommentTreeProps) {
   return (
-    <div>
+    <ul role="list" className="list-none p-0 m-0">
       {comments.map((c) => (
-        <CommentNode key={c.id} comment={c} onReply={onReply} depth={depth} leaderboardEntries={leaderboardEntries} />
+        <li key={c.id}>
+          <CommentNode comment={c} onReply={onReply} depth={depth} leaderboardEntries={leaderboardEntries} />
+        </li>
       ))}
-    </div>
+    </ul>
   )
 }
