@@ -25,10 +25,10 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
   return (
     <div>
         <div className="flex mb-3 gap-6 items-center">
-            <h3 className="m-0 text-secondary font-bold text-md uppercase tracking-wider">새 글 작성</h3>
+            <h3 className="m-0 text-secondary font-bold text-md uppercase tracking-[0.12em]">새 글 작성</h3>
             <button
                 onClick={onCancel}
-                className="bg-transparent border-0 text-primary text-sm font-bold uppercase tracking-wider cursor-pointer hover:text-white"
+                className="bg-transparent border-0 text-primary text-sm font-bold uppercase tracking-[0.12em] cursor-pointer hover:text-white"
             >
                 &larr; 목록
             </button>
@@ -38,7 +38,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
           <button
             key={t}
             onClick={() => setPostType(t)}
-            className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border rounded cursor-pointer transition-colors ${
+            className={`px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] border rounded cursor-pointer transition-colors ${
               postType === t ? 'bg-primary text-white border-primary' : 'bg-transparent text-txt-dim border-border-light hover:text-txt'
             }`}
           >
@@ -73,14 +73,14 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
       <div className="flex justify-end gap-2 mt-3">
         <button
           onClick={onCancel}
-          className="px-4 py-1.5 bg-transparent text-error border border-error font-bold text-sm uppercase tracking-wider rounded cursor-pointer hover:bg-error hover:text-white"
+          className="px-4 py-1.5 bg-transparent text-error border border-error font-bold text-sm uppercase tracking-[0.12em] rounded cursor-pointer hover:bg-error hover:text-white"
         >
           취소
         </button>
         <button
           onClick={handleSubmit}
           disabled={submitting || !title.trim() || !body.trim() || body.length > 1000}
-          className="btn-primary px-4 py-1.5 uppercase tracking-wider"
+          className="btn-primary px-4 py-1.5 uppercase tracking-[0.12em]"
         >
           {submitting ? '작성 중...' : '작성'}
         </button>

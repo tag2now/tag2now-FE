@@ -52,7 +52,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
   const subChar = entry?.player_info?.sub_char_info
 
   return (
-    <header className="app-header relative border-b-2 border-accent pt-2 pb-2 px-3 mb-1 flex justify-between items-center">
+    <header className="app-header relative border-b-2 border-accent py-2 px-3 mb-1 flex justify-between items-center">
       <div className="flex items-center sm:items-baseline gap-3">
         <div className="relative">
           <h1 className="font-display text-[clamp(1.05rem,4vw,1.8rem)] font-black m-0 tracking-wide uppercase">
@@ -61,7 +61,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
           <span className="absolute top-[76%] right-[4%] text-2xs text-txt-dim">v{APP_VERSION}</span>
         </div>
         <div className="inline-flex items-center flex-col sm:flex-row sm:gap-2 text-base font-bold">
-          <div className="inline-flex items-center gap-1.5 tracking-[0.2em] uppercase text-accent">
+          <div className="inline-flex items-center gap-1.5 tracking-[0.14em] uppercase text-accent">
             <span className="w-1.75 h-1.75 rounded-full bg-accent animate-[blink_1.6s_ease-in-out_infinite]" />
             Live
           </div>
@@ -120,7 +120,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
         ) : (
           <button
             onClick={startEditing}
-            className="text-txt-dim text-xl font-semibold hover:text-txt transition-colors cursor-pointer bg-transparent border-2 rounded-sm mt-1 px-1"
+            className="text-txt-dim text-base font-semibold hover:text-txt transition-colors cursor-pointer bg-transparent border border-border-light rounded px-2 py-0.5 mt-1"
           >
             유저명 설정
           </button>

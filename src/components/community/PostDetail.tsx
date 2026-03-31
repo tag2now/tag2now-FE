@@ -59,7 +59,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
     <div>
       <button
         onClick={onBack}
-        className="mb-4 bg-transparent border-0 text-primary text-sm font-bold uppercase tracking-wider cursor-pointer hover:text-white"
+        className="mb-4 bg-transparent border-0 text-primary text-sm font-bold uppercase tracking-[0.12em] cursor-pointer hover:text-white"
       >
         &larr; 목록
       </button>
@@ -71,23 +71,23 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           {username && post.author === username && (
             <button
               onClick={handleDelete}
-              className="btn-danger ml-auto uppercase tracking-wider"
+              className="btn-danger ml-auto uppercase tracking-[0.12em]"
             >
               삭제
             </button>
           )}
         </div>
         <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-sm mb-2" />
-        <h3 className="m-0 mb-2 text-md font-bold text-white break-words">{post.title}</h3>
+        <h3 className="m-0 mb-2 text-md font-bold text-txt break-words">{post.title}</h3>
         <p className="m-0 text-base text-txt whitespace-pre-wrap wrap-break-word">{post.body}</p>
       </div>
 
-      <div className="flex gap-3 mb-4 pb-4 border-b border-border-light">
+      <div className="flex gap-2 mb-4 pb-4 border-b border-border-light">
         <button
           onClick={() => handleThumb('up')}
           disabled={thumbing}
           aria-label={`Upvote (${post.thumbs_up})`}
-          className="flex items-center gap-1 bg-transparent border border-primary text-primary px-3 py-1 rounded cursor-pointer text-sm font-bold disabled:opacity-50"
+          className="btn-ghost flex items-center gap-1 disabled:opacity-50"
         >
           <span aria-hidden="true">&#9650;</span> {post.thumbs_up}
         </button>
@@ -101,7 +101,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
         </button>
       </div>
 
-      <h4 className="m-0 mb-3 text-sm font-bold uppercase tracking-wider text-txt-dim">
+      <h4 className="m-0 mb-3 text-sm font-bold uppercase tracking-[0.12em] text-txt-dim">
         댓글 ({post.comments.length})
       </h4>
 

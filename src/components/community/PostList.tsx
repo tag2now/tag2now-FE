@@ -34,7 +34,7 @@ export default function PostList({
             <button
               key={t}
               onClick={() => onPostTypeChange(t === 'all' ? '' : t)}
-              className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border rounded cursor-pointer transition-colors ${
+              className={`px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] border rounded cursor-pointer transition-colors ${
                 active ? 'bg-primary text-white border-primary' : 'bg-transparent text-txt-dim border-border-light hover:text-txt'
               }`}
             >
@@ -44,7 +44,7 @@ export default function PostList({
         })}
         <button
           onClick={onWrite}
-          className="ml-auto px-3 py-1 bg-secondary text-bg-deep text-sm font-bold uppercase tracking-wider border-0 rounded cursor-pointer hover:bg-secondary-light"
+          className="ml-auto px-3 py-1 bg-secondary text-bg-deep text-sm font-bold uppercase tracking-[0.12em] border-0 rounded cursor-pointer hover:bg-secondary-light"
         >
           글쓰기
         </button>
@@ -73,10 +73,10 @@ export default function PostList({
                 <PostTypeBadge postType={post.post_type} />
               </span>
               <div className="flex flex-1 min-w-0 items-center font-bold">
-                <span className="text-sm text-white truncate">{post.title}</span>
-                { post.comment_count > 0 && (<span className="text-gray-400">[{post.comment_count}]</span>)}
+                <span className="text-sm text-txt truncate">{post.title}</span>
+                { post.comment_count > 0 && (<span className="text-txt-dim">[{post.comment_count}]</span>)}
               </div>
-              <AuthorBadge name={post.author} entries={leaderboardEntries} className="hidden! sm:flex!  shrink-0" />
+              <AuthorBadge name={post.author} entries={leaderboardEntries} className="hidden sm:inline-flex shrink-0" />
               <span className="sm:hidden text-xs truncate max-w-20 sm:max-w-none">{post.author}</span>
               <span className="hidden sm:flex gap-2 text-xs text-txt-dim shrink-0">
                 <span className="text-primary">&#9650; {post.thumbs_up}</span>

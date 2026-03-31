@@ -151,7 +151,7 @@
   }
 
   .char-td {
-    @apply text-secondary text-sm font-semibold max-w-17.5 md:max-w-none text-center py-2;
+    @apply text-secondary text-sm font-semibold max-w-17.5 sm:max-w-none text-center py-2;
   }
 
   .char-rank {

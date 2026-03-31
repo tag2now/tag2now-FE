@@ -76,7 +76,7 @@ export default function PatchNotes() {
 
         {NOTES.map(note => (
           <div key={note.version} className="mb-4">
-            <h3 className="text-primary font-bold text-sm tracking-wider uppercase m-0 mb-2">
+            <h3 className="text-primary font-bold text-sm tracking-[0.12em] uppercase m-0 mb-2">
               v{note.version}
             </h3>
             <ul className="list-disc pl-5 m-0 space-y-1">
@@ -89,7 +89,7 @@ export default function PatchNotes() {
 
         <button
           onClick={dismiss}
-          className="mt-2 w-full py-2 bg-transparent border border-primary-dim text-primary font-sans text-sm font-bold tracking-wider uppercase cursor-pointer transition-all duration-150 hover:bg-primary-glow hover:border-primary hover:text-white rounded"
+          className="refresh-btn w-full ml-0 mb-0 mt-2 rounded"
         >
           다시 보지 않기
         </button>

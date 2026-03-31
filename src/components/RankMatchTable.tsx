@@ -56,7 +56,7 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
                     <RankImage rankInfo={r.rank_info} className="min-w-19.75 h-9 w-auto" />
                   </td>
                   <td className="tbl-td">
-                    <span className={`flex items-center justify-center ${inGame ? 'text-green-400' : 'text-yellow-400'}`} title={inGame ? '게임 중' : '찾는 중'} aria-label={inGame ? '게임 중' : '찾는 중'}>
+                    <span className={`flex items-center justify-center ${inGame ? 'text-tier-green' : 'text-tier-yellow'}`} title={inGame ? '게임 중' : '찾는 중'} aria-label={inGame ? '게임 중' : '찾는 중'}>
                       {inGame ? IconGamepad : IconSearch}
                     </span>
                   </td>
