@@ -23,7 +23,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
   }
 
   return (
-    <div className="p-4">
+    <div>
         <div className="flex mb-3 gap-6 items-center">
             <h3 className="m-0 text-secondary font-bold text-md uppercase tracking-wider">새 글 작성</h3>
             <button
@@ -38,7 +38,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
           <button
             key={t}
             onClick={() => setPostType(t)}
-            className={`px-3 py-1 text-sm font-bold uppercase tracking-wider border rounded cursor-pointer transition-colors ${
+            className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border rounded cursor-pointer transition-colors ${
               postType === t ? 'bg-primary text-white border-primary' : 'bg-transparent text-txt-dim border-border-light hover:text-txt'
             }`}
           >
@@ -57,7 +57,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         onChange={(e) => setTitle(e.target.value)}
         placeholder="제목"
         aria-label="게시글 제목"
-        className="w-full bg-bg-row border border-border-light rounded px-3 py-2 mb-3 text-base text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+        className="input-base w-full px-3 py-2 mb-3 text-base"
       />
 
       <textarea
@@ -66,14 +66,14 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         placeholder="내용을 입력하세요... (최대 1000자)"
         aria-label="게시글 내용"
         rows={6}
-        className="w-full bg-bg-row border border-border-light rounded p-3 text-base text-txt font-sans resize-vertical outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+        className="input-base w-full p-3 text-base resize-vertical"
       />
       <div className="text-right text-xs text-txt-dim mt-1">{body.length}/1000</div>
 
       <div className="flex justify-end gap-2 mt-3">
         <button
           onClick={onCancel}
-          className="px-4 py-1.5 bg-error text-txt border border-border-light font-bold text-sm uppercase tracking-wider rounded cursor-pointer hover:text-txt"
+          className="px-4 py-1.5 bg-transparent text-error border border-error font-bold text-sm uppercase tracking-wider rounded cursor-pointer hover:bg-error hover:text-white"
         >
           취소
         </button>

@@ -46,8 +46,22 @@ export default function App() {
           <button
             key={t.key}
             role="tab"
+            id={`tab-${t.key}`}
             aria-selected={activeTab === t.key}
+            aria-controls={`tabpanel-${t.key}`}
+            tabIndex={activeTab === t.key ? 0 : -1}
             onClick={() => setTab(t.key)}
+            onKeyDown={(e) => {
+              const idx = tabs.findIndex(x => x.key === t.key)
+              let next = -1
+              if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length
+              if (e.key === 'ArrowLeft') next = (idx - 1 + tabs.length) % tabs.length
+              if (next >= 0) {
+                e.preventDefault()
+                setTab(tabs[next].key)
+                document.getElementById(`tab-${tabs[next].key}`)?.focus()
+              }
+            }}
             className={`tab-btn${activeTab === t.key ? ' active' : ''}`}
           >
             {t.label}
@@ -55,7 +69,7 @@ export default function App() {
         ))}
       </nav>
 
-      <div>
+      <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
         {isRoomTab && (
           <Rooms
             data={activeRoomsData}

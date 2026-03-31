@@ -207,6 +207,10 @@
     border: 0;
   }
 
+  .input-base {
+    @apply bg-bg-row border border-border-light rounded text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary;
+  }
+
   .btn-primary {
     @apply px-4 py-2 bg-primary text-white text-sm font-bold border-0 rounded cursor-pointer disabled:opacity-50;
   }

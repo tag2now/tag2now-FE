@@ -58,7 +58,7 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="답글을 입력하세요..."
             aria-label="답글 입력"
-            className="flex-1 bg-bg-row border border-border-light rounded px-2 py-1 text-sm text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+            className="input-base flex-1 px-2 py-1 text-sm"
             onKeyDown={(e) => e.key === 'Enter' && handleSubmitReply()}
           />
           <button

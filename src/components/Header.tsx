@@ -58,7 +58,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
           <h1 className="font-display text-[clamp(1.05rem,4vw,1.8rem)] font-black m-0 tracking-wide uppercase">
             Tag<span className="header-accent">2</span>Now
           </h1>
-          <span className="absolute top-[76%] right-[4%]">v{APP_VERSION}</span>
+          <span className="absolute top-[76%] right-[4%] text-2xs text-txt-dim">v{APP_VERSION}</span>
         </div>
         <div className="inline-flex items-center flex-col sm:flex-row sm:gap-2 text-base font-bold">
           <div className="inline-flex items-center gap-1.5 tracking-[0.2em] uppercase text-accent">
@@ -83,7 +83,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
             onKeyDown={e => { if (e.key === 'Enter') commitUsername().then() }}
             onBlur={commitUsername}
             placeholder="유저명 입력"
-            className="bg-bg-row border border-border-light rounded px-2 py-0.5 mt-1 text-txt text-base w-36 outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-primary"
+            className="input-base px-2 py-0.5 mt-1 text-base w-36 focus:border-accent"
           />
         ) : username ? (
           <div className="flex flex-col sm:flex-row sm:gap-2 items-center">
@@ -91,6 +91,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
               <span className="text-accent font-bold">#{entry?.rank || "Unranked"}</span>
               <button
                   onClick={startEditing}
+                  aria-label={`${username} 유저명 수정`}
                   className="text-txt-dim hover:text-txt transition-colors cursor-pointer bg-transparent border-none p-0 flex items-center gap-1"
               >
                 <span className="truncate max-w-24 sm:max-w-none font-semibold">{username}</span>

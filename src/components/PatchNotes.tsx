@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { APP_VERSION } from '@/version'
 
 const LS_KEY = 'ttt2-patch-dismissed'
@@ -30,6 +30,16 @@ export default function PatchNotes() {
     return localStorage.getItem(LS_KEY) !== APP_VERSION
   })
 
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!visible) return
+    dialogRef.current?.focus()
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [visible])
+
   if (!visible) return null
 
   function close() {
@@ -44,10 +54,12 @@ export default function PatchNotes() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={close} role="presentation">
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="patch-notes-title"
-        className="relative bg-bg-panel border border-border-light rounded-lg max-w-md w-[90%] p-6 shadow-lg"
+        tabIndex={-1}
+        className="relative bg-bg-panel border border-border-light rounded-lg max-w-md w-[90%] p-6 shadow-lg outline-none"
         onClick={e => e.stopPropagation()}
       >
         <button
