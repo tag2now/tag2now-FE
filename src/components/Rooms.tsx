@@ -49,7 +49,7 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
           )}
           {onRefresh && (
             <button className="refresh-btn" aria-label="새로고침" onClick={onRefresh} disabled={refreshing}>
-              ↻ 새로고침
+              ↻
             </button>
           )}
         </div>

@@ -152,7 +152,7 @@
   }
 
   .tbl-th {
-    @apply bg-primary text-white font-sans text-sm font-bold tracking-[0.14em] uppercase px-3.5 py-2 text-center whitespace-nowrap border-b-2 border-primary-dim;
+    @apply bg-bg-row text-txt-dim font-sans text-xs font-bold tracking-[0.14em] uppercase px-3.5 py-2 text-center whitespace-nowrap border-b border-border-light;
   }
 
   .tbl-row {
@@ -197,12 +197,7 @@
   }
 
   .refresh-btn {
-    @apply ml-auto mb-1 px-2.5 py-0.5 bg-transparent border border-primary-dim text-primary font-sans text-sm font-bold tracking-[0.14em] uppercase cursor-pointer transition-all duration-150 hover:bg-primary-glow hover:border-primary hover:text-white hover:shadow-[0_0_8px_var(--color-primary-glow)] disabled:opacity-40 disabled:cursor-not-allowed;
-  }
-
-  .refresh-btn:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
+    @apply bg-transparent border border-primary-dim text-primary text-sm px-2 py-0.5 rounded cursor-pointer transition-colors hover:bg-primary-glow hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed;
   }
 
   .loading-bar {
