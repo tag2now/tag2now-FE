@@ -6,7 +6,9 @@
       "Bash(npm test:*)",
       "Bash(npx tsc:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm run:*)",
+      "Bash(node /tmp/test_sort.js)"
     ]
   }
 }
