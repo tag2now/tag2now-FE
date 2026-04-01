@@ -96,6 +96,21 @@ export interface PostDetail {
   comments: CommentOut[]
 }
 
+// Stats/History types
+export interface HourlyActivity {
+  hour: number
+  avg_players: number
+  peak_players: number
+}
+
+export interface DailySummary {
+  date: string
+  peak_players: number
+  avg_players: number
+  peak_rooms?: number
+  avg_rooms?: number
+}
+
 // Hook return type
 export interface PolledState<T> {
   data: T | null
@@ -103,4 +118,5 @@ export interface PolledState<T> {
   refreshing: boolean
   error: string | null
   refresh: () => void
+  lastUpdated: Date | null
 }

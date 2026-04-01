@@ -10,17 +10,18 @@ export default function usePolledData<T>(fetcher: () => Promise<T>, interval: nu
 
     try {
       const data = await fetcher();
+      const lastUpdated = new Date()
 
       setState((s) => {
-        if (s.data === data) return s.refreshing ? { ...s, refreshing: false } : s
-        return { data, loading: false, refreshing: false, error: null }
+        if (s.data === data) return s.refreshing ? { ...s, refreshing: false, lastUpdated } : s
+        return { data, loading: false, refreshing: false, error: null, lastUpdated }
       });
     } catch (e: any) {
       setState((s) => ({ ...s, loading: false, refreshing: false, error: e.message }))
     }
   }, [fetcher])
 
-  const [state, setState] = useState<Omit<PolledState<T>, 'refresh'>>({ data: null, loading: true, refreshing: false, error: null })
+  const [state, setState] = useState<Omit<PolledState<T>, 'refresh'>>({ data: null, loading: true, refreshing: false, error: null, lastUpdated: null })
 
   useEffect(() => {
     load()
