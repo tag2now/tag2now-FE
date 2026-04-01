@@ -29,12 +29,18 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
     <div className="w-full overflow-x-auto">
       <table className="border-collapse w-full min-w-85">
         <caption className="sr-only">Rank match rooms</caption>
+        <colgroup>
+          <col className="w-32" />
+          <col />
+          <col className="w-16" />
+          <col />
+        </colgroup>
         <thead>
           <tr>
-            <th scope="col" className="tbl-th w-4/20">Rank</th>
-            <th scope="col" className="tbl-th w-7/20 text-left pl-4">Player 1</th>
-            <th scope="col" className="tbl-th w-2/20"></th>
-            <th scope="col" className="tbl-th w-7/20 text-left pl-4">Player 2</th>
+            <th scope="col" className="tbl-th">랭크</th>
+            <th scope="col" className="tbl-th">플레이어 1</th>
+            <th scope="col" className="tbl-th"></th>
+            <th scope="col" className="tbl-th">플레이어 2</th>
           </tr>
         </thead>
         <tbody>
@@ -54,9 +60,6 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
                     style={separatorStyle}
                   >
                     <span className="tracking-widest">{tier}</span>
-                    <span className="ml-2 text-xs font-normal opacity-50">
-                      {tierRooms.length}개 방
-                    </span>
                   </th>
                 </tr>
                 {tierRooms.map((r) => {
@@ -66,7 +69,7 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
                       <td className="tbl-td">
                         <RankImage rankInfo={r.rank_info} className="min-w-19.75 h-9 w-auto mx-auto" />
                       </td>
-                      <td className="player-name text-left pl-4">
+                      <td className="player-name">
                         {r.users?.[0]?.online_name ?? '—'}
                       </td>
                       <td className="tbl-td px-1">
@@ -88,7 +91,7 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
                           </span>
                         )}
                       </td>
-                      <td className="player-name text-left pl-4">
+                      <td className="player-name">
                         {r.users?.[1]?.online_name ?? '—'}
                       </td>
                     </tr>
