@@ -52,7 +52,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
   const subChar = entry?.player_info?.sub_char_info
 
   return (
-    <header className="app-header sm:h-[15vh] relative border-b-2 border-accent py-2 px-3 mb-1 flex justify-between items-center">
+    <header className="w-full max-w-240 app-header sm:h-[15vh] relative border-b-2 border-accent py-2 px-3 mb-1 flex justify-between items-center">
       <div className="flex items-center sm:items-baseline gap-3">
         <div className="relative">
           <h1 className="font-display text-xl sm:text-3xl font-black m-0 tracking-wide uppercase">
