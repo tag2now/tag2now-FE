@@ -52,28 +52,28 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
   const subChar = entry?.player_info?.sub_char_info
 
   return (
-    <header className="app-header relative border-b-2 border-accent py-2 px-3 mb-1 flex justify-between items-center">
+    <header className="app-header sm:h-[15vh] relative border-b-2 border-accent py-2 px-3 mb-1 flex justify-between items-center">
       <div className="flex items-center sm:items-baseline gap-3">
         <div className="relative">
-          <h1 className="font-display text-[clamp(1.05rem,4vw,1.8rem)] font-black m-0 tracking-wide uppercase">
+          <h1 className="font-display text-xl sm:text-3xl font-black m-0 tracking-wide uppercase">
             Tag<span className="header-accent">2</span>Now
           </h1>
           <span className="absolute top-[76%] right-[4%] text-2xs text-txt-dim">v{APP_VERSION}</span>
         </div>
-        <div className="inline-flex items-center flex-col sm:flex-row sm:gap-2 text-base font-bold">
-          <div className="inline-flex items-center gap-1.5 tracking-[0.14em] uppercase text-accent">
-            <span className="w-1.75 h-1.75 rounded-full bg-accent animate-[blink_1.6s_ease-in-out_infinite]" />
+        <div className="inline-flex items-center gap-2 text-base font-bold">
+          <div className="inline-flex items-center gap-1.5 tracking-[0.14em] uppercase text-accent px-2 py-0.5 border border-accent/40 rounded-sm bg-accent/5">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-[blink_1.6s_ease-in-out_infinite]" />
             Live
           </div>
           {totalUsers != null && totalUsers > 0 && (
-            <span className="tracking-wide text-accent">
-              {totalUsers} online
+            <span className="tracking-wide text-sm text-txt-dim">
+              <span className="text-accent font-bold">{totalUsers}</span> online
             </span>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm bg-bg-panel/60 border border-border-light/60 rounded px-2.5 py-1.5">
         {editing ? (
           <input
             ref={inputRef}
@@ -83,7 +83,8 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
             onKeyDown={e => { if (e.key === 'Enter') commitUsername().then() }}
             onBlur={commitUsername}
             placeholder="유저명 입력"
-            className="input-base px-2 py-0.5 mt-1 text-base w-36 focus:border-accent"
+            aria-label="유저명 입력"
+            className="input-base px-2 py-0.5 mt-1 text-base w-36"
           />
         ) : username ? (
           <div className="flex flex-col sm:flex-row sm:gap-2 items-center">
@@ -101,14 +102,14 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
               </button>
             </div>
             {entry && (
-                <div className="flex flex-col gap-1 leading-none">
+                <div className="flex flex-col gap-0.5 leading-none">
                   {[mainChar, subChar].map(char => char &&
                     <div key={char.name} className="flex items-center">
                       {char.rank_info && (
-                        <RankImage rankInfo={char.rank_info} className="h-7 sm:h-8 w-auto" />
+                        <RankImage rankInfo={char.rank_info} className="h-6 sm:h-7 w-auto" />
                       )}
-                      <img src={charImageUrl(char.name)!} alt={char.name} className="h-7 sm:h-11 rounded" />
-                      <div className="hidden sm:flex flex-col items-start font-semibold text-lg">
+                      <img src={charImageUrl(char.name)!} alt={char.name} className="h-6 sm:h-9 rounded" />
+                      <div className="hidden sm:flex flex-col items-start font-semibold text-sm leading-tight">
                         <span>W{char.wins}</span>
                         <span>L{char.losses}</span>
                       </div>
