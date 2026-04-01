@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import {
-  BarChart,
+  ComposedChart,
   Bar,
   LineChart,
   Line,
@@ -10,8 +9,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Cell,
-  ReferenceLine,
 } from 'recharts'
 import { panelStatus } from '@/panelStatus'
 import useStats, { type StatsDays } from '@/hooks/useStats'
@@ -23,11 +20,6 @@ const DAY_OPTIONS: { value: StatsDays; label: string }[] = [
   { value: 90, label: '90일' },
 ]
 
-const METRIC_OPTIONS: { value: 'avg_players' | 'peak_players'; label: string }[] = [
-  { value: 'avg_players', label: '평균' },
-  { value: 'peak_players', label: '최대' },
-]
-
 // Design tokens as JS constants (CSS vars can't be used directly in Recharts SVG fills)
 const COLOR_PRIMARY = '#00c8d4'
 const COLOR_SECONDARY = '#c9a84c'
@@ -35,26 +27,33 @@ const COLOR_BORDER = '#1e1e32'
 const COLOR_TXT_DIM = '#9ba3cc'
 const COLOR_BG_PANEL = '#0d0d1c'
 
-interface HourlyChartProps {
-  data: HourlyActivity[]
-  metric: 'avg_players' | 'peak_players'
+const TOOLTIP_STYLE = {
+  background: COLOR_BG_PANEL,
+  border: `1px solid ${COLOR_BORDER}`,
+  borderRadius: 4,
+  fontSize: 12,
+  color: COLOR_TXT_DIM,
 }
 
-function HourlyChart({ data, metric }: HourlyChartProps) {
-  if (data.length === 0) return <p className="state-msg">데이터 없음</p>
+const LEGEND_STYLE = { fontSize: 11, color: COLOR_TXT_DIM, paddingTop: 4 }
 
-  const peakVal = data.reduce((m, d) => Math.max(m, d[metric]), 0)
+function seriesName(key: string) {
+  return key === 'peak_players' ? '최대' : '평균'
+}
+
+function HourlyChart({ data }: { data: HourlyActivity[] }) {
+  if (data.length === 0) return <p className="state-msg">데이터 없음</p>
 
   return (
     <ResponsiveContainer width="100%" height={176}>
-      <BarChart data={data} margin={{ top: 16, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
+      <ComposedChart data={data} margin={{ top: 16, right: 8, left: -20, bottom: 0 }} barCategoryGap="20%">
         <CartesianGrid vertical={false} stroke={COLOR_BORDER} strokeOpacity={0.8} />
         <XAxis
           dataKey="hour"
           tickLine={false}
           axisLine={false}
           tick={{ fill: COLOR_TXT_DIM, fontSize: 11 }}
-          tickFormatter={(h) => (h % 6 === 0 ? String(h) : '')}
+          tickFormatter={(h) => String(h)}
           interval={0}
         />
         <YAxis
@@ -66,35 +65,21 @@ function HourlyChart({ data, metric }: HourlyChartProps) {
         />
         <Tooltip
           cursor={{ fill: COLOR_PRIMARY, fillOpacity: 0.06 }}
-          contentStyle={{
-            background: COLOR_BG_PANEL,
-            border: `1px solid ${COLOR_BORDER}`,
-            borderRadius: 4,
-            fontSize: 12,
-            color: COLOR_TXT_DIM,
-          }}
+          contentStyle={TOOLTIP_STYLE}
           labelFormatter={(h) => `${h}시`}
-          formatter={(v) => [v ?? 0, metric === 'avg_players' ? '평균' : '최대']}
+          formatter={(v, key) => [v, seriesName(String(key))]}
         />
-        {peakVal > 0 && (
-          <ReferenceLine
-            y={peakVal}
-            stroke={COLOR_SECONDARY}
-            strokeDasharray="4 3"
-            strokeOpacity={0.5}
-            label={{ value: `최대 ${peakVal}`, position: 'insideTopRight', fill: COLOR_SECONDARY, fontSize: 11 }}
-          />
-        )}
-        <Bar dataKey={metric} radius={[2, 2, 0, 0]} maxBarSize={24}>
-          {data.map((d) => (
-            <Cell
-              key={d.hour}
-              fill={d[metric] === peakVal && peakVal > 0 ? COLOR_SECONDARY : COLOR_PRIMARY}
-              fillOpacity={d[metric] === peakVal && peakVal > 0 ? 1 : 0.7}
-            />
-          ))}
-        </Bar>
-      </BarChart>
+        <Legend wrapperStyle={LEGEND_STYLE} formatter={seriesName} />
+        <Bar dataKey="avg_players" fill={COLOR_PRIMARY} fillOpacity={0.75} radius={[2, 2, 0, 0]} maxBarSize={20} />
+        <Line
+          type="monotone"
+          dataKey="peak_players"
+          stroke={COLOR_SECONDARY}
+          strokeWidth={2}
+          dot={false}
+          activeDot={{ r: 4 }}
+        />
+      </ComposedChart>
     </ResponsiveContainer>
   )
 }
@@ -128,19 +113,11 @@ function DailyChart({ data }: { data: DailySummary[] }) {
           width={30}
         />
         <Tooltip
-          contentStyle={{
-            background: COLOR_BG_PANEL,
-            border: `1px solid ${COLOR_BORDER}`,
-            borderRadius: 4,
-            fontSize: 12,
-            color: COLOR_TXT_DIM,
-          }}
+          contentStyle={TOOLTIP_STYLE}
           labelFormatter={(label) => `날짜: ${label}`}
+          formatter={(v, key) => [v, seriesName(String(key))]}
         />
-        <Legend
-          wrapperStyle={{ fontSize: 11, color: COLOR_TXT_DIM, paddingTop: 4 }}
-          formatter={(value) => (value === 'peak_players' ? '최대' : '평균')}
-        />
+        <Legend wrapperStyle={LEGEND_STYLE} formatter={seriesName} />
         <Line
           type="monotone"
           dataKey="peak_players"
@@ -201,7 +178,6 @@ function ToggleGroup<T extends string | number>({
 
 export default function Stats() {
   const { hourly, daily, loading, error, days, setDays } = useStats()
-  const [metric, setMetric] = useState<'avg_players' | 'peak_players'>('avg_players')
 
   const s = panelStatus(loading, error, '통계 로딩 중...')
   if (s) return s
@@ -209,9 +185,8 @@ export default function Stats() {
   return (
     <div className="panel">
       {/* Controls row */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center mb-5">
         <ToggleGroup options={DAY_OPTIONS} value={days} onChange={setDays} label="기간" />
-        <ToggleGroup options={METRIC_OPTIONS} value={metric} onChange={setMetric} />
       </div>
 
       {/* Hourly chart */}
@@ -219,7 +194,7 @@ export default function Stats() {
         <h2 id="hourly-heading" className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim mb-3">
           시간대별 접속자 <span className="text-2xs font-normal opacity-60">(KST)</span>
         </h2>
-        <HourlyChart data={hourly} metric={metric} />
+        <HourlyChart data={hourly} />
       </section>
 
       {/* Daily chart */}
