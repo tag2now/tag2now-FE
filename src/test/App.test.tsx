@@ -1,19 +1,28 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import App from '../App'
-import {fetchRoomsAll} from "@/hooks/useRooms";
-import {fetchLeaderboard} from "@/hooks/useLeaderboard";
 
-// Mock the api module
-vi.mock('../api', () => ({
-  fetchLeaderboard: vi.fn(),
-  fetchRoomsAll: vi.fn(),
+// Create stable mock functions accessible inside vi.mock factories
+const { mockedFetchLeaderboard, mockedFetchRoomsAll } = vi.hoisted(() => ({
+  mockedFetchLeaderboard: vi.fn(),
+  mockedFetchRoomsAll: vi.fn(),
 }))
 
-// Import the mocks after vi.mock so we get the mocked versions
+vi.mock('@/hooks/useLeaderboard', async () => {
+  const { default: usePolledData } = await vi.importActual<typeof import('@/hooks/usePolledData')>('@/hooks/usePolledData')
+  return {
+    fetchLeaderboard: mockedFetchLeaderboard,
+    default: () => usePolledData(mockedFetchLeaderboard as any, null),
+  }
+})
 
-const mockedFetchLeaderboard = vi.mocked(fetchLeaderboard)
-const mockedFetchRoomsAll = vi.mocked(fetchRoomsAll)
+vi.mock('@/hooks/useRooms', async () => {
+  const { default: usePolledData } = await vi.importActual<typeof import('@/hooks/usePolledData')>('@/hooks/usePolledData')
+  return {
+    fetchRoomsAll: mockedFetchRoomsAll,
+    default: () => usePolledData(mockedFetchRoomsAll as any, 10_000),
+  }
+})
 
 const LEADERBOARD_DATA = {
   total_records: 1,
@@ -76,7 +85,7 @@ describe('App', () => {
   it('default tab is first room group and shows rooms content', async () => {
     await renderApp()
 
-    expect(screen.getByText('랭크매치 (1)')).toBeInTheDocument()
+    expect(screen.getByText('랭매 (1)')).toBeInTheDocument()
     expect(screen.getByText('RoomOwner')).toBeInTheDocument()
     expect(screen.queryByText('TestPlayer')).not.toBeInTheDocument()
   })
@@ -85,7 +94,7 @@ describe('App', () => {
     await renderApp()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Leaderboard' }))
+      fireEvent.click(screen.getByRole('tab', { name: '리더보드' }))
     })
 
     expect(screen.getByText('TestPlayer')).toBeInTheDocument()
@@ -109,7 +118,7 @@ describe('App', () => {
 
     // Switch to Leaderboard tab first
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Leaderboard' }))
+      fireEvent.click(screen.getByRole('tab', { name: '리더보드' }))
     })
 
     await act(async () => {
@@ -120,7 +129,7 @@ describe('App', () => {
     expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(1)
   })
 
-  it('auto-refresh: rooms refresh every 10s, leaderboard every 60s', async () => {
+  it('auto-refresh: rooms refresh every 10s, leaderboard does not auto-refresh', async () => {
     vi.useFakeTimers()
 
     await renderApp()
@@ -136,7 +145,7 @@ describe('App', () => {
     expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(2)
     expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(1)
 
-    // After 60s total: rooms has refreshed 6 times + 1 mount, leaderboard 1 + 1 mount
+    // After 60s total: rooms has refreshed 6 times + 1 mount, leaderboard still at 1
     await act(async () => {
       vi.advanceTimersByTime(50_000)
     })
@@ -216,7 +225,7 @@ describe('App', () => {
 
     // Switch to Leaderboard tab to see the error
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Leaderboard' }))
+      fireEvent.click(screen.getByRole('tab', { name: '리더보드' }))
     })
 
     await waitFor(() => {

@@ -12,7 +12,7 @@ interface CharCellProps {
 }
 
 function CharCell({ name, rankInfo, wins, losses }: CharCellProps) {
-  if (!name) return <td className="char-td">—</td>
+  if (!name) return <td className="char-td" aria-label="캐릭터 없음">—</td>
   const url = charImageUrl(name)
   const total = (wins ?? 0) + (losses ?? 0)
   const winRate = total > 0 ? Math.round((wins ?? 0) / total * 100) : null
@@ -53,10 +53,10 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
   return (
     <div className="panel relative" aria-live="polite">
       <LoadingBar visible={refreshing} />
-      <div className="panel-meta flex items-center justify-between px-4">
+      <div className="panel-meta flex items-center justify-between">
         <span>Total records: {data.total_records}</span>
         {onRefresh && (
-          <button className="refresh-btn" aria-label="Refresh" onClick={onRefresh}>
+          <button className="refresh-btn" aria-label="Refresh" onClick={onRefresh} disabled={refreshing}>
             ↻ Refresh
           </button>
         )}
@@ -66,10 +66,10 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
           <caption className="sr-only">Leaderboard rankings</caption>
           <thead>
             <tr>
-              <th className="tbl-th w-1/20 sm:w-2/20">#</th>
-              <th className="tbl-th w-7/20 sm:w-4/20">Player</th>
-              <th className="tbl-th sm:w-7/20 text-center">Main</th>
-              <th className="tbl-th sm:w-7/20 text-center">Sub</th>
+              <th scope="col" className="tbl-th w-1/20 sm:w-2/20">#</th>
+              <th scope="col" className="tbl-th w-7/20 sm:w-4/20">Player</th>
+              <th scope="col" className="tbl-th sm:w-7/20 text-center">Main</th>
+              <th scope="col" className="tbl-th sm:w-7/20 text-center">Sub</th>
             </tr>
           </thead>
           <tbody>

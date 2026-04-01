@@ -31,9 +31,11 @@ export default function PatchNotes() {
   })
 
   const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!visible) return
+    previousFocusRef.current = document.activeElement as HTMLElement
     const dialog = dialogRef.current
     dialog?.focus()
 
@@ -53,11 +55,13 @@ export default function PatchNotes() {
 
   function close() {
     setVisible(false)
+    previousFocusRef.current?.focus()
   }
 
   function dismiss() {
     localStorage.setItem(LS_KEY, APP_VERSION)
     setVisible(false)
+    previousFocusRef.current?.focus()
   }
 
   return (

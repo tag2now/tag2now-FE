@@ -8,7 +8,7 @@ interface CharacterGridPickerProps {
 
 export default function CharacterGridPicker({ value, onChange, defaultValue }: CharacterGridPickerProps) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" role="group" aria-label="캐릭터 선택">
       {CHARACTER_GRID.map((row, ri) => (
         <div key={ri} className="flex gap-0.5 mb-0.5">
           {row.map((name, ci) => {

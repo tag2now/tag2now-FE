@@ -110,7 +110,9 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
       )}
 
       <div className="mt-4 flex gap-2">
+        <label htmlFor="comment-input" className="sr-only">댓글 입력</label>
         <input
+          id="comment-input"
           type="text"
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}

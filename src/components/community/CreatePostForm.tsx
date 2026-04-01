@@ -51,7 +51,9 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         <CharacterGridPicker value={postType} onChange={setPostType} defaultValue="자유" />
       </div>
 
+      <label htmlFor="post-title" className="sr-only">게시글 제목</label>
       <input
+        id="post-title"
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -60,7 +62,9 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         className="input-base w-full px-3 py-2 mb-3 text-base"
       />
 
+      <label htmlFor="post-body" className="sr-only">게시글 내용</label>
       <textarea
+        id="post-body"
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder="내용을 입력하세요... (최대 1000자)"

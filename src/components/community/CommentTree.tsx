@@ -45,14 +45,16 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
       <p className="m-0 text-base text-txt whitespace-pre-wrap break-words">{comment.body}</p>
       <button
         onClick={() => setReplying(!replying)}
-        className="mt-1 bg-transparent border-0 text-txt-dim text-xs font-bold uppercase tracking-[0.12em] cursor-pointer hover:text-primary"
+        className="mt-1 bg-transparent border-0 text-txt-dim text-xs font-bold uppercase tracking-[0.12em] cursor-pointer hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
       >
         {replying ? '취소' : '답글'}
       </button>
 
       {replying && (
         <div className="mt-2 flex gap-2">
+          <label htmlFor={`reply-${comment.id}`} className="sr-only">답글 입력</label>
           <input
+            id={`reply-${comment.id}`}
             type="text"
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}

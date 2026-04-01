@@ -13,7 +13,7 @@ export default function PostTypeBadge({ postType, size = 'sm' }: PostTypeBadgePr
     : 'text-2xs px-1.5 py-0.5'
 
   if (url) {
-    return <img src={url} alt={postType} className={`${imgClass} object-cover rounded`} title={postType} />
+    return <img src={url} alt={postType} className={`${imgClass} object-cover rounded`} />
   }
 
   return (

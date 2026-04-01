@@ -7,8 +7,8 @@
 }
 
 .text-2xs {
-  font-size: 0.65rem; /* 0.75rem (12px) */
-  line-height: calc(1/0.65); /* calc(1 / 0.75) */
+  font-size: 0.75rem;
+  line-height: calc(1/0.75);
 }
 
 /* ─── Design tokens ───────────────────────────────────────── */
@@ -27,7 +27,7 @@
   --color-silver: #c0c0c0;
   --color-bronze: #cd7f32;
   --color-txt: #dde0f0;
-  --color-txt-dim: #8088b8;
+  --color-txt-dim: #9ba3cc;
   --color-primary-hover: rgba(0, 200, 212, 0.07);
   --color-tier-green: #4ade80;
   --color-tier-yellow: #facc15;
@@ -45,6 +45,7 @@
   --font-size-lg: 1.15rem;
   --font-sans: 'Rajdhani', sans-serif;
   --font-display: 'Orbitron', sans-serif;
+  --font-size-display: clamp(1.05rem, 4vw, 1.8rem);
 }
 
 /* ─── Base ────────────────────────────────────────────────── */
@@ -63,8 +64,8 @@
 
 /* ─── Animations ──────────────────────────────────────────── */
 @keyframes blink {
-  0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--color-primary); }
-  50%      { opacity: 0.15; box-shadow: none; }
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--color-accent), 0 0 12px rgba(200, 48, 46, 0.4); }
+  50%      { opacity: 0.25; box-shadow: none; }
 }
 
 @keyframes loading-slide {
@@ -75,14 +76,30 @@
 /* ─── Component classes ───────────────────────────────────── */
 @layer components {
   /* Pseudo-elements (can't be done with @apply) */
+  .app-header {
+    background:
+      linear-gradient(150deg, rgba(0, 200, 212, 0.06) 0%, transparent 45%),
+      linear-gradient(210deg, rgba(200, 48, 46, 0.05) 0%, transparent 40%);
+  }
+
+  .app-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--color-primary) 0%, rgba(0, 200, 212, 0.2) 50%, transparent 100%);
+  }
+
   .app-header::after {
     content: '';
     position: absolute;
-    bottom: -4px;
+    bottom: -2px;
     left: 0;
-    width: 72px;
+    width: 140px;
     height: 2px;
-    background: var(--color-accent);
+    background: linear-gradient(90deg, var(--color-accent) 0%, rgba(200, 48, 46, 0.3) 60%, transparent 100%);
   }
 
   .app-header h1 {
@@ -97,7 +114,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 8px rgba(200, 60, 20, 0.3));
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 12px rgba(200, 60, 20, 0.4));
   }
 
   .app-header h1 .header-accent {
@@ -170,12 +187,22 @@
     @apply relative px-2.5 py-2.25 bg-transparent border border-border-light border-b-0 font-sans text-base font-bold tracking-[0.12em] uppercase cursor-pointer transition-colors duration-150 -bottom-px text-txt-dim hover:text-txt;
   }
 
+  .tab-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
   .tab-btn.active {
     @apply text-secondary bg-bg-panel border-border-light border-b-bg-panel!;
   }
 
   .refresh-btn {
-    @apply ml-auto mb-1 px-2.5 py-0.5 bg-transparent border border-primary-dim text-primary font-sans text-sm font-bold tracking-[0.14em] uppercase cursor-pointer transition-all duration-150 hover:bg-primary-glow hover:border-primary hover:text-white hover:shadow-[0_0_8px_var(--color-primary-glow)];
+    @apply ml-auto mb-1 px-2.5 py-0.5 bg-transparent border border-primary-dim text-primary font-sans text-sm font-bold tracking-[0.14em] uppercase cursor-pointer transition-all duration-150 hover:bg-primary-glow hover:border-primary hover:text-white hover:shadow-[0_0_8px_var(--color-primary-glow)] disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .refresh-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 
   .loading-bar {
@@ -215,12 +242,27 @@
     @apply px-4 py-2 bg-primary text-white text-sm font-bold border-0 rounded cursor-pointer disabled:opacity-50;
   }
 
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
   .btn-ghost {
     @apply px-3 py-1 bg-transparent border border-primary text-primary rounded cursor-pointer text-sm font-bold;
   }
 
+  .btn-ghost:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
   .btn-danger {
     @apply px-2 py-0.5 bg-transparent border border-error text-error text-xs font-bold rounded cursor-pointer hover:bg-error hover:text-white;
+  }
+
+  .btn-danger:focus-visible {
+    outline: 2px solid var(--color-error);
+    outline-offset: 2px;
   }
 
   .loading-bar::after {

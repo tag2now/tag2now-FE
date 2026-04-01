@@ -12,17 +12,17 @@ export default function PlayerMatchTable({ rooms }: PlayerMatchTableProps) {
         <caption className="sr-only">Player match rooms</caption>
         <thead>
           <tr>
-            <th className="tbl-th">#</th>
-            <th className="tbl-th">User</th>
+            <th scope="col" className="tbl-th">#</th>
+            <th scope="col" className="tbl-th">User</th>
           </tr>
         </thead>
         <tbody>
           {rooms.map((r) => (
             <Fragment key={r.room_id}>
               <tr className="tier-separator">
-                <td colSpan={2} className="tier-heading py-2">
+                <th scope="colgroup" colSpan={2} className="tier-heading py-2">
                   {r.owner_online_name} ({r.users?.length ?? 0})
-                </td>
+                </th>
               </tr>
               {(r.users ?? []).map((u, i) => (
                 <tr key={u.user_id ?? i} className="tbl-row">

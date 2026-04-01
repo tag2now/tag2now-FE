@@ -62,7 +62,7 @@ export default function PostList({
       )}
 
       {!loading && posts.length > 0 && (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1" aria-live="polite">
           {posts.map((post) => (
             <button
               key={post.id}

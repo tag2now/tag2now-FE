@@ -52,8 +52,8 @@ expect(screen.getByText('Main')).toBeInTheDocument()
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByText('KazuyaFan')).toBeInTheDocument()
     expect(screen.getByAltText('Kazuya')).toBeInTheDocument()
-    expect(screen.getByText('Destroyer')).toBeInTheDocument()
-    expect(screen.getByText('Vanquisher')).toBeInTheDocument()
+    expect(screen.getByAltText('Destroyer')).toBeInTheDocument()
+    expect(screen.getByAltText('Vanquisher')).toBeInTheDocument()
   })
 
   it('shows em-dash when player_info is missing', () => {
