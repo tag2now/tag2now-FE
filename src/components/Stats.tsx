@@ -1,7 +1,21 @@
 import { useState } from 'react'
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+  ReferenceLine,
+} from 'recharts'
 import { panelStatus } from '@/panelStatus'
 import useStats, { type StatsDays } from '@/hooks/useStats'
-import type { HourlyActivity } from '@/types'
+import type { HourlyActivity, DailySummary } from '@/types'
 
 const DAY_OPTIONS: { value: StatsDays; label: string }[] = [
   { value: 7, label: '7일' },
@@ -14,90 +28,138 @@ const METRIC_OPTIONS: { value: 'avg_players' | 'peak_players'; label: string }[]
   { value: 'peak_players', label: '최대' },
 ]
 
-interface BarChartProps {
+// Design tokens as JS constants (CSS vars can't be used directly in Recharts SVG fills)
+const COLOR_PRIMARY = '#00c8d4'
+const COLOR_SECONDARY = '#c9a84c'
+const COLOR_BORDER = '#1e1e32'
+const COLOR_TXT_DIM = '#9ba3cc'
+const COLOR_BG_PANEL = '#0d0d1c'
+
+interface HourlyChartProps {
   data: HourlyActivity[]
   metric: 'avg_players' | 'peak_players'
 }
 
-function BarChart({ data, metric }: BarChartProps) {
+function HourlyChart({ data, metric }: HourlyChartProps) {
   if (data.length === 0) return <p className="state-msg">데이터 없음</p>
 
-  const { maxVal, peakHour } = data.reduce(
-    (acc, d) => {
-      const v = d[metric]
-      return {
-        maxVal: Math.max(acc.maxVal, v),
-        peakHour: v > acc.peakHour[metric] ? d : acc.peakHour,
-      }
-    },
-    { maxVal: 1, peakHour: data[0] },
-  )
+  const peakVal = data.reduce((m, d) => Math.max(m, d[metric]), 0)
 
   return (
-    <div className="relative flex gap-2">
-      {/* Y-axis labels */}
-      <div className="flex flex-col justify-between items-end text-2xs text-txt-dim select-none pb-5 w-5 shrink-0">
-        <span>{maxVal}</span>
-        <span>{Math.round(maxVal / 2)}</span>
-        <span>0</span>
-      </div>
-
-      {/* Chart + axis */}
-      <div className="flex-1 min-w-0">
-        <div className="relative h-44" role="img" aria-label="시간대별 접속자 차트">
-          {/* Grid lines */}
-          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="w-full border-t border-border/50" />
-            ))}
-          </div>
-
-          {/* Bars */}
-          <div className="absolute inset-0 flex items-end gap-px">
-            {data.map((d) => {
-              const pct = (d[metric] / maxVal) * 100
-              const val = d[metric]
-              const isPeak = d.hour === peakHour.hour
-              return (
-                <div
-                  key={d.hour}
-                  className="flex-1 flex flex-col items-center justify-end h-full group relative"
-                  title={`${d.hour}시: ${val}`}
-                  aria-label={`${d.hour}시: ${val}명`}
-                >
-                  {val > 0 && (
-                    <span className={`absolute bottom-full mb-0.5 text-2xs font-bold leading-none transition-opacity ${
-                      isPeak ? 'opacity-100 text-secondary' : 'opacity-0 group-hover:opacity-100 text-txt-dim'
-                    }`}>
-                      {val}
-                    </span>
-                  )}
-                  <div
-                    className={`w-full rounded-t transition-all duration-300 ${
-                      isPeak ? 'bg-secondary' : 'bg-primary opacity-75 group-hover:opacity-100'
-                    }`}
-                    style={{ height: pct > 0 ? `${pct}%` : '2px' }}
-                  />
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* X-axis labels */}
-        <div className="relative h-5 mt-1">
-          {[0, 6, 12, 18, 23].map((h) => (
-            <span
-              key={h}
-              className="absolute text-2xs text-txt-dim"
-              style={{ left: `${(h / 23) * 100}%`, transform: 'translateX(-50%)' }}
-            >
-              {h}
-            </span>
+    <ResponsiveContainer width="100%" height={176}>
+      <BarChart data={data} margin={{ top: 16, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
+        <CartesianGrid vertical={false} stroke={COLOR_BORDER} strokeOpacity={0.8} />
+        <XAxis
+          dataKey="hour"
+          tickLine={false}
+          axisLine={false}
+          tick={{ fill: COLOR_TXT_DIM, fontSize: 11 }}
+          tickFormatter={(h) => (h % 6 === 0 ? String(h) : '')}
+          interval={0}
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          tick={{ fill: COLOR_TXT_DIM, fontSize: 11 }}
+          allowDecimals={false}
+          width={30}
+        />
+        <Tooltip
+          cursor={{ fill: COLOR_PRIMARY, fillOpacity: 0.06 }}
+          contentStyle={{
+            background: COLOR_BG_PANEL,
+            border: `1px solid ${COLOR_BORDER}`,
+            borderRadius: 4,
+            fontSize: 12,
+            color: COLOR_TXT_DIM,
+          }}
+          labelFormatter={(h) => `${h}시`}
+          formatter={(v) => [v ?? 0, metric === 'avg_players' ? '평균' : '최대']}
+        />
+        {peakVal > 0 && (
+          <ReferenceLine
+            y={peakVal}
+            stroke={COLOR_SECONDARY}
+            strokeDasharray="4 3"
+            strokeOpacity={0.5}
+            label={{ value: `최대 ${peakVal}`, position: 'insideTopRight', fill: COLOR_SECONDARY, fontSize: 11 }}
+          />
+        )}
+        <Bar dataKey={metric} radius={[2, 2, 0, 0]} maxBarSize={24}>
+          {data.map((d) => (
+            <Cell
+              key={d.hour}
+              fill={d[metric] === peakVal && peakVal > 0 ? COLOR_SECONDARY : COLOR_PRIMARY}
+              fillOpacity={d[metric] === peakVal && peakVal > 0 ? 1 : 0.7}
+            />
           ))}
-        </div>
-      </div>
-    </div>
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+function DailyChart({ data }: { data: DailySummary[] }) {
+  if (data.length === 0) return <p className="state-msg">데이터 없음</p>
+
+  const formatted = data.map((d) => ({
+    ...d,
+    label: d.date.slice(5), // "MM-DD"
+  }))
+
+  const interval = Math.max(0, Math.floor(data.length / 7) - 1)
+
+  return (
+    <ResponsiveContainer width="100%" height={176}>
+      <LineChart data={formatted} margin={{ top: 16, right: 8, left: -20, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke={COLOR_BORDER} strokeOpacity={0.8} />
+        <XAxis
+          dataKey="label"
+          tickLine={false}
+          axisLine={false}
+          tick={{ fill: COLOR_TXT_DIM, fontSize: 11 }}
+          interval={interval}
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          tick={{ fill: COLOR_TXT_DIM, fontSize: 11 }}
+          allowDecimals={false}
+          width={30}
+        />
+        <Tooltip
+          contentStyle={{
+            background: COLOR_BG_PANEL,
+            border: `1px solid ${COLOR_BORDER}`,
+            borderRadius: 4,
+            fontSize: 12,
+            color: COLOR_TXT_DIM,
+          }}
+          labelFormatter={(label) => `날짜: ${label}`}
+        />
+        <Legend
+          wrapperStyle={{ fontSize: 11, color: COLOR_TXT_DIM, paddingTop: 4 }}
+          formatter={(value) => (value === 'peak_players' ? '최대' : '평균')}
+        />
+        <Line
+          type="monotone"
+          dataKey="peak_players"
+          stroke={COLOR_SECONDARY}
+          strokeWidth={2}
+          dot={false}
+          activeDot={{ r: 4 }}
+        />
+        <Line
+          type="monotone"
+          dataKey="avg_players"
+          stroke={COLOR_PRIMARY}
+          strokeWidth={2}
+          dot={false}
+          activeDot={{ r: 4 }}
+          strokeOpacity={0.8}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   )
 }
 
@@ -157,43 +219,15 @@ export default function Stats() {
         <h2 id="hourly-heading" className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim mb-3">
           시간대별 접속자 <span className="text-2xs font-normal opacity-60">(KST)</span>
         </h2>
-        <BarChart data={hourly} metric={metric} />
+        <HourlyChart data={hourly} metric={metric} />
       </section>
 
-      {/* Daily table */}
+      {/* Daily chart */}
       <section aria-labelledby="daily-heading">
         <h2 id="daily-heading" className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim mb-3">
-          일별 통계
+          일별 접속자
         </h2>
-        {daily.length === 0 ? (
-          <p className="state-msg">데이터 없음</p>
-        ) : (
-          <div className="w-full overflow-x-auto">
-            <table className="border-collapse w-full">
-              <caption className="sr-only">일별 접속자 통계</caption>
-              <thead>
-                <tr>
-                  <th scope="col" className="tbl-th">날짜</th>
-                  <th scope="col" className="tbl-th">최대 접속자</th>
-                  <th scope="col" className="tbl-th">평균 접속자</th>
-                  {daily[0]?.peak_rooms != null && <th scope="col" className="tbl-th">최대 방</th>}
-                  {daily[0]?.avg_rooms != null && <th scope="col" className="tbl-th">평균 방</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {daily.map((row) => (
-                  <tr key={row.date} className="tbl-row">
-                    <td className="tbl-td font-mono text-txt-dim">{row.date}</td>
-                    <td className="tbl-td font-bold text-secondary">{row.peak_players}</td>
-                    <td className="tbl-td">{typeof row.avg_players === 'number' ? row.avg_players.toFixed(1) : row.avg_players}</td>
-                    {row.peak_rooms != null && <td className="tbl-td">{row.peak_rooms}</td>}
-                    {row.avg_rooms != null && <td className="tbl-td">{typeof row.avg_rooms === 'number' ? row.avg_rooms.toFixed(1) : row.avg_rooms}</td>}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <DailyChart data={daily} />
       </section>
     </div>
   )
