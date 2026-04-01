@@ -55,7 +55,7 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
                   >
                     <span className="tracking-widest">{tier}</span>
                     <span className="ml-2 text-xs font-normal opacity-50">
-                      {tierRooms.length} room{tierRooms.length !== 1 ? 's' : ''}
+                      {tierRooms.length}개 방
                     </span>
                   </th>
                 </tr>
