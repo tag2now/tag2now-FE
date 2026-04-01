@@ -15,13 +15,14 @@ interface PostListProps {
   onPostTypeChange: (type: string) => void
   onPageChange: (page: number) => void
   onSelectPost: (id: number) => void
+  onRefresh: () => void
   onWrite: () => void
   leaderboardEntries?: LeaderboardEntry[]
 }
 
 export default function PostList({
   posts, total, page, pageSize, loading, error,
-  postType, onPostTypeChange, onPageChange, onSelectPost, onWrite, leaderboardEntries,
+  postType, onPostTypeChange, onPageChange, onSelectPost, onRefresh, onWrite, leaderboardEntries,
 }: PostListProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
@@ -42,12 +43,22 @@ export default function PostList({
             </button>
           )
         })}
-        <button
-          onClick={onWrite}
-          className="ml-auto px-3 py-1 bg-secondary text-bg-deep text-sm font-bold uppercase tracking-[0.12em] border-0 rounded cursor-pointer hover:bg-secondary-light"
-        >
-          글쓰기
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={onRefresh}
+            disabled={loading}
+            aria-label="새로고침"
+            className="refresh-btn"
+          >
+            ↻
+          </button>
+          <button
+            onClick={onWrite}
+            className="px-3 py-1 bg-secondary text-bg-deep text-sm font-bold uppercase tracking-[0.12em] border-0 rounded cursor-pointer hover:bg-secondary-light"
+          >
+            글쓰기
+          </button>
+        </div>
       </div>
 
       <div className="mb-4">

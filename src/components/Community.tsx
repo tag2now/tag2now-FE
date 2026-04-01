@@ -68,6 +68,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
           onPostTypeChange={handlePostTypeChange}
           onPageChange={handlePageChange}
           onSelectPost={handleSelectPost}
+          onRefresh={() => community.loadPosts(community.page, postType || undefined).then()}
           onWrite={() => setView('create')}
           leaderboardEntries={leaderboardEntries}
         />
