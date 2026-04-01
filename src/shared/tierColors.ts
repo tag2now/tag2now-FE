@@ -22,6 +22,8 @@ export const TIER_HEX: Record<string, string> = {
   'God': '#c9a84c',
 }
 
+export const RANK_COLORS: Record<number, string> = { 1: 'text-secondary-light', 2: 'text-silver', 3: 'text-bronze' }
+
 export const TIER_STYLES: Record<string, CSSProperties> = Object.fromEntries(
   Object.entries(TIER_COLORS).map(([k, v]) => [k, { color: v }]),
 )
