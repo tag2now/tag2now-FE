@@ -111,6 +111,29 @@ export interface DailySummary {
   avg_rooms?: number
 }
 
+// Weekly top / player history types
+export interface WeeklyTopPlayer {
+  npid: string
+  online_name: string
+  match_count: number
+}
+
+export interface PlayerHistoryCoPlayer {
+  npid: string
+  online_name: string
+  times_together: number
+}
+
+export interface PlayerHistory {
+  npid: string
+  days_active: number
+  times_seen: number
+  first_seen: string | null
+  last_seen: string | null
+  room_type_counts: Record<string, number>
+  top_played_with: PlayerHistoryCoPlayer[]
+}
+
 // Hook return type
 export interface PolledState<T> {
   data: T | null

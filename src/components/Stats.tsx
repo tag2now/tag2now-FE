@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   ComposedChart,
   Bar,
@@ -12,12 +13,29 @@ import {
 } from 'recharts'
 import { panelStatus } from '@/panelStatus'
 import useStats, { type StatsDays } from '@/hooks/useStats'
-import type { HourlyActivity, DailySummary } from '@/types'
+import useWeeklyTop, { type WeeklyTopLimit } from '@/hooks/useWeeklyTop'
+import PlayerHistoryPanel from '@/components/PlayerHistoryPanel'
+import CharCell from '@/components/CharCell'
+import { RANK_COLORS } from '@/shared/tierColors'
+import type { HourlyActivity, DailySummary, WeeklyTopPlayer, LeaderboardEntry } from '@/types'
+
+type SubTab = 'stats' | 'weekly_top'
+
+const SUB_TABS: { key: SubTab; label: string }[] = [
+  { key: 'stats', label: '접속자 통계' },
+  { key: 'weekly_top', label: '주간 TOP' },
+]
 
 const DAY_OPTIONS: { value: StatsDays; label: string }[] = [
   { value: 7, label: '7일' },
   { value: 30, label: '30일' },
   { value: 90, label: '90일' },
+]
+
+const LIMIT_OPTIONS: { value: WeeklyTopLimit; label: string }[] = [
+  { value: 10, label: '10' },
+  { value: 25, label: '25' },
+  { value: 50, label: '50' },
 ]
 
 // Design tokens as JS constants (CSS vars can't be used directly in Recharts SVG fills)
@@ -176,34 +194,143 @@ function ToggleGroup<T extends string | number>({
   )
 }
 
-export default function Stats() {
-  const { hourly, daily, loading, error, days, setDays } = useStats()
+function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; entries: LeaderboardEntry[]; onSelect: (npid: string) => void }) {
+  if (data.length === 0) return <p className="state-msg">데이터 없음</p>
+  const entryByNpid = new Map(entries.map((e) => [e.np_id, e]))
+  return (
+    <div className="w-full overflow-x-auto">
+      <table className="border-collapse w-full min-w-74.25">
+        <thead>
+          <tr>
+            <th scope="col" className="tbl-th w-1/20 sm:w-2/20">#</th>
+            <th scope="col" className="tbl-th w-1/20 sm:w-2/20">랭킹</th>
+            <th scope="col" className="tbl-th w-7/20 sm:w-4/20">Player</th>
+            <th scope="col" className="tbl-th sm:w-7/20 text-center">Main</th>
+            <th scope="col" className="tbl-th sm:w-7/20 text-center">Sub</th>
+            <th scope="col" className="tbl-th text-right">매치</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((p, i) => {
+            const lb = entryByNpid.get(p.npid)
+            return (
+              <tr key={p.npid} className="tbl-row">
+                <td className="tbl-td font-display text-xs font-bold w-11" style={{ color: COLOR_TXT_DIM }}>{i + 1}</td>
+                <td className={`tbl-td font-display text-xs font-bold w-11 ${lb ? (RANK_COLORS[lb.rank] ?? '') : ''}`} style={lb && !RANK_COLORS[lb.rank] ? { color: COLOR_TXT_DIM } : undefined}>
+                  {lb ? lb.rank : '—'}
+                </td>
+                <td className="player-name">
+                  <button
+                    onClick={() => onSelect(p.npid)}
+                    className="hover:underline cursor-pointer font-semibold"
+                    style={{ color: COLOR_PRIMARY }}
+                  >
+                    {p.online_name}
+                  </button>
+                </td>
+                <CharCell
+                  name={lb?.player_info?.main_char_info?.name}
+                  rankInfo={lb?.player_info?.main_char_info?.rank_info}
+                  wins={lb?.player_info?.main_char_info?.wins}
+                  losses={lb?.player_info?.main_char_info?.losses}
+                />
+                <CharCell
+                  name={lb?.player_info?.sub_char_info?.name}
+                  rankInfo={lb?.player_info?.sub_char_info?.rank_info}
+                  wins={lb?.player_info?.sub_char_info?.wins}
+                  losses={lb?.player_info?.sub_char_info?.losses}
+                />
+                <td className="tbl-td text-right text-xs font-bold" style={{ color: COLOR_TXT_DIM }}>{p.match_count}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
-  const s = panelStatus(loading, error, '통계 로딩 중...')
-  if (s) return s
+interface StatsProps {
+  leaderboardEntries?: LeaderboardEntry[]
+}
+
+export default function Stats({ leaderboardEntries = [] }: StatsProps) {
+  const [subTab, setSubTab] = useState<SubTab>('stats')
+  const { hourly, daily, loading, error, days, setDays } = useStats()
+  const wt = useWeeklyTop()
+  const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
+
+  const selectedEntry = selectedNpid
+    ? leaderboardEntries.find((e) => e.np_id === selectedNpid)
+    : undefined
 
   return (
     <div className="panel">
-      {/* Controls row */}
-      <div className="flex items-center mb-5">
-        <ToggleGroup options={DAY_OPTIONS} value={days} onChange={setDays} label="기간" />
+      {/* Sub-tab bar */}
+      <div className="flex border-b border-border-light mb-5 -mx-4 px-4">
+        {SUB_TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setSubTab(t.key)}
+            aria-pressed={subTab === t.key}
+            className={`px-4 py-2 text-xs font-bold tracking-[0.1em] uppercase transition-colors cursor-pointer border-b-2 -mb-px ${
+              subTab === t.key
+                ? 'border-primary text-primary'
+                : 'border-transparent text-txt-dim hover:text-txt'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* Hourly chart */}
-      <section aria-labelledby="hourly-heading" className="mb-6">
-        <h2 id="hourly-heading" className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim mb-3">
-          시간대별 접속자 <span className="text-2xs font-normal opacity-60">(KST)</span>
-        </h2>
-        <HourlyChart data={hourly} />
-      </section>
+      {/* 접속자 통계 */}
+      {subTab === 'stats' && (() => {
+        const s = panelStatus(loading, error, '통계 로딩 중...')
+        if (s) return s
+        return (
+          <>
+            <div className="flex items-center mb-5">
+              <ToggleGroup options={DAY_OPTIONS} value={days} onChange={setDays} label="기간" />
+            </div>
+            <section aria-labelledby="hourly-heading" className="mb-6">
+              <h2 id="hourly-heading" className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim mb-3">
+                시간대별 접속자 <span className="text-2xs font-normal opacity-60">(KST)</span>
+              </h2>
+              <HourlyChart data={hourly} />
+            </section>
+            <section aria-labelledby="daily-heading" className="mb-6">
+              <h2 id="daily-heading" className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim mb-3">
+                일별 접속자
+              </h2>
+              <DailyChart data={daily} />
+            </section>
+          </>
+        )
+      })()}
 
-      {/* Daily chart */}
-      <section aria-labelledby="daily-heading">
-        <h2 id="daily-heading" className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim mb-3">
-          일별 접속자
-        </h2>
-        <DailyChart data={daily} />
-      </section>
+      {/* 주간 TOP */}
+      {subTab === 'weekly_top' && (
+        <>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim">이번 주 활동왕</span>
+            <ToggleGroup options={LIMIT_OPTIONS} value={wt.limit} onChange={wt.setLimit} />
+          </div>
+          {wt.loading && <p className="state-msg" role="status">로딩 중...</p>}
+          {wt.error && <p className="state-msg error" role="alert">Error: {wt.error}</p>}
+          {!wt.loading && !wt.error && (
+            <WeeklyTopTable data={wt.data} entries={leaderboardEntries} onSelect={setSelectedNpid} />
+          )}
+        </>
+      )}
+
+      {selectedNpid && (
+        <PlayerHistoryPanel
+          npid={selectedNpid}
+          leaderboardEntry={selectedEntry}
+          onClose={() => setSelectedNpid(null)}
+        />
+      )}
     </div>
   )
 }

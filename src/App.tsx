@@ -98,7 +98,7 @@ export default function App() {
             )}
             {activeTab === 'leaderboard' && <Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />}
             {activeTab === 'community' && <Community leaderboardEntries={lb.data?.entries} />}
-            {activeTab === 'stats' && <Stats />}
+            {activeTab === 'stats' && <Stats leaderboardEntries={lb.data?.entries} />}
           </div>
         </div>
         <GoogleAdvertise
