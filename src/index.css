@@ -68,6 +68,11 @@
   50%      { opacity: 0.25; box-shadow: none; }
 }
 
+@keyframes border-pulse {
+  0%, 100% { border-color: #facc15; box-shadow: 0 0 6px #facc1560; }
+  50%      { border-color: #facc1530; box-shadow: none; }
+}
+
 @keyframes loading-slide {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(100%); }

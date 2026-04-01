@@ -24,6 +24,10 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
     if (!seen.has(tier)) { seen.set(tier, []); tierGroups.push([tier, seen.get(tier)!]) }
     seen.get(tier)!.push(r)
   }
+  // Within each tier: in-game rooms first, searching rooms last
+  for (const [, tierRooms] of tierGroups) {
+    tierRooms.sort((a, b) => (b.users?.length === 2 ? 1 : 0) - (a.users?.length === 2 ? 1 : 0))
+  }
 
   return (
     <div className="w-full overflow-x-auto">
@@ -62,41 +66,51 @@ export default function RankMatchTable({ rooms }: RankMatchTableProps) {
                     <span className="tracking-widest">{tier}</span>
                   </th>
                 </tr>
-                {tierRooms.map((r) => {
-                  const inGame = r.users?.length === 2
+                {(() => {
+                  const inGameRooms = tierRooms.filter(r => r.users?.length === 2)
+                  const searchingRooms = tierRooms.filter(r => r.users?.length !== 2)
                   return (
-                    <tr key={r.room_id} className="tbl-row" style={rowAccentStyle}>
-                      <td className="tbl-td">
-                        <RankImage rankInfo={r.rank_info} className="min-w-19.75 h-9 w-auto mx-auto" />
-                      </td>
-                      <td className="player-name">
-                        {r.users?.[0]?.online_name ?? '—'}
-                      </td>
-                      <td className="tbl-td px-1">
-                        {inGame ? (
-                          <span
-                            className="inline-flex items-center text-tier-green"
-                            title="게임 중"
-                            aria-label="게임 중"
-                          >
-                            {IconGamepad}
-                          </span>
-                        ) : (
-                          <span
-                            className="inline-block text-xs font-black tracking-[0.1em] text-tier-yellow animate-[blink_1.6s_ease-in-out_infinite]"
-                            title="찾는 중"
-                            aria-label="찾는 중"
-                          >
-                            VS
-                          </span>
-                        )}
-                      </td>
-                      <td className="player-name">
-                        {r.users?.[1]?.online_name ?? '—'}
-                      </td>
-                    </tr>
+                    <>
+                      {/* In-game rows — one per match */}
+                      {inGameRooms.map((r) => (
+                        <tr key={r.room_id} className="tbl-row" style={rowAccentStyle}>
+                          <td className="tbl-td">
+                            <RankImage rankInfo={r.rank_info} className="min-w-19.75 h-9 w-auto mx-auto" />
+                          </td>
+                          <td className="player-name">{r.users?.[0]?.online_name ?? '—'}</td>
+                          <td className="tbl-td px-1">
+                            <span className="inline-flex items-center text-tier-green" title="게임 중" aria-label="게임 중">
+                              {IconGamepad}
+                            </span>
+                          </td>
+                          <td className="player-name">{r.users?.[1]?.online_name ?? '—'}</td>
+                        </tr>
+                      ))}
+                      {/* Searching row — all searchers in one row */}
+                      {searchingRooms.length > 0 && (
+                        <tr className="tbl-row" style={rowAccentStyle}>
+                          <td colSpan={4} className="px-3 py-2">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                              <span
+                                className="shrink-0 px-2 py-0.5 text-xs font-bold tracking-widest text-tier-yellow border rounded-md animate-[border-pulse_1.6s_ease-in-out_infinite]"
+                              >
+                                찾는 중
+                              </span>
+                              {searchingRooms.map((r) => (
+                                <div key={r.room_id} className="flex items-center gap-1.5">
+                                  <RankImage rankInfo={r.rank_info} className="h-7 w-auto" />
+                                  <span className="font-bold text-sm text-txt">
+                                    {r.users?.[0]?.online_name ?? '—'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   )
-                })}
+                })()}
               </Fragment>
             )
           })}
