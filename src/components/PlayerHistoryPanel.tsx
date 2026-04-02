@@ -26,6 +26,54 @@ function formatDate(iso: string | null) {
   return iso.slice(0, 10)
 }
 
+function hourColor(h: number) {
+  // yellow (#facc15) at h=0 → red (#f87171) at h=23
+  const t = h / 23
+  const r = Math.round(250 + (248 - 250) * t)
+  const g = Math.round(204 + (113 - 204) * t)
+  const b = Math.round(21 + (113 - 21) * t)
+  return `rgb(${r},${g},${b})`
+}
+
+function sectorPath(h: number, cx: number, cy: number, rInner: number, rOuter: number) {
+  const total = 24
+  const gap = 0.03
+  const startRad = (h * (Math.PI * 2 / total)) - Math.PI / 2 + gap
+  const endRad = ((h + 1) * (Math.PI * 2 / total)) - Math.PI / 2 - gap
+  const x1 = cx + rInner * Math.cos(startRad), y1 = cy + rInner * Math.sin(startRad)
+  const x2 = cx + rOuter * Math.cos(startRad), y2 = cy + rOuter * Math.sin(startRad)
+  const x3 = cx + rOuter * Math.cos(endRad),   y3 = cy + rOuter * Math.sin(endRad)
+  const x4 = cx + rInner * Math.cos(endRad),   y4 = cy + rInner * Math.sin(endRad)
+  return `M${x1} ${y1} L${x2} ${y2} A${rOuter} ${rOuter} 0 0 1 ${x3} ${y3} L${x4} ${y4} A${rInner} ${rInner} 0 0 0 ${x1} ${y1}Z`
+}
+
+function ActiveHoursClock({ hours }: { hours: number[] }) {
+  const active = new Set(hours)
+  const cx = 64, cy = 64, rIn = 30, rOut = 56, labelR = 62
+  return (
+    <svg viewBox="0 0 128 128" className="w-36 h-36 mx-auto block">
+      {Array.from({ length: 24 }, (_, h) => (
+        <path
+          key={h}
+          d={sectorPath(h, cx, cy, rIn, rOut)}
+          fill={active.has(h) ? hourColor(h) : 'rgba(255,255,255,0.05)'}
+          stroke="rgba(0,0,0,0.4)"
+          strokeWidth="0.5"
+        />
+      ))}
+      {[0, 6, 12, 18].map((h) => {
+        const angle = (h * (Math.PI * 2 / 24)) - Math.PI / 2
+        return (
+          <text key={h} x={cx + labelR * Math.cos(angle)} y={cy + labelR * Math.sin(angle)}
+            textAnchor="middle" dominantBaseline="middle" fontSize="7" fill="#9ba3cc">
+            {h}
+          </text>
+        )
+      })}
+    </svg>
+  )
+}
+
 interface Props {
   npid: string
   leaderboardEntry?: LeaderboardEntry
@@ -58,12 +106,12 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 overflow-y-auto p-4"
       style={{ background: 'rgba(0,0,0,0.6)' }}
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-sm rounded-lg border p-5 overflow-y-auto max-h-[90vh]"
+        className="relative w-full max-w-sm rounded-lg border p-5 mx-auto my-auto"
         style={{ background: COLOR_BG_PANEL, borderColor: COLOR_BORDER }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -143,8 +191,8 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
               {[
                 { label: '목격 횟수', value: data.times_seen },
                 { label: '활동일', value: data.days_active },
-                { label: '첫 목격', value: formatDate(data.first_seen) },
-                { label: '마지막 목격', value: formatDate(data.last_seen) },
+                { label: '첫 플레이', value: formatDate(data.first_seen) },
+                { label: '마지막 플레이', value: formatDate(data.last_seen) },
               ].map(({ label, value }) => (
                 <div key={label} className="rounded p-2 border" style={{ borderColor: COLOR_BORDER }}>
                   <p className="text-2xs uppercase tracking-wide mb-0.5" style={{ color: COLOR_TXT_DIM }}>{label}</p>
@@ -172,7 +220,7 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
 
             {/* Top played with */}
             {data.top_played_with.length > 0 && (
-              <section>
+              <section className="mb-4">
                 <h3 className="text-xs font-bold tracking-[0.12em] uppercase mb-2" style={{ color: COLOR_TXT_DIM }}>
                   자주 함께한 플레이어
                 </h3>
@@ -192,6 +240,16 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
                     ))}
                   </tbody>
                 </table>
+              </section>
+            )}
+
+            {/* Active hours clock chart */}
+            {data.active_hours.length > 0 && (
+              <section>
+                <h3 className="text-xs font-bold tracking-[0.12em] uppercase mb-2" style={{ color: COLOR_TXT_DIM }}>
+                  활동 시간대 <span className="font-normal opacity-60">(KST)</span>
+                </h3>
+                <ActiveHoursClock hours={data.active_hours} />
               </section>
             )}
           </>

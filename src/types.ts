@@ -30,8 +30,9 @@ export interface LeaderboardData {
 
 // Room types
 export interface RoomUser {
+  np_id: string
   online_name: string
-  user_id?: string
+  avatar_url: string
 }
 
 export interface RoomRankInfo {
@@ -132,6 +133,7 @@ export interface PlayerHistory {
   last_seen: string | null
   room_type_counts: Record<string, number>
   top_played_with: PlayerHistoryCoPlayer[]
+  active_hours: number[]
 }
 
 // Hook return type
