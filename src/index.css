@@ -141,7 +141,7 @@
 
   /* Reusable layout classes */
   .panel {
-    @apply bg-bg-panel border border-border-light border-t-0 px-3 pt-3 pb-6;
+    @apply bg-bg-panel border border-border-light border-t-0 px-3 pt-3 pb-6 min-h-[60vh];
   }
 
   .panel-meta {

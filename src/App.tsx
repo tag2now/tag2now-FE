@@ -43,7 +43,7 @@ export default function App() {
     <div className="flex flex-col items-center pb-12">
       <PatchNotes />
       <Header totalUsers={rooms.data?.totalUsers} leaderboardEntries={lb.data?.entries} />
-      <div className="flex w-full justify-around px-8 py-4">
+      <div className="flex w-full justify-around md:px-8 py-4">
         <GoogleAdvertise
           className={"adsbygoogle hidden xl:block"}
           client={"ca-pub-1216394999861449"}
