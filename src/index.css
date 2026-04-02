@@ -253,7 +253,7 @@
   }
 
   .player-btn {
-    @apply px-2 py-0.5 bg-transparent border border-primary-dim text-primary text-sm font-bold rounded cursor-pointer transition-colors hover:border-primary hover:bg-primary-glow;
+    @apply px-2 py-0.5 font-bold bg-transparent cursor-pointer transition-colors rounded-lg hover:bg-primary-glow;
   }
 
   .player-btn:focus-visible {

@@ -234,7 +234,7 @@ function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; 
                     {p.online_name}
                   </button>
                 </td>
-                <td className="tbl-td text-right text-xs font-bold" style={{ color: COLOR_TXT_DIM }}>{p.match_count}</td>
+                <td className="tbl-td text-lg font-bold">{p.match_count}</td>
                 <td className={`tbl-td font-display text-xs font-bold w-11 ${lb ? (RANK_COLORS[lb.rank] ?? '') : ''}`} style={lb && !RANK_COLORS[lb.rank] ? { color: COLOR_TXT_DIM } : undefined}>
                   {lb ? lb.rank : '—'}
                 </td>
