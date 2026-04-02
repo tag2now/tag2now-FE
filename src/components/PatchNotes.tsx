@@ -5,6 +5,13 @@ const LS_KEY = 'ttt2-patch-dismissed'
 
 const NOTES: { version: string; items: string[] }[] = [
   {
+    version: '1.1',
+    items: [
+      '유저 이름 클릭 시 플레이어 히스토리 패널 오픈\n(리더보드, 랭크매치, 주간 철악귀)',
+      '플레이어 히스토리에 활동 시간대 차트 추가',
+    ],
+  },
+  {
     version: '1.0.7',
     items: ['글쓰기 에러 수정'],
   },
