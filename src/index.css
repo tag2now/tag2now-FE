@@ -173,7 +173,7 @@
   }
 
   .char-td {
-    @apply text-secondary text-sm font-semibold max-w-17.5 sm:max-w-none text-center py-2;
+    @apply text-secondary text-sm font-semibold max-w-17.5 sm:max-w-none text-center py-2 h-[68px] sm:h-[76px];
   }
 
   .char-rank {
