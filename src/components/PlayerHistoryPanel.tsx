@@ -63,7 +63,7 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md rounded-lg border p-5 overflow-y-auto max-h-[90vh]"
+        className="relative w-full max-w-sm rounded-lg border p-5 overflow-y-auto max-h-[90vh]"
         style={{ background: COLOR_BG_PANEL, borderColor: COLOR_BORDER }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -82,39 +82,30 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
           </button>
         </div>
 
-        {/* Leaderboard info */}
-        {leaderboardEntry && (
-          <div className="mb-4 rounded border overflow-x-auto" style={{ borderColor: COLOR_BORDER }}>
-            <table className="border-collapse w-full">
-              <thead>
-                <tr>
-                  <th className="tbl-th w-12">랭킹</th>
-                  <th className="tbl-th text-center">Main</th>
-                  <th className="tbl-th text-center">Sub</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="tbl-row">
-                  <td className="tbl-td font-display text-xs font-bold text-center" style={{ color: COLOR_PRIMARY }}>
-                    #{leaderboardEntry.rank}
-                  </td>
-                  <CharCell
-                    name={leaderboardEntry.player_info?.main_char_info?.name}
-                    rankInfo={leaderboardEntry.player_info?.main_char_info?.rank_info}
-                    wins={leaderboardEntry.player_info?.main_char_info?.wins}
-                    losses={leaderboardEntry.player_info?.main_char_info?.losses}
-                  />
-                  <CharCell
-                    name={leaderboardEntry.player_info?.sub_char_info?.name}
-                    rankInfo={leaderboardEntry.player_info?.sub_char_info?.rank_info}
-                    wins={leaderboardEntry.player_info?.sub_char_info?.wins}
-                    losses={leaderboardEntry.player_info?.sub_char_info?.losses}
-                  />
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="flex">
+          {/* Leaderboard info */}
+          {leaderboardEntry && (
+            <div className="flex flex-1 items-center pl-4 pr-6 mb-4 rounded border" style={{ borderColor: COLOR_BORDER }}>
+              <span className="flex-1 font-display text-lg font-bold text-center" style={{ color: COLOR_PRIMARY }}>
+                #{leaderboardEntry.rank}
+              </span>
+              <div className="flex flex-col">
+                <CharCell
+                  name={leaderboardEntry.player_info?.main_char_info?.name}
+                  rankInfo={leaderboardEntry.player_info?.main_char_info?.rank_info}
+                  wins={leaderboardEntry.player_info?.main_char_info?.wins}
+                  losses={leaderboardEntry.player_info?.main_char_info?.losses}
+                />
+                <CharCell
+                  name={leaderboardEntry.player_info?.sub_char_info?.name}
+                  rankInfo={leaderboardEntry.player_info?.sub_char_info?.rank_info}
+                  wins={leaderboardEntry.player_info?.sub_char_info?.wins}
+                  losses={leaderboardEntry.player_info?.sub_char_info?.losses}
+                />
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Day toggle */}
         <div className="flex items-center gap-2 mb-4">
@@ -125,7 +116,7 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
                 key={opt.value}
                 onClick={() => setDays(opt.value)}
                 aria-pressed={days === opt.value}
-                className="px-3 py-1 text-xs font-bold tracking-[0.1em] uppercase transition-colors cursor-pointer"
+                className="px-3 py-1 text-xs font-bold tracking-widest uppercase transition-colors cursor-pointer"
                 style={{
                   borderLeft: i > 0 ? `1px solid ${COLOR_BORDER}` : undefined,
                   background: days === opt.value ? COLOR_PRIMARY : 'transparent',
