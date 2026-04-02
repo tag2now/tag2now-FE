@@ -1,5 +1,6 @@
 import { panelStatus } from '@/panelStatus'
 import { RANK_COLORS } from '@/shared/tierColors'
+import { MEDAL } from '@/shared/medalColors'
 import type { LeaderboardData } from '@/types'
 import LoadingBar from './LoadingBar'
 import CharCell from './CharCell'
@@ -40,16 +41,22 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
             </tr>
           </thead>
           <tbody>
-            {data.entries.map((e) => (
-              <tr key={e.np_id} className="tbl-row">
-                <td className={`tbl-td font-display text-xs font-bold w-11 ${RANK_COLORS[e.rank] ?? ''}`}>
-                  {e.rank}
-                </td>
-                <td className="player-name">{e.online_name}</td>
-                <CharCell name={e.player_info?.main_char_info?.name} rankInfo={e.player_info?.main_char_info?.rank_info} wins={e.player_info?.main_char_info?.wins} losses={e.player_info?.main_char_info?.losses} />
-                <CharCell name={e.player_info?.sub_char_info?.name} rankInfo={e.player_info?.sub_char_info?.rank_info} wins={e.player_info?.sub_char_info?.wins} losses={e.player_info?.sub_char_info?.losses} />
-              </tr>
-            ))}
+            {data.entries.map((e, i) => {
+              const medal = i < 3 ? MEDAL[i] : null
+              const rankCls = medal ? '' : (RANK_COLORS[e.rank] ?? '')
+              const rowStyle = medal ? { background: medal.bg, borderLeft: '3px solid ' + medal.border } : undefined
+              const cellStyle = medal ? { color: medal.color } : undefined
+              return (
+                <tr key={e.np_id} className="tbl-row" style={rowStyle}>
+                  <td className={`tbl-td font-display text-sm font-black w-11 ${rankCls}`} style={cellStyle}>
+                    {medal ? medal.label : e.rank}
+                  </td>
+                  <td className="player-name" style={cellStyle}>{e.online_name}</td>
+                  <CharCell name={e.player_info?.main_char_info?.name} rankInfo={e.player_info?.main_char_info?.rank_info} wins={e.player_info?.main_char_info?.wins} losses={e.player_info?.main_char_info?.losses} />
+                  <CharCell name={e.player_info?.sub_char_info?.name} rankInfo={e.player_info?.sub_char_info?.rank_info} wins={e.player_info?.sub_char_info?.wins} losses={e.player_info?.sub_char_info?.losses} />
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

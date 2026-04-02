@@ -17,13 +17,14 @@ import useWeeklyTop, { type WeeklyTopLimit } from '@/hooks/useWeeklyTop'
 import PlayerHistoryPanel from '@/components/PlayerHistoryPanel'
 import CharCell from '@/components/CharCell'
 import { RANK_COLORS } from '@/shared/tierColors'
+import { MEDAL } from '@/shared/medalColors'
 import type { HourlyActivity, DailySummary, WeeklyTopPlayer, LeaderboardEntry } from '@/types'
 
 type SubTab = 'stats' | 'weekly_top'
 
 const SUB_TABS: { key: SubTab; label: string }[] = [
   { key: 'stats', label: '접속자 통계' },
-  { key: 'weekly_top', label: '주간 TOP' },
+  { key: 'weekly_top', label: '주간 철악귀' },
 ]
 
 const DAY_OPTIONS: { value: StatsDays; label: string }[] = [
@@ -44,6 +45,7 @@ const COLOR_SECONDARY = '#c9a84c'
 const COLOR_BORDER = '#1e1e32'
 const COLOR_TXT_DIM = '#9ba3cc'
 const COLOR_BG_PANEL = '#0d0d1c'
+
 
 const TOOLTIP_STYLE = {
   background: COLOR_BG_PANEL,
@@ -203,30 +205,38 @@ function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; 
         <thead>
           <tr>
             <th scope="col" className="tbl-th w-1/20 sm:w-2/20">#</th>
-            <th scope="col" className="tbl-th w-1/20 sm:w-2/20">랭킹</th>
             <th scope="col" className="tbl-th w-7/20 sm:w-4/20">Player</th>
+            <th scope="col" className="tbl-th text-right">매치</th>
+            <th scope="col" className="tbl-th w-1/20 sm:w-2/20">랭킹</th>
             <th scope="col" className="tbl-th sm:w-7/20 text-center">Main</th>
             <th scope="col" className="tbl-th sm:w-7/20 text-center">Sub</th>
-            <th scope="col" className="tbl-th text-right">매치</th>
           </tr>
         </thead>
         <tbody>
           {data.map((p, i) => {
             const lb = entryByNpid.get(p.npid)
+            const medal = i < 3 ? MEDAL[i] : null
             return (
-              <tr key={p.npid} className="tbl-row">
-                <td className="tbl-td font-display text-xs font-bold w-11" style={{ color: COLOR_TXT_DIM }}>{i + 1}</td>
-                <td className={`tbl-td font-display text-xs font-bold w-11 ${lb ? (RANK_COLORS[lb.rank] ?? '') : ''}`} style={lb && !RANK_COLORS[lb.rank] ? { color: COLOR_TXT_DIM } : undefined}>
-                  {lb ? lb.rank : '—'}
+              <tr
+                key={p.npid}
+                className="tbl-row"
+                style={medal ? { background: medal.bg, borderLeft: `3px solid ${medal.border}` } : undefined}
+              >
+                <td className="tbl-td font-display text-sm font-black w-11" style={{ color: medal ? medal.color : COLOR_TXT_DIM }}>
+                  {medal ? medal.label : i + 1}
                 </td>
                 <td className="player-name">
                   <button
                     onClick={() => onSelect(p.npid)}
                     className="hover:underline cursor-pointer font-semibold"
-                    style={{ color: COLOR_PRIMARY }}
+                    style={{ color: medal ? medal.color : COLOR_PRIMARY }}
                   >
                     {p.online_name}
                   </button>
+                </td>
+                <td className="tbl-td text-right text-xs font-bold" style={{ color: COLOR_TXT_DIM }}>{p.match_count}</td>
+                <td className={`tbl-td font-display text-xs font-bold w-11 ${lb ? (RANK_COLORS[lb.rank] ?? '') : ''}`} style={lb && !RANK_COLORS[lb.rank] ? { color: COLOR_TXT_DIM } : undefined}>
+                  {lb ? lb.rank : '—'}
                 </td>
                 <CharCell
                   name={lb?.player_info?.main_char_info?.name}
@@ -240,7 +250,6 @@ function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; 
                   wins={lb?.player_info?.sub_char_info?.wins}
                   losses={lb?.player_info?.sub_char_info?.losses}
                 />
-                <td className="tbl-td text-right text-xs font-bold" style={{ color: COLOR_TXT_DIM }}>{p.match_count}</td>
               </tr>
             )
           })}
