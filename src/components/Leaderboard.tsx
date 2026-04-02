@@ -52,8 +52,12 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
                     {medal ? medal.label : e.rank}
                   </td>
                   <td className="player-name" style={cellStyle}>{e.online_name}</td>
-                  <CharCell name={e.player_info?.main_char_info?.name} rankInfo={e.player_info?.main_char_info?.rank_info} wins={e.player_info?.main_char_info?.wins} losses={e.player_info?.main_char_info?.losses} />
-                  <CharCell name={e.player_info?.sub_char_info?.name} rankInfo={e.player_info?.sub_char_info?.rank_info} wins={e.player_info?.sub_char_info?.wins} losses={e.player_info?.sub_char_info?.losses} />
+                  <td className="char-td">
+                    <CharCell name={e.player_info?.main_char_info?.name} rankInfo={e.player_info?.main_char_info?.rank_info} wins={e.player_info?.main_char_info?.wins} losses={e.player_info?.main_char_info?.losses} />
+                  </td>
+                  <td className="char-td">
+                    <CharCell name={e.player_info?.sub_char_info?.name} rankInfo={e.player_info?.sub_char_info?.rank_info} wins={e.player_info?.sub_char_info?.wins} losses={e.player_info?.sub_char_info?.losses} />
+                  </td>
                 </tr>
               )
             })}

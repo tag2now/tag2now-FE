@@ -238,18 +238,22 @@ function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; 
                 <td className={`tbl-td font-display text-xs font-bold w-11 ${lb ? (RANK_COLORS[lb.rank] ?? '') : ''}`} style={lb && !RANK_COLORS[lb.rank] ? { color: COLOR_TXT_DIM } : undefined}>
                   {lb ? lb.rank : '—'}
                 </td>
-                <CharCell
-                  name={lb?.player_info?.main_char_info?.name}
-                  rankInfo={lb?.player_info?.main_char_info?.rank_info}
-                  wins={lb?.player_info?.main_char_info?.wins}
-                  losses={lb?.player_info?.main_char_info?.losses}
-                />
-                <CharCell
-                  name={lb?.player_info?.sub_char_info?.name}
-                  rankInfo={lb?.player_info?.sub_char_info?.rank_info}
-                  wins={lb?.player_info?.sub_char_info?.wins}
-                  losses={lb?.player_info?.sub_char_info?.losses}
-                />
+                <td className="char-td">
+                  <CharCell
+                    name={lb?.player_info?.main_char_info?.name}
+                    rankInfo={lb?.player_info?.main_char_info?.rank_info}
+                    wins={lb?.player_info?.main_char_info?.wins}
+                    losses={lb?.player_info?.main_char_info?.losses}
+                  />
+                </td>
+                <td className="char-td">
+                  <CharCell
+                    name={lb?.player_info?.sub_char_info?.name}
+                    rankInfo={lb?.player_info?.sub_char_info?.rank_info}
+                    wins={lb?.player_info?.sub_char_info?.wins}
+                    losses={lb?.player_info?.sub_char_info?.losses}
+                  />
+                </td>
               </tr>
             )
           })}
