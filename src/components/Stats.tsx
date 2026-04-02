@@ -228,8 +228,8 @@ function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; 
                 <td className="player-name">
                   <button
                     onClick={() => onSelect(p.npid)}
-                    className="hover:underline cursor-pointer font-semibold"
-                    style={{ color: medal ? medal.color : COLOR_PRIMARY }}
+                    className="player-btn"
+                    style={medal ? { color: medal.color, borderColor: medal.border } : undefined}
                   >
                     {p.online_name}
                   </button>

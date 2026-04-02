@@ -91,6 +91,7 @@ export default function App() {
                 onRefresh={rooms.refresh}
                 groupKey={activeTab}
                 lastUpdated={rooms.lastUpdated}
+                leaderboardEntries={lb.data?.entries}
               />
             )}
             {!isRoomTab && (rooms.loading || rooms.error) && groupKeys.length === 0 && (

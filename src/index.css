@@ -68,6 +68,11 @@
   50%      { opacity: 0.25; box-shadow: none; }
 }
 
+@keyframes vs-blink {
+  0%, 100% { opacity: 1; text-shadow: 0 0 6px #facc1560, 0 0 14px rgba(129, 106, 11, 0.4); }
+  50%       { opacity: 0.35; text-shadow: none; }
+}
+
 @keyframes border-pulse {
   0%, 100% { border-color: #facc15; box-shadow: 0 0 6px #facc1560; }
   50%      { border-color: #facc1530; box-shadow: none; }
@@ -205,6 +210,15 @@
     @apply bg-transparent border border-primary-dim text-primary text-sm px-2 py-0.5 rounded cursor-pointer transition-colors hover:bg-primary-glow hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed;
   }
 
+  .vs-label {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    color: var(--color-tier-orange);
+    animation: vs-blink 2s ease-in-out infinite;
+  }
+
   .loading-bar {
     position: absolute;
     top: 0;
@@ -236,6 +250,15 @@
 
   .input-base {
     @apply bg-bg-row border border-border-light rounded text-txt font-sans outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary;
+  }
+
+  .player-btn {
+    @apply px-2 py-0.5 bg-transparent border border-primary-dim text-primary text-sm font-bold rounded cursor-pointer transition-colors hover:border-primary hover:bg-primary-glow;
+  }
+
+  .player-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 
   .btn-primary {
