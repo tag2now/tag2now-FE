@@ -73,7 +73,7 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
                       <RankImage rankInfo={r.rank_info} className="min-w-19.75 h-9 w-auto mx-auto" />
                     </td>
                     <td className="player-name">
-                      {r.users?.[0] ? <button onClick={() => setSelectedNpid(r.users![0].npid)} className="player-btn">{r.users[0].online_name}</button> : '—'}
+                      {r.users?.[0] ? <button onClick={() => setSelectedNpid(r.users![0].np_id)} className="player-btn">{r.users[0].online_name}</button> : '—'}
                     </td>
                     <td className="tbl-td px-1">
                             <span className="inline-flex items-center" title="게임 중" aria-label="게임 중">
@@ -81,7 +81,7 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
                             </span>
                     </td>
                     <td className="player-name">
-                      {r.users?.[1] ? <button onClick={() => setSelectedNpid(r.users![1].npid)} className="player-btn">{r.users[1].online_name}</button> : '—'}
+                      {r.users?.[1] ? <button onClick={() => setSelectedNpid(r.users![1].np_id)} className="player-btn">{r.users[1].online_name}</button> : '—'}
                     </td>
                   </tr>
                 ))}
@@ -92,7 +92,7 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
                         <span className="searching-icon shrink-0 text-tier-yellow">{IconSearch}</span>
                         <RankImage rankInfo={searching[0].rank_info} className="h-7 w-auto shrink-0" />
                         {searching.map(({users: searchUsers}) => (
-                          <button key={searchUsers[0].npid} onClick={() => setSelectedNpid(searchUsers[0].npid)} className="player-btn">
+                          <button key={searchUsers[0].np_id} onClick={() => setSelectedNpid(searchUsers[0].np_id)} className="player-btn">
                             {searchUsers[0].online_name}
                           </button>
                         ))}

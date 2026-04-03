@@ -6,6 +6,10 @@ const ROOMS_REFRESH_INTERVAL = 10_000
 
 export const fetchRoomsAll =  async () => {
   const data: Record<string, any> = await GET('rooms/all');
+  Object.values(data).forEach(room => room["users"].forEach((user: { npid: any; }) => {
+      // @ts-ignore
+      user['np_id']= user.npid
+  }))
 
   const groups = Object.fromEntries(
       Object.entries(data)

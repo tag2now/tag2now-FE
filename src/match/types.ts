@@ -1,6 +1,6 @@
 // Room types
 export interface RoomUser {
-  npid: string
+  np_id: string
   online_name: string
   avatar_url: string
 }
