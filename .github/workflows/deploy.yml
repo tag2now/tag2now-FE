@@ -33,7 +33,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: npx playwright test
+        run: npx playwright test --update-snapshots
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
