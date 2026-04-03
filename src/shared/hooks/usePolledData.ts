@@ -34,7 +34,7 @@ export default function usePolledData<T>(fetcher: () => Promise<T>, interval: nu
   const [state, setState] = useState<Omit<PolledState<T>, 'refresh'>>({ data: null, loading: true, refreshing: false, error: null, lastUpdated: null })
 
   useEffect(() => {
-    load()
+    load().then()
     if (!interval) return
     const timer = setInterval(load, interval)
     return () => clearInterval(timer)

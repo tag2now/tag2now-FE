@@ -109,7 +109,7 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
                           <tr key={'s-' + rooms[0].rank_info.id} className="tbl-row" style={rowAccentStyle}>
                             <td colSpan={4} className="px-3 py-1.5">
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                <span className="shrink-0 text-tier-yellow">{IconSearch}</span>
+                                <span className="searching-icon shrink-0 text-tier-yellow">{IconSearch}</span>
                                 <RankImage rankInfo={searching[0].rank_info} className="h-7 w-auto shrink-0" />
                                 {searching.map(r => (
                                   r.users?.[0] ? (

@@ -67,7 +67,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
           </div>
           {totalUsers != null && totalUsers > 0 && (
             <span className="tracking-wide text-sm text-txt-dim">
-              <span className="text-accent font-bold">{totalUsers}</span> online
+              <span className="text-accent font-bold" aria-label="total users">{totalUsers}</span> online
             </span>
           )}
         </div>

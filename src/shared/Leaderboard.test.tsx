@@ -49,7 +49,7 @@ expect(screen.getByText('Main')).toBeInTheDocument()
     }
     render(<Leaderboard loading={false} data={data} error={null} />)
 
-    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('1ST')).toBeInTheDocument()
     expect(screen.getByText('KazuyaFan')).toBeInTheDocument()
     expect(screen.getByAltText('Kazuya')).toBeInTheDocument()
     expect(screen.getByAltText('Destroyer')).toBeInTheDocument()
