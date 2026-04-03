@@ -25,7 +25,7 @@ export default function PlayerMatchTable({ rooms }: PlayerMatchTableProps) {
                 </th>
               </tr>
               {(r.users ?? []).map((u, i) => (
-                <tr key={u.user_id ?? i} className="tbl-row">
+                <tr key={u.np_id ?? i} className="tbl-row">
                   <td className="tbl-td">{i + 1}</td>
                   <td className="player-name">{u.online_name}</td>
                 </tr>

@@ -6,8 +6,8 @@
       "rank_info": { "id": 1, "name": "Tekken Lord", "tier": "S" },
       "max_slots": 2,
       "users": [
-        { "online_name": "TTT2_Master", "user_id": "u001" },
-        { "online_name": "KingOfIronFist", "user_id": "u002" }
+        { "online_name": "TTT2_Master", "np_id": "u001" },
+        { "online_name": "KingOfIronFist", "np_id": "u002" }
       ]
     },
     {
@@ -16,7 +16,7 @@
       "rank_info": { "id": 2, "name": "Warrior", "tier": "B" },
       "max_slots": 2,
       "users": [
-        { "online_name": "TagComboKing", "user_id": "u003" }
+        { "online_name": "TagComboKing", "np_id": "u003" }
       ]
     }
   ],
@@ -26,9 +26,9 @@
       "owner_online_name": "BearPunchPro",
       "max_slots": 4,
       "users": [
-        { "online_name": "BearPunchPro", "user_id": "u004" },
-        { "online_name": "NewChallenger", "user_id": "u005" },
-        { "online_name": "GuestPlayer1", "user_id": "u006" }
+        { "online_name": "BearPunchPro", "np_id": "u004" },
+        { "online_name": "NewChallenger", "np_id": "u005" },
+        { "online_name": "GuestPlayer1", "np_id": "u006" }
       ]
     }
   ]

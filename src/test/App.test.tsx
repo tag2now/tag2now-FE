@@ -50,8 +50,8 @@ const ROOMS_DATA = {
         rank_info: { id: 1, name: 'Platinum', tier: 'Platinum' },
         max_slots: 6,
         users: [
-          { online_name: 'RoomOwner', user_id: 'RoomOwner' },
-          { online_name: 'Challenger', user_id: 'Challenger' },
+          { online_name: 'RoomOwner', np_id: 'RoomOwner' },
+          { online_name: 'Challenger', np_id: 'Challenger' },
         ],
       },
     ],

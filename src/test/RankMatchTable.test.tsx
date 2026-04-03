@@ -11,9 +11,9 @@ describe('RankMatchTable', () => {
         owner_online_name: 'Longuring',
         rank_info: { id: 1, name: '1st 나무단', tier: '나무단' },
         users: [
-          { online_name: 'Longuring', user_id: 'Longuring' },
-          { online_name: 'DuelMan', user_id: 'DuelMan' },
-        ],
+          { online_name: 'Longuring', np_id: 'Longuring' },
+          { online_name: 'DuelMan', np_id: 'DuelMan' },
+        ] as RoomUser[],
       },
     ]
     render(<RankMatchTable rooms={rooms} />)
@@ -35,7 +35,7 @@ describe('RankMatchTable', () => {
         room_id: 3382,
         owner_online_name: 'SoloPlayer',
         rank_info: { id: 2, name: '2nd 나무단', tier: '나무단' },
-        users: [{ online_name: 'SoloPlayer', user_id: 'SoloPlayer' }],
+        users: [{ online_name: 'SoloPlayer', np_id: 'SoloPlayer' }] as RoomUser[],
       },
     ]
     render(<RankMatchTable rooms={rooms} />)
@@ -50,17 +50,17 @@ describe('RankMatchTable', () => {
       {
         room_id: 1,
         rank_info: { id: 20, name: '2nd 돌단', tier: '돌단' },
-        users: [{ online_name: 'C' }, { online_name: 'D' }],
+        users: [{ online_name: 'C' }, { online_name: 'D' }] as RoomUser[],
       },
       {
         room_id: 2,
         rank_info: { id: 5, name: '1st 나무단', tier: '나무단' },
-        users: [{ online_name: 'A' }, { online_name: 'B' }],
+        users: [{ online_name: 'A' }, { online_name: 'B' }] as RoomUser[],
       },
       {
         room_id: 3,
         rank_info: { id: 10, name: '2nd 나무단', tier: '나무단' },
-        users: [{ online_name: 'E' }, { online_name: 'F' }],
+        users: [{ online_name: 'E' }, { online_name: 'F' }] as RoomUser[],
       },
     ]
     render(<RankMatchTable rooms={rooms} />)
