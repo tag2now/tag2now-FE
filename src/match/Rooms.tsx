@@ -42,8 +42,7 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
   return (
     <div className="panel relative" aria-live="polite">
       <LoadingBar visible={refreshing} />
-      <div className="panel-meta flex items-center justify-between">
-        <span>{rooms.length}개 방</span>
+      <div className="panel-meta flex items-center justify-end">
         <div className="flex items-center gap-3">
           {relativeTime && (
             <span className="text-txt-dim text-xs">업데이트 {relativeTime}</span>
@@ -56,7 +55,7 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
         </div>
       </div>
       {rooms.length === 0 ? (
-        <p className="state-msg px-4">활성화된 방이 없습니다.</p>
+        <p className="state-msg px-4">방이 없습니다.</p>
       ) : groupKey === 'rank_match' ? (
         <RankMatchTable rooms={rooms as unknown as RankMatchRoom[]} leaderboardEntries={leaderboardEntries} />
       ) : (

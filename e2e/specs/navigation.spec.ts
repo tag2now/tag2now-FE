@@ -54,7 +54,7 @@ test.describe('Navigation', () => {
 
     // Go back to rank match
     await page.locator('button.tab-btn', { hasText: '랭매' }).click()
-    await expect(page.locator('.panel-meta')).toContainText('room')
+    await expect(page.locator('thead tr')).toContainText('랭크')
   })
 
   test('active tab styling updates on click', async ({ page }) => {
