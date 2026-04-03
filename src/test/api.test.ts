@@ -36,9 +36,9 @@ describe('fetchLeaderboard', () => {
 describe('fetchRoomsAll', () => {
   it('calls GET /api/rooms/all and returns normalised { groups, total, totalUsers }', async () => {
     const rawPayload = {
-      '1': [{ id: 1, users: [{ online_name: 'A', user_id: 'a' }] }],
+      '1': [{ id: 1, users: [{ online_name: 'A', np_id: 'a' }] }],
       '2': [
-        { id: 2, users: [{ online_name: 'B', user_id: 'b' }, { online_name: 'C', user_id: 'c' }] },
+        { id: 2, users: [{ online_name: 'B', np_id: 'b' }, { online_name: 'C', np_id: 'c' }] },
         { id: 3, users: [] },
       ],
     }

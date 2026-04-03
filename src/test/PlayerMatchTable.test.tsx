@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import PlayerMatchTable from '../components/PlayerMatchTable'
-import type { Room } from '@/types'
+import type {Room, RoomUser} from '@/types'
 
 describe('PlayerMatchTable', () => {
   it('renders room separator with owner name and user count', () => {
@@ -11,9 +11,9 @@ describe('PlayerMatchTable', () => {
         owner_online_name: 'Alice',
         rank_info: null,
         users: [
-          { online_name: 'Alice', user_id: 'Alice' },
-          { online_name: 'Bob', user_id: 'Bob' },
-        ],
+          { online_name: 'Alice', np_id: 'Alice' },
+          { online_name: 'Bob', np_id: 'Bob' },
+        ] as RoomUser[],
       },
     ]
     render(<PlayerMatchTable rooms={rooms} />)
@@ -30,10 +30,10 @@ describe('PlayerMatchTable', () => {
         owner_online_name: 'Host',
         rank_info: null,
         users: [
-          { online_name: 'Player1', user_id: 'p1' },
-          { online_name: 'Player2', user_id: 'p2' },
-          { online_name: 'Player3', user_id: 'p3' },
-        ],
+          { online_name: 'Player1', np_id: 'p1' },
+          { online_name: 'Player2', np_id: 'p2' },
+          { online_name: 'Player3', np_id: 'p3' },
+        ] as RoomUser[],
       },
     ]
     render(<PlayerMatchTable rooms={rooms} />)
@@ -49,16 +49,16 @@ describe('PlayerMatchTable', () => {
         room_id: 1,
         owner_online_name: 'Room1Owner',
         rank_info: null,
-        users: [{ online_name: 'UserA', user_id: 'a' }],
+        users: [{ online_name: 'UserA', np_id: 'a' }] as RoomUser[],
       },
       {
         room_id: 2,
         owner_online_name: 'Room2Owner',
         rank_info: null,
         users: [
-          { online_name: 'UserB', user_id: 'b' },
-          { online_name: 'UserC', user_id: 'c' },
-        ],
+          { online_name: 'UserB', np_id: 'b' },
+          { online_name: 'UserC', np_id: 'c' },
+        ] as RoomUser[],
       },
     ]
     render(<PlayerMatchTable rooms={rooms} />)

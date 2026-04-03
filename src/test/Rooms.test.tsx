@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import Rooms from '../components/Rooms'
+import {Room} from "@/types";
 
 describe('Rooms', () => {
   it('shows loading message when loading=true', () => {
@@ -31,8 +32,8 @@ describe('Rooms', () => {
           room_id: 1,
           owner_online_name: 'Alice',
           rank_info: null,
-          users: [{ online_name: 'Alice', user_id: 'Alice' }],
-        },
+          users: [{ online_name: 'Alice', np_id: 'Alice' }],
+        } as Room,
       ],
     }
     render(<Rooms loading={false} data={data} error={null} />)
@@ -48,7 +49,7 @@ describe('Rooms', () => {
           room_id: 1,
           rank_info: { id: 1, name: '1st 나무단', tier: '나무단' },
           users: [{ online_name: 'A' }, { online_name: 'B' }],
-        },
+        } as Room,
       ],
     }
     render(<Rooms loading={false} data={data} error={null} groupKey="rank_match" />)
