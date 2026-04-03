@@ -6,7 +6,7 @@ import {Room} from "@/match/types";
 describe('Rooms', () => {
   it('shows loading message when loading=true', () => {
     render(<Rooms loading={true} data={null} error={null} />)
-    expect(screen.getByText('Loading rooms...')).toBeInTheDocument()
+    expect(screen.getByText('방 목록 불러오는 중...')).toBeInTheDocument()
   })
 
   it('shows error message when error is provided', () => {
@@ -22,7 +22,7 @@ describe('Rooms', () => {
   it('shows "No active rooms." when rooms array is empty', () => {
     const data = { rooms: [] as any[] }
     render(<Rooms loading={false} data={data} error={null} />)
-    expect(screen.getByText('No active rooms.')).toBeInTheDocument()
+    expect(screen.getByText('방이 없습니다.')).toBeInTheDocument()
   })
 
   it('renders PlayerMatchTable when groupKey is not rank_match', () => {
@@ -59,7 +59,7 @@ describe('Rooms', () => {
   it('falls back to empty array when data.rooms is undefined', () => {
     const data = {} as { rooms?: any[] }
     render(<Rooms loading={false} data={data} error={null} />)
-    expect(screen.getByText('No active rooms.')).toBeInTheDocument()
+    expect(screen.getByText('방이 없습니다.')).toBeInTheDocument()
   })
 
   it('shows loading bar when refreshing=true', () => {

@@ -8,8 +8,8 @@ const { mockedFetchLeaderboard, mockedFetchRoomsAll } = vi.hoisted(() => ({
   mockedFetchRoomsAll: vi.fn(),
 }))
 
-vi.mock('@/shared/hook/useLeaderboard', async () => {
-  const { default: usePolledData } = await vi.importActual<typeof import('@/shared/hooks/usePolledData')>('@/shared/hooks/usePolledData')
+const { default: usePolledData } = await vi.importActual<typeof import('@/shared/hooks/usePolledData')>('@/shared/hooks/usePolledData')
+vi.mock("@/shared/hooks/useLeaderboard", async () => {
   return {
     fetchLeaderboard: mockedFetchLeaderboard,
     default: () => usePolledData(mockedFetchLeaderboard as any, null),
@@ -17,7 +17,6 @@ vi.mock('@/shared/hook/useLeaderboard', async () => {
 })
 
 vi.mock('@/match/useRooms', async () => {
-  const { default: usePolledData } = await vi.importActual<typeof import('@/shared/hooks/usePolledData')>('@/shared/hooks/usePolledData')
   return {
     fetchRoomsAll: mockedFetchRoomsAll,
     default: () => usePolledData(mockedFetchRoomsAll as any, 10_000),
@@ -105,7 +104,7 @@ describe('App', () => {
     await renderApp()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+      fireEvent.click(screen.getByRole('button', { name: '새로고침' }))
     })
 
     // Called once on mount and once on Refresh click
@@ -166,7 +165,8 @@ describe('App', () => {
 
     unmount!()
 
-    expect(clearIntervalSpy).toHaveBeenCalledTimes(1)
+    // each for rooms, leaderboard
+    expect(clearIntervalSpy).toHaveBeenCalledTimes(2)
     clearIntervalSpy.mockRestore()
   })
 
@@ -175,7 +175,7 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Tag 2 Now' })).toBeInTheDocument()
     expect(screen.getByText('Live')).toBeInTheDocument()
-    expect(screen.getByText(/2 online/)).toBeInTheDocument()
+    expect(screen.getByLabelText('total users')).toHaveTextContent('2')
   })
 
   it('shows loading state initially when fetch is slow', async () => {
@@ -185,7 +185,7 @@ describe('App', () => {
 
     render(<App />)
 
-    expect(screen.getByText('Loading rooms...')).toBeInTheDocument()
+    expect(screen.getByText('방 목록 불러오는 중...')).toBeInTheDocument()
   })
 
   it('auto-refresh keeps content visible and shows loading bar instead of loading message', async () => {
@@ -195,7 +195,7 @@ describe('App', () => {
 
     // Data is visible after initial load
     expect(screen.getByText('RoomOwner')).toBeInTheDocument()
-    expect(screen.queryByText('Loading rooms...')).not.toBeInTheDocument()
+    expect(screen.queryByText('방 목록 불러오는 중...')).not.toBeInTheDocument()
 
     // Make the next fetch hang so we can observe the refreshing state
     mockedFetchRoomsAll.mockReturnValue(new Promise(() => {}))

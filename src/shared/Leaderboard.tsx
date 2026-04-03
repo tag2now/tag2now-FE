@@ -28,7 +28,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
         <span>Total records: {data.total_records}</span>
         {onRefresh && (
           <button className="refresh-btn" aria-label="Refresh" onClick={onRefresh} disabled={refreshing}>
-            ↻ Refresh
+            ↻
           </button>
         )}
       </div>
