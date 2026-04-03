@@ -49,6 +49,10 @@ export interface Room {
   users?: RoomUser[]
 }
 
+export interface RankMatchRoom extends Room {
+  rank_info: RoomRankInfo
+}
+
 export interface RoomsData {
   groups: Record<string, Room[]>
   total: number
