@@ -1,15 +1,15 @@
 import { useState, useMemo } from 'react'
-import Leaderboard from './components/Leaderboard'
-import Rooms from './components/Rooms'
-import Community from './components/Community'
-import Stats from './components/Stats'
-import Header from './components/Header'
-import Footer from './components/Footer'
-import PatchNotes from './components/PatchNotes'
-import { GROUP_ORDER, formatGroupName } from './tabConfig'
-import useLeaderboard from './hooks/useLeaderboard'
-import useRooms from './hooks/useRooms'
-import GoogleAdvertise from "@/components/GoogleAdvertise";
+import Leaderboard from "@/shared/Leaderboard";
+import Stats from "@/stat/Stats"
+import Header from "@/shared/components/Header";
+import Footer from "@/shared/components/Footer";
+import PatchNotes from "@/shared/components/PatchNotes";
+import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
+import useLeaderboard from "@/shared/hooks/useLeaderboard";
+import useRooms from "@/match/useRooms";
+import GoogleAdvertise from "@/shared/components/GoogleAdvertise";
+import Community from "@/community/Community";
+import Rooms from "@/match/Rooms";
 
 export default function App() {
   const [tab, setTab] = useState<string | null>(null)
