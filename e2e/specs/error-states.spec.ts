@@ -35,7 +35,7 @@ test.describe('Error states', () => {
     // Re-navigating should recover
     await page.goto('/')
     await dismissPatchNotes(page)
-    await expect(page.locator('.panel-meta')).toContainText('room')
+    await expect(page.locator('.panel-meta')).toContainText('방금')
   })
 
   test('both APIs failing shows rooms error on default tab', async ({ page }) => {

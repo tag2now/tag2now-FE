@@ -8,15 +8,10 @@ test.describe('Rooms', () => {
     await dismissPatchNotes(page)
   })
 
-  test('rank match tab shows room count', async ({ page }) => {
-    await expect(page.locator('.panel-meta')).toContainText('2 rooms')
-  })
-
-  test('rank match tab renders RankMatchTable with tier headers', async ({ page }) => {
-    // RankMatchTable has columns: Rank, status icon, User 1, User 2
-    await expect(page.locator('table thead th', { hasText: 'Rank' })).toBeVisible()
-    await expect(page.locator('table thead th', { hasText: 'User 1' })).toBeVisible()
-    await expect(page.locator('table thead th', { hasText: 'User 2' })).toBeVisible()
+  test('rank match tab renders RankMatchTable with headers', async ({ page }) => {
+    await expect(page.locator('table thead th', { hasText: '랭크' })).toBeVisible()
+    await expect(page.locator('table thead th', { hasText: '플레이어 1' })).toBeVisible()
+    await expect(page.locator('table thead th', { hasText: '플레이어 2' })).toBeVisible()
   })
 
   test('rank match shows player names from fixture', async ({ page }) => {
@@ -34,15 +29,10 @@ test.describe('Rooms', () => {
     await expect(page.locator('text=BearPunchPro').first()).toBeVisible()
   })
 
-  test('player match shows correct room count', async ({ page }) => {
-    await page.locator('button.tab-btn', { hasText: '플매' }).click()
-    await expect(page.locator('.panel-meta')).toContainText('1 room')
-  })
-
   test('refresh button is visible and triggers API call', async ({ page }) => {
     const refreshBtn = page.locator('button.refresh-btn')
     await expect(refreshBtn).toBeVisible()
-    await expect(refreshBtn).toContainText('Refresh')
+    await expect(refreshBtn).toContainText('↻')
 
     const requestPromise = page.waitForRequest(/\/api\/rooms\/all/)
     await refreshBtn.click()
@@ -63,6 +53,6 @@ test.describe('Rooms', () => {
     await mockAllApis(page, { rooms: { rank_match: [], player_match: [] } })
     await page.goto('/')
 
-    await expect(page.locator('text=No active rooms.')).toBeVisible()
+    await expect(page.locator('text=방이 없습니다.')).toBeVisible()
   })
 })
