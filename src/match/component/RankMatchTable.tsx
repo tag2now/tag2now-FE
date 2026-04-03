@@ -23,18 +23,9 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
   const entryByNpid = new Map(leaderboardEntries?.map(e => [e.np_id, e]) ?? [])
   const selectedEntry = selectedNpid !== null ? entryByNpid.get(selectedNpid) : undefined
-  const selectUser = (u: { np_id: string; online_name: string }) =>
-    setSelectedNpid(u.np_id || u.online_name)
-  const sorted = rooms.sort((a, b) => (a.rank_info.id ?? 0) - (b.rank_info.id ?? 0)).reverse()
-  const tierGroups: [string, RankMatchRoom[]][] = []
-  const seen = new Map<string, RankMatchRoom[]>()
-  for (const r of sorted) {
-    const tier = r.rank_info.tier ?? '—'
-    if (!seen.has(tier)) { seen.set(tier, []); tierGroups.push([tier, seen.get(tier)!]) }
-    seen.get(tier)!.push(r)
-    // seen.getOrInsertComputed();
-  }
 
+  const sortedRoom = rooms.sort((a,b) => a.rank_info.id - b.rank_info.id).reverse()
+  const tierGroups = Array.from(Map.groupBy(sortedRoom, room => room.rank_info.tier))
 
   return (
     <div className="w-full overflow-x-auto">
@@ -63,6 +54,9 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
             const rowAccentStyle: CSSProperties = hex
               ? { borderLeft: `2px solid ${hex}28` }
               : {}
+            const inGame = tierRooms.filter(r => r.users?.length === 2)
+            const searching = tierRooms.filter(r => r.users?.length !== 2)
+            const groupedSearching = Array.from(Map.groupBy(searching, s => s.rank_info.id))
             return (
               <Fragment key={tier}>
                 <tr className="tier-separator">
@@ -73,60 +67,39 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
                     <span className="tracking-widest">{tier}</span>
                   </th>
                 </tr>
-                {(() => {
-                  // Group all rooms by rank id, sorted by rank desc
-                  const rankGroups = new Map<number, RankMatchRoom[]>()
-                  for (const r of tierRooms) {
-                    const id = r.rank_info.id ?? -1
-                    if (!rankGroups.has(id)) rankGroups.set(id, [])
-                    rankGroups.get(id)!.push(r)
-                  }
-                  return [...rankGroups.entries()]
-                    .sort(([a], [b]) => b - a)
-                    .flatMap(([, rooms]) => {
-                      const inGame = rooms.filter(r => r.users?.length === 2)
-                      const searching = rooms.filter(r => r.users?.length !== 2)
-                      return [
-                        ...inGame.map(r => (
-                          <tr key={r.room_id} className="tbl-row" style={rowAccentStyle}>
-                            <td className="tbl-td">
-                              <RankImage rankInfo={r.rank_info} className="min-w-19.75 h-9 w-auto mx-auto" />
-                            </td>
-                            <td className="player-name">
-                              {r.users?.[0] ? <button onClick={() => selectUser(r.users![0])} className="player-btn">{r.users[0].online_name}</button> : '—'}
-                            </td>
-                            <td className="tbl-td px-1">
-                              <span className="inline-flex items-center" title="게임 중" aria-label="게임 중">
-                                {VsLabel}
-                              </span>
-                            </td>
-                            <td className="player-name">
-                              {r.users?.[1] ? <button onClick={() => selectUser(r.users![1])} className="player-btn">{r.users[1].online_name}</button> : '—'}
-                            </td>
-                          </tr>
-                        )),
-                        ...(searching.length > 0 ? [(
-                          <tr key={'s-' + rooms[0].rank_info.id} className="tbl-row" style={rowAccentStyle}>
-                            <td colSpan={4} className="px-3 py-1.5">
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                <span className="searching-icon shrink-0 text-tier-yellow">{IconSearch}</span>
-                                <RankImage rankInfo={searching[0].rank_info} className="h-7 w-auto shrink-0" />
-                                {searching.map(r => (
-                                  r.users?.[0] ? (
-                                    <button key={r.room_id} onClick={() => selectUser(r.users![0])} className="player-btn">
-                                      {r.users[0].online_name}
-                                    </button>
-                                  ) : (
-                                    <span key={r.room_id} className="text-sm font-semibold text-txt-dim">—</span>
-                                  )
-                                ))}
-                              </div>
-                            </td>
-                          </tr>
-                        )] : []),
-                      ]
-                    })
-                })()}
+                {inGame.map((r,i) => (
+                  <tr key={i} className="tbl-row" style={rowAccentStyle}>
+                    <td className="tbl-td">
+                      <RankImage rankInfo={r.rank_info} className="min-w-19.75 h-9 w-auto mx-auto" />
+                    </td>
+                    <td className="player-name">
+                      {r.users?.[0] ? <button onClick={() => setSelectedNpid(r.users![0].npid)} className="player-btn">{r.users[0].online_name}</button> : '—'}
+                    </td>
+                    <td className="tbl-td px-1">
+                            <span className="inline-flex items-center" title="게임 중" aria-label="게임 중">
+                              {VsLabel}
+                            </span>
+                    </td>
+                    <td className="player-name">
+                      {r.users?.[1] ? <button onClick={() => setSelectedNpid(r.users![1].npid)} className="player-btn">{r.users[1].online_name}</button> : '—'}
+                    </td>
+                  </tr>
+                ))}
+                {groupedSearching.map(([rankId, searching]) => (
+                  <tr key={'s-' + rankId} className="tbl-row" style={rowAccentStyle}>
+                    <td colSpan={4} className="px-3 py-1.5">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="searching-icon shrink-0 text-tier-yellow">{IconSearch}</span>
+                        <RankImage rankInfo={searching[0].rank_info} className="h-7 w-auto shrink-0" />
+                        {searching.map(({users: searchUsers}) => (
+                          <button key={searchUsers[0].npid} onClick={() => setSelectedNpid(searchUsers[0].npid)} className="player-btn">
+                            {searchUsers[0].online_name}
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </Fragment>
             )
           })}

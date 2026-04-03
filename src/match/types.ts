@@ -1,6 +1,6 @@
 // Room types
 export interface RoomUser {
-  np_id: string
+  npid: string
   online_name: string
   avatar_url: string
 }
@@ -16,7 +16,7 @@ export interface Room {
   owner_online_name?: string
   rank_info?: RoomRankInfo | null
   max_slots?: number
-  users?: RoomUser[]
+  users: RoomUser[]
 }
 
 export interface RankMatchRoom extends Room {
