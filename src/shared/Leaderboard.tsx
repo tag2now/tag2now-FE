@@ -3,7 +3,7 @@ import { RANK_COLORS } from '@/shared/tierColors'
 import { MEDAL } from '@/shared/medalColors'
 import LoadingBar from "@/shared/components/LoadingBar";
 import CharCell from "@/shared/components/CharCell";
-import {PlayerHistoryPanel} from "@/match/component";
+import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import {panelStatus} from "@/shared/util/panelStatus";
 import {LeaderboardData} from "@/shared/types";
 
