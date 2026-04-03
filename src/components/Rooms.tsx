@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { panelStatus } from '@/panelStatus'
-import type { Room, LeaderboardEntry } from '@/types'
+import type {Room, LeaderboardEntry, RankMatchRoom} from '@/types'
 import LoadingBar from './LoadingBar'
 import RankMatchTable from './RankMatchTable'
 import PlayerMatchTable from './PlayerMatchTable'
@@ -58,7 +58,7 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
       {rooms.length === 0 ? (
         <p className="state-msg px-4">활성화된 방이 없습니다.</p>
       ) : groupKey === 'rank_match' ? (
-        <RankMatchTable rooms={rooms} leaderboardEntries={leaderboardEntries} />
+        <RankMatchTable rooms={rooms as unknown as RankMatchRoom[]} leaderboardEntries={leaderboardEntries} />
       ) : (
         <PlayerMatchTable rooms={rooms} />
       )}

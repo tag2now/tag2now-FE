@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react'
 import { TIER_STYLES, TIER_HEX } from '@/shared/tierColors'
 import type { CSSProperties } from 'react'
-import type { Room, LeaderboardEntry } from '@/types'
+import type {LeaderboardEntry, RankMatchRoom} from '@/types'
 import RankImage from './RankImage'
 import PlayerHistoryPanel from './PlayerHistoryPanel'
 
@@ -14,7 +14,7 @@ const IconSearch = (
 )
 
 interface RankMatchTableProps {
-  rooms: Room[]
+  rooms: RankMatchRoom[]
   leaderboardEntries?: LeaderboardEntry[]
 }
 
@@ -24,11 +24,11 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
   const selectedEntry = selectedNpid !== null ? entryByNpid.get(selectedNpid) : undefined
   const selectUser = (u: { np_id: string; online_name: string }) =>
     setSelectedNpid(u.np_id || u.online_name)
-  const sorted = [...rooms].sort((a, b) => (a.rank_info?.id ?? 0) - (b.rank_info?.id ?? 0)).reverse()
-  const tierGroups: [string, Room[]][] = []
-  const seen = new Map<string, Room[]>()
+  const sorted = rooms.sort((a, b) => (a.rank_info.id ?? 0) - (b.rank_info.id ?? 0)).reverse()
+  const tierGroups: [string, RankMatchRoom[]][] = []
+  const seen = new Map<string, RankMatchRoom[]>()
   for (const r of sorted) {
-    const tier = r.rank_info?.tier ?? '—'
+    const tier = r.rank_info.tier ?? '—'
     if (!seen.has(tier)) { seen.set(tier, []); tierGroups.push([tier, seen.get(tier)!]) }
     seen.get(tier)!.push(r)
   }
@@ -73,9 +73,9 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
                 </tr>
                 {(() => {
                   // Group all rooms by rank id, sorted by rank desc
-                  const rankGroups = new Map<number, Room[]>()
+                  const rankGroups = new Map<number, RankMatchRoom[]>()
                   for (const r of tierRooms) {
-                    const id = r.rank_info?.id ?? -1
+                    const id = r.rank_info.id ?? -1
                     if (!rankGroups.has(id)) rankGroups.set(id, [])
                     rankGroups.get(id)!.push(r)
                   }
@@ -104,7 +104,7 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
                           </tr>
                         )),
                         ...(searching.length > 0 ? [(
-                          <tr key={'s-' + rooms[0].rank_info?.id} className="tbl-row" style={rowAccentStyle}>
+                          <tr key={'s-' + rooms[0].rank_info.id} className="tbl-row" style={rowAccentStyle}>
                             <td colSpan={4} className="px-3 py-1.5">
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                 <span className="shrink-0 text-tier-yellow">{IconSearch}</span>
