@@ -18,11 +18,6 @@ const DAY_OPTIONS: { value: Days; label: string }[] = [
   { value: 90, label: '90일' },
 ]
 
-const ROOM_TYPE_LABELS: Record<string, string> = {
-  rank_match: '랭크 매치',
-  player_match: '플레이어 매치',
-}
-
 function formatDate(iso: string | null) {
   if (!iso) return '—'
   return iso.slice(0, 10)
@@ -60,20 +55,20 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto p-4"
+      className="fixed flex inset-0 z-50 overflow-y-auto p-4"
       style={{ background: 'rgba(0,0,0,0.6)' }}
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-sm rounded-lg border p-5 mx-auto my-auto"
+        className="flex flex-col relative min-w-80 sm:min-w-180 rounded-lg border p-5 m-auto"
         style={{ background: COLOR_BG_PANEL, borderColor: COLOR_BORDER }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold tracking-wider" style={{ color: COLOR_PRIMARY }}>
+          <span className="text-lg font-bold tracking-wider" style={{ color: COLOR_PRIMARY }}>
             {npid}
-          </h2>
+          </span>
           <button
             onClick={onClose}
             className="text-xs px-2 py-1 rounded border cursor-pointer hover:opacity-70"
@@ -84,130 +79,124 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
           </button>
         </div>
 
-        <div className="flex">
-          {/* Leaderboard info */}
-          {leaderboardEntry && (
-            <div className="flex flex-1 items-center pl-4 pr-6 mb-4 rounded border" style={{ borderColor: COLOR_BORDER }}>
+        <div className="flex flex-col sm:flex-row gap-6">
+          <div className="flex flex-col sm:w-1/2">
+            <div className="flex">
+              {/* Leaderboard info */}
+              {leaderboardEntry && (
+                <div className="flex flex-1 items-center pl-4 pr-6 mb-4 rounded border" style={{ borderColor: COLOR_BORDER }}>
               <span className="flex-1 font-display text-lg font-bold text-center" style={{ color: COLOR_PRIMARY }}>
                 #{leaderboardEntry.rank}
               </span>
-              <div className="flex flex-col">
-                <CharCell
-                  name={leaderboardEntry.player_info?.main_char_info?.name}
-                  rankInfo={leaderboardEntry.player_info?.main_char_info?.rank_info}
-                  wins={leaderboardEntry.player_info?.main_char_info?.wins}
-                  losses={leaderboardEntry.player_info?.main_char_info?.losses}
-                />
-                <CharCell
-                  name={leaderboardEntry.player_info?.sub_char_info?.name}
-                  rankInfo={leaderboardEntry.player_info?.sub_char_info?.rank_info}
-                  wins={leaderboardEntry.player_info?.sub_char_info?.wins}
-                  losses={leaderboardEntry.player_info?.sub_char_info?.losses}
-                />
+                  <div className="flex py-3 sm:flex-col">
+                    <CharCell
+                      name={leaderboardEntry.player_info?.main_char_info?.name}
+                      rankInfo={leaderboardEntry.player_info?.main_char_info?.rank_info}
+                      wins={leaderboardEntry.player_info?.main_char_info?.wins}
+                      losses={leaderboardEntry.player_info?.main_char_info?.losses}
+                    />
+                    <CharCell
+                      name={leaderboardEntry.player_info?.sub_char_info?.name}
+                      rankInfo={leaderboardEntry.player_info?.sub_char_info?.rank_info}
+                      wins={leaderboardEntry.player_info?.sub_char_info?.wins}
+                      losses={leaderboardEntry.player_info?.sub_char_info?.losses}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Day toggle */}
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_TXT_DIM }}>기간</span>
+              <div className="flex rounded border overflow-hidden" style={{ borderColor: COLOR_BORDER }}>
+                {DAY_OPTIONS.map((opt, i) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setDays(opt.value)}
+                    aria-pressed={days === opt.value}
+                    className="px-3 py-1 text-xs font-bold tracking-widest uppercase transition-colors cursor-pointer"
+                    style={{
+                      borderLeft: i > 0 ? `1px solid ${COLOR_BORDER}` : undefined,
+                      background: days === opt.value ? COLOR_PRIMARY : 'transparent',
+                      color: days === opt.value ? COLOR_BG_PANEL : COLOR_TXT_DIM,
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Day toggle */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_TXT_DIM }}>기간</span>
-          <div className="flex rounded border overflow-hidden" style={{ borderColor: COLOR_BORDER }}>
-            {DAY_OPTIONS.map((opt, i) => (
-              <button
-                key={opt.value}
-                onClick={() => setDays(opt.value)}
-                aria-pressed={days === opt.value}
-                className="px-3 py-1 text-xs font-bold tracking-widest uppercase transition-colors cursor-pointer"
-                style={{
-                  borderLeft: i > 0 ? `1px solid ${COLOR_BORDER}` : undefined,
-                  background: days === opt.value ? COLOR_PRIMARY : 'transparent',
-                  color: days === opt.value ? COLOR_BG_PANEL : COLOR_TXT_DIM,
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
+            {loading && (
+              <p className="state-msg" role="status">로딩 중...</p>
+            )}
+            {error && (
+              <p className="state-msg error" role="alert">Error: {error}</p>
+            )}
 
-        {loading && (
-          <p className="state-msg" role="status">로딩 중...</p>
-        )}
-        {error && (
-          <p className="state-msg error" role="alert">Error: {error}</p>
-        )}
-
-        {!loading && !error && data && (
-          <>
-            {/* Summary stats */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {[
-                { label: '목격 횟수', value: data.times_seen },
-                { label: '활동일', value: data.days_active },
-                { label: '첫 플레이', value: formatDate(data.first_seen) },
-                { label: '마지막 플레이', value: formatDate(data.last_seen) },
-              ].map(({ label, value }) => (
-                <div key={label} className="rounded p-2 border" style={{ borderColor: COLOR_BORDER }}>
-                  <p className="text-2xs uppercase tracking-wide mb-0.5" style={{ color: COLOR_TXT_DIM }}>{label}</p>
-                  <p className="text-sm font-bold" style={{ color: COLOR_PRIMARY }}>{value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Room type breakdown */}
-            {Object.keys(data.room_type_counts).length > 0 && (
-              <section className="mb-4">
-                <h3 className="text-xs font-bold tracking-[0.12em] uppercase mb-2" style={{ color: COLOR_TXT_DIM }}>
-                  룸 타입별
-                </h3>
-                <div className="flex flex-col gap-1">
-                  {Object.entries(data.room_type_counts).map(([type, count]) => (
-                    <div key={type} className="flex justify-between text-xs px-2 py-1 rounded border" style={{ borderColor: COLOR_BORDER }}>
-                      <span style={{ color: COLOR_TXT_DIM }}>{ROOM_TYPE_LABELS[type] ?? type}</span>
-                      <span className="font-bold" style={{ color: COLOR_PRIMARY }}>{count}</span>
+            {!loading && !error && data && (
+              <>
+                {/* Summary stats */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {[
+                    { label: '플레이', value: `${data.times_seen} 판` },
+                    { label: '활동일', value: data.days_active },
+                    { label: '첫 플레이', value: formatDate(data.first_seen) },
+                    { label: '마지막 플레이', value: formatDate(data.last_seen) },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="rounded p-2 border" style={{ borderColor: COLOR_BORDER }}>
+                      <p className="text-2xs uppercase tracking-wide mb-0.5" style={{ color: COLOR_TXT_DIM }}>{label}</p>
+                      <p className="text-base font-bold" style={{ color: COLOR_PRIMARY }}>{value}</p>
                     </div>
                   ))}
                 </div>
-              </section>
-            )}
 
-            {/* Top played with */}
-            {data.top_played_with.length > 0 && (
-              <section className="mb-4">
-                <h3 className="text-xs font-bold tracking-[0.12em] uppercase mb-2" style={{ color: COLOR_TXT_DIM }}>
-                  자주 함께한 플레이어
-                </h3>
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr style={{ color: COLOR_TXT_DIM }}>
-                      <th className="text-left pb-1 font-semibold">닉네임</th>
-                      <th className="text-right pb-1 font-semibold">함께한 횟수</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.top_played_with.map((p) => (
-                      <tr key={p.npid} className="border-t" style={{ borderColor: COLOR_BORDER }}>
-                        <td className="py-1" style={{ color: COLOR_PRIMARY }}>{p.online_name}</td>
-                        <td className="py-1 text-right font-bold" style={{ color: COLOR_TXT_DIM }}>{p.times_together}</td>
+
+              </>
+            )}
+          </div>
+          <div className="flex flex-col sm:w-1/2">
+            {!loading && !error && data && (
+              <>
+                {/* Top played with */}
+                {data.top_played_with.length > 0 && (
+                  <section className="mb-4">
+                    <table className="w-full text-xs">
+                      <thead>
+                      <tr style={{ color: COLOR_TXT_DIM }}>
+                        <th className="text-left pb-1 font-semibold">자주 함께한 플레이어</th>
+                        <th className="text-right pb-1 font-semibold">함께한 횟수</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-            )}
+                      </thead>
+                      <tbody>
+                      {data.top_played_with.slice(0,4).map((p) => (
+                        <tr key={p.npid} className="border-t text-base font-semibold" style={{ borderColor: COLOR_BORDER }}>
+                          <td className="py-1" style={{ color: COLOR_PRIMARY }}>{p.online_name}</td>
+                          <td className="py-1 text-right font-bold" style={{ color: COLOR_TXT_DIM }}>{p.times_together}</td>
+                        </tr>
+                      ))}
+                      </tbody>
+                    </table>
+                  </section>
+                )}
 
-            {/* Active hours clock chart */}
-            {data.active_hours.length > 0 && (
-              <section>
-                <h3 className="text-xs font-bold tracking-[0.12em] uppercase mb-2" style={{ color: COLOR_TXT_DIM }}>
-                  활동 시간대 <span className="font-normal opacity-60">(KST)</span>
-                </h3>
-                <ActiveHoursClock hours={data.active_hours} />
-              </section>
+                {/* Active hours clock chart */}
+                {data.active_hours.length > 0 && (
+                  <section className="flex flex-col flex-1">
+                    <h3 className="absolute text-xs font-bold tracking-[0.12em] uppercase mb-2" style={{ color: COLOR_TXT_DIM }}>
+                      활동 시간대 <span className="font-normal opacity-60">(KST)</span>
+                    </h3>
+                    <div className="flex-wrap h-full max-h-50">
+                      <ActiveHoursClock hours={data.active_hours} />
+                    </div>
+                  </section>
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+        </div>
+
       </div>
     </div>
   )

@@ -21,27 +21,27 @@ function sectorPath(h: number, cx: number, cy: number, rInner: number, rOuter: n
 
 export default function ActiveHoursClock({ hours }: { hours: number[] }) {
   const active = new Set(hours)
-  const cx = 64, cy = 64, rIn = 30, rOut = 56, labelR = 62
+  const cx = 64, cy = 64, rIn = 30, rOut = 60, labelR = 59
   return (
-    <svg viewBox="0 0 128 128" className="w-36 h-36 mx-auto block">
+    <svg viewBox="0 0 128 128" className="h-full mx-auto block">
     {Array.from({ length: 24 }, (_, h) => (
-        <path
-          key={h}
-      d={sectorPath(h, cx, cy, rIn, rOut)}
-      fill={active.has(h) ? hourColor(h) : 'rgba(255,255,255,0.05)'}
-      stroke="rgba(0,0,0,0.4)"
-      strokeWidth="0.5"
+        <path key={h}
+          d={sectorPath(h, cx, cy, rIn, rOut)}
+          fill={active.has(h) ? hourColor(h) : 'rgba(255,255,255,0.05)'}
+          stroke="rgba(0,0,0,0.4)"
+          strokeWidth="0.5"
         />
-))}
-  {[0, 6, 12, 18].map((h) => {
-    const angle = (h * (Math.PI * 2 / 24)) - Math.PI / 2
-    return (
-      <text key={h} x={cx + labelR * Math.cos(angle)} y={cy + labelR * Math.sin(angle)}
-    textAnchor="middle" dominantBaseline="middle" fontSize="7" fill="#9ba3cc">
-      {h}
-      </text>
-  )
-  })}
+    ))}
+    {[0, 6, 12, 18].map((h) => {
+      const angle = (h * (Math.PI * 2 / 24)) - Math.PI / 2
+      return (
+        <text key={h} x={cx + labelR * Math.cos(angle)} y={cy + labelR * Math.sin(angle)}
+              textAnchor="middle" dominantBaseline="middle"
+              fontSize="11" fontWeight="800" fill="#9ba3cc">
+          {h}
+        </text>
+      )
+    })}
   </svg>
 )
 }
