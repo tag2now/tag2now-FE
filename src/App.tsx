@@ -45,7 +45,7 @@ export default function App() {
       <Header totalUsers={rooms.data?.totalUsers} leaderboardEntries={lb.data?.entries} />
       <div className="flex w-full justify-around md:px-8 py-4">
         <GoogleAdvertise
-          className={"adsbygoogle hidden xl:block"}
+          className={"adsbygoogle"}
           client={"ca-pub-1216394999861449"}
           slot={"4642693487"}
           format={"auto"}
@@ -103,7 +103,7 @@ export default function App() {
           </div>
         </div>
         <GoogleAdvertise
-          className={"adsbygoogle hidden xl:block"}
+          className={"adsbygoogle"}
           client={"ca-pub-1216394999861449"}
           slot={"4642693487"}
           format={"auto"}

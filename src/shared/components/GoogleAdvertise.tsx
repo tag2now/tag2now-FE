@@ -1,4 +1,5 @@
 import {useEffect} from "react";
+import {useMediaQuery} from 'react-responsive'
 
 interface GoogleAdvertiseProps {
   className: string,
@@ -29,6 +30,9 @@ export default function GoogleAdvertise({
         console.error("AdvertiseError", e);
       }
   }, []);
+
+  const isDesktop = useMediaQuery({ query: '(min-width: 1440px)' });
+  if(!isDesktop) return null;
 
   //production이 아닌 경우 대체 컴포넌트 표시
   if (process.env.NODE_ENV !== "production")
