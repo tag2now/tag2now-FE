@@ -3,7 +3,7 @@ import { TIER_STYLES, TIER_HEX } from '@/shared/tierColors'
 import type { CSSProperties } from 'react'
 import type {LeaderboardEntry} from "@/shared/types";
 import RankImage from "@/shared/components/RankImage";
-import PlayerHistoryPanel from './PlayerHistoryPanel'
+import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import {RankMatchRoom} from "@/match/types";
 
 const VsLabel = <span aria-hidden="true" className="vs-label">VS</span>

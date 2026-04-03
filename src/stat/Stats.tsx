@@ -14,7 +14,7 @@ import {
 import {panelStatus} from "@/shared/util/panelStatus";
 import useStats, { type StatsDays} from "@/stat/useStats";
 import useWeeklyTop, { type WeeklyTopLimit} from "@/stat/useWeeklyTop";
-import {PlayerHistoryPanel} from "@/match/component";
+import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import CharCell from "@/shared/components/CharCell";
 import { RANK_COLORS } from '@/shared/tierColors'
 import { MEDAL } from '@/shared/medalColors'
