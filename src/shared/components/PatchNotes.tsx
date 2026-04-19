@@ -5,30 +5,17 @@ const LS_KEY = 'ttt2-patch-dismissed'
 
 const NOTES: { version: string; items: string[] }[] = [
   {
+    version: '2.0',
+    items: [
+        '신규 서버로 변경 (rpcn.tag2now.click)'
+    ]
+  },
+  {
     version: '1.1',
     items: [
       '유저 이름 클릭 시 플레이어 히스토리 패널 오픈\n(리더보드, 랭크매치, 주간 철악귀)',
       '플레이어 히스토리에 활동 시간대 차트 추가',
     ],
-  },
-  {
-    version: '1.0.7',
-    items: ['글쓰기 에러 수정'],
-  },
-  {
-    version: '1.0.6',
-    items: ['커뮤니티 게시판 추가\n(글쓰기, 댓글, 추천/비추천, 현재는 단순 텍스트만 가능)'],
-  },
-  {
-    version: '1.0.5',
-    items: [
-      '랭크 이미지 추가',
-      '1p 2p 랜덤 표시'
-    ],
-  },
-  {
-    version: '1.0.4',
-    items: ['상단바에 유저 설정 가능, 설정 시 해당 유저 계급 표시'],
   }
 ]
 
@@ -96,12 +83,12 @@ export default function PatchNotes() {
 
         {NOTES.map(note => (
           <div key={note.version} className="mb-4">
-            <h3 className="text-primary font-bold text-sm tracking-[0.12em] uppercase m-0 mb-2">
+            <h2 className="text-primary font-bold text-sm tracking-[0.12em] uppercase m-0 mb-2">
               v{note.version}
-            </h3>
+            </h2>
             <ul className="list-disc pl-5 m-0 space-y-1">
               {note.items.map((item, i) => (
-                <li key={i} className="whitespace-pre-wrap text-txt text-sm">{item}</li>
+                <li key={i} className="whitespace-pre-wrap text-txt text-md">{item}</li>
               ))}
             </ul>
           </div>
