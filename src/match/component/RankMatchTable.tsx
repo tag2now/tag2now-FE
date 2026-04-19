@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, memo, useState } from 'react'
 import { TIER_STYLES, TIER_HEX } from '@/shared/tierColors'
 import type { CSSProperties } from 'react'
 import type {LeaderboardEntry} from "@/shared/types";
@@ -19,7 +19,7 @@ interface RankMatchTableProps {
   leaderboardEntries?: LeaderboardEntry[]
 }
 
-export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchTableProps) {
+export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankMatchTableProps) {
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
   const entryByNpid = new Map(leaderboardEntries?.map(e => [e.np_id, e]) ?? [])
   const selectedEntry = selectedNpid !== null ? entryByNpid.get(selectedNpid) : undefined
@@ -110,4 +110,4 @@ export default function RankMatchTable({ rooms, leaderboardEntries }: RankMatchT
       )}
     </div>
   )
-}
+})
