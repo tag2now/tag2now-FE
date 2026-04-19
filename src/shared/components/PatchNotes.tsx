@@ -5,6 +5,10 @@ const LS_KEY = 'ttt2-patch-dismissed'
 
 const NOTES: { version: string; items: string[] }[] = [
   {
+    version: '2.0.1',
+    items: ['Yaksa 까지 계급 이미지 추가']
+  },
+  {
     version: '2.0',
     items: [
         '신규 서버로 변경 (rpcn.tag2now.click)'
