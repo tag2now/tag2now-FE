@@ -4,38 +4,154 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Live info dashboard for **Tekken Tag Tournament 2 (TTT2)** — displays real-time leaderboard rankings and active online rooms pulled from a game backend API.
+Frontend for **tag2now** — a live info dashboard for **Tekken Tag Tournament 2 (TTT2)**. Shows active online rooms, leaderboard rankings, player activity statistics, and a community board, all sourced from the `tag2now-BE` API.
+
+UI text is in Korean. The visual style is a dark neon arcade theme.
 
 ## Commands
 
 ```bash
-npm run dev          # dev server on :5173, proxies /api → http://localhost:8000
+npm run dev          # dev server on :5173 (host 0.0.0.0), proxies /api
 npm run build        # production build → dist/
-npm test             # vitest run (all tests, once)
-npm run test:watch   # vitest in watch mode
-npm run test:coverage  # coverage report via v8
+npm test             # vitest run (unit/component, once)
+npm run test:watch   # vitest watch mode
+npm run test:coverage  # v8 coverage
+npm run typecheck    # tsc --noEmit
+npm run test:e2e     # playwright (auto-starts the dev server)
+npm run test:e2e:ui  # playwright UI mode
+npm run test:e2e:update-snapshots  # refresh visual baselines
 ```
 
-Run a single test file:
+Run a single unit test file:
 ```bash
-npx vitest run src/test/api.test.js
+npx vitest run src/match/Rooms.test.tsx
 ```
+
+Run a single E2E spec:
+```bash
+npx playwright test e2e/specs/rooms.spec.ts
+```
+
+### Dev proxy target
+
+`vite.config.ts` proxies `/api` to **production by default** (`https://match.tag2now.click/api`). To hit a local backend, set `BE=local`:
+
+```bash
+BE=local npm run dev
+```
+
+The proxy strips the `/api` prefix before forwarding.
+
+## Stack
+
+React 19 + TypeScript + Vite 8 (rolldown) + Tailwind CSS 4. No router — a single page with tab state. No global state library; state lives in hooks.
+
+Key dependencies: `recharts` (statistics charts), `react-hot-toast` (notifications).
+
+The `@` alias resolves to `src/` and is configured in both `vite.config.ts` and `tsconfig.json`. Prefer `@/shared/util/api` over relative paths.
 
 ## Architecture
 
-**Single-page app** — React 18 + Vite, no router. All state lives in `App.jsx`.
+**Feature-folder layout.** Each feature owns its components, hooks, types, and API calls; `shared/` holds what crosses features.
 
-**Data flow:**
-- `src/api.js` — two thin fetch wrappers: `fetchLeaderboard(top?)` and `fetchRoomsAll()`. Both call `/api/*`, which Vite proxies to `http://localhost:8000` in dev and nginx proxies to `http://ttt2-backend-svc:8000` in production (Docker).
-- `src/App.jsx` — owns all async state as `{ data, loading, error }` objects for leaderboard and rooms. Fetches both on mount, auto-refreshes every 60 s via `setInterval`, and exposes a manual Refresh button. Tab switching is purely display — both data sets are always kept fresh.
-- `src/components/Leaderboard.jsx` and `src/components/Rooms.jsx` — purely presentational, receive `{ data, loading, error }` as props and render table/loading/error states.
+```
+src/
+  App.tsx              tab state and layout; the only place tabs are assembled
+  main.tsx             root render, Toaster, global unhandledrejection handler
+  index.css            Tailwind 4 @theme design tokens
+  config/              tabConfig, version, test-setup
+  match/               rooms — useRooms, Rooms, RankMatchTable, PlayerMatchTable
+  community/           board — useCommunity, communityApi, post/comment components
+  stat/                statistics — useStats, useWeeklyTop, Stats
+  shared/              api util, Leaderboard, hooks, components, colors, formatters
+```
 
-**Deployment:** Docker multi-stage build — Node builds the SPA, nginx serves static files and proxies `/api/` to the backend service named `ttt2-backend-svc`.
+A feature folder holds `<Feature>.tsx` (container), `use<Feature>.ts` (state), `types.ts`, and a `component/` subfolder with an `index.ts` barrel re-export.
+
+### Data flow
+
+`shared/util/api.ts` is the only place `fetch` is called. `GET`/`POST`/`DELETE` prepend the base URL, send `credentials: 'include'` (required for the community identity cookie), and throw on non-2xx.
+
+The base URL is `window.__ENV__?.API_BASE ?? '/api'`, letting a deployed build override the endpoint at runtime without a rebuild.
+
+**Polling** is centralised in `shared/hooks/usePolledData.ts`. It returns `{ data, loading, refreshing, error, refresh, lastUpdated }` and distinguishes first load (`loading`) from background refresh (`refreshing`) so the UI does not blank out on every poll. Feature hooks are thin wrappers:
+
+```ts
+export default function useRooms(): PolledState<RoomsData> {
+  return usePolledData(fetchRoomsAll, ROOMS_REFRESH_INTERVAL)  // 10s
+}
+```
+
+Pass `null` as the interval to fetch once without polling.
+
+`App.tsx` owns `useLeaderboard()` and `useRooms()` and passes `{ data, loading, error, onRefresh }` down. Both data sets stay fresh regardless of the active tab — switching tabs is display-only.
+
+### Tabs
+
+Tabs are derived, not hardcoded: one tab per room group returned by the API (ordered by `GROUP_ORDER` in `config/tabConfig.ts`, unknown groups appended), followed by the fixed `leaderboard`, `community`, and `stats` tabs. `tab` state is `string | null`; when null or stale it falls back to the first available tab.
+
+The tab bar implements the ARIA tabs pattern — `role="tablist"`/`tab`/`tabpanel`, roving `tabIndex`, and Arrow Left/Right navigation. Preserve this when touching the nav.
+
+### Community identity
+
+Not authentication. The username is stored in a cookie (`shared/util/cookie.ts`) and registered with the backend via `useIdentity().ensureIdentity()`, which POSTs to `/community/identity` once per session (guarded by a `useRef`) before any write. Callers must `await ensureIdentity()` before posting; it throws a Korean error message if no username is set.
+
+### Error handling
+
+`main.tsx` registers a global `unhandledrejection` handler that shows a toast and calls `preventDefault()`. Rejected promises therefore surface to the user without a try/catch at every call site — but a caller that wants inline error state (as feature hooks do) must catch and store `e.message` itself.
+
+`shared/util/panelStatus.tsx` renders shared loading/error/empty panel states.
+
+## Styling
+
+Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. Design tokens are declared in an `@theme` block in `src/index.css` and become utilities automatically (`--color-primary` → `bg-primary`, `text-primary`, `border-primary`).
+
+Use tokens rather than raw hex or arbitrary values. Fonts are Rajdhani (`--font-sans`) and Orbitron (`--font-display`), loaded from Google Fonts in `index.css`.
+
+Rank/tier and medal colours live in `shared/tierColors.ts` and `shared/medalColors.ts`; character art paths in `shared/characterImage.ts`.
 
 ## Tests
 
-Tests live in `src/test/`. `setup.js` imports `@testing-library/jest-dom` globally.
+Two independent suites.
 
-- `api.test.js` — mocks `global.fetch` with `vi.fn()` per test
-- `Leaderboard.test.jsx` / `Rooms.test.jsx` — pure prop-driven rendering; no mocks needed
-- `App.test.jsx` — mocks the entire `src/api.js` module via `vi.mock('../api')`. Uses `vi.useFakeTimers()` for auto-refresh tests; `afterEach` always calls `vi.useRealTimers()` so a mid-test failure can't corrupt subsequent tests.
+**Unit / component — Vitest + Testing Library.** Tests sit beside the code they cover (`src/**/*.test.tsx`), jsdom environment, globals enabled, `src/config/test-setup.ts` imports `@testing-library/jest-dom`. `vitest.config.ts` merges `vite.config.ts`, so the `@` alias works in tests.
+
+Component tests are prop-driven and need no mocks. `App.test.tsx` mocks the feature hooks. When testing polling, use `vi.useFakeTimers()` and always restore with `vi.useRealTimers()` in `afterEach`, so a mid-test failure cannot corrupt later tests.
+
+**E2E — Playwright**, in `e2e/`, against two projects: `chromium` (Desktop Chrome) and `mobile` (Pixel 5). The config starts `npm run dev` automatically and reuses a running server outside CI.
+
+- `e2e/helpers/mock-api.ts` — route interception; E2E does not hit a real backend.
+- `e2e/specs/` — behavioural specs per feature.
+- `e2e/visual/screenshots.spec.ts` — visual regression against committed baselines.
+
+Visual baselines are environment-sensitive: snapshots rendered on Windows will not match CI's Linux. Refresh them with the `Update Visual Baselines` workflow (`workflow_dispatch`) and commit the artifact rather than regenerating locally.
+
+## Custom commands
+
+`.claude/commands/` provides `/a11y-audit`, `/design-audit`, `/design-review`, and `/version-up`.
+
+Note that `/version-up` refers to `src/version.ts`, but the file is actually at `src/config/version.ts` — fix the path in the command or the version bump will fail.
+
+## Deployment
+
+Docker multi-stage: `node:24-alpine` builds the SPA, `nginx:alpine` serves `dist/`. `nginx.conf.template` is rendered by nginx's envsubst with `BACKEND_URL` (filtered to the `BACKEND` prefix), proxying `/api/` to the backend.
+
+Caching in nginx: hashed `/assets/` are immutable for a year; `index.html` is `no-cache` so deploys take effect immediately.
+
+Images go to ECR (`864573346741.dkr.ecr.ap-northeast-2.amazonaws.com/tag2-now/fe`). Production is a **single AWS Lightsail instance** running docker compose alongside the backend and its datastores — not ECS. CloudFront fronts the static assets only; `/api/` reaches the instance directly.
+
+| Workflow | Trigger | Does |
+|----------|---------|------|
+| `test.yml` | PR to `dev`/`master` | unit tests + typecheck, then E2E |
+| `deploy.yml` | `v*` tag | full test suite, then build and push to ECR |
+| `update-snapshots.yml` | manual | regenerate visual baselines, upload as artifact |
+
+**Release is manual** — SSH into Lightsail and run `docker compose pull && docker compose up -d`. `deploy.yml` carries a `deploy` job targeting ECS, but there is no ECS cluster: it is gated with `if: false` and never runs, kept only so the configuration survives a possible move back to ECS. Tagging pushes an image but does not roll out. See [aws-setup.md](../tag2now-BE/docs/aws-setup.md) in the backend repo.
+
+## Analytics
+
+Google Analytics (`G-S4Y67MPNPR`) is loaded via a gtag snippet in `index.html`. Device category and OS are collected automatically by Enhanced Measurement — no per-event code. Check *Reports → Tech → Tech details* before adding custom tracking.
+
+Because the SPA has no router, GA4 records one `page_view` per load; tab switches are not tracked.
+
+The CloudFront distribution is on the **Free plan**, where standard and real-time access logging are locked behind paid tiers, so the S3 → Athena pipeline described in `aws-setup.md` cannot currently be enabled. GA4 is the only source actually collecting.
