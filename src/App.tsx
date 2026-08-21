@@ -1,14 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import Leaderboard from "@/shared/Leaderboard";
 import Stats from "@/stat/Stats"
 import Header from "@/shared/components/Header";
 import Footer from "@/shared/components/Footer";
 import PatchNotes from "@/shared/components/PatchNotes";
-import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useRooms from "@/match/useRooms";
 import Community from "@/community/Community";
-import Rooms from "@/match/Rooms";
+import MatchingOverview from "@/match/MatchingOverview";
 import Reservation from "@/reservation/Reservation";
 
 export default function App() {
@@ -17,28 +16,15 @@ export default function App() {
   const rooms = useRooms()
 
   const groups = rooms.data?.groups ?? {}
-  const groupKeys = useMemo(() => {
-    const known = GROUP_ORDER.filter((k) => k in groups)
-    const rest = Object.keys(groups).filter((k) => !GROUP_ORDER.includes(k))
-    return [...known, ...rest]
-  }, [groups])
+  const tabs = [
+    { key: 'matching', label: '매칭 현황' },
+    { key: 'reservation', label: '예약' },
+    { key: 'leaderboard', label: '리더보드' },
+    { key: 'community', label: '커뮤니티' },
+    { key: 'stats', label: '통계' },
+  ]
 
-  const tabs = useMemo(
-    () => [...groupKeys.map((k) => ({ key: k, label: `${formatGroupName(k)} (${groups[k].length})` })),
-           { key: 'leaderboard', label: '리더보드' },
-           { key: 'reservation', label: '예약' },
-           { key: 'community', label: '커뮤니티' },
-           { key: 'stats', label: '통계' }],
-    [groupKeys, groups],
-  )
-
-  // Default to first room group tab, or leaderboard if no groups
-  const activeTab = tab && tabs.some((t) => t.key === tab) ? tab : tabs[0]?.key ?? 'leaderboard'
-  const isRoomTab = activeTab !== 'leaderboard' && activeTab !== 'reservation' && activeTab !== 'community' && activeTab !== 'stats'
-
-  const activeRoomsData = isRoomTab
-    ? { rooms: groups[activeTab] ?? [] }
-    : null
+  const activeTab = tab && tabs.some((item) => item.key === tab) ? tab : 'matching'
 
   return (
     <div className="flex flex-col items-center pb-12">
@@ -75,20 +61,16 @@ export default function App() {
           </nav>
 
           <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`} tabIndex={0}>
-            {isRoomTab && (
-              <Rooms
-                data={activeRoomsData}
+            {activeTab === 'matching' && (
+              <MatchingOverview
+                groups={groups}
                 loading={rooms.loading}
                 refreshing={rooms.refreshing}
                 error={rooms.error}
                 onRefresh={rooms.refresh}
-                groupKey={activeTab}
                 lastUpdated={rooms.lastUpdated}
                 leaderboardEntries={lb.data?.entries}
               />
-            )}
-            {!isRoomTab && (rooms.loading || rooms.error) && groupKeys.length === 0 && (
-              <Rooms data={null} loading={rooms.loading} error={rooms.error} onRefresh={rooms.refresh} lastUpdated={rooms.lastUpdated} />
             )}
             {activeTab === 'leaderboard' && <Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />}
             {activeTab === 'reservation' && <Reservation />}
