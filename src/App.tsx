@@ -7,7 +7,6 @@ import PatchNotes from "@/shared/components/PatchNotes";
 import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useRooms from "@/match/useRooms";
-import GoogleAdvertise from "@/shared/components/GoogleAdvertise";
 import Community from "@/community/Community";
 import Rooms from "@/match/Rooms";
 
@@ -43,15 +42,7 @@ export default function App() {
     <div className="flex flex-col items-center pb-12">
       <PatchNotes />
       <Header totalUsers={rooms.data?.totalUsers} leaderboardEntries={lb.data?.entries} />
-      <div className="flex w-full justify-around md:px-8 py-4">
-        <GoogleAdvertise
-          className={"adsbygoogle"}
-          client={"ca-pub-1216394999861449"}
-          slot={"4642693487"}
-          format={"auto"}
-          responsive={"true"}
-          layoutKey={""}
-        />
+      <div className="flex w-full justify-center md:px-8 py-4">
         <div id="mainContent" className="w-full max-w-240">
           <nav className=" flex items-end flex-nowrap border-b border-border-light pb-0 overflow-x-auto overflow-y-hidden whitespace-nowrap" role="tablist" aria-label="Main navigation">
             {tabs.map((t) => (
@@ -102,14 +93,6 @@ export default function App() {
             {activeTab === 'stats' && <Stats leaderboardEntries={lb.data?.entries} />}
           </div>
         </div>
-        <GoogleAdvertise
-          className={"adsbygoogle"}
-          client={"ca-pub-1216394999861449"}
-          slot={"4642693487"}
-          format={"auto"}
-          responsive={"true"}
-          layoutKey={""}
-        />
       </div>
       <Footer />
     </div>
