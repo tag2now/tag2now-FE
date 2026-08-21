@@ -58,10 +58,15 @@ export default function Reservation() {
     [rankFilter, reservations, typeFilter],
   )
   const selectedReservation = visibleReservations.find((reservation) => reservation.id === selectedId) ?? visibleReservations[0]
-  const reservationsByTime = useMemo(() => Object.entries(visibleReservations.reduce<Record<string, Reservation[]>>((groups, reservation) => {
-    ;(groups[reservation.time] ??= []).push(reservation)
-    return groups
-  }, {})), [visibleReservations])
+  const reservationsByTime = useMemo(() => {
+    const groups = visibleReservations.reduce<Record<string, Reservation[]>>((result, reservation) => {
+      ;(result[reservation.time] ??= []).push(reservation)
+      return result
+    }, {})
+    return Object.entries(groups)
+      .sort(([leftTime], [rightTime]) => leftTime.localeCompare(rightTime))
+      .map(([time, items]) => [time, [...items].sort((left, right) => Number(left.status === 'full') - Number(right.status === 'full'))] as const)
+  }, [visibleReservations])
 
   const handleJoin = (id: number) => {
     const alreadyJoined = joinedIds.includes(id)
@@ -167,22 +172,25 @@ export default function Reservation() {
         {notice && <p role="status" className="mt-3 border-l-2 border-primary bg-primary/8 px-3 py-2 text-sm font-semibold text-primary">{notice}</p>}
 
         <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.8fr)]">
-          <div className="overflow-x-auto border border-border-light bg-bg-row/70">
-            <div className="min-w-150">
-            <div className="grid grid-cols-[4.5rem_minmax(7rem,1fr)_minmax(14rem,1.5fr)_5.5rem] gap-2 border-b border-border-light bg-bg-panel px-3 py-2 text-[0.68rem] font-bold tracking-[0.12em] text-txt-dim">
-              <span>시간</span><span>등록자</span><span>매치</span><span className="text-center">현황</span>
-            </div>
-            {visibleReservations.map((reservation) => {
-              const availability = availabilityMeta(reservation)
-              const selected = reservation.id === selectedReservation?.id
-              return <button key={reservation.id} type="button" onClick={() => setSelectedId(reservation.id)} className={`grid w-full min-w-150 grid-cols-[4.5rem_minmax(7rem,1fr)_minmax(14rem,1.5fr)_5.5rem] gap-2 border-b border-border px-3 py-2 text-left transition-colors ${selected ? 'bg-primary/10 shadow-[inset_3px_0_0_var(--color-primary)]' : 'hover:bg-primary-hover'}`}>
-                <span className="font-display text-base font-black tracking-[0.06em] text-white">{reservation.time}</span>
-                <span className="self-center truncate text-sm font-bold text-txt">{reservation.host}</span>
-                <span className="flex h-7 items-center gap-2 self-center">{reservation.type === '플레이어 매치' && <span className="border border-primary-dim px-1.5 py-0.5 text-xs font-bold text-primary">플레이어 매치</span>}{reservation.ranks.map((rank) => <RankImage key={rank} rankInfo={{ name: rank, tier: rank }} className="h-7 w-auto" />)}</span>
-                <span className={`self-center justify-self-center border px-1.5 py-0.5 text-[0.65rem] font-bold tracking-[0.08em] ${availability.className}`}>{availability.label}</span>
-              </button>
-            })}
-            </div>
+          <div className="space-y-3">
+            {reservationsByTime.map(([time, reservationsAtTime]) => (
+              <section key={time} className="border border-border-light bg-bg-row/70 p-3" aria-label={`${time} 예약`}>
+                <div className="mb-3 flex items-baseline gap-3 border-b border-border pb-2">
+                  <h3 className="font-display text-2xl font-black tracking-[0.08em] text-white">{time}</h3>
+                  <span className="text-xs font-bold tracking-[0.12em] text-txt-dim">예약 {reservationsAtTime.length}건</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {reservationsAtTime.map((reservation) => {
+                    const availability = availabilityMeta(reservation)
+                    const selected = reservation.id === selectedReservation?.id
+                    return <button key={reservation.id} type="button" onClick={() => setSelectedId(reservation.id)} className={`grid grid-cols-2 overflow-hidden border text-left transition-colors ${selected ? 'border-primary bg-primary/10 shadow-[inset_3px_0_0_var(--color-primary)]' : 'border-border-light bg-bg-panel hover:border-primary-dim hover:bg-primary-hover'}`}>
+                      <span className="flex min-w-0 flex-col justify-between px-3 py-3"><strong className="truncate text-base tracking-[0.03em] text-white">{reservation.host}</strong><span className={`w-fit border px-1.5 py-0.5 text-xs font-bold tracking-[0.08em] ${availability.className}`}>{availability.label}</span></span>
+                      <span className="flex shrink-0 items-center justify-center border-l border-border bg-bg-row px-3">{reservation.type === '플레이어 매치' ? <span className="flex h-8 items-center border border-primary-dim px-2 text-center text-xs font-bold tracking-[0.04em] text-primary">PLAYER MATCH</span> : <RankImage rankInfo={{ name: reservation.ranks[0], tier: reservation.ranks[0] }} className="h-8 w-auto" />}</span>
+                    </button>
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
           {selectedReservation && (() => {
             const availability = availabilityMeta(selectedReservation)
