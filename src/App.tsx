@@ -9,6 +9,7 @@ import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useRooms from "@/match/useRooms";
 import Community from "@/community/Community";
 import Rooms from "@/match/Rooms";
+import Reservation from "@/reservation/Reservation";
 
 export default function App() {
   const [tab, setTab] = useState<string | null>(null)
@@ -25,6 +26,7 @@ export default function App() {
   const tabs = useMemo(
     () => [...groupKeys.map((k) => ({ key: k, label: `${formatGroupName(k)} (${groups[k].length})` })),
            { key: 'leaderboard', label: '리더보드' },
+           { key: 'reservation', label: '예약' },
            { key: 'community', label: '커뮤니티' },
            { key: 'stats', label: '통계' }],
     [groupKeys, groups],
@@ -32,7 +34,7 @@ export default function App() {
 
   // Default to first room group tab, or leaderboard if no groups
   const activeTab = tab && tabs.some((t) => t.key === tab) ? tab : tabs[0]?.key ?? 'leaderboard'
-  const isRoomTab = activeTab !== 'leaderboard' && activeTab !== 'community' && activeTab !== 'stats'
+  const isRoomTab = activeTab !== 'leaderboard' && activeTab !== 'reservation' && activeTab !== 'community' && activeTab !== 'stats'
 
   const activeRoomsData = isRoomTab
     ? { rooms: groups[activeTab] ?? [] }
@@ -89,6 +91,7 @@ export default function App() {
               <Rooms data={null} loading={rooms.loading} error={rooms.error} onRefresh={rooms.refresh} lastUpdated={rooms.lastUpdated} />
             )}
             {activeTab === 'leaderboard' && <Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />}
+            {activeTab === 'reservation' && <Reservation />}
             {activeTab === 'community' && <Community leaderboardEntries={lb.data?.entries} />}
             {activeTab === 'stats' && <Stats leaderboardEntries={lb.data?.entries} />}
           </div>
