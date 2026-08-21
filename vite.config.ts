@@ -27,7 +27,7 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: process.env.BE === 'local' ? 'http://localhost:8000' : 'https://tag2now.click:8000',
+        target: process.env.BE === 'local' ? 'http://localhost:8000' : 'https://match.tag2now.click/api',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

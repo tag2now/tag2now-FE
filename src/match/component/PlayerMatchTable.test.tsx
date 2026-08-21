@@ -76,7 +76,7 @@ describe('PlayerMatchTable', () => {
         room_id: 1,
         owner_online_name: 'EmptyRoom',
         rank_info: null,
-      },
+      } as Room,
     ]
     render(<PlayerMatchTable rooms={rooms} />)
 
