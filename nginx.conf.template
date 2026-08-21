@@ -13,7 +13,7 @@ server {
     add_header X-Content-Type-Options "nosniff";
     add_header X-Frame-Options "DENY";
 
-    # Health check for ALB/ECS
+    # Health check
     location = /health {
         access_log off;
         return 200 'ok';
