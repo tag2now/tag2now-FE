@@ -81,11 +81,10 @@ describe('App', () => {
     expect(mockedFetchRoomsAll).toHaveBeenCalledOnce()
   })
 
-  it('default tab is matching overview and shows rooms content', async () => {
+  it('default tab is rank match and shows its rooms content', async () => {
     await renderApp()
 
-    expect(screen.getByRole('tab', { name: '매칭 현황' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByText('랭매')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '랭매 (1)' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('RoomOwner')).toBeInTheDocument()
     expect(screen.queryByText('TestPlayer')).not.toBeInTheDocument()
   })

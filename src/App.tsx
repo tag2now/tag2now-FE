@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Leaderboard from "@/shared/Leaderboard";
 import Stats from "@/stat/Stats"
 import Header from "@/shared/components/Header";
 import Footer from "@/shared/components/Footer";
 import PatchNotes from "@/shared/components/PatchNotes";
+import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useRooms from "@/match/useRooms";
 import Community from "@/community/Community";
-import MatchingOverview from "@/match/MatchingOverview";
+import Rooms from "@/match/Rooms";
 import Reservation from "@/reservation/Reservation";
 
 export default function App() {
@@ -16,15 +17,26 @@ export default function App() {
   const rooms = useRooms()
 
   const groups = rooms.data?.groups ?? {}
-  const tabs = [
-    { key: 'matching', label: '매칭 현황' },
-    { key: 'reservation', label: '예약' },
-    { key: 'leaderboard', label: '리더보드' },
-    { key: 'community', label: '커뮤니티' },
-    { key: 'stats', label: '통계' },
-  ]
+  const groupKeys = useMemo(() => {
+    const known = GROUP_ORDER.filter((key) => key in groups)
+    const rest = Object.keys(groups).filter((key) => !GROUP_ORDER.includes(key))
+    return [...known, ...rest]
+  }, [groups])
 
-  const activeTab = tab && tabs.some((item) => item.key === tab) ? tab : 'matching'
+  const tabs = useMemo(
+    () => [
+      ...groupKeys.map((key) => ({ key, label: `${formatGroupName(key)} (${groups[key].length})` })),
+      { key: 'reservation', label: '예약' },
+      { key: 'leaderboard', label: '리더보드' },
+      { key: 'community', label: '커뮤니티' },
+      { key: 'stats', label: '통계' },
+    ],
+    [groupKeys, groups],
+  )
+
+  const activeTab = tab && tabs.some((item) => item.key === tab) ? tab : tabs[0]?.key ?? 'leaderboard'
+  const isRoomTab = !['reservation', 'leaderboard', 'community', 'stats'].includes(activeTab)
+  const activeRoomsData = isRoomTab ? { rooms: groups[activeTab] ?? [] } : null
 
   return (
     <div className="flex flex-col items-center pb-12">
@@ -61,16 +73,20 @@ export default function App() {
           </nav>
 
           <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`} tabIndex={0}>
-            {activeTab === 'matching' && (
-              <MatchingOverview
-                groups={groups}
+            {isRoomTab && (
+              <Rooms
+                data={activeRoomsData}
                 loading={rooms.loading}
                 refreshing={rooms.refreshing}
                 error={rooms.error}
                 onRefresh={rooms.refresh}
+                groupKey={activeTab}
                 lastUpdated={rooms.lastUpdated}
                 leaderboardEntries={lb.data?.entries}
               />
+            )}
+            {!isRoomTab && (rooms.loading || rooms.error) && groupKeys.length === 0 && (
+              <Rooms data={null} loading={rooms.loading} error={rooms.error} onRefresh={rooms.refresh} lastUpdated={rooms.lastUpdated} />
             )}
             {activeTab === 'leaderboard' && <Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />}
             {activeTab === 'reservation' && <Reservation />}
