@@ -165,8 +165,8 @@ describe('App', () => {
 
     unmount!()
 
-    // each for rooms, leaderboard
-    expect(clearIntervalSpy).toHaveBeenCalledTimes(2)
+    // rooms, leaderboard, reservations
+    expect(clearIntervalSpy).toHaveBeenCalledTimes(3)
     clearIntervalSpy.mockRestore()
   })
 

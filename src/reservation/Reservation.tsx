@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import RankImage from '@/shared/components/RankImage'
+import { getUsername } from '@/shared/util/cookie'
+import { cancelParticipation, createReservation, fetchReservations, hasParticipation, joinReservation, type ApiReservation } from './reservationApi'
 
 type MatchType = '랭크매치' | '플레이어 매치'
 type ReservationStatus = 'open' | 'full'
@@ -40,15 +42,35 @@ function availabilityMeta(reservation: Reservation) {
   return { label: `${reservation.joined}/${reservation.capacity}명`, className: 'border-primary text-primary bg-primary/10' }
 }
 
+function fromApi(item: ApiReservation): Reservation {
+  const time = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(item.start_at))
+  const duration = item.duration_minutes === 30 ? '약 30분' : `약 ${item.duration_minutes / 60}시간`
+  return { id: item.id, time, duration, host: item.host_display_name, ranks: item.host_ranks, type: item.match_type === 'rank_match' ? '랭크매치' : '플레이어 매치', capacity: item.capacity, joined: item.participant_count, memo: item.memo, status: item.status === 'matched' ? 'full' : 'open' }
+}
+
 export default function Reservation() {
   const [typeFilter, setTypeFilter] = useState<MatchType | '전체'>('전체')
   const [rankFilter, setRankFilter] = useState('전체')
-  const [reservations, setReservations] = useState(initialReservations)
+  const [reservations, setReservations] = useState<Reservation[]>([])
   const [joinedIds, setJoinedIds] = useState<number[]>([])
-  const [selectedId, setSelectedId] = useState(1)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [notice, setNotice] = useState('')
-  const [form, setForm] = useState({ time: '21:00', type: '랭크매치' as MatchType, ranks: ['Vanquisher'], capacity: '1', memo: '' })
+  const [form, setForm] = useState({ time: '21:00', duration: '60', type: '랭크매치' as MatchType, ranks: ['Vanquisher'], capacity: '1', memo: '' })
+
+  const refresh = async () => {
+    try {
+      const items = (await fetchReservations()).map(fromApi)
+      setReservations(items)
+      setJoinedIds(items.filter((item) => hasParticipation(item.id)).map((item) => item.id))
+    } catch (error) { setNotice(error instanceof Error ? error.message : '예약을 불러오지 못했습니다.') }
+  }
+
+  useEffect(() => {
+    refresh().then()
+    const id = window.setInterval(() => refresh().then(), 10_000)
+    return () => window.clearInterval(id)
+  }, [])
 
   const visibleReservations = useMemo(
     () => reservations.filter((reservation) =>
@@ -68,53 +90,30 @@ export default function Reservation() {
       .map(([time, items]) => [time, [...items].sort((left, right) => Number(left.status === 'full') - Number(right.status === 'full'))] as const)
   }, [visibleReservations])
 
-  const handleJoin = (id: number) => {
+  const handleJoin = async (id: number) => {
     const alreadyJoined = joinedIds.includes(id)
     const current = reservations.find((reservation) => reservation.id === id)
     if (!current) return
 
     if (alreadyJoined) {
-      setJoinedIds((ids) => ids.filter((joinedId) => joinedId !== id))
-      setReservations((items) => items.map((item) => item.id === id
-        ? { ...item, joined: item.joined - 1, status: 'open', contact: undefined }
-        : item))
-      setNotice('참가를 취소했습니다. 다시 모집중으로 전환되었습니다.')
+      try { await cancelParticipation(id); await refresh(); setNotice('참가를 취소했습니다. 다시 모집중으로 전환되었습니다.') } catch (error) { setNotice(error instanceof Error ? error.message : '참가 취소에 실패했습니다.') }
       return
     }
 
     if (current.status === 'full') return
-    const nextJoined = current.joined + 1
-    const becameFull = nextJoined === current.capacity
-    setJoinedIds((ids) => [...ids, id])
-    setReservations((items) => items.map((item) => item.id === id
-      ? {
-          ...item,
-          joined: nextJoined,
-          status: becameFull ? 'full' : 'open',
-          contact: becameFull ? '성사! 오픈톡: tag2now / 방 비밀번호: 2121' : item.contact,
-        }
-      : item))
-    setNotice(becameFull ? '매칭이 성사되었습니다. 접속 정보를 확인하세요!' : '참가했습니다. 다른 참가자를 기다리고 있어요.')
+    const username = getUsername()
+    if (!username) { setNotice('상단바에서 유저명을 설정한 뒤 참가할 수 있습니다.'); return }
+    try { const updated = await joinReservation(id, username); await refresh(); setNotice(updated.status === 'matched' ? '매칭이 성사되었습니다.' : '참가했습니다. 다른 참가자를 기다리고 있어요.') } catch (error) { setNotice(error instanceof Error ? error.message : '참가에 실패했습니다.') }
   }
 
-  const handleCreate = (event: React.FormEvent) => {
+  const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault()
-    const newReservation: Reservation = {
-      id: Date.now(),
-      time: form.time,
-      duration: '약 1시간',
-      host: '나',
-      ranks: form.type === '플레이어 매치' ? [] : form.ranks,
-      type: form.type,
-      capacity: form.type === '랭크매치' ? 1 : Number(form.capacity),
-      joined: 0,
-      memo: form.memo || '함께 하실 분을 찾고 있어요.',
-      status: 'open',
-    }
-    setReservations((items) => [...items, newReservation].sort((a, b) => a.time.localeCompare(b.time)))
-    setShowForm(false)
-    setNotice('예약을 만들었습니다. 참여자를 기다려 보세요!')
-    setForm({ time: '21:00', type: '랭크매치', ranks: ['Vanquisher'], capacity: '1', memo: '' })
+    const username = getUsername()
+    if (!username) { setNotice('상단바에서 유저명을 설정한 뒤 예약을 만들 수 있습니다.'); return }
+    try {
+      await createReservation({ start_time: form.time, duration_minutes: Number(form.duration), display_name: username, ranks: form.type === '플레이어 매치' ? [] : form.ranks, match_type: form.type === '랭크매치' ? 'rank_match' : 'player_match', capacity: form.type === '랭크매치' ? 1 : Number(form.capacity), memo: form.memo })
+      await refresh(); setShowForm(false); setNotice('예약을 만들었습니다. 참여자를 기다려 보세요!')
+    } catch (error) { setNotice(error instanceof Error ? error.message : '예약 생성에 실패했습니다.') }
   }
 
   return (
@@ -141,6 +140,11 @@ export default function Reservation() {
             <label className="text-sm font-bold text-txt-dim">매치 종류
               <select className="input-base mt-1 block w-full px-3 py-2" value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as MatchType })}>
                 {matchTypes.slice(1).map((type) => <option key={type}>{type}</option>)}
+              </select>
+            </label>
+            <label className="text-sm font-bold text-txt-dim">예상 시간
+              <select className="input-base mt-1 block w-full px-3 py-2" value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })}>
+                <option value="30">30분</option><option value="60">1시간</option><option value="120">2시간</option><option value="180">3시간</option>
               </select>
             </label>
             {form.type !== '플레이어 매치' && <label className="text-sm font-bold text-txt-dim">보유 계급 <span className="font-normal">(복수 선택 가능)</span>
@@ -199,13 +203,11 @@ export default function Reservation() {
               <div className="flex items-start justify-between gap-3"><div><p className="panel-meta mb-1">선택한 예약</p><p className="font-display text-3xl font-black text-white">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
               <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.type !== '플레이어 매치' && <div className="flex items-center justify-between"><span className="text-txt-dim">보유 계급</span><span className="flex h-8 items-center gap-1">{selectedReservation.ranks.map((rank) => <RankImage key={rank} rankInfo={{ name: rank, tier: rank }} className="h-8 w-auto" />)}</span></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
               <p className="mt-4 min-h-10 text-sm text-txt-dim">{selectedReservation.memo}</p>
-              {selectedReservation.status === 'full' && selectedReservation.contact && <p className="mt-4 border border-secondary/50 bg-secondary/8 px-3 py-2 text-sm font-bold text-secondary-light">{selectedReservation.contact}</p>}
               <button type="button" className={`mt-4 w-full py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-white hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 마감' : '참가하기'}</button>
             </aside>
           })()}
         </div>
         {visibleReservations.length === 0 && <div className="py-16 text-center"><p className="font-display text-lg text-txt">아직 예약이 없습니다</p><p className="mt-2 text-sm text-txt-dim">원하는 시간에 먼저 예약을 만들어 보세요.</p></div>}
-        <p className="mt-5 text-center text-xs text-txt-dim">프로토타입 · 실제 예약 정보는 저장되지 않습니다.</p>
       </div>
     </section>
   )

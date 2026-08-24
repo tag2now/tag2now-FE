@@ -17,15 +17,17 @@ export const GET = async (path: string, params?: any) => {
     return await request(`${path}?${queries}`, { method: 'GET'})
 }
 
-export const POST = async (path: string, data: any) => {
+export const POST = async (path: string, data: any, headers?: HeadersInit) => {
     return await request(path, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify(data),
     })
 }
 
-export const DELETE = async (path: string) => {
-    const res = await fetch(`${BASE}/${path}`, { credentials: 'include', method: 'DELETE' });
+export const DELETE = async (path: string, headers?: HeadersInit) => {
+    const res = await fetch(`${BASE}/${path}`, { credentials: 'include', method: 'DELETE', headers });
     if (!res.ok) throw new Error(`request failed: ${res.status}`)
+    if (res.status === 204) return undefined
+    return res.json()
 }
