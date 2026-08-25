@@ -1,13 +1,14 @@
 import { DELETE, GET, POST } from '@/shared/util/api'
 
-export type ApiReservation = { id: number; start_at: string; duration_minutes: number; host_display_name: string; host_ranks: string[]; match_type: 'rank_match' | 'player_match'; capacity: number; memo: string; status: 'open' | 'matched'; participant_count: number }
+export type ApiReservation = { id: number; start_at: string; duration_minutes: number; host_display_name: string; host_ranks: string[]; match_type: 'rank_match' | 'player_match'; capacity: number; memo: string; status: 'open' | 'matched' | 'cancelled' | 'ended'; participant_count: number; created_at: string }
+export type CreateReservationInput = { start_time: string; duration_minutes: number; display_name: string; ranks: string[]; match_type: 'rank_match' | 'player_match'; capacity: number; memo: string }
 const participantKey = (id: number) => `reservation-participant-${id}`
 
 export const fetchReservations = (): Promise<ApiReservation[]> => {
   const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date())
   return GET('reservations', { date })
 }
-export async function createReservation(data: Record<string, unknown>) {
+export async function createReservation(data: CreateReservationInput) {
   const result = await POST('reservations', data)
   localStorage.setItem(`reservation-owner-${result.reservation.id}`, result.owner_token)
   return result.reservation as ApiReservation

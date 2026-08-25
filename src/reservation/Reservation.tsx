@@ -21,21 +21,32 @@ type Reservation = {
   status: ReservationStatus
   contact?: string
 }
-
-const initialReservations: Reservation[] = [
-  { id: 1, time: '19:00', duration: '약 2시간', host: 'MardukFan', ranks: ['Brawler', 'Vanquisher'], type: '랭크매치', capacity: 1, joined: 1, memo: '랭크매치 한 시간 이상 하실 분을 찾습니다.', status: 'full', contact: '성사! 오픈톡: tag2now / 방 비밀번호: 1900' },
-  { id: 2, time: '19:00', duration: '약 1시간', host: 'GreenTiger', ranks: ['Warrior'], type: '랭크매치', capacity: 1, joined: 0, memo: '비슷한 계급에서 랭크매치 하실 분 찾아요.', status: 'open' },
-  { id: 3, time: '19:00', duration: '약 2시간', host: 'JinPark', ranks: [], type: '플레이어 매치', capacity: 3, joined: 2, memo: '방 파고 순서대로 친선전 합니다. 초보도 환영!', status: 'open' },
-  { id: 4, time: '20:00', duration: '약 1시간', host: 'BlueStorm', ranks: ['Yaksa'], type: '랭크매치', capacity: 1, joined: 1, memo: '랭크매치 한 시간 집중해서 해요.', status: 'full', contact: '성사! 오픈톡: tag2now / 방 비밀번호: 2030' },
-  { id: 5, time: '20:00', duration: '약 2시간', host: 'LiliLove', ranks: ['Fighter', 'Brawler'], type: '랭크매치', capacity: 1, joined: 0, memo: '부담 없이 랭크매치 하실 분을 찾아요.', status: 'open' },
-  { id: 6, time: '20:00', duration: '약 1시간', host: 'Six_miri', ranks: ['Vanquisher'], type: '랭크매치', capacity: 1, joined: 0, memo: '가볍게 랭크매치 1시간 하실 분. 승패 부담 없이!', status: 'open' },
-  { id: 7, time: '21:30', duration: '약 2시간', host: 'Jewel_Gayageum', ranks: [], type: '플레이어 매치', capacity: 3, joined: 2, memo: '방 파고 순서대로 친선전 합니다. 초보도 환영!', status: 'open' },
-  { id: 8, time: '21:30', duration: '약 1시간', host: 'OrangePunch', ranks: ['Fighter', 'Vanquisher'], type: '랭크매치', capacity: 1, joined: 1, memo: '오늘 마지막 랭크매치 한 판 더 하실 분.', status: 'full', contact: '성사! 오픈톡: tag2now / 방 비밀번호: 2130' },
-  { id: 9, time: '21:30', duration: '약 1시간', host: 'TagMaster', ranks: ['Brawler', 'Yaksa'], type: '랭크매치', capacity: 1, joined: 0, memo: '늦은 시간 랭크매치 하실 분을 찾습니다.', status: 'open' },
-  { id: 10, time: '22:00', duration: '약 1시간', host: 'NightOwl', ranks: ['Yaksa'], type: '랭크매치', capacity: 1, joined: 0, memo: '늦은 시간까지 랭크매치 가능하신 분.', status: 'open' },
-]
-
 const matchTypes: Array<MatchType | '전체'> = ['전체', '랭크매치', '플레이어 매치']
+const durationOptions = [
+  { value: '30', label: '약 30분' },
+  { value: '60', label: '약 1시간' },
+  { value: '120', label: '약 2시간' },
+  { value: '180', label: '약 3시간' },
+]
+const durationLabels = new Map(durationOptions.map(({ value, label }) => [Number(value), label]))
+const matchTypeLabels: Record<ApiReservation['match_type'], MatchType> = { rank_match: '랭크매치', player_match: '플레이어 매치' }
+const matchTypeValues: Record<MatchType, ApiReservation['match_type']> = { '랭크매치': 'rank_match', '플레이어 매치': 'player_match' }
+const kstTimeFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false })
+
+function fromApi(item: ApiReservation): Reservation {
+  return {
+    id: item.id,
+    time: kstTimeFormat.format(new Date(item.start_at)),
+    duration: durationLabels.get(item.duration_minutes) ?? `약 ${item.duration_minutes}분`,
+    host: item.host_display_name,
+    ranks: item.host_ranks,
+    type: matchTypeLabels[item.match_type],
+    capacity: item.capacity,
+    joined: item.participant_count,
+    memo: item.memo,
+    status: item.status === 'open' && item.participant_count < item.capacity ? 'open' : 'full',
+  }
+}
 const rankOptions = [
   'Beginner', '9th kyu', '8th kyu', '7th kyu',
   '6th kyu', '5th kyu', '4th kyu', '3rd kyu',
@@ -107,6 +118,8 @@ export default function Reservation() {
     return () => window.clearInterval(id)
   }, [])
 
+  const closeForm = () => { setShowForm(false); setRankPickerOpen(false); setTimePickerOpen(false) }
+
   const toggleRank = (rank: string) => {
     setForm((current) => ({
       ...current,
@@ -152,24 +165,25 @@ export default function Reservation() {
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault()
-    const newReservation: Reservation = {
-      id: Date.now(),
-      time: form.time,
-      duration: '약 1시간',
-      host: '나',
-      ranks: form.type === '플레이어 매치' ? [] : form.ranks,
-      type: form.type,
-      capacity: form.type === '랭크매치' ? 1 : Number(form.capacity),
-      joined: 0,
-      memo: form.memo || '함께 하실 분을 찾고 있어요.',
-      status: 'open',
-    }
-    setReservations((items) => [...items, newReservation].sort((a, b) => a.time.localeCompare(b.time)))
-    setShowForm(false)
-    setRankPickerOpen(false)
-    setTimePickerOpen(false)
-    setNotice('예약을 만들었습니다. 참여자를 기다려 보세요!')
-    setForm({ time: '21:00', type: '랭크매치', ranks: ['Vanquisher'], capacity: '1', memo: '' })
+    const username = getUsername()
+    if (!username) { setNotice('상단바에서 유저명을 설정한 뒤 예약을 만들 수 있습니다.'); return }
+
+    const isPlayerMatch = form.type === '플레이어 매치'
+    try {
+      await createReservation({
+        start_time: `${form.time}:00`,
+        duration_minutes: Number(form.duration),
+        display_name: username,
+        ranks: isPlayerMatch ? [] : form.ranks,
+        match_type: matchTypeValues[form.type],
+        capacity: isPlayerMatch ? Number(form.capacity) : 1,
+        memo: form.memo,
+      })
+      await refresh()
+      closeForm()
+      setNotice('예약을 만들었습니다. 참여자를 기다려 보세요!')
+      setForm({ time: '21:00', duration: '60', type: '랭크매치', ranks: ['Vanquisher'], capacity: '1', memo: '' })
+    } catch (error) { setNotice(error instanceof Error ? error.message : '예약 생성에 실패했습니다.') }
   }
 
   return (
@@ -192,7 +206,7 @@ export default function Reservation() {
           <form onSubmit={handleCreate} role="dialog" aria-modal="true" aria-labelledby="reservation-modal-title" className="grid max-h-[calc(100vh-2rem)] w-full max-w-lg gap-3 overflow-y-auto border border-primary-dim bg-bg-panel p-4 shadow-[0_0_48px_rgba(0,200,212,0.22)] sm:grid-cols-2 sm:p-5">
             <div className="col-span-full flex items-start justify-between border-b border-border-light pb-3">
               <div><p className="panel-meta mb-1 text-primary">NEW MATCH REQUEST</p><h3 id="reservation-modal-title" className="font-display text-xl font-black tracking-[0.06em] text-white">예약 추가</h3></div>
-              <button type="button" aria-label="예약 추가 닫기" className="flex h-8 w-8 items-center justify-center border border-border-light text-lg text-txt-dim transition-colors hover:border-primary hover:text-primary" onClick={() => { setShowForm(false); setRankPickerOpen(false); setTimePickerOpen(false) }}>×</button>
+              <button type="button" aria-label="예약 추가 닫기" className="flex h-8 w-8 items-center justify-center border border-border-light text-lg text-txt-dim transition-colors hover:border-primary hover:text-primary" onClick={closeForm}>×</button>
             </div>
             <fieldset className="relative text-sm font-bold text-txt-dim">
               <legend>시작 시각</legend>
@@ -221,6 +235,11 @@ export default function Reservation() {
                 })}
               </div>
             </fieldset>
+            <label className="col-span-full text-sm font-bold text-txt-dim sm:col-span-1">예상 시간
+              <select className="input-base mt-1 block w-full px-3 py-2" value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })}>
+                {durationOptions.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </label>
             {form.type !== '플레이어 매치' && <fieldset className="col-span-full text-sm font-bold text-txt-dim">
               <legend>보유 계급 <span className="font-normal">(복수 선택 가능)</span></legend>
               <button type="button" aria-label={form.ranks.length > 0 ? `계급 선택, 현재 ${sortSelectedRanks(form.ranks).join(', ')}` : '계급 선택'} aria-expanded={rankPickerOpen} aria-controls="reservation-rank-picker" onClick={() => setRankPickerOpen((open) => !open)} className="input-base mt-1 flex min-h-12 w-full items-center justify-between gap-3 px-3 py-1.5 text-left">
@@ -261,7 +280,7 @@ export default function Reservation() {
             <label className="text-sm font-bold text-txt-dim">메모 <span className="font-normal">(선택)</span>
               <input className="input-base mt-1 block w-full px-3 py-2" maxLength={140} placeholder="예: 부담 없이 1시간 랭매" value={form.memo} onChange={(event) => setForm({ ...form, memo: event.target.value })} />
             </label>
-            <div className="col-span-full flex justify-end gap-2 pt-1"><button className="btn-ghost" type="button" onClick={() => { setShowForm(false); setRankPickerOpen(false); setTimePickerOpen(false) }}>취소</button><button className="btn-primary" type="submit" disabled={form.type === '랭크매치' && form.ranks.length === 0}>예약 등록</button></div>
+            <div className="col-span-full flex justify-end gap-2 pt-1"><button className="btn-ghost" type="button" onClick={closeForm}>취소</button><button className="btn-primary" type="submit" disabled={form.type === '랭크매치' && form.ranks.length === 0}>예약 등록</button></div>
           </form>
           </div>
         )}

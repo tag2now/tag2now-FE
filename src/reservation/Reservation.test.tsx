@@ -1,6 +1,30 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Reservation from './Reservation'
+import { createReservation, fetchReservations, hasParticipation } from './reservationApi'
+import { saveUsername } from '@/shared/util/cookie'
+
+vi.mock('./reservationApi', () => ({
+  fetchReservations: vi.fn(),
+  createReservation: vi.fn(),
+  joinReservation: vi.fn(),
+  cancelParticipation: vi.fn(),
+  hasParticipation: vi.fn(),
+}))
+
+const apiReservation = {
+  id: 1,
+  start_at: '2026-08-25T12:00:00+00:00',
+  duration_minutes: 60,
+  host_display_name: '나',
+  host_ranks: ['Yaksa', 'Vanquisher'],
+  match_type: 'rank_match' as const,
+  capacity: 1,
+  memo: '',
+  status: 'open' as const,
+  participant_count: 0,
+  created_at: '2026-08-25T10:00:00+00:00',
+}
 
 vi.mock('@ncdai/react-wheel-picker', () => ({
   WheelPickerWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -18,6 +42,13 @@ vi.mock('@ncdai/react-wheel-picker', () => ({
     </select>
   ),
 }))
+
+beforeEach(() => {
+  vi.mocked(fetchReservations).mockResolvedValue([])
+  vi.mocked(hasParticipation).mockReturnValue(false)
+  vi.mocked(createReservation).mockResolvedValue(apiReservation)
+  saveUsername('나')
+})
 
 function openReservationModal() {
   render(<Reservation />)
@@ -93,15 +124,51 @@ describe('Reservation', () => {
     expect(timeButton).toHaveAttribute('aria-label', '시작 시각 22:35')
   })
 
-  it('creates a rank reservation using the highest rank image and a +N badge', () => {
+  it('creates a rank reservation using the highest rank image and a +N badge', async () => {
     openReservationModal()
     fireEvent.click(screen.getByRole('button', { name: /계급 선택, 현재/ }))
     const picker = document.getElementById('reservation-rank-picker')!
     fireEvent.click(within(picker).getByRole('button', { name: /Yaksa/ }))
+    vi.mocked(fetchReservations).mockResolvedValue([apiReservation])
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
 
-    const createdCard = screen.getByRole('button', { name: /나 모집중 Yaksa, Vanquisher/ })
+    const createdCard = await screen.findByRole('button', { name: /나 모집중 Yaksa, Vanquisher/ })
     expect(within(createdCard).getByRole('img', { name: 'Yaksa' })).toBeInTheDocument()
     expect(within(createdCard).getByText('+1')).toBeInTheDocument()
+  })
+
+  it('sends the form values to the backend contract on submit', async () => {
+    openReservationModal()
+    fireEvent.change(screen.getByLabelText('예상 시간'), { target: { value: '120' } })
+    fireEvent.change(screen.getByLabelText(/메모/), { target: { value: '가볍게 한 판' } })
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+
+    await waitFor(() => expect(createReservation).toHaveBeenCalledWith({
+      start_time: '21:00:00',
+      duration_minutes: 120,
+      display_name: '나',
+      ranks: ['Vanquisher'],
+      match_type: 'rank_match',
+      capacity: 1,
+      memo: '가볍게 한 판',
+    }))
+  })
+
+  it('sends a player match without ranks and with the chosen capacity', async () => {
+    openReservationModal()
+    fireEvent.click(screen.getByRole('radio', { name: '플레이어 매치' }))
+    fireEvent.change(screen.getByLabelText('모집 인원'), { target: { value: '3' } })
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+
+    await waitFor(() => expect(createReservation).toHaveBeenCalledWith(
+      expect.objectContaining({ match_type: 'player_match', ranks: [], capacity: 3 }),
+    ))
+  })
+
+  it('renders a full card when the backend reports the reservation as matched', async () => {
+    vi.mocked(fetchReservations).mockResolvedValue([{ ...apiReservation, status: 'matched', participant_count: 1 }])
+    render(<Reservation />)
+
+    expect(await screen.findByRole('button', { name: /나 마감/ })).toBeInTheDocument()
   })
 })
