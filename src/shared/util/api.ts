@@ -6,9 +6,16 @@ declare global {
 
 const BASE = window.__ENV__?.API_BASE ?? '/api'
 
+/** The API reports failures as { detail: string }; fall back if that is missing. */
+const throwIfFailed = async (res: Response) => {
+    if (res.ok) return
+    const detail = await res.json().then((body) => body?.detail).catch(() => null)
+    throw new Error(typeof detail === 'string' ? detail : `request failed: ${res.status}`)
+}
+
 export const request = async (path: string, option: RequestInit) => {
     const res = await fetch(`${BASE}/${path}`, { credentials: 'include', ...option });
-    if (!res.ok) throw new Error(`request failed: ${res.status}`)
+    await throwIfFailed(res)
     return res.json()
 }
 
@@ -27,7 +34,7 @@ export const POST = async (path: string, data: any, headers?: HeadersInit) => {
 
 export const DELETE = async (path: string, headers?: HeadersInit) => {
     const res = await fetch(`${BASE}/${path}`, { credentials: 'include', method: 'DELETE', headers });
-    if (!res.ok) throw new Error(`request failed: ${res.status}`)
+    await throwIfFailed(res)
     if (res.status === 204) return undefined
     return res.json()
 }
