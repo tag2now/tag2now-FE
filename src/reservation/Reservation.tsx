@@ -101,7 +101,10 @@ export default function Reservation() {
   const [rankPickerOpen, setRankPickerOpen] = useState(false)
   const [timePickerOpen, setTimePickerOpen] = useState(false)
   const [draftTime, setDraftTime] = useState('21:00')
-  const [notice, setNotice] = useState('')
+  const [notice, setNotice] = useState<{ text: string; tone: 'info' | 'error' }>({ text: '', tone: 'info' })
+  const showNotice = (text: string) => setNotice({ text, tone: 'info' })
+  const showError = (error: unknown, fallback: string) => setNotice({ text: error instanceof Error ? error.message : fallback, tone: 'error' })
+  const clearNotice = () => setNotice({ text: '', tone: 'info' })
   const [form, setForm] = useState({ time: '21:00', duration: '60', type: '랭크매치' as MatchType, ranks: ['Vanquisher'], capacity: '1', memo: '' })
 
   const refresh = async () => {
@@ -109,7 +112,7 @@ export default function Reservation() {
       const items = (await fetchReservations()).map(fromApi)
       setReservations(items)
       setJoinedIds(items.filter((item) => hasParticipation(item.id)).map((item) => item.id))
-    } catch (error) { setNotice(error instanceof Error ? error.message : '예약을 불러오지 못했습니다.') }
+    } catch (error) { showError(error, '예약을 불러오지 못했습니다.') }
   }
 
   useEffect(() => {
@@ -118,7 +121,14 @@ export default function Reservation() {
     return () => window.clearInterval(id)
   }, [])
 
-  const closeForm = () => { setShowForm(false); setRankPickerOpen(false); setTimePickerOpen(false) }
+  const noticeBanner = notice.text && (
+    <p
+      role={notice.tone === 'error' ? 'alert' : 'status'}
+      className={`border-l-2 px-3 py-2 text-sm font-semibold ${notice.tone === 'error' ? 'border-error bg-error/8 text-error' : 'border-primary bg-primary/8 text-primary'}`}
+    >{notice.text}</p>
+  )
+
+  const closeForm = () => { setShowForm(false); setRankPickerOpen(false); setTimePickerOpen(false); clearNotice() }
 
   const toggleRank = (rank: string) => {
     setForm((current) => ({
@@ -153,22 +163,23 @@ export default function Reservation() {
     if (!current) return
 
     if (alreadyJoined) {
-      try { await cancelParticipation(id); await refresh(); setNotice('참가를 취소했습니다. 다시 모집중으로 전환되었습니다.') } catch (error) { setNotice(error instanceof Error ? error.message : '참가 취소에 실패했습니다.') }
+      try { await cancelParticipation(id); await refresh(); showNotice('참가를 취소했습니다. 다시 모집중으로 전환되었습니다.') } catch (error) { showError(error, '참가 취소에 실패했습니다.') }
       return
     }
 
     if (current.status === 'full') return
     const username = getUsername()
-    if (!username) { setNotice('상단바에서 유저명을 설정한 뒤 참가할 수 있습니다.'); return }
-    try { const updated = await joinReservation(id, username); await refresh(); setNotice(updated.status === 'matched' ? '매칭이 성사되었습니다.' : '참가했습니다. 다른 참가자를 기다리고 있어요.') } catch (error) { setNotice(error instanceof Error ? error.message : '참가에 실패했습니다.') }
+    if (!username) { showError(null, '상단바에서 유저명을 설정한 뒤 참가할 수 있습니다.'); return }
+    try { const updated = await joinReservation(id, username); await refresh(); showNotice(updated.status === 'matched' ? '매칭이 성사되었습니다.' : '참가했습니다. 다른 참가자를 기다리고 있어요.') } catch (error) { showError(error, '참가에 실패했습니다.') }
   }
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault()
     const username = getUsername()
-    if (!username) { setNotice('상단바에서 유저명을 설정한 뒤 예약을 만들 수 있습니다.'); return }
+    if (!username) { showError(null, '상단바에서 유저명을 설정한 뒤 예약을 만들 수 있습니다.'); return }
 
     const isPlayerMatch = form.type === '플레이어 매치'
+    clearNotice()
     try {
       await createReservation({
         start_time: `${form.time}:00`,
@@ -181,9 +192,9 @@ export default function Reservation() {
       })
       await refresh()
       closeForm()
-      setNotice('예약을 만들었습니다. 참여자를 기다려 보세요!')
+      showNotice('예약을 만들었습니다. 참여자를 기다려 보세요!')
       setForm({ time: '21:00', duration: '60', type: '랭크매치', ranks: ['Vanquisher'], capacity: '1', memo: '' })
-    } catch (error) { setNotice(error instanceof Error ? error.message : '예약 생성에 실패했습니다.') }
+    } catch (error) { showError(error, '예약 생성에 실패했습니다.') }
   }
 
   return (
@@ -280,6 +291,7 @@ export default function Reservation() {
             <label className="text-sm font-bold text-txt-dim">메모 <span className="font-normal">(선택)</span>
               <input className="input-base mt-1 block w-full px-3 py-2" maxLength={140} placeholder="예: 부담 없이 1시간 랭매" value={form.memo} onChange={(event) => setForm({ ...form, memo: event.target.value })} />
             </label>
+            {noticeBanner && <div className="col-span-full">{noticeBanner}</div>}
             <div className="col-span-full flex justify-end gap-2 pt-1"><button className="btn-ghost" type="button" onClick={closeForm}>취소</button><button className="btn-primary" type="submit" disabled={form.type === '랭크매치' && form.ranks.length === 0}>예약 등록</button></div>
           </form>
           </div>
@@ -294,7 +306,7 @@ export default function Reservation() {
             </select>
         </div>
 
-        {notice && <p role="status" className="mt-3 border-l-2 border-primary bg-primary/8 px-3 py-2 text-sm font-semibold text-primary">{notice}</p>}
+        {!showForm && noticeBanner && <div className="mt-3">{noticeBanner}</div>}
 
         <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.8fr)]">
           <div className="space-y-3">
