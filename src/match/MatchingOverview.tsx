@@ -27,8 +27,7 @@ function useRelativeTime(date: Date | null | undefined): string {
   }, [timestamp])
 
   if (!timestamp) return ''
-  const seconds = Math.floor((Date.now() - timestamp) / 1000)
-  if (seconds < 5) return '방금'
+  const seconds = Math.max(1, Math.floor((Date.now() - timestamp) / 1000))
   if (seconds < 60) return `${seconds}초 전`
   return `${Math.floor(seconds / 60)}분 전`
 }

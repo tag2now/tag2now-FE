@@ -25,8 +25,7 @@ function useRelativeTime(date: Date | null | undefined): string {
     return () => clearInterval(id)
   }, [ts])
   if (!ts) return ''
-  const secs = Math.floor((Date.now() - ts) / 1000)
-  if (secs < 5) return '방금'
+  const secs = Math.max(1, Math.floor((Date.now() - ts) / 1000))
   if (secs < 60) return `${secs}초 전`
   return `${Math.floor(secs / 60)}분 전`
 }
