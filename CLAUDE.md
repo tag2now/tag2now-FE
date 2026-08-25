@@ -78,7 +78,7 @@ The base URL is `window.__ENV__?.API_BASE ?? '/api'`, letting a deployed build o
 
 ```ts
 export default function useRooms(): PolledState<RoomsData> {
-  return usePolledData(fetchRoomsAll, ROOMS_REFRESH_INTERVAL)  // 10s
+  return usePolledData(fetchRoomsAll, ROOMS_REFRESH_INTERVAL)  // 5s
 }
 ```
 

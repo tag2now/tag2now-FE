@@ -2,7 +2,7 @@ import usePolledData, {PolledState} from "@/shared/hooks/usePolledData";
 import type {RoomsData, Room} from "@/match/types";
 import {GET} from "@/shared/util/api";
 
-const ROOMS_REFRESH_INTERVAL = 10_000
+const ROOMS_REFRESH_INTERVAL = 5_000
 
 export const fetchRoomsAll =  async () => {
   const data: Record<string, any> = await GET('rooms/all');

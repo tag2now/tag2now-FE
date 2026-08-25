@@ -19,7 +19,7 @@ vi.mock("@/shared/hooks/useLeaderboard", async () => {
 vi.mock('@/match/useRooms', async () => {
   return {
     fetchRoomsAll: mockedFetchRoomsAll,
-    default: () => usePolledData(mockedFetchRoomsAll as any, 10_000),
+    default: () => usePolledData(mockedFetchRoomsAll as any, 5_000),
   }
 })
 
@@ -128,7 +128,7 @@ describe('App', () => {
     expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(1)
   })
 
-  it('auto-refresh: rooms refresh every 10s, leaderboard does not auto-refresh', async () => {
+  it('auto-refresh: rooms refresh every 5s, leaderboard does not auto-refresh', async () => {
     vi.useFakeTimers()
 
     await renderApp()
@@ -136,20 +136,20 @@ describe('App', () => {
     expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(1)
     expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(1)
 
-    // After 10s: rooms refreshes, leaderboard does not
+    // After 5s: rooms refreshes, leaderboard does not
     await act(async () => {
-      vi.advanceTimersByTime(10_000)
+      vi.advanceTimersByTime(5_000)
     })
 
     expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(2)
     expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(1)
 
-    // After 60s total: rooms has refreshed 6 times + 1 mount, leaderboard still at 1
+    // After 60s total: rooms has refreshed 12 times + 1 mount, leaderboard still at 1
     await act(async () => {
-      vi.advanceTimersByTime(50_000)
+      vi.advanceTimersByTime(55_000)
     })
 
-    expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(7)
+    expect(mockedFetchRoomsAll).toHaveBeenCalledTimes(13)
     expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(1)
   })
 
@@ -202,7 +202,7 @@ describe('App', () => {
 
     // Trigger auto-refresh
     await act(async () => {
-      vi.advanceTimersByTime(10_000)
+      vi.advanceTimersByTime(5_000)
     })
 
     // Content should still be visible (not replaced by loading message)
