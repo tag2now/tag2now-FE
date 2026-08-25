@@ -82,6 +82,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') commitUsername().then() }}
             onBlur={commitUsername}
+            maxLength={50}
             placeholder="유저명 입력"
             aria-label="유저명 입력"
             className="input-base px-2 py-0.5 mt-1 text-base w-36"
