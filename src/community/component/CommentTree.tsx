@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { relativeTime } from "@/shared/util/timeFormat";
+import { formatTimeAgo } from "@/shared/util/timeFormat";
 import AuthorBadge from './AuthorBadge'
 import type { LeaderboardEntry} from "@/shared/types";
 import type {CommentOut} from "@/community/types";
@@ -41,7 +41,7 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
     <div className={`${visualDepth > 0 ? 'ml-3 sm:ml-5' : ''} border-l border-border-light pl-3 py-2`}>
       <div className="flex items-center gap-2 text-sm text-txt-dim mb-1">
         <AuthorBadge name={comment.author} entries={leaderboardEntries} />
-        <span>{relativeTime(comment.created_at)}</span>
+        <span>{formatTimeAgo(comment.created_at)}</span>
       </div>
       <p className="m-0 text-base text-txt whitespace-pre-wrap break-words">{comment.body}</p>
       <button

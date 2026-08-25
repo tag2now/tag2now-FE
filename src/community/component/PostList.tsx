@@ -1,4 +1,4 @@
-import { relativeTime } from '@/shared/util/timeFormat'
+import { formatTimeAgo } from '@/shared/util/timeFormat'
 import CharacterGridPicker from './CharacterGridPicker'
 import PostTypeBadge from './PostTypeBadge'
 import type { LeaderboardEntry} from "@/shared/types";
@@ -95,7 +95,7 @@ export default function PostList({
                 <span className="text-primary">&#9650; {post.thumbs_up}</span>
                 <span>&#9660; {post.thumbs_down}</span>
               </span>
-              <span className="hidden sm:inline text-xs text-txt-dim shrink-0">{relativeTime(post.created_at)}</span>
+              <span className="hidden sm:inline text-xs text-txt-dim shrink-0">{formatTimeAgo(post.created_at)}</span>
             </button>
           ))}
         </div>

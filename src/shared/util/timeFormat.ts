@@ -1,4 +1,4 @@
-export function relativeTime(isoString: string): string {
+export function formatTimeAgo(isoString: string): string {
   const diff = Date.now() - new Date(isoString).getTime()
   const seconds = Math.floor(diff / 1000)
   if (seconds < 60) return '방금 전'
