@@ -1,0 +1,25 @@
+// Project tasks configuration. See https://zed.dev/docs/tasks for documentation.
+[
+  {
+    // BE=local points the Vite proxy at http://localhost:8000.
+    // Without it the dev server proxies to PRODUCTION, so any write
+    // (e.g. a community post) lands in the live board.
+    "label": "FE dev server (local BE)",
+    "command": "npm",
+    "args": ["run", "dev"],
+    "env": { "BE": "local" },
+    "use_new_terminal": true
+  },
+  {
+    "label": "FE unit tests",
+    "command": "npm",
+    "args": ["run", "test"],
+    "use_new_terminal": false
+  },
+  {
+    "label": "FE typecheck",
+    "command": "npm",
+    "args": ["run", "typecheck"],
+    "use_new_terminal": false
+  }
+]
