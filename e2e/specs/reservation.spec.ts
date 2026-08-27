@@ -1,5 +1,5 @@
 import { test, expect, type Locator } from '@playwright/test'
-import { dismissPatchNotes, mockAllApis } from '../helpers/mock-api'
+import { dismissPatchNotes, mockAllApis, reservationAt, signInAs } from '../helpers/mock-api'
 
 test.describe('Reservation', () => {
   test.beforeEach(async ({ page }) => {
@@ -98,6 +98,19 @@ test.describe('Reservation', () => {
     await expect(page.getByRole('button', { name: /나 0\/3명 PLAYER MATCH/ })).toBeVisible()
   })
 })
+
+/**
+ * toBeVisible() passes for an element covered by an overlay — it only looks at
+ * CSS box and visibility. Hit-test the centre point to prove the element is
+ * what the user actually sees there.
+ */
+async function isTopmost(locator: Locator) {
+  return locator.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+    return hit !== null && element.contains(hit)
+  })
+}
 
 test.describe('Reservation participation', () => {
   const openRankMatch = reservationAt(21, { id: 10, host_display_name: '상대', host_ranks: ['Yaksa'] })

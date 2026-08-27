@@ -257,7 +257,7 @@ describe('Reservation participation', () => {
     const detail = await selectTheReservation()
     fireEvent.click(within(detail).getByRole('button', { name: '참가하기' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('상단바에서 유저명을 설정한 뒤 참가할 수 있습니다.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('상단바에서 유저명을 설정한 뒤 참가할 수 있습니다.')
     expect(joinReservation).not.toHaveBeenCalled()
   })
 
@@ -291,7 +291,7 @@ describe('Reservation participation', () => {
     const detail = await selectTheReservation()
     fireEvent.click(within(detail).getByRole('button', { name: '참가하기' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('이미 마감된 예약입니다.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('이미 마감된 예약입니다.')
   })
 
   it('surfaces the backend message when cancelling is refused', async () => {
@@ -303,7 +303,7 @@ describe('Reservation participation', () => {
     vi.mocked(cancelParticipation).mockRejectedValue(new Error('참가 취소 권한이 없습니다.'))
     fireEvent.click(within(detail).getByRole('button', { name: '참가 취소' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('참가 취소 권한이 없습니다.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('참가 취소 권한이 없습니다.')
   })
 
   it('leaves a full reservation the user never joined unclickable', async () => {
