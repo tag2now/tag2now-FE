@@ -5,14 +5,9 @@ import type {LeaderboardEntry} from "@/shared/types";
 import RankImage from "@/shared/components/RankImage";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import {RankMatchRoom} from "@/match/types";
+import { Search } from 'lucide-react'
 
 const VsLabel = <span aria-hidden="true" className="vs-label">VS</span>
-
-const IconSearch = (
-  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-  </svg>
-)
 
 interface RankMatchTableProps {
   rooms: RankMatchRoom[]
@@ -28,8 +23,8 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
   const tierGroups = Array.from(Map.groupBy(sortedRoom, room => room.rank_info.tier))
 
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="border-collapse w-full min-w-85">
+    <div className="data-table-wrap">
+      <table className="match-table border-collapse w-full">
         <caption className="sr-only">Rank match rooms</caption>
         <colgroup>
           <col className="w-32" />
@@ -89,7 +84,7 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
                   <tr key={'s-' + rankId} className="tbl-row" style={rowAccentStyle}>
                     <td colSpan={4} className="px-3 py-1.5">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span className="searching-icon shrink-0 text-tier-yellow">{IconSearch}</span>
+                        <span className="searching-icon shrink-0 text-tier-yellow"><Search size={16} aria-hidden="true" /></span>
                         <RankImage rankInfo={searching[0].rank_info} className="h-7 w-auto shrink-0" />
                         {searching.map(({users: searchUsers}) => (
                           <button key={searchUsers[0].np_id} onClick={() => setSelectedNpid(searchUsers[0].np_id)} className="player-btn">

@@ -7,8 +7,8 @@ interface PlayerMatchTableProps {
 
 export default function PlayerMatchTable({ rooms }: PlayerMatchTableProps) {
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="border-collapse w-full min-w-85">
+    <div className="data-table-wrap">
+      <table className="match-table border-collapse w-full">
         <caption className="sr-only">Player match rooms</caption>
         <thead>
           <tr>

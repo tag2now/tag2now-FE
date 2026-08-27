@@ -6,6 +6,7 @@ import CharCell from "@/shared/components/CharCell";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import {panelStatus} from "@/shared/util/panelStatus";
 import {LeaderboardData} from "@/shared/types";
+import { RefreshCw, Trophy } from 'lucide-react'
 
 interface LeaderboardProps {
   data: LeaderboardData | null
@@ -24,16 +25,19 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
   return (
     <div className="panel relative" aria-live="polite">
       <LoadingBar visible={refreshing} />
-      <div className="panel-meta flex items-center justify-between">
-        <span>Total records: {data.total_records}</span>
+      <div className="section-toolbar">
+        <div className="section-title">
+          <span className="section-icon"><Trophy size={15} aria-hidden="true" /></span>
+          <div><h3>전체 랭킹</h3><p>등록 플레이어 {data.total_records}명</p><span className="sr-only">Total records: {data.total_records}</span></div>
+        </div>
         {onRefresh && (
           <button className="refresh-btn" aria-label="Refresh" onClick={onRefresh} disabled={refreshing}>
-            ↻
+            <RefreshCw size={14} aria-hidden="true" />
           </button>
         )}
       </div>
-      <div className="w-full overflow-x-auto">
-        <table className="border-collapse w-full min-w-74.25">
+      <div className="data-table-wrap">
+        <table className="ranking-table leaderboard-table">
           <caption className="sr-only">Leaderboard rankings</caption>
           <thead>
             <tr>
@@ -47,12 +51,12 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
             {data.entries.map((e, i) => {
               const medal = i < 3 ? MEDAL[i] : null
               const rankCls = medal ? '' : (RANK_COLORS[e.rank] ?? '')
-              const rowStyle = medal ? { background: medal.bg, borderLeft: '3px solid ' + medal.border } : undefined
+              const rowStyle = medal ? { borderLeft: '3px solid ' + medal.border } : undefined
               const cellStyle = medal ? { color: medal.color } : undefined
               return (
                 <tr key={e.np_id} className="tbl-row" style={rowStyle}>
-                  <td className={`tbl-td font-display text-sm font-black w-11 ${rankCls}`} style={cellStyle}>
-                    {medal ? medal.label : e.rank}
+                  <td className={`tbl-td rank-cell ${rankCls}`} style={cellStyle}>
+                    <span className={`rank-position ${medal ? `is-podium podium-${i + 1}` : ''}`}>{medal ? medal.label : e.rank}</span>
                   </td>
                   <td className="player-name" style={cellStyle}>
                     <button onClick={() => setSelectedNpid(e.np_id)} className="player-btn" style={cellStyle}>

@@ -3,6 +3,7 @@ import { formatTimeAgo } from "@/shared/util/timeFormat";
 import AuthorBadge from './AuthorBadge'
 import type { LeaderboardEntry} from "@/shared/types";
 import type {CommentOut} from "@/community/types";
+import { CornerDownRight, Send } from 'lucide-react'
 
 interface CommentTreeProps {
   comments: CommentOut[]
@@ -38,7 +39,7 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
   const visualDepth = Math.min(depth, 3)
 
   return (
-    <div className={`${visualDepth > 0 ? 'ml-3 sm:ml-5' : ''} border-l border-border-light pl-3 py-2`}>
+    <div className={`comment-node ${visualDepth > 0 ? 'ml-3 sm:ml-5' : ''}`}>
       <div className="flex items-center gap-2 text-sm text-txt-dim mb-1">
         <AuthorBadge name={comment.author} entries={leaderboardEntries} />
         <span>{formatTimeAgo(comment.created_at)}</span>
@@ -48,7 +49,7 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
         onClick={() => setReplying(!replying)}
         className="mt-1 bg-transparent border-0 text-txt-dim text-xs font-bold uppercase tracking-[0.12em] cursor-pointer hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
       >
-        {replying ? '취소' : '답글'}
+        <CornerDownRight size={12} aria-hidden="true" /> {replying ? '취소' : '답글'}
       </button>
 
       {replying && (
@@ -69,7 +70,7 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
             disabled={submitting || !replyText.trim()}
             className="btn-primary px-3 py-1"
           >
-            {submitting ? '...' : '작성'}
+            {!submitting && <Send size={13} aria-hidden="true" />}{submitting ? '작성 중' : '작성'}
           </button>
         </div>
       )}

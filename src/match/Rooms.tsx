@@ -4,6 +4,7 @@ import type {LeaderboardEntry} from "@/shared/types";
 import LoadingBar from "@/shared/components/LoadingBar";
 import {RankMatchRoom, Room} from "@/match/types";
 import {PlayerMatchTable, RankMatchTable} from "@/match/component";
+import { Radio, RefreshCw } from 'lucide-react'
 
 interface RoomsProps {
   data: { rooms?: Room[] } | null
@@ -27,14 +28,18 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
   return (
     <div className="panel relative" aria-live="polite">
       <LoadingBar visible={refreshing} />
-      <div className="panel-meta flex items-center justify-end">
+      <div className="section-toolbar">
+        <div className="section-title">
+          <span className="section-icon"><Radio size={15} aria-hidden="true" /></span>
+          <div><h3>실시간 방 목록</h3><p>현재 접속 가능한 매칭 세션</p></div>
+        </div>
         <div className="flex items-center gap-3">
           {updatedAgo && (
             <span className="text-txt-dim text-xs">업데이트 {updatedAgo}</span>
           )}
           {onRefresh && (
             <button className="refresh-btn" aria-label="새로고침" onClick={onRefresh} disabled={refreshing}>
-              ↻
+              <RefreshCw size={14} aria-hidden="true" />
             </button>
           )}
         </div>
