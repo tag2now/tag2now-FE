@@ -17,13 +17,14 @@ test.describe('Navigation', () => {
 
   test('all expected tabs are visible', async ({ page }) => {
     const tabs = page.locator('button.tab-btn')
-    // rank_match, player_match, leaderboard, community, stats
-    await expect(tabs).toHaveCount(5)
+    // One tab per room group in the fixture, then the fixed tabs in App.tsx.
+    await expect(tabs).toHaveCount(6)
     await expect(tabs.nth(0)).toContainText('랭매')
     await expect(tabs.nth(1)).toContainText('플매')
-    await expect(tabs.nth(2)).toContainText('리더보드')
-    await expect(tabs.nth(3)).toContainText('커뮤니티')
-    await expect(tabs.nth(4)).toContainText('통계')
+    await expect(tabs.nth(2)).toContainText('예약')
+    await expect(tabs.nth(3)).toContainText('리더보드')
+    await expect(tabs.nth(4)).toContainText('커뮤니티')
+    await expect(tabs.nth(5)).toContainText('통계')
   })
 
   test('tab shows room count in label', async ({ page }) => {
