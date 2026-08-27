@@ -143,10 +143,22 @@ Images go to ECR (`864573346741.dkr.ecr.ap-northeast-2.amazonaws.com/tag2-now/fe
 | Workflow | Trigger | Does |
 |----------|---------|------|
 | `test.yml` | PR to `dev`/`master` | unit tests + typecheck, then E2E |
-| `deploy.yml` | `v*` tag | full test suite, then build and push to ECR |
+| `deploy.yml` | `v*` tag | full test suite, build and push to ECR, then deploy to production over SSH |
 | `update-snapshots.yml` | manual | regenerate visual baselines, upload as artifact |
 
-**Release is manual** — SSH into Lightsail and run `docker compose pull && docker compose up -d`. `deploy.yml` carries a `deploy` job targeting ECS, but there is no ECS cluster: it is gated with `if: false` and never runs, kept only so the configuration survives a possible move back to ECS. Tagging pushes an image but does not roll out. See [aws-setup.md](../tag2now-BE/docs/aws-setup.md) in the backend repo.
+**Release is automatic on a `v*` tag.** The `deploy` job SSHes into Lightsail,
+writes `FE_IMAGE_TAG` into the instance's `.env.prod`, and restarts **only
+`fe`** — `be` and the datastores are left alone, and are released independently
+by the backend repo.
+
+`compose.prod.yml` lives in **tag2now-BE** and describes the whole stack,
+including this service's image. A change to how `fe` runs in production belongs
+in that repo.
+
+The SSH and ECR settings are **org-level** secrets/variables on the `tag2now`
+org, shared with tag2now-BE; this repo defines only `ECR_REPOSITORY`
+(`tag2-now/fe`) and its own `production` environment. See
+[aws-setup.md](../tag2now-BE/docs/aws-setup.md#actions-configuration).
 
 ## Analytics
 
