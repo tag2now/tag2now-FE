@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { relativeTime } from '@/shared/util/timeFormat'
+import { formatTimeAgo } from '@/shared/util/timeFormat'
 import { thumbPost, createComment, deletePost } from '@/community/communityApi'
 import PostTypeBadge from './PostTypeBadge'
 import CommentTree from './CommentTree'
@@ -68,7 +68,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <PostTypeBadge postType={post.post_type} size="md" />
-          <span className="text-sm text-txt-dim">{relativeTime(post.created_at)}</span>
+          <span className="text-sm text-txt-dim">{formatTimeAgo(post.created_at)}</span>
           {username && post.author === username && (
             <button
               onClick={handleDelete}

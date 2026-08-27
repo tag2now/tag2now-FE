@@ -157,6 +157,17 @@ describe('Reservation', () => {
     }))
   })
 
+  it('keeps the modal open and shows the reason when creation fails', async () => {
+    vi.mocked(createReservation).mockRejectedValue(new Error('이미 같은 시간에 예약이 있습니다.'))
+    openReservationModal()
+
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('이미 같은 시간에 예약이 있습니다.')
+    expect(screen.getByRole('dialog', { name: '예약 추가' })).toContainElement(alert)
+  })
+
   it('sends a player match without ranks and with the chosen capacity', async () => {
     openReservationModal()
     fireEvent.click(screen.getByRole('radio', { name: '플레이어 매치' }))
