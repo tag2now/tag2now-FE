@@ -8,7 +8,8 @@
     "command": "npm",
     "args": ["run", "dev"],
     "env": { "BE": "local" },
-    "use_new_terminal": true
+    "use_new_terminal": true,
+    "cwd": "$ZED_WORKTREE_ROOT/tag2now-FE"
   },
   {
     "label": "FE unit tests",
