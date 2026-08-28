@@ -3,7 +3,7 @@ import usePolledData, { type PolledState} from "@/shared/hooks/usePolledData";
 import type { LeaderboardData } from "@/shared/types";
 
 export const fetchLeaderboard = async () => {
-  const data: Record<string, any> = await GET('leaderboard', {top: 100});
+  const data: Record<string, any> = await GET('leaderboard', {top: 500});
   const entries = (data.entries as Array<Record<string, unknown>>) ?? []
   return {
     ...data,

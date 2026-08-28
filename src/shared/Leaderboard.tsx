@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { RANK_COLORS } from '@/shared/tierColors'
 import { MEDAL } from '@/shared/medalColors'
 import LoadingBar from "@/shared/components/LoadingBar";
 import CharCell from "@/shared/components/CharCell";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
+import LeaderboardControls from "@/shared/components/LeaderboardControls";
 import {panelStatus} from "@/shared/util/panelStatus";
+import {filterEntries, COLLAPSED_VISIBLE} from "@/shared/util/leaderboardFilter";
 import {LeaderboardData} from "@/shared/types";
 
 interface LeaderboardProps {
@@ -17,6 +19,16 @@ interface LeaderboardProps {
 
 export default function Leaderboard({ data, loading, refreshing, error, onRefresh }: LeaderboardProps) {
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [character, setCharacter] = useState('')
+  const [collapsed, setCollapsed] = useState(false)
+
+  const entries = data?.entries ?? []
+  const visible = useMemo(
+    () => filterEntries(entries, { search, character, collapsed }),
+    [entries, search, character, collapsed],
+  )
+
   const s = panelStatus(loading, error, 'Loading leaderboard...')
   if (s) return s
   if (!data) return null
@@ -32,6 +44,18 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
           </button>
         )}
       </div>
+      <LeaderboardControls
+        search={search}
+        onSearchChange={setSearch}
+        character={character}
+        onCharacterChange={setCharacter}
+        collapsed={collapsed}
+        onToggleCollapsed={() => setCollapsed((v) => !v)}
+        collapsible={entries.length > COLLAPSED_VISIBLE}
+        filtering={search.trim() !== '' || character !== ''}
+        shown={visible.length}
+        total={entries.length}
+      />
       <div className="w-full overflow-x-auto">
         <table className="border-collapse w-full min-w-74.25">
           <caption className="sr-only">Leaderboard rankings</caption>
@@ -44,8 +68,10 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
             </tr>
           </thead>
           <tbody>
-            {data.entries.map((e, i) => {
-              const medal = i < 3 ? MEDAL[i] : null
+            {visible.map((e) => {
+              // Keyed off the true rank, not the row index: a filtered view must
+              // not award a medal to whoever happens to land in the top rows.
+              const medal = e.rank <= 3 ? MEDAL[e.rank - 1] : null
               const rankCls = medal ? '' : (RANK_COLORS[e.rank] ?? '')
               const rowStyle = medal ? { background: medal.bg, borderLeft: '3px solid ' + medal.border } : undefined
               const cellStyle = medal ? { color: medal.color } : undefined
@@ -70,6 +96,9 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
             })}
           </tbody>
         </table>
+        {visible.length === 0 && entries.length > 0 && (
+          <p className="state-msg">검색 결과가 없습니다</p>
+        )}
       </div>
       {selectedNpid && (
         <PlayerHistoryPanel npid={selectedNpid} leaderboardEntry={data?.entries.find(e => e.np_id === selectedNpid)} onClose={() => setSelectedNpid(null)} />
