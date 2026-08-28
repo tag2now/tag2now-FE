@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { charImageUrl } from '@/shared/characterImage'
-import { APP_VERSION } from '@/config/version'
+import { LATEST_PATCH_VERSION } from '@/config/patchNotes'
 import RankImage from './RankImage'
 import { getUsername as getSavedUsername, saveUsername, clearUsername } from '@/shared/util/cookie'
 import { setIdentity } from '@/community/communityApi'
@@ -58,7 +58,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
           <h1 className="font-display text-xl sm:text-3xl font-black m-0 tracking-wide uppercase">
             Tag<span className="header-accent">2</span>Now
           </h1>
-          <span className="absolute top-[76%] right-[4%] text-2xs text-txt-dim">v{APP_VERSION}</span>
+          <span className="absolute top-[76%] right-[4%] text-2xs text-txt-dim">v{LATEST_PATCH_VERSION}</span>
         </div>
         <div className="inline-flex items-center gap-2 text-base font-bold">
           <div className="inline-flex items-center gap-1.5 tracking-[0.14em] uppercase text-accent px-2 py-0.5 border border-accent/40 rounded-sm bg-accent/5">

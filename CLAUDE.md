@@ -59,7 +59,7 @@ src/
   App.tsx              tab state and layout; the only place tabs are assembled
   main.tsx             root render, Toaster, global unhandledrejection handler
   index.css            Tailwind 4 @theme design tokens
-  config/              tabConfig, version, test-setup
+  config/              tabConfig, patchNotes, test-setup
   match/               rooms — useRooms, Rooms, RankMatchTable, PlayerMatchTable
   community/           board — useCommunity, communityApi, post/comment components
   stat/                statistics — useStats, useWeeklyTop, Stats
@@ -142,9 +142,7 @@ Visual baselines are environment-sensitive: snapshots rendered on Windows will n
 
 ## Custom commands
 
-`.claude/commands/` provides `/a11y-audit`, `/design-audit`, `/design-review`, and `/version-up`.
-
-Note that `/version-up` refers to `src/version.ts`, but the file is actually at `src/config/version.ts` — fix the path in the command or the version bump will fail.
+`.claude/commands/` provides `/a11y-audit`, `/design-audit`, and `/design-review`.
 
 ## Deployment
 
@@ -159,6 +157,19 @@ Images go to ECR (`864573346741.dkr.ecr.ap-northeast-2.amazonaws.com/tag2-now/fe
 | `test.yml` | PR to `dev`/`master` | unit tests + typecheck, then E2E |
 | `deploy.yml` | `v*` tag | full test suite, build and push to ECR, then deploy to production over SSH |
 | `update-snapshots.yml` | manual | regenerate visual baselines, upload as artifact |
+
+### Versioning
+
+There is no `APP_VERSION` constant. `src/config/patchNotes.ts` is the single
+source of truth: `PATCH_NOTES[0].version` is exported as `LATEST_PATCH_VERSION`,
+which drives both the version shown in the header and the "seen" marker that
+decides whether the patch-notes dialog reappears. Adding an entry to the top of
+that array is therefore the whole version bump — there is no second constant to
+remember, which is what previously let the header, the dialog, and the tags
+drift apart.
+
+The one pairing still done by hand is the release tag: tag `v{version}` to match
+the new top entry.
 
 **Release is automatic on a `v*` tag.** The `deploy` job SSHes into Lightsail,
 writes `FE_IMAGE_TAG` into the instance's `.env.prod`, and restarts **only
