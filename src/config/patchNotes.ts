@@ -10,6 +10,14 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.1',
+    items: [
+      '리더보드에 100위 밖 플레이어도 표시',
+      '리더보드 이름 검색 및 캐릭터 필터 추가',
+      '내가 만든 예약 수정 / 삭제 가능',
+    ],
+  },
+  {
     version: '2.0.1',
     items: ['Yaksa 까지 계급 이미지 추가'],
   },
