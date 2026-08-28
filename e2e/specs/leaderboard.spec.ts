@@ -10,7 +10,7 @@ test.describe('Leaderboard', () => {
   })
 
   test('shows total records count', async ({ page }) => {
-    await expect(page.locator('.panel-meta')).toContainText('Total records: 5')
+    await expect(page.locator('.panel-meta').first()).toContainText('Total records: 5')
   })
 
   test('renders table with correct column headers', async ({ page }) => {
@@ -52,5 +52,65 @@ test.describe('Leaderboard', () => {
     const bearRow = page.locator('tr.tbl-row', { hasText: 'BearPunchPro' })
     // The sub character cell (4th td) should show "—"
     await expect(bearRow.locator('td').nth(3)).toContainText('—')
+  })
+})
+
+/** A board bigger than the 100-row default view, to exercise the toggle and search. */
+function largeBoard(size: number) {
+  const entries = Array.from({ length: size }, (_, i) => ({
+    np_id: `p${i + 1}`,
+    rank: i + 1,
+    online_name: `player${i + 1}`,
+    score: size - i,
+    player_info: {
+      main_char_info: { name: i % 2 === 0 ? 'Kazuya' : 'Jin', wins: 10, losses: 5 },
+      sub_char_info: null,
+    },
+  }))
+  return { total_records: size, entries }
+}
+
+test.describe('Leaderboard search, filter and toggle', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockAllApis(page, { leaderboard: largeBoard(150) })
+    await page.goto('/')
+    await dismissPatchNotes(page)
+    await page.locator('button.tab-btn', { hasText: '리더보드' }).click()
+  })
+
+  test('shows the whole board by default', async ({ page }) => {
+    await expect(page.locator('table tbody tr.tbl-row')).toHaveCount(150)
+    await expect(page.locator('.lb-count')).toHaveText('150 / 150')
+  })
+
+  test('collapses to the top 100 and expands back', async ({ page }) => {
+    await page.getByRole('button', { name: '상위 100위만' }).click()
+    await expect(page.locator('table tbody tr.tbl-row')).toHaveCount(100)
+
+    await page.getByRole('button', { name: '전체 보기' }).click()
+    await expect(page.locator('table tbody tr.tbl-row')).toHaveCount(150)
+  })
+
+  test('finds a player ranked past 100 while collapsed', async ({ page }) => {
+    await page.getByRole('button', { name: '상위 100위만' }).click()
+    await page.getByLabel('플레이어 검색').fill('player130')
+
+    const rows = page.locator('table tbody tr.tbl-row')
+    await expect(rows).toHaveCount(1)
+    await expect(rows.first().locator('td').first()).toHaveText('130')
+  })
+
+  test('filters by character', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by Jin', exact: true }).click()
+
+    await expect(page.locator('table tbody tr.tbl-row')).toHaveCount(75)
+    await expect(page.locator('.lb-count')).toHaveText('75 / 150')
+  })
+
+  test('reports when nothing matches the search', async ({ page }) => {
+    await page.getByLabel('플레이어 검색').fill('nobody-here')
+
+    await expect(page.locator('table tbody tr.tbl-row')).toHaveCount(0)
+    await expect(page.getByText('검색 결과가 없습니다')).toBeVisible()
   })
 })

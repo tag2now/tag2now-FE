@@ -1,6 +1,21 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import Leaderboard from "@/shared/Leaderboard";
+
+const entry = (rank: number, online_name: string, main?: string, sub?: string) => ({
+  np_id: `p${rank}`,
+  rank,
+  online_name,
+  player_info: {
+    main_char_info: main ? { name: main } : null,
+    sub_char_info: sub ? { name: sub } : null,
+  },
+})
+
+const boardOf = (entries: ReturnType<typeof entry>[]) => ({ total_records: entries.length, entries })
+
+const rowNames = () =>
+  Array.from(document.querySelectorAll('.player-btn')).map((b) => b.textContent)
 
 describe('Leaderboard', () => {
   it('shows loading message when loading=true', () => {
@@ -49,11 +64,14 @@ expect(screen.getByText('Main')).toBeInTheDocument()
     }
     render(<Leaderboard loading={false} data={data} error={null} />)
 
+    // Scoped to the table: the character picker above it renders a portrait
+    // for every character, so an unscoped alt-text query is ambiguous.
+    const table = screen.getByRole('table')
     expect(screen.getByText('1ST')).toBeInTheDocument()
     expect(screen.getByText('KazuyaFan')).toBeInTheDocument()
-    expect(screen.getByAltText('Kazuya')).toBeInTheDocument()
-    expect(screen.getByAltText('Destroyer')).toBeInTheDocument()
-    expect(screen.getByAltText('Vanquisher')).toBeInTheDocument()
+    expect(within(table).getByAltText('Kazuya')).toBeInTheDocument()
+    expect(within(table).getByAltText('Destroyer')).toBeInTheDocument()
+    expect(within(table).getByAltText('Vanquisher')).toBeInTheDocument()
   })
 
   it('shows em-dash when player_info is missing', () => {
@@ -137,5 +155,106 @@ expect(screen.getByText('Main')).toBeInTheDocument()
     const data = { total_records: 0, entries: [] }
     const { container } = render(<Leaderboard loading={false} refreshing={false} data={data} error={null} />)
     expect(container.querySelector('.loading-bar')).toHaveClass('loading-bar-hidden')
+  })
+
+  it('shows the whole board by default', () => {
+    const entries = Array.from({ length: 150 }, (_, i) => entry(i + 1, `player${i + 1}`, 'Kazuya'))
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+
+    expect(rowNames()).toHaveLength(150)
+    expect(screen.getByText('150 / 150')).toBeInTheDocument()
+  })
+
+  it('collapses to the top 100 and expands back', () => {
+    const entries = Array.from({ length: 150 }, (_, i) => entry(i + 1, `player${i + 1}`, 'Kazuya'))
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+
+    fireEvent.click(screen.getByRole('button', { name: '상위 100위만' }))
+    expect(rowNames()).toHaveLength(100)
+    expect(screen.getByText('100 / 150')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '전체 보기' }))
+    expect(rowNames()).toHaveLength(150)
+  })
+
+  it('finds a player ranked past 100 while the board is collapsed', () => {
+    const entries = [
+      ...Array.from({ length: 100 }, (_, i) => entry(i + 1, `player${i + 1}`, 'Kazuya')),
+      entry(101, 'deepCut', 'Lili'),
+    ]
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+    fireEvent.click(screen.getByRole('button', { name: '상위 100위만' }))
+
+    fireEvent.change(screen.getByLabelText('플레이어 검색'), { target: { value: 'deepCut' } })
+
+    expect(rowNames()).toEqual(['deepCut'])
+  })
+
+  it('filters by character across main and sub slots', () => {
+    const entries = [entry(1, 'mainJin', 'Jin'), entry(2, 'subJin', 'Lili', 'Jin'), entry(3, 'noJin', 'Asuka')]
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filter by Jin' }))
+
+    expect(rowNames()).toEqual(['mainJin', 'subJin'])
+  })
+
+  it('clears the character filter when the active character is picked again', () => {
+    const entries = [entry(1, 'jinMain', 'Jin'), entry(2, 'asukaMain', 'Asuka')]
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+
+    const jin = screen.getByRole('button', { name: 'Filter by Jin' })
+    fireEvent.click(jin)
+    expect(rowNames()).toEqual(['jinMain'])
+
+    fireEvent.click(jin)
+    expect(rowNames()).toEqual(['jinMain', 'asukaMain'])
+  })
+
+  it('marks the selected character as pressed', () => {
+    const entries = [entry(1, 'jinMain', 'Jin')]
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+
+    const jin = screen.getByRole('button', { name: 'Filter by Jin' })
+    expect(jin).toHaveAttribute('aria-pressed', 'false')
+
+    fireEvent.click(jin)
+    expect(jin).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('shows an empty-result message when nothing matches', () => {
+    const entries = [entry(1, 'onlyGuy', 'Jin')]
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+
+    fireEvent.change(screen.getByLabelText('플레이어 검색'), { target: { value: 'nobody' } })
+
+    expect(screen.getByText('검색 결과가 없습니다')).toBeInTheDocument()
+    expect(rowNames()).toEqual([])
+  })
+
+  it('hides the collapse toggle while a filter is active', () => {
+    const entries = Array.from({ length: 150 }, (_, i) => entry(i + 1, `player${i + 1}`, 'Kazuya'))
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+
+    fireEvent.change(screen.getByLabelText('플레이어 검색'), { target: { value: 'player1' } })
+
+    expect(screen.queryByRole('button', { name: '상위 100위만' })).not.toBeInTheDocument()
+  })
+
+  it('awards medals by true rank, not by row position in a filtered view', () => {
+    const entries = [entry(1, 'champ', 'Jin'), entry(2, 'second', 'Jin'), entry(400, 'lowRanked', 'Lili')]
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+
+    fireEvent.change(screen.getByLabelText('플레이어 검색'), { target: { value: 'lowRanked' } })
+
+    expect(screen.getByText('400')).toBeInTheDocument()
+    expect(screen.queryByText('1ST')).not.toBeInTheDocument()
+  })
+
+  it('hides the collapse toggle when the board is too short to collapse', () => {
+    const entries = [entry(1, 'onlyGuy', 'Jin')]
+    render(<Leaderboard loading={false} data={boardOf(entries)} error={null} />)
+
+    expect(screen.queryByRole('button', { name: '상위 100위만' })).not.toBeInTheDocument()
   })
 })
