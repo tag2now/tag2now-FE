@@ -165,8 +165,10 @@ describe('App', () => {
 
     unmount!()
 
-    // rooms, leaderboard, reservations
-    expect(clearIntervalSpy).toHaveBeenCalledTimes(3)
+    // rooms and leaderboard: the two App-level polls. Reservation owns a third
+    // interval, but it only runs while that tab is mounted and rank match is
+    // the default tab.
+    expect(clearIntervalSpy).toHaveBeenCalledTimes(2)
     clearIntervalSpy.mockRestore()
   })
 
@@ -214,6 +216,42 @@ describe('App', () => {
     const bar = panel!.querySelector('.loading-bar')
     expect(bar).toBeInTheDocument()
     expect(bar).not.toHaveClass('loading-bar-hidden')
+  })
+
+  it('keeps room tabs when the rooms fetch fails', async () => {
+    mockedFetchRoomsAll.mockRejectedValue(new Error('NOT FOUND'))
+
+    await renderApp()
+
+    expect(screen.getByRole('tab', { name: '랭매 (—)' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '플매 (—)' })).toBeInTheDocument()
+  })
+
+  it('does not show the rooms error on the reservation tab', async () => {
+    mockedFetchRoomsAll.mockRejectedValue(new Error('NOT FOUND'))
+
+    await renderApp()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('tab', { name: '예약' }))
+    })
+
+    expect(screen.queryByText('Error: NOT FOUND')).not.toBeInTheDocument()
+  })
+
+  it('shows the rooms error inside the room tab', async () => {
+    mockedFetchRoomsAll.mockRejectedValue(new Error('NOT FOUND'))
+
+    await renderApp()
+
+    expect(screen.getByText('Error: NOT FOUND')).toBeInTheDocument()
+  })
+
+  it('labels a group the API omitted as empty once rooms load', async () => {
+    await renderApp()
+
+    // ROOMS_DATA carries rank_match only; player_match is a known group.
+    expect(screen.getByRole('tab', { name: '플매 (0)' })).toBeInTheDocument()
   })
 
   it('shows error when fetchLeaderboard rejects', async () => {

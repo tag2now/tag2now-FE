@@ -9,7 +9,16 @@ import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useRooms from "@/match/useRooms";
 import Community from "@/community/Community";
 import Rooms from "@/match/Rooms";
+import type { Room } from "@/match/types";
 import Reservation from "@/reservation/Reservation";
+
+// Before the first successful load the count is unknown, not zero - "(0)" would
+// assert there are no rooms while the fetch is still in flight or has failed.
+// Once rooms have loaded, a group the payload omits really is empty.
+function roomCountLabel(rooms: Room[] | undefined, loaded: boolean): string {
+  if (!loaded) return '—'
+  return String(rooms?.length ?? 0)
+}
 
 export default function App() {
   const [tab, setTab] = useState<string | null>(null)
@@ -17,21 +26,23 @@ export default function App() {
   const rooms = useRooms()
 
   const groups = rooms.data?.groups ?? {}
+  const roomsLoaded = rooms.data !== null
+  // Room tabs are part of the fixed layout: they render before rooms load and
+  // survive a failed fetch, so the tab strip never shifts under the user.
   const groupKeys = useMemo(() => {
-    const known = GROUP_ORDER.filter((key) => key in groups)
-    const rest = Object.keys(groups).filter((key) => !GROUP_ORDER.includes(key))
-    return [...known, ...rest]
+    const extra = Object.keys(groups).filter((key) => !GROUP_ORDER.includes(key))
+    return [...GROUP_ORDER, ...extra]
   }, [groups])
 
   const tabs = useMemo(
     () => [
-      ...groupKeys.map((key) => ({ key, label: `${formatGroupName(key)} (${groups[key].length})` })),
+      ...groupKeys.map((key) => ({ key, label: `${formatGroupName(key)} (${roomCountLabel(groups[key], roomsLoaded)})` })),
       { key: 'reservation', label: '예약' },
       { key: 'leaderboard', label: '리더보드' },
       { key: 'community', label: '커뮤니티' },
       { key: 'stats', label: '통계' },
     ],
-    [groupKeys, groups],
+    [groupKeys, groups, roomsLoaded],
   )
 
   const activeTab = tab && tabs.some((item) => item.key === tab) ? tab : tabs[0]?.key ?? 'leaderboard'
@@ -84,9 +95,6 @@ export default function App() {
                 lastUpdated={rooms.lastUpdated}
                 leaderboardEntries={lb.data?.entries}
               />
-            )}
-            {!isRoomTab && (rooms.loading || rooms.error) && groupKeys.length === 0 && (
-              <Rooms data={null} loading={rooms.loading} error={rooms.error} onRefresh={rooms.refresh} lastUpdated={rooms.lastUpdated} />
             )}
             {activeTab === 'leaderboard' && <Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />}
             {activeTab === 'reservation' && <Reservation />}

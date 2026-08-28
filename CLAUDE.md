@@ -88,7 +88,11 @@ Pass `null` as the interval to fetch once without polling.
 
 ### Tabs
 
-Tabs are derived, not hardcoded: one tab per room group returned by the API (ordered by `GROUP_ORDER` in `config/tabConfig.ts`, unknown groups appended), followed by the fixed `leaderboard`, `community`, and `stats` tabs. `tab` state is `string | null`; when null or stale it falls back to the first available tab.
+The tab strip is **fixed layout, not derived from the response**: one tab per key in `GROUP_ORDER` (`config/tabConfig.ts`) — always rendered, even before rooms load or after the fetch fails — plus any unknown group the API returns appended after them, followed by the fixed `reservation`, `leaderboard`, `community`, and `stats` tabs. `tab` state is `string | null`; when null or stale it falls back to the first tab, which is therefore always `rank_match`.
+
+Room data affects only the **count in the label**, never which tabs exist. Until the first successful load the count renders as `(—)` rather than `(0)`, so a pending or failed fetch is not mistaken for "no rooms"; afterwards a group the payload omits is genuinely `(0)`.
+
+Do not gate room tabs on the rooms response. Doing so made the tab strip shift during load, silently moved the default tab to `reservation`, and required a fallback that rendered the rooms error panel on top of unrelated tabs.
 
 The tab bar implements the ARIA tabs pattern — `role="tablist"`/`tab`/`tabpanel`, roving `tabIndex`, and Arrow Left/Right navigation. Preserve this when touching the nav.
 
