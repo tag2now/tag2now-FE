@@ -1,5 +1,5 @@
 import { formatTimeAgo } from '@/shared/util/timeFormat'
-import CharacterGridPicker from './CharacterGridPicker'
+import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import PostTypeBadge from './PostTypeBadge'
 import type { LeaderboardEntry} from "@/shared/types";
 import type {PostSummary} from "@/community/types";

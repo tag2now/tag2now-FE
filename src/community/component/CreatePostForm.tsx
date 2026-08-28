@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import CharacterGridPicker from './CharacterGridPicker'
+import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 
 interface CreatePostFormProps {
   onSubmit: (title: string, body: string, postType: string) => Promise<void>
