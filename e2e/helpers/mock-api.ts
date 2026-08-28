@@ -147,6 +147,16 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       return asJson(route, { detail: 'Reservation not found' }, 404)
     }
 
+    if (method === 'PATCH') {
+      // Mirror the backend: a reservation somebody joined is frozen.
+      if (reservation.participant_count > 0) {
+        return asJson(route, { detail: '참가자가 있는 예약은 수정할 수 없습니다. 삭제 후 다시 등록해 주세요.' }, 400)
+      }
+      const patch = route.request().postDataJSON()
+      Object.assign(reservation, patch, patch.ranks ? { host_ranks: patch.ranks } : {})
+      return asJson(route, reservation)
+    }
+
     if (method === 'POST') {
       if (reservation.participant_count >= reservation.capacity) {
         return asJson(route, { detail: '이미 마감된 예약입니다.' }, 400)

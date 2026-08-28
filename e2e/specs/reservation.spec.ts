@@ -3,6 +3,10 @@ import { dismissPatchNotes, mockAllApis, reservationAt, signInAs } from '../help
 
 test.describe('Reservation', () => {
   test.beforeEach(async ({ page }) => {
+    // The default start time is the next whole hour in Seoul, so pin the clock
+    // to 20:10 KST and the form opens on a predictable 21:00.
+    await page.clock.install({ time: new Date('2026-08-28T11:10:00Z') })
+    await page.clock.runFor(0)
     await signInAs(page, '나')
     await mockAllApis(page)
     await page.addInitScript(() => localStorage.setItem('ttt2-username', '나'))
@@ -111,6 +115,145 @@ async function isTopmost(locator: Locator) {
     return hit !== null && element.contains(hit)
   })
 }
+
+test.describe('Reservation deletion', () => {
+  const someoneElse = reservationAt(21, { id: 10, host_display_name: '상대', host_ranks: ['Yaksa'] })
+
+  async function openReservationTab(page: import('@playwright/test').Page, reservations = [someoneElse]) {
+    await signInAs(page, '나')
+    await mockAllApis(page, { reservations })
+    await page.goto('/')
+    await dismissPatchNotes(page)
+    await page.getByRole('tab', { name: '예약' }).click()
+  }
+
+  // The owner token only exists for a reservation this browser created, so the
+  // delete affordance has to be earned by going through the create flow.
+  async function createReservation(page: import('@playwright/test').Page) {
+    await page.getByRole('button', { name: '+ 예약 추가' }).click()
+    const modal = page.getByRole('dialog', { name: '예약 추가' })
+    await modal.getByRole('button', { name: '예약 등록' }).click()
+    await page.getByRole('button', { name: /나 모집중/ }).click()
+    return page.getByRole('complementary', { name: '선택한 예약 상세' })
+  }
+
+  test('the host can delete a reservation they created', async ({ page }) => {
+    await openReservationTab(page, [])
+    const detail = await createReservation(page)
+
+    page.once('dialog', (dialog) => dialog.accept())
+    const deleteRequest = page.waitForRequest((request) =>
+      request.method() === 'DELETE' && /\/reservations\/\d+$/.test(new URL(request.url()).pathname))
+    await detail.getByRole('button', { name: '예약 삭제' }).click()
+
+    // The owner token proves the request is authorised; without it the backend
+    // rejects the delete, so a passing UI assertion alone would not mean much.
+    expect((await deleteRequest).headers()['x-reservation-token']).toBeTruthy()
+    await expect(page.getByRole('button', { name: /나 모집중/ })).toHaveCount(0)
+    await expect(page.getByRole('status')).toHaveText('예약을 삭제했습니다.')
+  })
+
+  test('dismissing the confirmation keeps the reservation', async ({ page }) => {
+    await openReservationTab(page, [])
+    const detail = await createReservation(page)
+
+    page.once('dialog', (dialog) => dialog.dismiss())
+    await detail.getByRole('button', { name: '예약 삭제' }).click()
+
+    await expect(page.getByRole('button', { name: /나 모집중/ })).toBeVisible()
+  })
+
+  test('a reservation hosted by someone else offers joining, not deleting', async ({ page }) => {
+    await openReservationTab(page)
+    await page.getByRole('button', { name: /상대/ }).click()
+    const detail = page.getByRole('complementary', { name: '선택한 예약 상세' })
+
+    await expect(detail.getByRole('button', { name: '참가하기' })).toBeVisible()
+    await expect(detail.getByRole('button', { name: '예약 삭제' })).toHaveCount(0)
+  })
+})
+
+test.describe('Reservation editing', () => {
+  const someoneElse = reservationAt(21, { id: 10, host_display_name: '상대', host_ranks: ['Yaksa'] })
+
+  async function openReservationTab(page: import('@playwright/test').Page, reservations = [someoneElse]) {
+    await signInAs(page, '나')
+    await mockAllApis(page, { reservations })
+    await page.goto('/')
+    await dismissPatchNotes(page)
+    await page.getByRole('tab', { name: '예약' }).click()
+  }
+
+  async function createThenOpenEditor(page: import('@playwright/test').Page) {
+    await page.getByRole('button', { name: '+ 예약 추가' }).click()
+    await page.getByRole('dialog', { name: '예약 추가' }).getByRole('button', { name: '예약 등록' }).click()
+    await page.getByRole('button', { name: /나 모집중/ }).click()
+    const detail = page.getByRole('complementary', { name: '선택한 예약 상세' })
+    await detail.getByRole('button', { name: '예약 수정' }).click()
+    return page.getByRole('dialog', { name: '예약 수정' })
+  }
+
+  test('the host edits a reservation through the create form', async ({ page }) => {
+    await openReservationTab(page, [])
+    const modal = await createThenOpenEditor(page)
+
+    await modal.getByLabel(/메모/).fill('자리 하나 남음')
+    const editRequest = page.waitForRequest((request) => request.method() === 'PATCH')
+    await modal.getByRole('button', { name: '예약 수정' }).click()
+
+    // The owner token authorises the edit; without it the backend refuses.
+    expect((await editRequest).headers()['x-reservation-token']).toBeTruthy()
+    await expect(page.getByRole('status')).toHaveText('예약을 수정했습니다.')
+    await expect(page.getByText('자리 하나 남음')).toBeVisible()
+  })
+
+  test('the editor opens on the values the reservation already has', async ({ page }) => {
+    await openReservationTab(page, [])
+    const modal = await createThenOpenEditor(page)
+
+    await expect(modal.getByLabel('예상 시간')).toHaveValue('60')
+    await expect(modal.getByRole('button', { name: /시작 시각/ })).toBeVisible()
+  })
+
+  test('a reservation hosted by someone else offers no edit button', async ({ page }) => {
+    await openReservationTab(page)
+    await page.getByRole('button', { name: /상대/ }).click()
+    const detail = page.getByRole('complementary', { name: '선택한 예약 상세' })
+
+    await expect(detail.getByRole('button', { name: '예약 수정' })).toHaveCount(0)
+  })
+
+  test('the edit button is disabled once somebody has joined', async ({ page }) => {
+    const taken = reservationAt(21, { id: 11, host_display_name: '나', capacity: 3, participant_count: 1 })
+    await openReservationTab(page, [taken])
+    await page.evaluate(() => localStorage.setItem('reservation-owner-11', 'owner-11'))
+    await page.reload()
+    await dismissPatchNotes(page)
+    await page.getByRole('tab', { name: '예약' }).click()
+    await page.getByRole('button', { name: /나 모집중/ }).click()
+    const detail = page.getByRole('complementary', { name: '선택한 예약 상세' })
+
+    await expect(detail.getByRole('button', { name: '예약 수정' })).toBeDisabled()
+    await expect(detail.getByRole('button', { name: '예약 삭제' })).toBeEnabled()
+  })
+
+  // The disabled button covers the state the host can see; this covers the race
+  // it cannot — somebody joining while the editor is already open.
+  test('the backend reason shows when a joined reservation is edited', async ({ page }) => {
+    await openReservationTab(page, [])
+    const modal = await createThenOpenEditor(page)
+
+    // Somebody joins between opening the editor and submitting it.
+    await page.evaluate(() => fetch('/api/reservations/1/participants', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ display_name: '난입', ranks: [] }),
+    }))
+    await modal.getByRole('button', { name: '예약 수정' }).click()
+
+    await expect(page.getByRole('alert')).toContainText('참가자가 있는 예약')
+  })
+})
 
 test.describe('Reservation participation', () => {
   const openRankMatch = reservationAt(21, { id: 10, host_display_name: '상대', host_ranks: ['Yaksa'] })
