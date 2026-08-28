@@ -32,6 +32,14 @@ export const POST = async (path: string, data: any, headers?: HeadersInit) => {
     })
 }
 
+export const PATCH = async (path: string, data: any, headers?: HeadersInit) => {
+    return await request(path, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify(data),
+    })
+}
+
 export const DELETE = async (path: string, headers?: HeadersInit) => {
     const res = await fetch(`${BASE}/${path}`, { credentials: 'include', method: 'DELETE', headers });
     await throwIfFailed(res)

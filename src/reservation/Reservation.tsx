@@ -3,7 +3,7 @@ import { WheelPicker, WheelPickerWrapper, type WheelPickerOption } from '@ncdai/
 import '@ncdai/react-wheel-picker/style.css'
 import RankImage from '@/shared/components/RankImage'
 import { getUsername } from '@/shared/util/cookie'
-import { cancelParticipation, createReservation, fetchReservations, hasParticipation, joinReservation, type ApiReservation } from './reservationApi'
+import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
 
 type MatchType = '랭크매치' | '플레이어 매치'
 type ReservationStatus = 'open' | 'full'
@@ -76,6 +76,38 @@ function sortSelectedRanks(ranks: string[]) {
   return [...ranks].sort((left, right) => (rankOrder.get(right) ?? -1) - (rankOrder.get(left) ?? -1))
 }
 
+type FormState = { time: string; duration: string; type: MatchType; ranks: string[]; capacity: string; memo: string }
+
+const kstHourFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', hour12: false })
+
+/** The next whole hour in Seoul, which is where a host most likely wants to start.
+ *
+ * Rounding down instead would always land in the past and be rejected by the
+ * backend's ten-minute lead time. The 23:00 hour has no valid next hour at all —
+ * the API takes a time of day with no date, so midnight resolves to *today*
+ * midnight — and stays at 23:00 rather than offering a slot that cannot be booked.
+ */
+function nextHourInSeoul(now = new Date()): string {
+  const hour = Number(kstHourFormat.format(now))
+  return `${String(Math.min(hour + 1, 23)).padStart(2, '0')}:00`
+}
+
+const blankForm = (): FormState => ({ time: nextHourInSeoul(), duration: '60', type: '랭크매치', ranks: ['Vanquisher'], capacity: '1', memo: '' })
+
+const durationValues = new Map(Array.from(durationLabels, ([minutes, label]) => [label, String(minutes)]))
+
+/** Reverse of the create mapping, so editing starts from what the host posted. */
+function toForm(reservation: Reservation): FormState {
+  return {
+    time: reservation.time,
+    duration: durationValues.get(reservation.duration) ?? '60',
+    type: reservation.type,
+    ranks: reservation.ranks,
+    capacity: String(reservation.capacity),
+    memo: reservation.memo,
+  }
+}
+
 function availabilityMeta(reservation: Reservation) {
   if (reservation.status === 'full') return { label: '마감', className: 'border-secondary text-secondary bg-secondary/10' }
   if (reservation.type === '랭크매치') return { label: '모집중', className: 'border-primary text-primary bg-primary/10' }
@@ -100,12 +132,13 @@ export default function Reservation() {
   const [showForm, setShowForm] = useState(false)
   const [rankPickerOpen, setRankPickerOpen] = useState(false)
   const [timePickerOpen, setTimePickerOpen] = useState(false)
-  const [draftTime, setDraftTime] = useState('21:00')
+  const [draftTime, setDraftTime] = useState(nextHourInSeoul)
   const [notice, setNotice] = useState<{ text: string; tone: 'info' | 'error' }>({ text: '', tone: 'info' })
   const showNotice = (text: string) => setNotice({ text, tone: 'info' })
   const showError = (error: unknown, fallback: string) => setNotice({ text: error instanceof Error ? error.message : fallback, tone: 'error' })
   const clearNotice = () => setNotice({ text: '', tone: 'info' })
-  const [form, setForm] = useState({ time: '21:00', duration: '60', type: '랭크매치' as MatchType, ranks: ['Vanquisher'], capacity: '1', memo: '' })
+  const [form, setForm] = useState<FormState>(blankForm)
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   const refresh = async () => {
     try {
@@ -128,7 +161,28 @@ export default function Reservation() {
     >{notice.text}</p>
   )
 
-  const closeForm = () => { setShowForm(false); setRankPickerOpen(false); setTimePickerOpen(false); clearNotice() }
+  const closeForm = () => { setShowForm(false); setEditingId(null); setRankPickerOpen(false); setTimePickerOpen(false); clearNotice() }
+
+  const openCreateForm = () => {
+    // Recomputed per open: a tab left sitting since morning would otherwise
+    // still offer the hour that was next when the page loaded.
+    setForm(blankForm())
+    setEditingId(null)
+    setShowForm(true)
+    setRankPickerOpen(false)
+    setTimePickerOpen(false)
+    // A failed list refresh stays on screen: the host opening the form does not
+    // make the reason it could not load any less true.
+  }
+
+  const openEditForm = (reservation: Reservation) => {
+    setForm(toForm(reservation))
+    setEditingId(reservation.id)
+    setShowForm(true)
+    setRankPickerOpen(false)
+    setTimePickerOpen(false)
+    clearNotice()
+  }
 
   const toggleRank = (rank: string) => {
     setForm((current) => ({
@@ -173,28 +227,47 @@ export default function Reservation() {
     try { const updated = await joinReservation(id, username); await refresh(); showNotice(updated.status === 'matched' ? '매칭이 성사되었습니다.' : '참가했습니다. 다른 참가자를 기다리고 있어요.') } catch (error) { showError(error, '참가에 실패했습니다.') }
   }
 
-  const handleCreate = async (event: React.FormEvent) => {
+  const handleDelete = async (id: number) => {
+    const participants = reservations.find((reservation) => reservation.id === id)?.joined ?? 0
+    const warning = participants > 0
+      ? `참가자 ${participants}명의 참가도 함께 취소됩니다. 예약을 삭제할까요?`
+      : '이 예약을 삭제할까요?'
+    if (!confirm(warning)) return
+
+    try {
+      await cancelReservation(id)
+      await refresh()
+      showNotice('예약을 삭제했습니다.')
+    } catch (error) { showError(error, '예약 삭제에 실패했습니다.') }
+  }
+
+  const conditionsFromForm = () => {
+    const isPlayerMatch = form.type === '플레이어 매치'
+    return {
+      start_time: `${form.time}:00`,
+      duration_minutes: Number(form.duration),
+      ranks: isPlayerMatch ? [] : form.ranks,
+      match_type: matchTypeValues[form.type],
+      capacity: isPlayerMatch ? Number(form.capacity) : 1,
+      memo: form.memo,
+    }
+  }
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const username = getUsername()
-    if (!username) { showError(null, '상단바에서 유저명을 설정한 뒤 예약을 만들 수 있습니다.'); return }
+    if (!username) { showError(null, `상단바에서 유저명을 설정한 뒤 예약을 ${editingId === null ? '만들' : '수정할'} 수 있습니다.`); return }
 
-    const isPlayerMatch = form.type === '플레이어 매치'
     clearNotice()
     try {
-      await createReservation({
-        start_time: `${form.time}:00`,
-        duration_minutes: Number(form.duration),
-        display_name: username,
-        ranks: isPlayerMatch ? [] : form.ranks,
-        match_type: matchTypeValues[form.type],
-        capacity: isPlayerMatch ? Number(form.capacity) : 1,
-        memo: form.memo,
-      })
+      if (editingId === null) await createReservation({ ...conditionsFromForm(), display_name: username })
+      else await updateReservation(editingId, conditionsFromForm())
+      const created = editingId === null
       await refresh()
       closeForm()
-      showNotice('예약을 만들었습니다. 참여자를 기다려 보세요!')
-      setForm({ time: '21:00', duration: '60', type: '랭크매치', ranks: ['Vanquisher'], capacity: '1', memo: '' })
-    } catch (error) { showError(error, '예약 생성에 실패했습니다.') }
+      showNotice(created ? '예약을 만들었습니다. 참여자를 기다려 보세요!' : '예약을 수정했습니다.')
+      setForm(blankForm())
+    } catch (error) { showError(error, editingId === null ? '예약 생성에 실패했습니다.' : '예약 수정에 실패했습니다.') }
   }
 
   return (
@@ -207,17 +280,17 @@ export default function Reservation() {
             <h2 className="font-display text-lg tracking-[0.08em] text-white">오늘의 예약</h2>
             <p className="mt-1 text-sm text-txt-dim">미리 약속하고, 접속 시간을 맞춰 보세요.</p>
           </div>
-          <button className="btn-primary self-start sm:self-auto" type="button" onClick={() => { setShowForm(true); setRankPickerOpen(false); setTimePickerOpen(false) }}>
+          <button className="btn-primary self-start sm:self-auto" type="button" onClick={openCreateForm}>
             + 예약 추가
           </button>
         </div>
 
         {showForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-deep/85 p-4 backdrop-blur-sm">
-          <form onSubmit={handleCreate} role="dialog" aria-modal="true" aria-labelledby="reservation-modal-title" className="grid max-h-[calc(100vh-2rem)] w-full max-w-lg gap-3 overflow-y-auto border border-primary-dim bg-bg-panel p-4 shadow-[0_0_48px_rgba(0,200,212,0.22)] sm:grid-cols-2 sm:p-5">
+          <form onSubmit={handleSubmit} role="dialog" aria-modal="true" aria-labelledby="reservation-modal-title" className="grid max-h-[calc(100vh-2rem)] w-full max-w-lg gap-3 overflow-y-auto border border-primary-dim bg-bg-panel p-4 shadow-[0_0_48px_rgba(0,200,212,0.22)] sm:grid-cols-2 sm:p-5">
             <div className="col-span-full flex items-start justify-between border-b border-border-light pb-3">
-              <div><p className="panel-meta mb-1 text-primary">NEW MATCH REQUEST</p><h3 id="reservation-modal-title" className="font-display text-xl font-black tracking-[0.06em] text-white">예약 추가</h3></div>
-              <button type="button" aria-label="예약 추가 닫기" className="flex h-8 w-8 items-center justify-center border border-border-light text-lg text-txt-dim transition-colors hover:border-primary hover:text-primary" onClick={closeForm}>×</button>
+              <div><p className="panel-meta mb-1 text-primary">{editingId === null ? 'NEW MATCH REQUEST' : 'EDIT MATCH REQUEST'}</p><h3 id="reservation-modal-title" className="font-display text-xl font-black tracking-[0.06em] text-white">{editingId === null ? '예약 추가' : '예약 수정'}</h3></div>
+              <button type="button" aria-label="닫기" className="flex h-8 w-8 items-center justify-center border border-border-light text-lg text-txt-dim transition-colors hover:border-primary hover:text-primary" onClick={closeForm}>×</button>
             </div>
             <fieldset className="relative text-sm font-bold text-txt-dim">
               <legend>시작 시각</legend>
@@ -292,7 +365,7 @@ export default function Reservation() {
               <input className="input-base mt-1 block w-full px-3 py-2" maxLength={140} placeholder="예: 부담 없이 1시간 랭매" value={form.memo} onChange={(event) => setForm({ ...form, memo: event.target.value })} />
             </label>
             {noticeBanner && <div className="col-span-full">{noticeBanner}</div>}
-            <div className="col-span-full flex justify-end gap-2 pt-1"><button className="btn-ghost" type="button" onClick={closeForm}>취소</button><button className="btn-primary" type="submit" disabled={form.type === '랭크매치' && form.ranks.length === 0}>예약 등록</button></div>
+            <div className="col-span-full flex justify-end gap-2 pt-1"><button className="btn-ghost" type="button" onClick={closeForm}>취소</button><button className="btn-primary" type="submit" disabled={form.type === '랭크매치' && form.ranks.length === 0}>{editingId === null ? '예약 등록' : '예약 수정'}</button></div>
           </form>
           </div>
         )}
@@ -332,11 +405,20 @@ export default function Reservation() {
           {selectedReservation && (() => {
             const availability = availabilityMeta(selectedReservation)
             const joined = joinedIds.includes(selectedReservation.id)
+            const owned = isOwner(selectedReservation.id)
+            // The backend refuses an edit once anyone has joined; say so here
+            // rather than letting the host find out by being rejected.
+            const frozen = selectedReservation.joined > 0
             return <aside className={`border bg-bg-row p-4 ${selectedReservation.status === 'full' ? 'border-secondary/60' : 'border-primary-dim'}`} aria-label="선택한 예약 상세">
               <div className="flex items-start justify-between gap-3"><div><p className="panel-meta mb-1">선택한 예약</p><p className="font-display text-3xl font-black text-white">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
               <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.type !== '플레이어 매치' && <div className="flex items-center justify-between"><span className="text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-9" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
               <p className="mt-4 min-h-10 text-sm text-txt-dim">{selectedReservation.memo}</p>
-              <button type="button" className={`mt-4 w-full py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-white hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 마감' : '참가하기'}</button>
+              {owned
+                ? <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button type="button" className={`border py-2 text-sm font-bold transition-colors ${frozen ? 'cursor-not-allowed border-border bg-bg-panel text-txt-dim' : 'border-primary text-primary hover:bg-primary/10'}`} disabled={frozen} title={frozen ? '참가자가 있는 예약은 수정할 수 없습니다. 삭제 후 다시 등록해 주세요.' : undefined} onClick={() => openEditForm(selectedReservation)}>예약 수정</button>
+                    <button type="button" className="border border-error py-2 text-sm font-bold text-error transition-colors hover:bg-error/10" onClick={() => handleDelete(selectedReservation.id)}>예약 삭제</button>
+                  </div>
+                : <button type="button" className={`mt-4 w-full py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-white hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 마감' : '참가하기'}</button>}
             </aside>
           })()}
         </div>

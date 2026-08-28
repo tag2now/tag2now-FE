@@ -1,31 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import {APP_VERSION} from "@/config/version";
+import { PATCH_NOTES, LATEST_PATCH_VERSION } from '@/config/patchNotes'
 
 const LS_KEY = 'ttt2-patch-dismissed'
 
-const NOTES: { version: string; items: string[] }[] = [
-  {
-    version: '2.0.1',
-    items: ['Yaksa 까지 계급 이미지 추가']
-  },
-  {
-    version: '2.0',
-    items: [
-        '신규 서버로 변경 (rpcn.tag2now.click)'
-    ]
-  },
-  {
-    version: '1.1',
-    items: [
-      '유저 이름 클릭 시 플레이어 히스토리 패널 오픈\n(리더보드, 랭크매치, 주간 철악귀)',
-      '플레이어 히스토리에 활동 시간대 차트 추가',
-    ],
-  }
-]
-
 export default function PatchNotes() {
   const [visible, setVisible] = useState(() => {
-    return localStorage.getItem(LS_KEY) !== APP_VERSION
+    return localStorage.getItem(LS_KEY) !== LATEST_PATCH_VERSION
   })
 
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -57,7 +37,7 @@ export default function PatchNotes() {
   }
 
   function dismiss() {
-    localStorage.setItem(LS_KEY, APP_VERSION)
+    localStorage.setItem(LS_KEY, LATEST_PATCH_VERSION)
     setVisible(false)
     previousFocusRef.current?.focus()
   }
@@ -85,7 +65,7 @@ export default function PatchNotes() {
           Patch Notes
         </h2>
 
-        {NOTES.map(note => (
+        {PATCH_NOTES.map(note => (
           <div key={note.version} className="mb-4">
             <h2 className="text-primary font-bold text-sm tracking-[0.12em] uppercase m-0 mb-2">
               v{note.version}

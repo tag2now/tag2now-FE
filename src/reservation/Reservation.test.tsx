@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Reservation from './Reservation'
-import { cancelParticipation, createReservation, fetchReservations, hasParticipation, joinReservation, type ApiReservation } from './reservationApi'
+import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
 import { clearUsername, saveUsername } from '@/shared/util/cookie'
 
 vi.mock('./reservationApi', () => ({
@@ -9,7 +9,10 @@ vi.mock('./reservationApi', () => ({
   createReservation: vi.fn(),
   joinReservation: vi.fn(),
   cancelParticipation: vi.fn(),
+  cancelReservation: vi.fn(),
+  updateReservation: vi.fn(),
   hasParticipation: vi.fn(),
+  isOwner: vi.fn(),
 }))
 
 const apiReservation = {
@@ -43,14 +46,26 @@ vi.mock('@ncdai/react-wheel-picker', () => ({
   ),
 }))
 
+// 20:10 KST, so the default start time — the next whole hour in Seoul — is a
+// fixed 21:00 and the assertions below stay deterministic.
+const KST_2010 = new Date('2026-08-28T11:10:00Z')
+
 beforeEach(() => {
+  vi.setSystemTime(KST_2010)
   // Without this, a "never called" assertion passes on a stale call from an
   // earlier test, and a "called with" one can match the wrong test's call.
   vi.clearAllMocks()
   vi.mocked(fetchReservations).mockResolvedValue([])
   vi.mocked(hasParticipation).mockReturnValue(false)
+  vi.mocked(isOwner).mockReturnValue(false)
   vi.mocked(createReservation).mockResolvedValue(apiReservation)
   saveUsername('나')
+})
+
+afterEach(() => {
+  // setSystemTime pins Date globally; leaving it pinned would follow the suite
+  // into the next file.
+  vi.useRealTimers()
 })
 
 function openReservationModal() {
@@ -64,7 +79,7 @@ describe('Reservation', () => {
     openReservationModal()
     expect(screen.getByRole('dialog', { name: '예약 추가' })).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: '예약 추가 닫기' }))
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
     expect(screen.queryByRole('dialog', { name: '예약 추가' })).not.toBeInTheDocument()
   })
 
@@ -108,6 +123,37 @@ describe('Reservation', () => {
     const summary = screen.getByRole('button', { name: '계급 선택, 현재 Yaksa, Vanquisher' })
     expect(Array.from(summary.querySelectorAll('img')).map((image) => image.alt)).toEqual(['Yaksa', 'Vanquisher'])
     expect(within(summary).queryByText('+1')).not.toBeInTheDocument()
+  })
+
+  it('defaults the start time to the next whole hour in Seoul', () => {
+    vi.setSystemTime(new Date('2026-08-28T04:55:00Z'))  // 13:55 KST
+    openReservationModal()
+
+    expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 14:00')
+  })
+
+  it('defaults to the next hour even moments after the last one struck', () => {
+    vi.setSystemTime(new Date('2026-08-28T04:01:00Z'))  // 13:01 KST
+    openReservationModal()
+
+    expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 14:00')
+  })
+
+  it('stays at 23:00 in the last hour, which has no bookable next hour', () => {
+    // The API takes a time of day with no date, so midnight would resolve to
+    // today's midnight and be rejected as past.
+    vi.setSystemTime(new Date('2026-08-28T14:30:00Z'))  // 23:30 KST
+    openReservationModal()
+
+    expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 23:00')
+  })
+
+  it('offers the hour that is next when the form opens, not when the page loaded', () => {
+    render(<Reservation />)
+    vi.setSystemTime(new Date('2026-08-28T06:20:00Z'))  // 15:20 KST, two hours later
+    fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
+
+    expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 16:00')
   })
 
   it('keeps the previous time on cancel and commits it on confirm', () => {
@@ -177,6 +223,121 @@ describe('Reservation', () => {
     await waitFor(() => expect(createReservation).toHaveBeenCalledWith(
       expect.objectContaining({ match_type: 'player_match', ranks: [], capacity: 3 }),
     ))
+  })
+
+  async function openDetail(reservation: ApiReservation = apiReservation) {
+    vi.mocked(fetchReservations).mockResolvedValue([reservation])
+    render(<Reservation />)
+    fireEvent.click(await screen.findByRole('button', { name: /나/ }))
+    return screen.getByRole('complementary', { name: '선택한 예약 상세' })
+  }
+
+  it('deletes the reservation once the host confirms', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    vi.mocked(cancelReservation).mockResolvedValue(undefined)
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const detail = await openDetail()
+
+    fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
+
+    await waitFor(() => expect(cancelReservation).toHaveBeenCalledWith(1))
+    confirmSpy.mockRestore()
+  })
+
+  it('leaves the reservation alone when the host dismisses the confirmation', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const detail = await openDetail()
+
+    fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
+
+    expect(cancelReservation).not.toHaveBeenCalled()
+    confirmSpy.mockRestore()
+  })
+
+  it('warns that participants lose their spot before deleting', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const detail = await openDetail({ ...apiReservation, capacity: 3, participant_count: 2 })
+
+    fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
+
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('참가자 2명'))
+    confirmSpy.mockRestore()
+  })
+
+  it('offers joining rather than deleting on a reservation the user does not own', async () => {
+    const detail = await openDetail()
+
+    expect(within(detail).getByRole('button', { name: '참가하기' })).toBeInTheDocument()
+    expect(within(detail).queryByRole('button', { name: '예약 삭제' })).not.toBeInTheDocument()
+  })
+
+  it('opens the form already filled in with what the host posted', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    const detail = await openDetail({ ...apiReservation, memo: '초보 환영', duration_minutes: 120 })
+
+    fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
+
+    expect(screen.getByRole('dialog', { name: '예약 수정' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/메모/)).toHaveValue('초보 환영')
+    expect(screen.getByLabelText('예상 시간')).toHaveValue('120')
+  })
+
+  it('refuses to open the editor once somebody has joined', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    const detail = await openDetail({ ...apiReservation, capacity: 3, participant_count: 1 })
+
+    const edit = within(detail).getByRole('button', { name: '예약 수정' })
+
+    expect(edit).toBeDisabled()
+    expect(edit).toHaveAttribute('title', expect.stringContaining('참가자가 있는 예약'))
+  })
+
+  it('still allows deleting a reservation somebody joined', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    const detail = await openDetail({ ...apiReservation, capacity: 3, participant_count: 1 })
+
+    expect(within(detail).getByRole('button', { name: '예약 삭제' })).toBeEnabled()
+  })
+
+  it('sends only the reservation id and the edited conditions', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    vi.mocked(updateReservation).mockResolvedValue(apiReservation)
+    const detail = await openDetail()
+
+    fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
+    const modal = screen.getByRole('dialog', { name: '예약 수정' })
+    fireEvent.change(screen.getByLabelText(/메모/), { target: { value: '자리 하나 남음' } })
+    fireEvent.click(within(modal).getByRole('button', { name: '예약 수정' }))
+
+    await waitFor(() => expect(updateReservation).toHaveBeenCalledWith(1, expect.objectContaining({ memo: '자리 하나 남음' })))
+    expect(createReservation).not.toHaveBeenCalled()
+  })
+
+  it('creates rather than edits after the edit form is dismissed', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    const detail = await openDetail()
+
+    fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+    fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+
+    await waitFor(() => expect(createReservation).toHaveBeenCalled())
+    expect(updateReservation).not.toHaveBeenCalled()
+  })
+
+  it('surfaces the backend reason when an edit is refused', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    vi.mocked(updateReservation).mockRejectedValue(new Error('참가자가 있는 예약은 수정할 수 없습니다.'))
+    const detail = await openDetail()
+
+    fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
+    const modal = screen.getByRole('dialog', { name: '예약 수정' })
+    fireEvent.click(within(modal).getByRole('button', { name: '예약 수정' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('참가자가 있는 예약은 수정할 수 없습니다.')
   })
 
   it('renders a full card when the backend reports the reservation as matched', async () => {

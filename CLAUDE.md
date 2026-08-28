@@ -59,7 +59,7 @@ src/
   App.tsx              tab state and layout; the only place tabs are assembled
   main.tsx             root render, Toaster, global unhandledrejection handler
   index.css            Tailwind 4 @theme design tokens
-  config/              tabConfig, version, test-setup
+  config/              tabConfig, patchNotes, test-setup
   match/               rooms — useRooms, Rooms, RankMatchTable, PlayerMatchTable
   community/           board — useCommunity, communityApi, post/comment components
   stat/                statistics — useStats, useWeeklyTop, Stats
@@ -100,6 +100,16 @@ The tab bar implements the ARIA tabs pattern — `role="tablist"`/`tab`/`tabpane
 
 Not authentication. The username is stored in a cookie (`shared/util/cookie.ts`) and registered with the backend via `useIdentity().ensureIdentity()`, which POSTs to `/community/identity` once per session (guarded by a `useRef`) before any write. Callers must `await ensureIdentity()` before posting; it throws a Korean error message if no username is set.
 
+### Reservation ownership
+
+Reservations use **capability tokens in `localStorage`**, not the community cookie identity. Creating one stores `reservation-owner-{id}`; joining stores `reservation-participant-{id}`. Both are sent back as `X-Reservation-Token` on the matching `DELETE`, and the backend authorises by comparing token hashes — there is no account to check against.
+
+`isOwner(id)` / `hasParticipation(id)` therefore answer "does this browser hold the token", not "is this the same person". Clearing site data or switching browsers loses the ability to delete a reservation, and nothing in the UI can recover it. Treat that as a known limitation of the token model rather than a bug to patch around.
+
+Editing (`PATCH /reservations/{id}`) is refused once anyone has joined: participants agreed to the conditions as they stood, and letting the host move the time underneath them would bind people to an appointment they never accepted. The host cancels and re-posts instead. The edit button is disabled once `participant_count > 0` so the host sees the restriction before acting, but the server stays the authority — a participant arriving while the editor is already open is caught by the 400, not by the disabled state. The create modal doubles as the edit form — same fields, same validation — so a rule cannot drift between posting and editing.
+
+Cancelling is a soft delete (`status = 'cancelled'`) that also releases every participant. `GET /reservations` returns only `open` and `matched`, so a cancelled reservation disappears on the next poll without any client-side removal.
+
 ### Error handling
 
 `main.tsx` registers a global `unhandledrejection` handler that shows a toast and calls `preventDefault()`. Rejected promises therefore surface to the user without a try/catch at every call site — but a caller that wants inline error state (as feature hooks do) must catch and store `e.message` itself.
@@ -132,9 +142,7 @@ Visual baselines are environment-sensitive: snapshots rendered on Windows will n
 
 ## Custom commands
 
-`.claude/commands/` provides `/a11y-audit`, `/design-audit`, `/design-review`, and `/version-up`.
-
-Note that `/version-up` refers to `src/version.ts`, but the file is actually at `src/config/version.ts` — fix the path in the command or the version bump will fail.
+`.claude/commands/` provides `/a11y-audit`, `/design-audit`, and `/design-review`.
 
 ## Deployment
 
@@ -149,6 +157,19 @@ Images go to ECR (`864573346741.dkr.ecr.ap-northeast-2.amazonaws.com/tag2-now/fe
 | `test.yml` | PR to `dev`/`master` | unit tests + typecheck, then E2E |
 | `deploy.yml` | `v*` tag | full test suite, build and push to ECR, then deploy to production over SSH |
 | `update-snapshots.yml` | manual | regenerate visual baselines, upload as artifact |
+
+### Versioning
+
+There is no `APP_VERSION` constant. `src/config/patchNotes.ts` is the single
+source of truth: `PATCH_NOTES[0].version` is exported as `LATEST_PATCH_VERSION`,
+which drives both the version shown in the header and the "seen" marker that
+decides whether the patch-notes dialog reappears. Adding an entry to the top of
+that array is therefore the whole version bump — there is no second constant to
+remember, which is what previously let the header, the dialog, and the tags
+drift apart.
+
+The one pairing still done by hand is the release tag: tag `v{version}` to match
+the new top entry.
 
 **Release is automatic on a `v*` tag.** The `deploy` job SSHes into Lightsail,
 writes `FE_IMAGE_TAG` into the instance's `.env.prod`, and restarts **only
