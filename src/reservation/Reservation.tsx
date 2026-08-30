@@ -5,7 +5,7 @@ import RankImage from '@/shared/components/RankImage'
 import { getUsername } from '@/shared/util/cookie'
 import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
 
-type MatchType = '랭크매치' | '플레이어 매치'
+type MatchType = '랭크매치' | '플레이어 매치' | '상관없음'
 type ReservationStatus = 'open' | 'full'
 
 type Reservation = {
@@ -21,7 +21,7 @@ type Reservation = {
   status: ReservationStatus
   contact?: string
 }
-const matchTypes: Array<MatchType | '전체'> = ['전체', '랭크매치', '플레이어 매치']
+const matchTypes: Array<MatchType | '전체'> = ['전체', '랭크매치', '플레이어 매치', '상관없음']
 const durationOptions = [
   { value: '30', label: '약 30분' },
   { value: '60', label: '약 1시간' },
@@ -29,8 +29,8 @@ const durationOptions = [
   { value: '180', label: '약 3시간' },
 ]
 const durationLabels = new Map(durationOptions.map(({ value, label }) => [Number(value), label]))
-const matchTypeLabels: Record<ApiReservation['match_type'], MatchType> = { rank_match: '랭크매치', player_match: '플레이어 매치' }
-const matchTypeValues: Record<MatchType, ApiReservation['match_type']> = { '랭크매치': 'rank_match', '플레이어 매치': 'player_match' }
+const matchTypeLabels: Record<ApiReservation['match_type'], MatchType> = { rank_match: '랭크매치', player_match: '플레이어 매치', any: '상관없음' }
+const matchTypeValues: Record<MatchType, ApiReservation['match_type']> = { '랭크매치': 'rank_match', '플레이어 매치': 'player_match', '상관없음': 'any' }
 const kstTimeFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false })
 
 function fromApi(item: ApiReservation): Reservation {
@@ -193,9 +193,10 @@ export default function Reservation() {
     }))
   }
 
+  // A '상관없음' host takes either game, so both single-type filters keep them.
   const visibleReservations = useMemo(
     () => reservations.filter((reservation) =>
-      (typeFilter === '전체' || reservation.type === typeFilter)
+      (typeFilter === '전체' || reservation.type === typeFilter || reservation.type === '상관없음')
       && (rankFilter === '전체' || reservation.ranks.includes(rankFilter)),
     ),
     [rankFilter, reservations, typeFilter],
@@ -241,17 +242,14 @@ export default function Reservation() {
     } catch (error) { showError(error, '예약 삭제에 실패했습니다.') }
   }
 
-  const conditionsFromForm = () => {
-    const isPlayerMatch = form.type === '플레이어 매치'
-    return {
-      start_time: `${form.time}:00`,
-      duration_minutes: Number(form.duration),
-      ranks: isPlayerMatch ? [] : form.ranks,
-      match_type: matchTypeValues[form.type],
-      capacity: isPlayerMatch ? Number(form.capacity) : 1,
-      memo: form.memo,
-    }
-  }
+  const conditionsFromForm = () => ({
+    start_time: `${form.time}:00`,
+    duration_minutes: Number(form.duration),
+    ranks: form.type === '플레이어 매치' ? [] : form.ranks,
+    match_type: matchTypeValues[form.type],
+    capacity: form.type === '랭크매치' ? 1 : Number(form.capacity),
+    memo: form.memo,
+  })
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -310,10 +308,10 @@ export default function Reservation() {
             </fieldset>
             <fieldset className="text-sm font-bold text-txt-dim">
               <legend>매치 종류</legend>
-              <div className="mt-1 grid grid-cols-2 border border-border-light bg-bg-row" role="radiogroup" aria-label="매치 종류">
-                {matchTypes.slice(1).map((type) => {
+              <div className="mt-1 grid grid-cols-3 border border-border-light bg-bg-row" role="radiogroup" aria-label="매치 종류">
+                {matchTypes.slice(1).map((type, index, options) => {
                   const selected = form.type === type
-                  return <button key={type} type="button" role="radio" aria-checked={selected} onClick={() => { setForm({ ...form, type: type as MatchType }); setRankPickerOpen(false) }} className={`px-3 py-2 text-sm font-bold transition-colors first:border-r first:border-border-light ${selected ? 'bg-primary text-bg-deep shadow-[inset_0_-2px_0_rgba(255,255,255,0.35)]' : 'text-txt-dim hover:bg-primary-hover hover:text-primary'}`}>
+                  return <button key={type} type="button" role="radio" aria-checked={selected} onClick={() => { setForm({ ...form, type: type as MatchType }); setRankPickerOpen(false) }} className={`px-2 py-2 text-sm font-bold transition-colors ${index < options.length - 1 ? 'border-r border-border-light' : ''} ${selected ? 'bg-primary text-bg-deep shadow-[inset_0_-2px_0_rgba(255,255,255,0.35)]' : 'text-txt-dim hover:bg-primary-hover hover:text-primary'}`}>
                     {type}
                   </button>
                 })}
@@ -325,7 +323,7 @@ export default function Reservation() {
               </select>
             </label>
             {form.type !== '플레이어 매치' && <fieldset className="col-span-full text-sm font-bold text-txt-dim">
-              <legend>보유 계급 <span className="font-normal">(복수 선택 가능)</span></legend>
+              <legend>보유 계급 <span className="font-normal">{form.type === '랭크매치' ? '(복수 선택 가능)' : '(선택, 복수 가능)'}</span></legend>
               <button type="button" aria-label={form.ranks.length > 0 ? `계급 선택, 현재 ${sortSelectedRanks(form.ranks).join(', ')}` : '계급 선택'} aria-expanded={rankPickerOpen} aria-controls="reservation-rank-picker" onClick={() => setRankPickerOpen((open) => !open)} className="input-base mt-1 flex min-h-12 w-full items-center justify-between gap-3 px-3 py-1.5 text-left">
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="shrink-0 text-xs font-normal text-txt-dim">{form.ranks.length > 0 ? `${form.ranks.length}개 선택` : '계급을 선택해 주세요'}</span>
@@ -354,7 +352,7 @@ export default function Reservation() {
                 </div>
                 <div className="mt-2 flex justify-end"><button type="button" className="btn-ghost" onClick={() => setRankPickerOpen(false)}>선택 완료</button></div>
               </div>}
-              {form.ranks.length === 0 && <p className="mt-1 text-xs font-normal text-error">계급을 하나 이상 선택해 주세요.</p>}
+              {form.type === '랭크매치' && form.ranks.length === 0 && <p className="mt-1 text-xs font-normal text-error">계급을 하나 이상 선택해 주세요.</p>}
             </fieldset>}
             {form.type !== '랭크매치' && <label className="text-sm font-bold text-txt-dim">모집 인원
               <select className="input-base mt-1 block w-full px-3 py-2" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })}>
@@ -395,7 +393,7 @@ export default function Reservation() {
                     const selected = reservation.id === selectedReservation?.id
                     return <button key={reservation.id} type="button" onClick={() => setSelectedId(reservation.id)} className={`grid grid-cols-2 overflow-hidden border text-left transition-colors ${selected ? 'border-primary bg-primary/10 shadow-[inset_3px_0_0_var(--color-primary)]' : 'border-border-light bg-bg-panel hover:border-primary-dim hover:bg-primary-hover'}`}>
                       <span className="flex min-w-0 flex-col justify-between px-3 py-3"><strong className="truncate text-base tracking-[0.03em] text-white">{reservation.host}</strong><span className={`w-fit border px-1.5 py-0.5 text-xs font-bold tracking-[0.08em] ${availability.className}`}>{availability.label}</span></span>
-                      <span className="flex shrink-0 items-center justify-center border-l border-border bg-bg-row px-3">{reservation.type === '플레이어 매치' ? <span className="flex h-8 items-center border border-primary-dim px-2 text-center text-xs font-bold tracking-[0.04em] text-primary">PLAYER MATCH</span> : <RankSummary ranks={reservation.ranks} imageClassName="h-10" />}</span>
+                      <span className="flex shrink-0 items-center justify-center border-l border-border bg-bg-row px-3">{reservation.type === '플레이어 매치' || (reservation.type === '상관없음' && reservation.ranks.length === 0) ? <span className="flex h-8 items-center border border-primary-dim px-2 text-center text-xs font-bold tracking-[0.04em] text-primary">{reservation.type === '상관없음' ? 'ANY MATCH' : 'PLAYER MATCH'}</span> : <RankSummary ranks={reservation.ranks} imageClassName="h-10" />}</span>
                     </button>
                   })}
                 </div>
@@ -411,7 +409,7 @@ export default function Reservation() {
             const frozen = selectedReservation.joined > 0
             return <aside className={`border bg-bg-row p-4 ${selectedReservation.status === 'full' ? 'border-secondary/60' : 'border-primary-dim'}`} aria-label="선택한 예약 상세">
               <div className="flex items-start justify-between gap-3"><div><p className="panel-meta mb-1">선택한 예약</p><p className="font-display text-3xl font-black text-white">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
-              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.type !== '플레이어 매치' && <div className="flex items-center justify-between"><span className="text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-9" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
+              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-center justify-between"><span className="text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-9" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
               <p className="mt-4 min-h-10 text-sm text-txt-dim">{selectedReservation.memo}</p>
               {owned
                 ? <div className="mt-4 grid grid-cols-2 gap-2">

@@ -225,6 +225,46 @@ describe('Reservation', () => {
     ))
   })
 
+  it('offers ranks and a capacity together when either match type will do', async () => {
+    openReservationModal()
+    fireEvent.click(screen.getByRole('radio', { name: '상관없음' }))
+
+    expect(screen.getByRole('group', { name: /보유 계급/ })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('모집 인원'), { target: { value: '2' } })
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+
+    await waitFor(() => expect(createReservation).toHaveBeenCalledWith(
+      expect.objectContaining({ match_type: 'any', ranks: ['Vanquisher'], capacity: 2 }),
+    ))
+  })
+
+  it('lets a reservation for either type be posted without any rank', async () => {
+    openReservationModal()
+    fireEvent.click(screen.getByRole('radio', { name: '상관없음' }))
+    fireEvent.click(screen.getByRole('button', { name: /계급 선택, 현재/ }))
+    const selectedTiles = within(document.getElementById('reservation-rank-picker')!).getAllByRole('button', { pressed: true })
+    expect(selectedTiles).toHaveLength(1)
+    fireEvent.click(selectedTiles[0])
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+
+    await waitFor(() => expect(createReservation).toHaveBeenCalledWith(
+      expect.objectContaining({ match_type: 'any', ranks: [] }),
+    ))
+  })
+
+  it('keeps a reservation for either type in both single-type filters', async () => {
+    vi.mocked(fetchReservations).mockResolvedValue([
+      { ...apiReservation, id: 2, host_display_name: '아무나', match_type: 'any', host_ranks: [], capacity: 2 },
+    ])
+    render(<Reservation />)
+    expect(await screen.findByRole('button', { name: /아무나/ })).toBeInTheDocument()
+
+    for (const filter of ['랭크매치', '플레이어 매치']) {
+      fireEvent.change(screen.getByLabelText('매치 종류 필터'), { target: { value: filter } })
+      expect(screen.getByRole('button', { name: /아무나/ })).toBeInTheDocument()
+    }
+  })
+
   async function openDetail(reservation: ApiReservation = apiReservation) {
     vi.mocked(fetchReservations).mockResolvedValue([reservation])
     render(<Reservation />)

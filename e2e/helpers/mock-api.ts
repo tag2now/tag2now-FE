@@ -10,7 +10,7 @@ interface ApiReservationLike {
   duration_minutes: number
   host_display_name: string
   host_ranks: string[]
-  match_type: 'rank_match' | 'player_match'
+  match_type: 'rank_match' | 'player_match' | 'any'
   capacity: number
   memo: string
   status: 'open' | 'matched' | 'cancelled' | 'ended'
@@ -33,7 +33,7 @@ export interface ApiReservation {
   duration_minutes: number
   host_display_name: string
   host_ranks: string[]
-  match_type: 'rank_match' | 'player_match'
+  match_type: 'rank_match' | 'player_match' | 'any'
   capacity: number
   memo: string
   status: 'open' | 'matched' | 'cancelled' | 'ended'

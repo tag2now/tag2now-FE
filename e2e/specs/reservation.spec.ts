@@ -90,6 +90,18 @@ test.describe('Reservation', () => {
     expect(await isTopmost(alert)).toBe(true)
   })
 
+  test('creates a reservation open to either match type, keeping ranks and capacity', async ({ page }) => {
+    await page.getByRole('button', { name: '+ 예약 추가' }).click()
+    const modal = page.getByRole('dialog', { name: '예약 추가' })
+    await modal.getByRole('radio', { name: '상관없음' }).click()
+
+    await expect(modal.getByRole('group', { name: /보유 계급/ })).toBeVisible()
+    await modal.getByLabel('모집 인원').selectOption('2')
+    await modal.getByRole('button', { name: '예약 등록' }).click()
+
+    await expect(page.getByRole('button', { name: /나 0\/2명/ })).toBeVisible()
+  })
+
   test('creates a player match without rank selection', async ({ page }) => {
     await page.getByRole('button', { name: '+ 예약 추가' }).click()
     const modal = page.getByRole('dialog', { name: '예약 추가' })
