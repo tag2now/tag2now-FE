@@ -1,7 +1,7 @@
 // Project tasks configuration. See https://zed.dev/docs/tasks for documentation.
 [
   {
-    // BE=local points the Vite proxy at http://localhost:8000.
+    // BE=local points the Vite proxy at http://127.0.0.1:8000.
     // Without it the dev server proxies to PRODUCTION, so any write
     // (e.g. a community post) lands in the live board.
     "label": "FE dev server (local BE)",
