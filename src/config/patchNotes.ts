@@ -10,6 +10,10 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.1.1',
+    items: ['예약 매치 종류에 "상관없음" 추가 (양쪽 필터에 모두 표시)'],
+  },
+  {
     version: '2.1',
     items: [
       '리더보드에 100위 밖 플레이어도 표시',
