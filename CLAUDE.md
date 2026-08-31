@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Frontend for **tag2now** — a live info dashboard for **Tekken Tag Tournament 2 (TTT2)**. Shows active online rooms, leaderboard rankings, player activity statistics, and a community board, all sourced from the `tag2now-BE` API.
 
-UI text is in Korean. The visual style is a dark neon arcade theme.
+UI text is in Korean. The visual style is a black + red arcade theme.
 
 ## Commands
 

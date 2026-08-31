@@ -272,7 +272,7 @@ export default function Reservation() {
 
   return (
     <section className="panel relative overflow-hidden" aria-label="예약">
-      <div className="absolute inset-0 pointer-events-none opacity-25 [background-image:linear-gradient(rgba(139,124,246,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(139,124,246,0.04)_1px,transparent_1px)] [background-size:24px_24px]" />
+      <div className="absolute inset-0 pointer-events-none opacity-25 [background-image:linear-gradient(rgba(230,57,70,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(230,57,70,0.04)_1px,transparent_1px)] [background-size:24px_24px]" />
       <div className="relative">
         <div className="flex flex-col gap-4 border-b border-border-light pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>

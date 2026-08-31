@@ -42,11 +42,11 @@ const LIMIT_OPTIONS: { value: WeeklyTopLimit; label: string }[] = [
 ]
 
 // Design tokens as JS constants (CSS vars can't be used directly in Recharts SVG fills)
-const COLOR_PRIMARY = '#8b7cf6'
+const COLOR_PRIMARY = '#e63946'
 const COLOR_SECONDARY = '#c9a84c'
 const COLOR_BORDER = 'rgba(255,255,255,.10)'
-const COLOR_TXT_DIM = '#aaa4b9'
-const COLOR_BG_PANEL = '#231e30'
+const COLOR_TXT_DIM = '#a3a3ad'
+const COLOR_BG_PANEL = '#151517'
 
 
 const TOOLTIP_STYLE = {
