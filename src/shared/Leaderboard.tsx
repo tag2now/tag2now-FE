@@ -72,7 +72,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
             </tr>
           </thead>
           <tbody>
-            {visible.map((e) => {
+            {visible.map((e,i) => {
               // Keyed off the true rank, not the row index: a filtered view must
               // not award a medal to whoever happens to land in the top rows.
               const medal = e.rank <= 3 ? MEDAL[e.rank - 1] : null
