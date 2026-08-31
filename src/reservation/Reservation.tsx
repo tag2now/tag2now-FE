@@ -280,17 +280,17 @@ export default function Reservation() {
             <h2 className="font-display text-lg tracking-[0.08em] text-white">오늘의 예약</h2>
             <p className="mt-1 text-sm text-txt-dim">미리 약속하고, 접속 시간을 맞춰 보세요.</p>
           </div>
-          <button className="btn-primary self-start sm:self-auto" type="button" aria-label="+ 예약 추가" onClick={() => { setShowForm(true); setRankPickerOpen(false); setTimePickerOpen(false) }}>
+          <button className="btn-primary self-start sm:self-auto" type="button" aria-label="+ 예약 추가" onClick={openCreateForm}>
             <CalendarPlus size={15} aria-hidden="true" /> 예약 추가
           </button>
         </div>
 
         {showForm && (
           <div className="modal-backdrop">
-          <form onSubmit={handleCreate} role="dialog" aria-modal="true" aria-labelledby="reservation-modal-title" className="reservation-modal grid sm:grid-cols-2">
+          <form onSubmit={handleSubmit} role="dialog" aria-modal="true" aria-labelledby="reservation-modal-title" className="reservation-modal grid sm:grid-cols-2">
             <div className="reservation-modal-header col-span-full">
-              <div><p className="panel-meta mb-1 text-primary">NEW MATCH REQUEST</p><h3 id="reservation-modal-title" className="font-display text-xl font-black tracking-[0.06em] text-white">예약 추가</h3><p className="modal-description">시간과 매치 조건을 설정해 참가자를 모집하세요.</p></div>
-              <button type="button" aria-label="예약 추가 닫기" className="modal-close" onClick={closeForm}><X size={16} /></button>
+              <div><p className="panel-meta mb-1 text-primary">{editingId === null ? 'NEW MATCH REQUEST' : 'EDIT MATCH REQUEST'}</p><h3 id="reservation-modal-title" className="font-display text-xl font-black tracking-[0.06em] text-white">{editingId === null ? '예약 추가' : '예약 수정'}</h3><p className="modal-description">시간과 매치 조건을 설정해 참가자를 모집하세요.</p></div>
+              <button type="button" aria-label="닫기" className="modal-close" onClick={closeForm}><X size={16} /></button>
             </div>
             <fieldset className="modal-field relative">
               <legend className="field-label">시작 시각</legend>
@@ -311,7 +311,7 @@ export default function Reservation() {
             <fieldset className="modal-field">
               <legend className="field-label">매치 종류</legend>
               <div className="match-type-selector" role="radiogroup" aria-label="매치 종류">
-                {matchTypes.slice(1).map((type) => {
+                {matchTypes.slice(1).map((type, index, options) => {
                   const selected = form.type === type
                   return <button key={type} type="button" role="radio" aria-checked={selected} onClick={() => { setForm({ ...form, type: type as MatchType }); setRankPickerOpen(false) }} className={`px-2 py-2 text-sm font-bold transition-colors ${index < options.length - 1 ? 'border-r border-border-light' : ''} ${selected ? 'bg-primary text-bg-deep shadow-[inset_0_-2px_0_rgba(255,255,255,0.35)]' : 'text-txt-dim hover:bg-primary-hover hover:text-primary'}`}>
                     {type}
@@ -406,11 +406,20 @@ export default function Reservation() {
           {selectedReservation && (() => {
             const availability = availabilityMeta(selectedReservation)
             const joined = joinedIds.includes(selectedReservation.id)
+            const owned = isOwner(selectedReservation.id)
+            // The backend refuses an edit once anyone has joined; say so here
+            // rather than letting the host find out by being rejected.
+            const frozen = selectedReservation.joined > 0
             return <aside className={`reservation-detail ${selectedReservation.status === 'full' ? 'is-full' : ''}`} aria-label="선택한 예약 상세">
               <div className="flex items-start justify-between gap-3"><div><p className="panel-meta mb-1">선택한 예약</p><p className="font-display text-3xl font-black text-white">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
               <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-center justify-between"><span className="text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-9" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
               <p className="mt-4 min-h-10 text-sm text-txt-dim">{selectedReservation.memo}</p>
-              <button type="button" className={`mt-4 flex min-h-9 w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-white hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? <UserMinus size={15} /> : selectedReservation.status === 'full' ? <X size={15} /> : <LogIn size={15} />}{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 마감' : '참가하기'}</button>
+              {owned
+                ? <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button type="button" className={`border py-2 text-sm font-bold transition-colors ${frozen ? 'cursor-not-allowed border-border bg-bg-panel text-txt-dim' : 'border-primary text-primary hover:bg-primary/10'}`} disabled={frozen} title={frozen ? '참가자가 있는 예약은 수정할 수 없습니다. 삭제 후 다시 등록해 주세요.' : undefined} onClick={() => openEditForm(selectedReservation)}>예약 수정</button>
+                    <button type="button" className="border border-error py-2 text-sm font-bold text-error transition-colors hover:bg-error/10" onClick={() => handleDelete(selectedReservation.id)}>예약 삭제</button>
+                  </div>
+                : <button type="button" className={`mt-4 flex min-h-9 w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-white hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? <UserMinus size={15} /> : selectedReservation.status === 'full' ? <X size={15} /> : <LogIn size={15} />}{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 마감' : '참가하기'}</button>}
             </aside>
           })()}
         </div>
