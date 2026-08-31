@@ -144,7 +144,7 @@ export default function App() {
                   <button
                     key={key}
                     role="tab"
-                    aria-label={`${formatGroupName(key)} (${groups[key]?.length ?? 0})`}
+                    aria-label={`${formatGroupName(key)} (${roomCountLabel(groups[key], roomsLoaded)})`}
                     id={`tab-${key}`}
                     aria-selected={activeTab === key}
                     aria-controls={`tabpanel-${key}`}
@@ -154,7 +154,7 @@ export default function App() {
                   >
                     <Swords size={14} aria-hidden="true" />
                     {formatGroupName(key)}
-                    <span>{groups[key]?.length ?? 0}</span>
+                    <span>{roomCountLabel(groups[key], roomsLoaded)}</span>
                   </button>
                 ))}
               </div>
