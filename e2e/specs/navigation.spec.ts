@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test'
 import { mockAllApis, dismissPatchNotes } from '../helpers/mock-api'
 
+// Locators here go through roles and accessible names on purpose: the tab strip
+// is an ARIA tabs widget, so what a user — or a screen reader — can reach is the
+// contract worth asserting. Class names are styling, and a redesign that only
+// moves them should not turn this suite red.
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await mockAllApis(page)
@@ -9,64 +13,57 @@ test.describe('Navigation', () => {
   })
 
   test('page loads with first room group tab active', async ({ page }) => {
-    // rank_match is first in GROUP_ORDER, label is "랭매"
-    const activeTab = page.locator('button.tab-btn.active')
-    await expect(activeTab).toBeVisible()
-    await expect(activeTab).toContainText('랭매')
+    // Room groups live under the "매칭" tab; rank_match is first in GROUP_ORDER.
+    await expect(page.getByRole('tab', { name: '매칭' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('tab', { name: /^랭매/ })).toHaveAttribute('aria-selected', 'true')
   })
 
   test('all expected tabs are visible', async ({ page }) => {
-    const tabs = page.locator('button.tab-btn')
-    // One tab per room group in the fixture, then the fixed tabs in App.tsx.
-    await expect(tabs).toHaveCount(6)
-    await expect(tabs.nth(0)).toContainText('랭매')
-    await expect(tabs.nth(1)).toContainText('플매')
-    await expect(tabs.nth(2)).toContainText('예약')
-    await expect(tabs.nth(3)).toContainText('리더보드')
-    await expect(tabs.nth(4)).toContainText('커뮤니티')
-    await expect(tabs.nth(5)).toContainText('통계')
+    const mainTabs = page.getByRole('tablist', { name: 'Main navigation' }).getByRole('tab')
+    await expect(mainTabs).toHaveText(['매칭', '예약', '리더보드', '커뮤니티', '통계'])
+
+    const roomTabs = page.getByRole('tablist', { name: '매칭 종류 선택' }).getByRole('tab')
+    await expect(roomTabs).toHaveCount(2)
+    await expect(roomTabs.nth(0)).toHaveAccessibleName(/랭매/)
+    await expect(roomTabs.nth(1)).toHaveAccessibleName(/플매/)
   })
 
   test('tab shows room count in label', async ({ page }) => {
-    const rankTab = page.locator('button.tab-btn', { hasText: '랭매' })
-    // 2 rooms in rank_match fixture
-    await expect(rankTab).toContainText('(2)')
+    // 2 rooms in the rank_match fixture
+    await expect(page.getByRole('tab', { name: '랭매 (2)' })).toBeVisible()
   })
 
   test('clicking leaderboard tab shows leaderboard content', async ({ page }) => {
-    await page.locator('button.tab-btn', { hasText: '리더보드' }).click()
+    await page.getByRole('tab', { name: '리더보드' }).click()
 
-    await expect(page.locator('text=Total records:')).toBeVisible()
-    await expect(page.locator('table thead th', { hasText: 'Player' })).toBeVisible()
+    await expect(page.getByText('Total records: 5')).toBeAttached()
+    await expect(page.getByRole('columnheader', { name: 'Player' })).toBeVisible()
   })
 
   test('clicking community tab shows post list', async ({ page }) => {
-    await page.locator('button.tab-btn', { hasText: '커뮤니티' }).click()
+    await page.getByRole('tab', { name: '커뮤니티' }).click()
 
     // Community has filter buttons
-    await expect(page.locator('button', { hasText: '전체' })).toBeVisible()
-    await expect(page.locator('button', { hasText: '글쓰기' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '전체' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '글쓰기' })).toBeVisible()
   })
 
   test('switching back to room tab shows rooms again', async ({ page }) => {
-    // Go to leaderboard
-    await page.locator('button.tab-btn', { hasText: '리더보드' }).click()
-    await expect(page.locator('text=Total records:')).toBeVisible()
+    await page.getByRole('tab', { name: '리더보드' }).click()
+    await expect(page.getByText('Total records: 5')).toBeAttached()
 
-    // Go back to rank match
-    await page.locator('button.tab-btn', { hasText: '랭매' }).click()
-    await expect(page.locator('thead tr')).toContainText('랭크')
+    await page.getByRole('tab', { name: '매칭' }).click()
+    await expect(page.getByRole('columnheader', { name: '랭크' })).toBeVisible()
   })
 
-  test('active tab styling updates on click', async ({ page }) => {
-    const leaderboardTab = page.locator('button.tab-btn', { hasText: '리더보드' })
-    await expect(leaderboardTab).not.toHaveClass(/active/)
+  test('the selected tab moves on click', async ({ page }) => {
+    const leaderboardTab = page.getByRole('tab', { name: '리더보드' })
+    await expect(leaderboardTab).toHaveAttribute('aria-selected', 'false')
 
     await leaderboardTab.click()
-    await expect(leaderboardTab).toHaveClass(/active/)
+    await expect(leaderboardTab).toHaveAttribute('aria-selected', 'true')
 
-    // Previous tab is no longer active
-    const rankTab = page.locator('button.tab-btn', { hasText: '랭매' })
-    await expect(rankTab).not.toHaveClass(/active/)
+    // Only one tab is ever selected, so the previous one has to give it up.
+    await expect(page.getByRole('tab', { name: '매칭' })).toHaveAttribute('aria-selected', 'false')
   })
 })

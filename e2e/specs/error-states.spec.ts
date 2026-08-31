@@ -1,24 +1,26 @@
 import { test, expect } from '@playwright/test'
 import { mockAllApis, dismissPatchNotes } from '../helpers/mock-api'
 
+// panelStatus renders a failure as role="alert", so these assertions check what
+// actually reaches the user instead of the class the panel happens to carry.
 test.describe('Error states', () => {
   test('rooms API failure shows error message', async ({ page }) => {
     await mockAllApis(page, { failEndpoints: ['rooms'] })
     await page.goto('/')
     await dismissPatchNotes(page)
 
-    await expect(page.locator('.state-msg.error')).toBeVisible()
-    await expect(page.locator('.state-msg.error')).toContainText('Error:')
+    await expect(page.getByRole('alert')).toBeVisible()
+    await expect(page.getByRole('alert')).toContainText('Error:')
   })
 
   test('leaderboard API failure shows error on leaderboard tab', async ({ page }) => {
     await mockAllApis(page, { failEndpoints: ['leaderboard'] })
     await page.goto('/')
     await dismissPatchNotes(page)
-    await page.locator('button.tab-btn', { hasText: '리더보드' }).click()
+    await page.getByRole('tab', { name: '리더보드' }).click()
 
-    await expect(page.locator('.state-msg.error')).toBeVisible()
-    await expect(page.locator('.state-msg.error')).toContainText('Error:')
+    await expect(page.getByRole('alert')).toBeVisible()
+    await expect(page.getByRole('alert')).toContainText('Error:')
   })
 
   test('recovery after manual refresh', async ({ page }) => {
@@ -26,7 +28,7 @@ test.describe('Error states', () => {
     await page.goto('/')
     await dismissPatchNotes(page)
 
-    await expect(page.locator('.state-msg.error')).toBeVisible()
+    await expect(page.getByRole('alert')).toBeVisible()
 
     // Now fix the route to return success
     await page.unrouteAll({ behavior: 'ignoreErrors' })
@@ -35,7 +37,8 @@ test.describe('Error states', () => {
     // Re-navigating should recover
     await page.goto('/')
     await dismissPatchNotes(page)
-    await expect(page.locator('.panel-meta')).toContainText(/업데이트 \d+초 전/)
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await expect(page.getByText(/업데이트 \d+초 전/)).toBeVisible()
   })
 
   test('both APIs failing shows rooms error on default tab', async ({ page }) => {
@@ -43,6 +46,6 @@ test.describe('Error states', () => {
     await page.goto('/')
     await dismissPatchNotes(page)
 
-    await expect(page.locator('.state-msg.error').first()).toBeVisible()
+    await expect(page.getByRole('alert').first()).toBeVisible()
   })
 })

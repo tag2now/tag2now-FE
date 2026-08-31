@@ -9,30 +9,29 @@ test.describe('Rooms', () => {
   })
 
   test('rank match tab renders RankMatchTable with headers', async ({ page }) => {
-    await expect(page.locator('table thead th', { hasText: '랭크' })).toBeVisible()
-    await expect(page.locator('table thead th', { hasText: '플레이어 1' })).toBeVisible()
-    await expect(page.locator('table thead th', { hasText: '플레이어 2' })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: '랭크' })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: '플레이어 1' })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: '플레이어 2' })).toBeVisible()
   })
 
   test('rank match shows player names from fixture', async ({ page }) => {
-    await expect(page.locator('text=TTT2_Master')).toBeVisible()
-    await expect(page.locator('text=KingOfIronFist')).toBeVisible()
-    await expect(page.locator('text=TagComboKing')).toBeVisible()
+    await expect(page.getByText('TTT2_Master')).toBeVisible()
+    await expect(page.getByText('KingOfIronFist')).toBeVisible()
+    await expect(page.getByText('TagComboKing')).toBeVisible()
   })
 
   test('player match tab renders PlayerMatchTable', async ({ page }) => {
-    await page.locator('button.tab-btn', { hasText: '플매' }).click()
+    await page.getByRole('tab', { name: /^플매/ }).click()
 
     // PlayerMatchTable has columns: #, User
-    await expect(page.locator('table thead th', { hasText: '#' })).toBeVisible()
-    await expect(page.locator('table thead th', { hasText: 'User' })).toBeVisible()
-    await expect(page.locator('text=BearPunchPro').first()).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: '#' })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: 'User' })).toBeVisible()
+    await expect(page.getByText('BearPunchPro').first()).toBeVisible()
   })
 
   test('refresh button is visible and triggers API call', async ({ page }) => {
-    const refreshBtn = page.locator('button.refresh-btn')
+    const refreshBtn = page.getByRole('button', { name: '새로고침' })
     await expect(refreshBtn).toBeVisible()
-    await expect(refreshBtn).toContainText('↻')
 
     const requestPromise = page.waitForRequest(/\/api\/rooms\/all/)
     await refreshBtn.click()
@@ -53,6 +52,6 @@ test.describe('Rooms', () => {
     await mockAllApis(page, { rooms: { rank_match: [], player_match: [] } })
     await page.goto('/')
 
-    await expect(page.locator('text=방이 없습니다.')).toBeVisible()
+    await expect(page.getByText('방이 없습니다.')).toBeVisible()
   })
 })

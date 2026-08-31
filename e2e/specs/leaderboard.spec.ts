@@ -10,7 +10,7 @@ test.describe('Leaderboard', () => {
   })
 
   test('shows total records count', async ({ page }) => {
-    await expect(page.locator('.panel-meta').first()).toContainText('Total records: 5')
+    await expect(page.getByText('Total records: 5')).toBeAttached()
   })
 
   test('renders table with correct column headers', async ({ page }) => {
