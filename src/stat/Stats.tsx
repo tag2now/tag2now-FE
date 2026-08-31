@@ -20,6 +20,7 @@ import { RANK_COLORS } from '@/shared/tierColors'
 import { MEDAL } from '@/shared/medalColors'
 import type { HourlyActivity, DailySummary, WeeklyTopPlayer } from '@/stat/types'
 import type {LeaderboardEntry} from "@/shared/types";
+import { Activity, Crown } from 'lucide-react'
 
 type SubTab = 'stats' | 'weekly_top'
 
@@ -41,11 +42,11 @@ const LIMIT_OPTIONS: { value: WeeklyTopLimit; label: string }[] = [
 ]
 
 // Design tokens as JS constants (CSS vars can't be used directly in Recharts SVG fills)
-const COLOR_PRIMARY = '#00c8d4'
+const COLOR_PRIMARY = '#8b7cf6'
 const COLOR_SECONDARY = '#c9a84c'
-const COLOR_BORDER = '#1e1e32'
-const COLOR_TXT_DIM = '#9ba3cc'
-const COLOR_BG_PANEL = '#0d0d1c'
+const COLOR_BORDER = 'rgba(255,255,255,.10)'
+const COLOR_TXT_DIM = '#aaa4b9'
+const COLOR_BG_PANEL = '#231e30'
 
 
 const TOOLTIP_STYLE = {
@@ -175,13 +176,13 @@ function ToggleGroup<T extends string | number>({
   return (
     <div className="flex items-center gap-2">
       {label && <span className="text-xs text-txt-dim font-semibold tracking-wide uppercase">{label}</span>}
-      <div className="flex rounded border border-border-light overflow-hidden">
+      <div className="segmented-control">
         {options.map((opt, i) => (
           <button
             key={String(opt.value)}
             onClick={() => onChange(opt.value)}
             aria-pressed={value === opt.value}
-            className={`px-3 py-1 text-xs font-bold tracking-widest uppercase transition-colors cursor-pointer ${
+            className={`transition-colors cursor-pointer ${
               i > 0 ? 'border-l border-border-light' : ''
             } ${
               value === opt.value
@@ -201,8 +202,8 @@ function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; 
   if (data.length === 0) return <p className="state-msg">데이터 없음</p>
   const entryByNpid = new Map(entries.map((e) => [e.np_id, e]))
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="border-collapse w-full min-w-74.25">
+    <div className="data-table-wrap">
+      <table className="ranking-table weekly-ranking-table">
         <thead>
           <tr>
             <th scope="col" className="tbl-th w-1/20 sm:w-2/20">#</th>
@@ -221,10 +222,10 @@ function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; 
               <tr
                 key={p.npid}
                 className="tbl-row"
-                style={medal ? { background: medal.bg, borderLeft: `3px solid ${medal.border}` } : undefined}
+                style={medal ? { borderLeft: `3px solid ${medal.border}` } : undefined}
               >
-                <td className="tbl-td font-display text-sm font-black w-11" style={{ color: medal ? medal.color : COLOR_TXT_DIM }}>
-                  {medal ? medal.label : i + 1}
+                <td className="tbl-td rank-cell" style={{ color: medal ? medal.color : COLOR_TXT_DIM }}>
+                  <span className={`rank-position ${medal ? `is-podium podium-${i + 1}` : ''}`}>{medal ? medal.label : i + 1}</span>
                 </td>
                 <td className="player-name">
                   <button
@@ -281,13 +282,14 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
   return (
     <div className="panel">
       {/* Sub-tab bar */}
-      <div className="flex border-b border-border-light mb-5 -mx-4 px-4">
+      <div className="detail-tabs" role="tablist" aria-label="통계 보기">
         {SUB_TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setSubTab(t.key)}
-            aria-pressed={subTab === t.key}
-            className={`px-4 py-2 text-xs font-bold tracking-widest uppercase transition-colors cursor-pointer border-b-2 -mb-px ${
+            role="tab"
+            aria-selected={subTab === t.key}
+            className={`${
               subTab === t.key
                 ? 'border-primary text-primary'
                 : 'border-transparent text-txt-dim hover:text-txt'
@@ -304,21 +306,27 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
         if (s) return s
         return (
           <>
-            <div className="flex items-center mb-5">
+            <div className="section-toolbar compact-toolbar">
+              <div className="section-title">
+                <span className="section-icon"><Activity size={15} /></span>
+                <div><h3>접속자 흐름</h3><p>시간대와 날짜별 활성 사용자</p></div>
+              </div>
               <ToggleGroup options={DAY_OPTIONS} value={days} onChange={setDays} label="기간" />
             </div>
-            <section aria-labelledby="hourly-heading" className="mb-6">
-              <h2 id="hourly-heading" className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim mb-3">
+            <div className="chart-grid">
+            <section aria-labelledby="hourly-heading" className="chart-panel">
+              <h2 id="hourly-heading">
                 시간대별 접속자 <span className="text-2xs font-normal opacity-60">(KST)</span>
               </h2>
               <HourlyChart data={hourly} />
             </section>
-            <section aria-labelledby="daily-heading" className="mb-6">
-              <h2 id="daily-heading" className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim mb-3">
+            <section aria-labelledby="daily-heading" className="chart-panel">
+              <h2 id="daily-heading">
                 일별 접속자
               </h2>
               <DailyChart data={daily} />
             </section>
+            </div>
           </>
         )
       })()}
@@ -326,8 +334,8 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
       {/* 주간 TOP */}
       {subTab === 'weekly_top' && (
         <>
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-bold tracking-[0.14em] uppercase text-txt-dim">이번 주 활동왕</span>
+          <div className="section-toolbar compact-toolbar">
+            <div className="section-title"><span className="section-icon"><Crown size={15} /></span><div><h3>이번 주 활동왕</h3><p>최근 7일 매치 참여 순위</p></div></div>
             <ToggleGroup options={LIMIT_OPTIONS} value={wt.limit} onChange={wt.setLimit} />
           </div>
           {wt.loading && <p className="state-msg" role="status">로딩 중...</p>}

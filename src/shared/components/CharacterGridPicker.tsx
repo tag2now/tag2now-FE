@@ -21,8 +21,8 @@ export default function CharacterGridPicker({ value, onChange, defaultValue }: C
                 onClick={() => onChange(active ? defaultValue : name)}
                 aria-pressed={active}
                 aria-label={`Filter by ${name}`}
-                className={`w-1/23 h-9 p-0 border rounded cursor-pointer transition-all ${
-                  active ? 'border-primary border-2 shadow-[0_0_6px_var(--color-primary-glow)]' : 'border-transparent hover:border-primary-dim'
+                className={`w-1/23 h-9 p-0 border rounded-md cursor-pointer transition-colors ${
+                  active ? 'border-primary border-2 bg-primary/12' : 'border-transparent opacity-75 hover:opacity-100 hover:border-primary-dim'
                 }`}
                 title={name}
               >

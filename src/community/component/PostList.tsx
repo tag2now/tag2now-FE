@@ -4,6 +4,7 @@ import PostTypeBadge from './PostTypeBadge'
 import type { LeaderboardEntry} from "@/shared/types";
 import type {PostSummary} from "@/community/types";
 import AuthorBadge from './AuthorBadge'
+import { ChevronLeft, ChevronRight, MessageSquare, MessagesSquare, PenLine, RefreshCw, SlidersHorizontal, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 interface PostListProps {
   posts: PostSummary[]
@@ -29,40 +30,46 @@ export default function PostList({
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-3">
-        {['all', '자유', '랭매구인'].map((t) => {
-          const active = (t === 'all' && !postType) || postType === t
-          return (
-            <button
-              key={t}
-              onClick={() => onPostTypeChange(t === 'all' ? '' : t)}
-              className={`px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] border rounded cursor-pointer transition-colors ${
-                active ? 'bg-primary text-white border-primary' : 'bg-transparent text-txt-dim border-border-light hover:text-txt'
-              }`}
-            >
-              {t === 'all' ? '전체' : t}
-            </button>
-          )
-        })}
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={onRefresh}
-            disabled={loading}
-            aria-label="새로고침"
-            className="refresh-btn"
-          >
-            ↻
-          </button>
-          <button
-            onClick={onWrite}
-            className="px-3 py-1 bg-secondary text-bg-deep text-sm font-bold uppercase tracking-[0.12em] border-0 rounded cursor-pointer hover:bg-secondary-light"
-          >
-            글쓰기
-          </button>
+      <div className="section-toolbar community-section-toolbar">
+        <div className="section-title">
+          <span className="section-icon"><MessagesSquare size={15} /></span>
+          <div><h3>커뮤니티 피드</h3><p>전체 게시글 {total}개</p></div>
+        </div>
+        <div className="toolbar-actions">
+          <button onClick={onRefresh} disabled={loading} aria-label="새로고침" className="refresh-btn"><RefreshCw size={14} aria-hidden="true" /></button>
+          <button onClick={onWrite} className="btn-primary"><PenLine size={14} aria-hidden="true" /> 글쓰기</button>
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="community-filter-bar">
+        <div className="community-filter-heading">
+          <span className="community-filter-icon" aria-hidden="true"><SlidersHorizontal size={14} /></span>
+          <div>
+            <strong>게시글 분류</strong>
+            <small>보고 싶은 게시글 유형을 선택하세요.</small>
+          </div>
+        </div>
+        <div className="community-filter-controls">
+          <div className="segmented-control" role="group" aria-label="게시글 분류">
+            {['all', '자유', '랭매구인'].map((t) => {
+              const active = (t === 'all' && !postType) || postType === t
+              return (
+                <button
+                  type="button"
+                  key={t}
+                  onClick={() => onPostTypeChange(t === 'all' ? '' : t)}
+                  aria-pressed={active}
+                  className={`cursor-pointer transition-colors ${active ? 'active' : ''}`}
+                >
+                  {t === 'all' ? '전체' : t}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="character-filter">
         <CharacterGridPicker value={postType} onChange={onPostTypeChange} defaultValue="" />
       </div>
 
@@ -74,26 +81,26 @@ export default function PostList({
       )}
 
       {!loading && posts.length > 0 && (
-        <div className="flex flex-col gap-1" aria-live="polite">
+        <div className="post-list" aria-live="polite">
           {posts.map((post) => (
             <button
               key={post.id}
               onClick={() => onSelectPost(post.id)}
               aria-label={`${post.title} — ${post.post_type}`}
-              className="w-full text-left bg-bg-row border border-border rounded px-3 py-2 cursor-pointer transition-colors hover:bg-primary-hover hover:border-primary-dim flex items-center gap-2"
+              className="post-row"
             >
               <span className="w-14 shrink-0 flex items-center justify-center">
                 <PostTypeBadge postType={post.post_type} />
               </span>
               <div className="flex flex-1 min-w-0 items-center font-bold">
                 <span className="text-sm text-txt truncate">{post.title}</span>
-                { post.comment_count > 0 && (<span className="text-txt-dim">[{post.comment_count}]</span>)}
+                { post.comment_count > 0 && (<span className="ml-1 inline-flex items-center gap-0.5 text-txt-dim"><MessageSquare size={11} />{post.comment_count}</span>)}
               </div>
               <AuthorBadge name={post.author} entries={leaderboardEntries} className="hidden sm:inline-flex shrink-0" />
               <span className="sm:hidden text-xs truncate max-w-20 sm:max-w-none">{post.author}</span>
               <span className="hidden sm:flex gap-2 text-xs text-txt-dim shrink-0">
-                <span className="text-primary">&#9650; {post.thumbs_up}</span>
-                <span>&#9660; {post.thumbs_down}</span>
+                <span className="inline-flex items-center gap-1 text-primary"><ThumbsUp size={12} /> {post.thumbs_up}</span>
+                <span className="inline-flex items-center gap-1"><ThumbsDown size={12} /> {post.thumbs_down}</span>
               </span>
               <span className="hidden sm:inline text-xs text-txt-dim shrink-0">{formatTimeAgo(post.created_at)}</span>
             </button>
@@ -107,9 +114,9 @@ export default function PostList({
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
             aria-label="이전 페이지"
-            className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-sm font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
+            className="btn-ghost disabled:opacity-30"
           >
-            이전
+            <ChevronLeft size={14} aria-hidden="true" /> 이전
           </button>
           <span className="text-sm text-txt-dim" aria-live="polite" aria-atomic="true">
             {page} / {totalPages}
@@ -118,9 +125,9 @@ export default function PostList({
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
             aria-label="다음 페이지"
-            className="px-3 py-1 bg-transparent border border-border-light text-txt-dim text-sm font-bold rounded cursor-pointer disabled:opacity-30 hover:text-txt"
+            className="btn-ghost disabled:opacity-30"
           >
-            다음
+            다음 <ChevronRight size={14} aria-hidden="true" />
           </button>
         </div>
       )}

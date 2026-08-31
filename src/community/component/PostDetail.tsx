@@ -6,6 +6,7 @@ import CommentTree from './CommentTree'
 import type { LeaderboardEntry } from "@/shared/types";
 import type { PostDetail } from '@/community/types'
 import AuthorBadge from './AuthorBadge'
+import { ArrowLeft, Send, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react'
 
 interface PostDetailProps {
   post: PostDetail
@@ -57,15 +58,15 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
   }
 
   return (
-    <div>
+    <article className="post-detail">
       <button
         onClick={onBack}
-        className="mb-4 bg-transparent border-0 text-primary text-sm font-bold uppercase tracking-[0.12em] cursor-pointer hover:text-white"
+        className="mb-4 inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary text-xs font-bold cursor-pointer hover:text-white"
       >
-        &larr; 목록
+        <ArrowLeft size={14} aria-hidden="true" /> 목록
       </button>
 
-      <div className="mb-4">
+      <header className="post-detail-header">
         <div className="flex items-center gap-2 mb-2">
           <PostTypeBadge postType={post.post_type} size="md" />
           <span className="text-sm text-txt-dim">{formatTimeAgo(post.created_at)}</span>
@@ -74,14 +75,14 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
               onClick={handleDelete}
               className="btn-danger ml-auto uppercase tracking-[0.12em]"
             >
-              삭제
+              <Trash2 size={13} aria-hidden="true" /> 삭제
             </button>
           )}
         </div>
         <AuthorBadge name={post.author} entries={leaderboardEntries} className="text-sm mb-2" />
-        <h2 className="m-0 mb-2 text-md font-bold text-txt wrap-break-word">{post.title}</h2>
-        <p className="m-0 text-base text-txt whitespace-pre-wrap wrap-break-word">{post.body}</p>
-      </div>
+        <h2>{post.title}</h2>
+      </header>
+      <div className="post-detail-body"><p>{post.body}</p></div>
 
       <div className="flex gap-2 mb-4 pb-4 border-b border-border-light">
         <button
@@ -90,7 +91,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           aria-label={`추천 ${post.thumbs_up}`}
           className="btn-ghost flex items-center gap-1 disabled:opacity-50"
         >
-          <span aria-hidden="true">&#9650;</span> {post.thumbs_up}
+          <ThumbsUp size={14} aria-hidden="true" /> {post.thumbs_up}
         </button>
         <button
           onClick={() => handleThumb('down')}
@@ -98,11 +99,11 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           aria-label={`비추천 ${post.thumbs_down}`}
           className="flex items-center gap-1 bg-transparent border border-border-light text-txt-dim px-3 py-1 rounded cursor-pointer text-sm font-bold hover:border-error hover:text-error disabled:opacity-50"
         >
-          <span aria-hidden="true">&#9660;</span> {post.thumbs_down}
+          <ThumbsDown size={14} aria-hidden="true" /> {post.thumbs_down}
         </button>
       </div>
 
-      <h3 className="m-0 mb-3 text-sm font-bold uppercase tracking-[0.12em] text-txt-dim">
+      <h3 className="comment-heading">
         댓글 ({post.comments.length})
       </h3>
 
@@ -110,7 +111,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
         <CommentTree comments={post.comments} onReply={handleReply} leaderboardEntries={leaderboardEntries} />
       )}
 
-      <div className="mt-4 flex gap-2">
+      <div className="comment-composer">
         <label htmlFor="comment-input" className="sr-only">댓글 입력</label>
         <input
           id="comment-input"
@@ -127,9 +128,9 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           disabled={submitting || !commentText.trim()}
           className="btn-primary"
         >
-          {submitting ? '...' : '작성'}
+          {!submitting && <Send size={14} aria-hidden="true" />}{submitting ? '작성 중' : '작성'}
         </button>
       </div>
-    </div>
+    </article>
   )
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { PATCH_NOTES, LATEST_PATCH_VERSION } from '@/config/patchNotes'
+import { BellRing, X } from 'lucide-react'
 
 const LS_KEY = 'ttt2-patch-dismissed'
 
@@ -58,11 +59,11 @@ export default function PatchNotes() {
           className="absolute top-3 right-3 bg-transparent border-none text-txt-dim hover:text-txt text-4xl cursor-pointer leading-none p-2"
           aria-label="Close"
         >
-          &times;
+          <X size={18} aria-hidden="true" />
         </button>
 
         <h2 id="patch-notes-title" className="font-display text-lg font-bold text-secondary m-0 mb-4 tracking-wide uppercase">
-          Patch Notes
+          <span className="inline-flex items-center gap-2"><BellRing size={17} /> Patch Notes</span>
         </h2>
 
         {PATCH_NOTES.map(note => (

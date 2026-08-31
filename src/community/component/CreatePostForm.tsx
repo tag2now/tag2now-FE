@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
+import { AlignLeft, ArrowLeft, FilePenLine, Send, Type, X } from 'lucide-react'
 
 interface CreatePostFormProps {
   onSubmit: (title: string, body: string, postType: string) => Promise<void>
@@ -23,23 +24,25 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
   }
 
   return (
-    <div>
-        <div className="flex mb-3 gap-6 items-center">
-            <h2 className="m-0 text-secondary font-bold text-md uppercase tracking-[0.12em]">새 글 작성</h2>
+    <div className="detail-form">
+        <div className="section-toolbar">
+          <div className="section-title"><span className="section-icon"><FilePenLine size={15} /></span><div><h3>새 글 작성</h3><p>정보를 공유하거나 함께할 상대를 찾아보세요</p></div></div>
             <button
                 onClick={onCancel}
-                className="bg-transparent border-0 text-primary text-sm font-bold uppercase tracking-[0.12em] cursor-pointer hover:text-white"
+                className="inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary text-xs font-bold cursor-pointer hover:text-white"
             >
-                &larr; 목록
+                <ArrowLeft size={14} aria-hidden="true" /> 목록
             </button>
         </div>
-      <div className="mb-3 flex gap-2">
+      <div className="form-section writing-form">
+      <div className="field-heading"><span className="field-label">게시글 유형</span><small>게시글 성격에 맞는 분류를 선택하세요.</small></div>
+      <div className="segmented-control mb-3">
         {['자유', '랭매구인'].map((t) => (
           <button
             key={t}
             onClick={() => setPostType(t)}
-            className={`px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] border rounded cursor-pointer transition-colors ${
-              postType === t ? 'bg-primary text-white border-primary' : 'bg-transparent text-txt-dim border-border-light hover:text-txt'
+            className={`cursor-pointer transition-colors ${
+              postType === t ? 'active' : ''
             }`}
           >
             {t}
@@ -47,46 +50,53 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
         ))}
       </div>
 
-      <div className="mb-3">
+      <div className="character-filter mb-4">
         <CharacterGridPicker value={postType} onChange={setPostType} defaultValue="자유" />
       </div>
 
-      <label htmlFor="post-title" className="sr-only">게시글 제목</label>
+      <div className="field-heading"><label htmlFor="post-title" className="field-label">제목</label><small>내용을 한눈에 이해할 수 있게 작성하세요.</small></div>
+      <div className="input-shell">
+      <Type size={15} aria-hidden="true" />
       <input
         id="post-title"
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="제목"
+        placeholder="제목을 입력하세요"
         aria-label="게시글 제목"
-        className="input-base w-full px-3 py-2 mb-3 text-base"
+        className="input-base w-full text-base"
       />
+      </div>
 
-      <label htmlFor="post-body" className="sr-only">게시글 내용</label>
+      <div className="field-heading mt-4"><label htmlFor="post-body" className="field-label">내용</label><small>개인정보나 민감한 정보는 입력하지 마세요.</small></div>
+      <div className="textarea-shell">
+      <AlignLeft size={15} aria-hidden="true" />
       <textarea
         id="post-body"
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        placeholder="내용을 입력하세요... (최대 1000자)"
+        placeholder="내용을 입력하세요(최대 1000자)"
         aria-label="게시글 내용"
         rows={6}
         className="input-base w-full p-3 text-base resize-vertical"
       />
-      <div className="text-right text-xs text-txt-dim mt-1">{body.length}/1000</div>
+      </div>
+      <div className={`character-count ${body.length > 900 ? 'near-limit' : ''}`}>{body.length.toLocaleString()} / 1,000</div>
+      </div>
 
-      <div className="flex justify-end gap-2 mt-3">
+      <div className="form-actions">
         <button
           onClick={onCancel}
-          className="px-4 py-1.5 bg-transparent text-error border border-error font-bold text-sm uppercase tracking-[0.12em] rounded cursor-pointer hover:bg-error hover:text-white"
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-error bg-transparent px-3 text-xs font-bold text-error cursor-pointer hover:bg-error hover:text-white"
         >
-          취소
+          <X size={14} aria-hidden="true" /> 취소
         </button>
         <button
           onClick={handleSubmit}
           disabled={submitting || !title.trim() || !body.trim() || body.length > 1000}
           className="btn-primary px-4 py-1.5 uppercase tracking-[0.12em]"
         >
-          {submitting ? '작성 중...' : '작성'}
+          {!submitting && <Send size={14} aria-hidden="true" />}{submitting ? '작성 중...' : '작성'}
         </button>
       </div>
     </div>

@@ -5,6 +5,7 @@ import RankImage from './RankImage'
 import { getUsername as getSavedUsername, saveUsername, clearUsername } from '@/shared/util/cookie'
 import { setIdentity } from '@/community/communityApi'
 import {LeaderboardEntry} from "@/shared/types";
+import { Check, Pencil, Radio, UserRound, X } from 'lucide-react'
 
 interface HeaderProps {
   totalUsers?: number
@@ -52,82 +53,53 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
   const subChar = entry?.player_info?.sub_char_info
 
   return (
-    <header className="w-full max-w-240 app-header sm:h-[15vh] relative border-b-2 border-accent py-2 px-3 mb-1 flex justify-between items-center">
-      <div className="flex items-center sm:items-baseline gap-3">
-        <div className="relative">
-          <h1 className="font-display text-xl sm:text-3xl font-black m-0 tracking-wide uppercase">
-            Tag<span className="header-accent">2</span>Now
-          </h1>
-          <span className="absolute top-[76%] right-[4%] text-2xs text-txt-dim">v{LATEST_PATCH_VERSION}</span>
-        </div>
-        <div className="inline-flex items-center gap-2 text-base font-bold">
-          <div className="inline-flex items-center gap-1.5 tracking-[0.14em] uppercase text-accent px-2 py-0.5 border border-accent/40 rounded-sm bg-accent/5">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-[blink_1.6s_ease-in-out_infinite]" />
-            Live
-          </div>
-          {totalUsers != null && totalUsers > 0 && (
-            <span className="tracking-wide text-sm text-txt-dim">
-              <span className="text-accent font-bold" aria-label="total users">{totalUsers}</span> online
-            </span>
-          )}
+    <header className="app-header">
+      <div className="brand-lockup">
+        <div className="brand-mark" aria-hidden="true"><SwordsMark /></div>
+        <div>
+          <h1 aria-label="Tag 2 Now">TAG<span>2</span>NOW</h1>
+          <p>Tekken Tag Tournament 2 live hub <b>v{LATEST_PATCH_VERSION}</b></p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-sm bg-bg-panel/60 border border-border-light/60 rounded px-2.5 py-1.5">
+      <div className="header-live" aria-label={`${totalUsers ?? 0}명 온라인`}>
+        <Radio size={15} aria-hidden="true" />
+        <span>Live</span>
+        {totalUsers != null && totalUsers > 0 && <strong aria-label="total users">{totalUsers}</strong>}
+      </div>
+
+      <div className="profile-control">
         {editing ? (
-          <input
-            ref={inputRef}
-            type="text"
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') commitUsername().then() }}
-            onBlur={commitUsername}
-            maxLength={50}
-            placeholder="유저명 입력"
-            aria-label="유저명 입력"
-            className="input-base px-2 py-0.5 mt-1 text-base w-36"
-          />
+          <div className="profile-editor">
+            <input ref={inputRef} type="text" value={draft} onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') commitUsername().then(); if (e.key === 'Escape') setEditing(false) }}
+              maxLength={50} placeholder="유저명 입력" aria-label="유저명 입력" className="input-base" />
+            <button onClick={() => commitUsername()} aria-label="저장"><Check size={15} /></button>
+            <button onClick={() => setEditing(false)} aria-label="취소"><X size={15} /></button>
+          </div>
         ) : username ? (
-          <div className="flex flex-col sm:flex-row sm:gap-2 items-center">
-            <div className="flex gap-2 sm:text-lg">
-              <span className="text-accent font-bold">#{entry?.rank || "Unranked"}</span>
+          <div className="profile-summary">
+            <div className="profile-avatar">{mainChar ? <img src={charImageUrl(mainChar.name)!} alt="" /> : <UserRound size={17} />}</div>
+            <div className="profile-copy">
+              <small>#{entry?.rank || "UNRANKED"}</small>
               <button
                   onClick={startEditing}
                   aria-label={`${username} 유저명 수정`}
-                  className="text-txt-dim hover:text-txt transition-colors cursor-pointer bg-transparent border-none p-0 flex items-center gap-1"
+                  className="profile-name"
               >
-                <span className="truncate max-w-24 sm:max-w-none font-semibold">{username}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
-                  <path d="M13.49 3.1a2 2 0 0 0-2.83 0L3.17 10.6a1 1 0 0 0-.26.45l-.77 2.9a.5.5 0 0 0 .6.6l2.9-.77a1 1 0 0 0 .45-.26l7.5-7.5a2 2 0 0 0 0-2.83l-.1-.1Z" />
-                </svg>
+                <span>{username}</span><Pencil size={12} aria-hidden="true" />
               </button>
             </div>
-            {entry && (
-                <div className="flex flex-col gap-0.5 leading-none">
-                  {[mainChar, subChar].map(char => char &&
-                    <div key={char.name} className="flex items-center">
-                      {char.rank_info && (
-                        <RankImage rankInfo={char.rank_info} className="h-6 sm:h-7 w-auto" />
-                      )}
-                      <img src={charImageUrl(char.name)!} alt={char.name} className="h-6 sm:h-9 rounded" />
-                      <div className="hidden sm:flex flex-col items-start font-semibold text-sm leading-tight">
-                        <span>W{char.wins}</span>
-                        <span>L{char.losses}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-            )}
+            {entry && <div className="profile-rank">{[mainChar, subChar].map(char => char?.rank_info && <RankImage key={char.name} rankInfo={char.rank_info} className="h-7 w-auto" />)}</div>}
           </div>
         ) : (
-          <button
-            onClick={startEditing}
-            className="text-txt-dim text-base font-semibold hover:text-txt transition-colors cursor-pointer bg-transparent border border-border-light rounded px-2 py-0.5 mt-1"
-          >
-            유저명 설정
-          </button>
+          <button onClick={startEditing} className="profile-empty"><UserRound size={15} /> 유저명 설정</button>
         )}
       </div>
     </header>
   )
+}
+
+function SwordsMark() {
+  return <span>2</span>
 }

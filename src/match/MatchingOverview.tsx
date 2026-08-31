@@ -5,6 +5,7 @@ import LoadingBar from '@/shared/components/LoadingBar'
 import useTimeSince from '@/shared/hooks/useTimeSince'
 import type { LeaderboardEntry } from '@/shared/types'
 import { panelStatus } from '@/shared/util/panelStatus'
+import { RefreshCw } from 'lucide-react'
 
 type MatchingOverviewProps = {
   groups: Record<string, Room[]>
@@ -36,7 +37,7 @@ export default function MatchingOverview({ groups, loading, refreshing, error, o
         </div>
         <div className="flex items-center gap-3">
           {updatedAgo && <span className="text-xs text-txt-dim">업데이트 {updatedAgo}</span>}
-          {onRefresh && <button className="refresh-btn" aria-label="새로고침" onClick={onRefresh} disabled={refreshing}>↻</button>}
+          {onRefresh && <button className="refresh-btn" aria-label="새로고침" onClick={onRefresh} disabled={refreshing}><RefreshCw size={14} aria-hidden="true" /></button>}
         </div>
       </div>
 
