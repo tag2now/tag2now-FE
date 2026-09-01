@@ -120,9 +120,34 @@ Cancelling is a soft delete (`status = 'cancelled'`) that also releases every pa
 
 Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. Design tokens are declared in an `@theme` block in `src/index.css` and become utilities automatically (`--color-primary` → `bg-primary`, `text-primary`, `border-primary`).
 
-Use tokens rather than raw hex or arbitrary values. Fonts are Rajdhani (`--font-sans`) and Orbitron (`--font-display`), loaded from Google Fonts in `index.css`.
+Use tokens rather than raw hex or arbitrary values. **Pretendard** backs both
+`--font-sans` and `--font-display`, imported as an npm package in `main.tsx`
+(`pretendard/…/pretendardvariable-dynamic-subset.css`) — not from Google Fonts.
+
+`--color-txt-faint` is the floor for tertiary text: it is the dimmest grey that
+still clears 4.5:1 on every surface in play, the `#1b1b1f` input fill included.
+Reach for it rather than inventing another hex — several of the greys it
+replaced sat at 4.0–4.3, and the 7–10px sizes this text uses get no large-text
+exemption. The one deliberate holdout is `.input-base:disabled`, where WCAG
+exempts inactive controls anyway.
 
 Rank/tier and medal colours live in `shared/tierColors.ts` and `shared/medalColors.ts`; character art paths in `shared/characterImage.ts`.
+
+### Brand assets
+
+`public/favicon.svg` and `public/og-image.png` both carry the black-and-red
+palette; keep them in step with `--color-primary` when it moves.
+
+The 1200×630 share card is generated, not hand-drawn — edit
+`scripts/og-image.html` and re-render:
+
+```bash
+node scripts/generate-og-image.mjs
+```
+
+It renders through the Chromium that Playwright already installs, so it needs
+no extra dependency. Commit the regenerated PNG; a raster is required because
+Discord and KakaoTalk ignore SVG in `og:image`.
 
 ## Tests
 
@@ -150,7 +175,12 @@ Docker multi-stage: `node:24-alpine` builds the SPA, `nginx:alpine` serves `dist
 
 Caching in nginx: hashed `/assets/` are immutable for a year; `index.html` is `no-cache` so deploys take effect immediately.
 
-Images go to ECR (`864573346741.dkr.ecr.ap-northeast-2.amazonaws.com/tag2-now/fe`). Production is a **single AWS Lightsail instance** running docker compose alongside the backend and its datastores — not ECS. CloudFront fronts the static assets only; `/api/` reaches the instance directly.
+Images go to ECR (`864573346741.dkr.ecr.ap-northeast-2.amazonaws.com/tag2-now/fe`). Production is a **single AWS Lightsail instance** running docker compose alongside the backend and its datastores — not ECS.
+
+The site is served at **`match.tag2now.click`**, which fronts both the SPA and
+`/api` through CloudFront — responses on both carry a `Via: … cloudfront.net`
+header. The bare `tag2now.click` has no address record and serves nothing, so
+absolute URLs (`og:url`, `canonical`) must use the `match.` host.
 
 | Workflow | Trigger | Does |
 |----------|---------|------|
