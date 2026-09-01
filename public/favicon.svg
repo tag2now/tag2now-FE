@@ -14,10 +14,10 @@
       <stop offset="60%" stop-color="#c8302e" stop-opacity="0.1"/>
       <stop offset="100%" stop-color="#c8302e" stop-opacity="0"/>
     </radialGradient>
-    <!-- Primary cyan for the "2" -->
-    <linearGradient id="cyan" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#00e8f0"/>
-      <stop offset="100%" stop-color="#009ba3"/>
+    <!-- Primary red for the "2", matching --color-primary / .header-accent -->
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e63946"/>
+      <stop offset="100%" stop-color="#a3222c"/>
     </linearGradient>
     <!-- Filter for red outer glow matching header drop-shadow -->
     <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
@@ -37,10 +37,10 @@
         font-family="'Orbitron','Arial Black',sans-serif" font-weight="900" font-size="34"
         fill="url(#chrome)" filter="url(#glow)">T</text>
 
-  <!-- "2" in primary cyan (matching header-accent) -->
+  <!-- "2" in primary red (matching header-accent) -->
   <text x="46" y="45" text-anchor="middle"
         font-family="'Orbitron','Arial Black',sans-serif" font-weight="900" font-size="34"
-        fill="url(#cyan)" filter="url(#glow)">2</text>
+        fill="url(#accent)" filter="url(#glow)">2</text>
 
   <!-- Accent line at bottom (matching header ::after) -->
   <rect x="8" y="56" width="20" height="2" rx="1" fill="#c8302e" opacity="0.8"/>
