@@ -605,7 +605,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .loading-bar::after { background: var(--color-primary); animation-duration: 1s; }
 
 @media (max-width: 760px) {
-  .app-shell { padding-bottom: 78px; }
+  .app-shell { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
   .app-header { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; min-height: 60px; padding: 8px 12px; }
   .brand-lockup p, .profile-rank, .profile-copy small { display: none; }
   .brand-mark { width: 32px; height: 32px; }
@@ -617,7 +617,9 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
   .content-heading { min-height: 48px; padding: 0 4px 9px; }
   .content-heading h2 { font-size: 17px; }
   .content-status { display: none; }
-  .app-sidebar { position: fixed; inset: auto 8px 8px; z-index: 50; padding: 5px; border-color: rgba(255,255,255,.13); background: rgba(21,21,23,.97); backdrop-filter: blur(14px); }
+  /* The 8px gap alone puts the bar inside the iPhone home indicator's 34px
+     strip, where the system swallows taps. env() resolves to 0 elsewhere. */
+  .app-sidebar { position: fixed; inset: auto 8px calc(8px + env(safe-area-inset-bottom)); z-index: 50; padding: 5px; border-color: rgba(255,255,255,.13); background: rgba(21,21,23,.97); backdrop-filter: blur(14px); }
   .sidebar-heading, .sidebar-status { display: none; }
   .app-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; overflow: visible; }
   .app-nav::-webkit-scrollbar { display: none; }
