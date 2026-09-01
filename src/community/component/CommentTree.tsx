@@ -41,7 +41,7 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
   return (
     <div className={`comment-node ${visualDepth > 0 ? 'ml-3 sm:ml-5' : ''}`}>
       <div className="flex items-center gap-2 text-sm text-txt-dim mb-1">
-        <AuthorBadge name={comment.author} entries={leaderboardEntries} />
+        <AuthorBadge name={comment.author} entries={leaderboardEntries} className="inline-flex" />
         <span>{formatTimeAgo(comment.created_at)}</span>
       </div>
       <p className="m-0 text-base text-txt whitespace-pre-wrap break-words">{comment.body}</p>
