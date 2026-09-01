@@ -314,6 +314,22 @@
 
 /* ─── Violet Graphite / Compact Control app shell ─────────── */
 .app-shell { min-height: 100vh; padding-bottom: 36px; }
+/* Kept out of the layout entirely until focused, so it cannot shift the
+   header or appear in a full-page screenshot. Sits above the sticky
+   header's z-index: 40.
+
+   Moved with `top`, not a transform: a fixed element pushed off-viewport by a
+   transform is skipped by Chromium's sequential focus navigation entirely,
+   which silently removes the link from the tab order. Offsetting `top` keeps
+   it focusable. display:none and visibility:hidden are out for the same
+   reason. */
+.skip-link {
+  position: fixed; top: -100px; left: 8px; z-index: 100;
+  padding: 10px 16px; border: 1px solid var(--color-primary); border-radius: 6px;
+  background: var(--color-bg-panel); color: var(--color-txt);
+  font-size: 12px; font-weight: 700; text-decoration: none;
+}
+.skip-link:focus { top: 8px; outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .app-header {
   position: sticky; top: 0; z-index: 40;
   display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 20px;

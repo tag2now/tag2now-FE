@@ -80,6 +80,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#mainContent">본문으로 건너뛰기</a>
       <PatchNotes />
       <Header totalUsers={rooms.data?.totalUsers} leaderboardEntries={lb.data?.entries} />
       <div className="app-layout">

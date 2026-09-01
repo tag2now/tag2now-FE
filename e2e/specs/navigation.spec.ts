@@ -56,6 +56,33 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('columnheader', { name: '랭크' })).toBeVisible()
   })
 
+  // The skip link is the whole keyboard-only escape hatch past the header and
+  // the sidebar. Three things have to hold: it comes before every other
+  // control, activating it lands on main, and it is invisible until focused.
+  test('the skip link precedes every other control in the tab order', async ({ page }) => {
+    const order = await page.evaluate(() => {
+      const sel = 'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      return Array.from(document.querySelectorAll<HTMLElement>(sel))
+        .filter((el) => el.offsetParent !== null || getComputedStyle(el).position === 'fixed')
+        .slice(0, 1)
+        .map((el) => el.className)
+    })
+    expect(order[0]).toContain('skip-link')
+  })
+
+  test('focusing the skip link reveals it and it jumps to main', async ({ page }) => {
+    const skipLink = page.getByRole('link', { name: '본문으로 건너뛰기' })
+    await expect(skipLink).not.toBeInViewport()
+
+    await skipLink.focus()
+    await expect(skipLink).toBeFocused()
+    await expect(skipLink).toBeInViewport()
+
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/#mainContent$/)
+    await expect(page.locator('#mainContent')).toBeVisible()
+  })
+
   test('the selected tab moves on click', async ({ page }) => {
     const leaderboardTab = page.getByRole('tab', { name: '리더보드' })
     await expect(leaderboardTab).toHaveAttribute('aria-selected', 'false')
