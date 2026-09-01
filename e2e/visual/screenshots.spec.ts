@@ -41,7 +41,7 @@ test.describe('Visual regression', () => {
     await page.goto('/')
     await dismissPatchNotes(page)
     await disableAnimations(page)
-    await page.locator('button.tab-btn', { hasText: '플매' }).click()
+    await page.getByRole('tab', { name: /^플매/ }).click()
     await page.locator('table').waitFor()
     await expect(page).toHaveScreenshot('rooms-player-match.png', { maxDiffPixelRatio: 0.01 })
   })
