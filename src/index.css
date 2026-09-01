@@ -27,6 +27,9 @@
   --color-bronze: #cd7f32;
   --color-txt: #f2f2f3;
   --color-txt-dim: #a3a3ad;
+  /* Tertiary text: eyebrows, field hints, chart labels. Clears 4.5:1 on
+     every surface it lands on, the #1b1b1f input fill included (5.29). */
+  --color-txt-faint: #8e8e98;
   --color-primary-hover: rgba(230, 57, 70, 0.10);
   --color-tier-green: #4ade80;
   --color-tier-yellow: #facc15;
@@ -324,7 +327,7 @@
 .brand-lockup h1 { margin: 0; color: var(--color-txt); font-size: 16px; line-height: 1.1; letter-spacing: .06em; font-weight: 800; }
 .brand-lockup h1 span { color: var(--color-primary); }
 .brand-lockup p { margin: 3px 0 0; color: var(--color-txt-dim); font-size: 10px; line-height: 1; }
-.brand-lockup p b { margin-left: 5px; font-weight: 600; color: #7a7a82; }
+.brand-lockup p b { margin-left: 5px; font-weight: 600; color: var(--color-txt-faint); }
 .header-live { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 9px; border: 1px solid var(--color-border-light); border-radius: 6px; color: var(--color-accent); font-size: 10px; font-weight: 700; letter-spacing: .1em; }
 .header-live strong { min-width: 22px; padding-left: 7px; border-left: 1px solid var(--color-border-light); color: var(--color-txt); text-align: center; letter-spacing: 0; }
 .profile-control { min-width: 0; }
@@ -344,7 +347,7 @@
 
 .app-layout { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; width: min(1180px, calc(100% - 32px)); margin: 18px auto 0; }
 .app-sidebar { position: sticky; top: 86px; align-self: start; padding: 10px; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-panel); }
-.sidebar-heading { display: flex; align-items: center; justify-content: space-between; padding: 5px 7px 10px; color: #7a7a82; font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.sidebar-heading { display: flex; align-items: center; justify-content: space-between; padding: 5px 7px 10px; color: var(--color-txt-faint); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .app-nav { display: flex; flex-direction: column; gap: 3px; }
 .app-nav .tab-btn { width: 100%; }
 .app-nav .tab-btn::before { display: none; }
@@ -361,7 +364,7 @@
 .content-status span { width: 6px; height: 6px; border-radius: 50%; background: var(--color-accent); }
 .app-main [role="tabpanel"]:focus { outline: none; }
 .room-tabs { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-bottom: 8px; padding: 5px 8px; border: 1px solid var(--color-border-light); border-radius: 7px; background: var(--color-bg-panel); }
-.room-tabs-label { flex: 0 0 auto; padding-left: 3px; color: #85858e; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.room-tabs-label { flex: 0 0 auto; padding-left: 3px; color: var(--color-txt-faint); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .room-tabs > div { display: flex; min-width: 0; gap: 4px; overflow-x: auto; scrollbar-width: none; }
 .room-tabs > div::-webkit-scrollbar { display: none; }
 .room-tabs button { display: inline-flex; flex: 0 0 auto; min-height: 32px; align-items: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--color-txt-dim); font-size: 11px; font-weight: 600; cursor: pointer; }
@@ -389,7 +392,10 @@
 .input-base { min-height: 38px; border: 1px solid rgba(255,255,255,.11); border-radius: 7px; padding-inline: 11px; background: #1b1b1f; color: var(--color-txt); caret-color: var(--color-primary); transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease; }
 .input-base:hover { border-color: rgba(255,255,255,.16); }
 .input-base:focus { border-color: rgba(230,57,70,.8); background: #232329; box-shadow: 0 0 0 3px rgba(230,57,70,.12); outline: 0; }
-.input-base::placeholder { color: #7a7a82; opacity: 1; }
+.input-base::placeholder { color: var(--color-txt-faint); opacity: 1; }
+/* Disabled controls are exempt from WCAG 1.4.3 (incidental, inactive), and
+   the .65 opacity puts any colour under 4.5:1 anyway - so this keeps the
+   dimmer grey rather than borrowing the faint token and implying it passes. */
 .input-base:disabled { cursor: not-allowed; background: #121214; color: #7a7a82; opacity: .65; }
 textarea.input-base { min-height: 140px; padding-block: 10px; line-height: 1.55; }
 select.input-base { appearance: none; padding-right: 34px; color-scheme: dark; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, #a3a3ad 50%), linear-gradient(135deg, #a3a3ad 50%, transparent 50%); background-position: calc(100% - 16px) 16px, calc(100% - 11px) 16px; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
@@ -410,16 +416,16 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .custom-select-menu button:hover { background: rgba(255,255,255,.045); color: var(--color-txt); }
 .custom-select-menu button[data-selected] { background: rgba(230,57,70,.14); color: var(--color-primary); }
 .input-shell, .textarea-shell { position: relative; display: flex; align-items: center; }
-.input-shell > svg { position: absolute; left: 11px; z-index: 1; color: #85858e; pointer-events: none; }
+.input-shell > svg { position: absolute; left: 11px; z-index: 1; color: var(--color-txt-faint); pointer-events: none; }
 .input-shell .input-base { padding-left: 34px; }
 .textarea-shell { align-items: flex-start; }
-.textarea-shell > svg { position: absolute; left: 11px; top: 12px; z-index: 1; color: #85858e; pointer-events: none; }
+.textarea-shell > svg { position: absolute; left: 11px; top: 12px; z-index: 1; color: var(--color-txt-faint); pointer-events: none; }
 .textarea-shell .input-base { padding-left: 34px; }
 .input-shell:focus-within > svg, .textarea-shell:focus-within > svg { color: var(--color-primary); }
 .field-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
 .field-heading .field-label { margin: 0; }
-.field-heading small { color: #7a7a82; font-size: 9px; }
-.character-count { margin-top: 6px; color: #85858e; font-size: 10px; text-align: right; font-variant-numeric: tabular-nums; }
+.field-heading small { color: var(--color-txt-faint); font-size: 9px; }
+.character-count { margin-top: 6px; color: var(--color-txt-faint); font-size: 10px; text-align: right; font-variant-numeric: tabular-nums; }
 .character-count.near-limit { color: var(--color-warning); }
 .field-label { display: block; margin: 0 0 6px; color: var(--color-txt-dim); font-size: 10px; font-weight: 650; letter-spacing: .04em; }
 .form-section { padding: 14px; border: 1px solid var(--color-border); border-radius: 7px; background: rgba(255,255,255,.015); }
@@ -479,7 +485,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .reservation-modal { position: relative; width: min(720px, 100%); margin: auto; gap: 12px; overflow: visible; padding: 18px; border: 1px solid rgba(255,255,255,.12); border-radius: 9px; background: #121214; box-shadow: 0 24px 70px rgba(0,0,0,.42); }
 .reservation-modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--color-border-light); }
 .reservation-modal-header h3 { margin: 2px 0 0; color: var(--color-txt); font-size: 18px; line-height: 1.2; }
-.modal-description { margin: 5px 0 0; color: #85858e; font-size: 10px; font-weight: 450; }
+.modal-description { margin: 5px 0 0; color: var(--color-txt-faint); font-size: 10px; font-weight: 450; }
 .modal-close { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px solid var(--color-border-light); border-radius: 6px; background: transparent; color: var(--color-txt-dim); cursor: pointer; }
 .modal-close:hover { border-color: rgba(230,57,70,.45); background: rgba(230,57,70,.08); color: var(--color-primary); }
 .modal-field { position: relative; min-width: 0; color: var(--color-txt-dim); font-size: 11px; font-weight: 600; }
@@ -548,11 +554,11 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .activity-segment { fill: rgba(255,255,255,.045); stroke: transparent; transition: fill 150ms ease; }
 .activity-segment.is-active { fill: #e63946; }
 .activity-segment.is-active:hover { fill: #ff5a63; }
-.activity-hour-label { fill: #7a7a82; font-family: var(--font-sans); font-size: 7px; font-weight: 700; }
+.activity-hour-label { fill: var(--color-txt-faint); font-family: var(--font-sans); font-size: 7px; font-weight: 700; }
 .activity-ring-center { position: absolute; inset: 50% auto auto 50%; display: flex; width: 82px; transform: translate(-50%,-50%); align-items: center; flex-direction: column; text-align: center; pointer-events: none; }
 .activity-ring-center small { color: var(--color-txt-dim); font-size: 8px; font-weight: 650; letter-spacing: .04em; }
 .activity-ring-center strong { margin-top: 3px; color: var(--color-txt); font-size: 11px; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.activity-ring-center span { margin-top: 2px; color: #7a7a82; font-size: 7px; }
+.activity-ring-center span { margin-top: 2px; color: var(--color-txt-faint); font-size: 7px; }
 .activity-summary { display: flex; min-width: 0; flex-direction: column; gap: 13px; padding: 12px 10px 10px 12px; border-left: 1px solid var(--color-border); }
 .activity-summary-copy { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
 .activity-summary-copy > span { display: flex; align-items: center; gap: 5px; color: var(--color-txt-dim); font-size: 8px; font-weight: 750; letter-spacing: .08em; }
@@ -563,7 +569,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .activity-timeline-cells { display: grid; grid-template-columns: repeat(24,minmax(2px,1fr)); gap: 2px; height: 42px; align-items: end; padding: 7px 6px; border: 1px solid var(--color-border); border-radius: 6px; background: rgba(0,0,0,.1); }
 .activity-timeline-cells span { height: 8px; border-radius: 1px; background: rgba(255,255,255,.06); }
 .activity-timeline-cells span.is-active { height: 26px; background: var(--color-primary); }
-.activity-timeline-labels { display: flex; justify-content: space-between; margin-top: 5px; color: #7a7a82; font-size: 7px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.activity-timeline-labels { display: flex; justify-content: space-between; margin-top: 5px; color: var(--color-txt-faint); font-size: 7px; font-weight: 650; font-variant-numeric: tabular-nums; }
 .history-empty { display: grid; min-height: 172px; place-items: center; color: var(--color-txt-dim); font-size: 11px; text-align: center; }
 .history-state { margin: 18px; }
 .ranking-table { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
