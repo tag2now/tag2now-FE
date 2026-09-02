@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   ComposedChart,
   Bar,
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -18,7 +17,9 @@ import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import CharCell from "@/shared/components/CharCell";
 import { RANK_COLORS } from '@/shared/tierColors'
 import { MEDAL } from '@/shared/medalColors'
-import type { HourlyActivity, DailySummary, WeeklyTopPlayer } from '@/stat/types'
+import type { HourlyActivity, WeeklyTopPlayer } from '@/stat/types'
+import DailyChart from '@/shared/components/DailyChart'
+import { COLOR_BORDER, COLOR_PRIMARY, COLOR_SECONDARY, COLOR_TXT_DIM, LEGEND_STYLE, TOOLTIP_STYLE, seriesName } from '@/shared/components/chartTheme'
 import type {LeaderboardEntry} from "@/shared/types";
 import { Activity, Crown } from 'lucide-react'
 
@@ -40,28 +41,6 @@ const LIMIT_OPTIONS: { value: WeeklyTopLimit; label: string }[] = [
   { value: 25, label: '25' },
   { value: 50, label: '50' },
 ]
-
-// Design tokens as JS constants (CSS vars can't be used directly in Recharts SVG fills)
-const COLOR_PRIMARY = '#e63946'
-const COLOR_SECONDARY = '#c9a84c'
-const COLOR_BORDER = 'rgba(255,255,255,.10)'
-const COLOR_TXT_DIM = '#a3a3ad'
-const COLOR_BG_PANEL = '#151517'
-
-
-const TOOLTIP_STYLE = {
-  background: COLOR_BG_PANEL,
-  border: `1px solid ${COLOR_BORDER}`,
-  borderRadius: 4,
-  fontSize: 12,
-  color: COLOR_TXT_DIM,
-}
-
-const LEGEND_STYLE = { fontSize: 11, color: COLOR_TXT_DIM, paddingTop: 4 }
-
-function seriesName(key: string) {
-  return key === 'peak_players' ? '최대' : '평균'
-}
 
 function HourlyChart({ data }: { data: HourlyActivity[] }) {
   if (data.length === 0) return <p className="state-msg">데이터 없음</p>
@@ -102,62 +81,6 @@ function HourlyChart({ data }: { data: HourlyActivity[] }) {
           activeDot={{ r: 4 }}
         />
       </ComposedChart>
-    </ResponsiveContainer>
-  )
-}
-
-function DailyChart({ data }: { data: DailySummary[] }) {
-  if (data.length === 0) return <p className="state-msg">데이터 없음</p>
-
-  const formatted = data.map((d) => ({
-    ...d,
-    label: d.date.slice(5), // "MM-DD"
-  }))
-
-  const interval = Math.max(0, Math.floor(data.length / 7) - 1)
-
-  return (
-    <ResponsiveContainer width="100%" height={176}>
-      <LineChart data={formatted} margin={{ top: 16, right: 8, left: -20, bottom: 0 }}>
-        <CartesianGrid vertical={false} stroke={COLOR_BORDER} strokeOpacity={0.8} />
-        <XAxis
-          dataKey="label"
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: COLOR_TXT_DIM, fontSize: 11 }}
-          interval={interval}
-        />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: COLOR_TXT_DIM, fontSize: 11 }}
-          allowDecimals={false}
-          width={30}
-        />
-        <Tooltip
-          contentStyle={TOOLTIP_STYLE}
-          labelFormatter={(label) => `날짜: ${label}`}
-          formatter={(v, key) => [v, seriesName(String(key))]}
-        />
-        <Legend wrapperStyle={LEGEND_STYLE} formatter={seriesName} />
-        <Line
-          type="monotone"
-          dataKey="peak_players"
-          stroke={COLOR_SECONDARY}
-          strokeWidth={2}
-          dot={false}
-          activeDot={{ r: 4 }}
-        />
-        <Line
-          type="monotone"
-          dataKey="avg_players"
-          stroke={COLOR_PRIMARY}
-          strokeWidth={2}
-          dot={false}
-          activeDot={{ r: 4 }}
-          strokeOpacity={0.8}
-        />
-      </LineChart>
     </ResponsiveContainer>
   )
 }

@@ -7,6 +7,7 @@ import { getUsername } from '@/shared/util/cookie'
 import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
 import { CalendarPlus, Check, ChevronDown, Clock3, Filter, LogIn, UserMinus, X } from 'lucide-react'
 import Select from '@/shared/components/Select'
+import { kstTimeFormat, MATCH_TYPE_LABELS } from '@/reservation/reservationLabels'
 
 type MatchType = '랭크매치' | '플레이어 매치' | '상관없음'
 type ReservationStatus = 'open' | 'full'
@@ -32,9 +33,8 @@ const durationOptions = [
   { value: '180', label: '약 3시간' },
 ]
 const durationLabels = new Map(durationOptions.map(({ value, label }) => [Number(value), label]))
-const matchTypeLabels: Record<ApiReservation['match_type'], MatchType> = { rank_match: '랭크매치', player_match: '플레이어 매치', any: '상관없음' }
+const matchTypeLabels = MATCH_TYPE_LABELS as Record<ApiReservation['match_type'], MatchType>
 const matchTypeValues: Record<MatchType, ApiReservation['match_type']> = { '랭크매치': 'rank_match', '플레이어 매치': 'player_match', '상관없음': 'any' }
-const kstTimeFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false })
 
 function fromApi(item: ApiReservation): Reservation {
   return {
