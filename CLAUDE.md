@@ -60,7 +60,9 @@ src/
   main.tsx             root render, Toaster, global unhandledrejection handler
   index.css            Tailwind 4 @theme design tokens
   config/              tabConfig, patchNotes, test-setup
+  overview/            landing summary — useOverview, Overview, KPI and top-five cards
   match/               rooms — useRooms, Rooms, RankMatchTable, PlayerMatchTable
+  reservation/         appointments — Reservation, reservationApi, reservationLabels
   community/           board — useCommunity, communityApi, post/comment components
   stat/                statistics — useStats, useWeeklyTop, Stats
   shared/              api util, Leaderboard, hooks, components, colors, formatters
@@ -86,9 +88,43 @@ Pass `null` as the interval to fetch once without polling.
 
 `App.tsx` owns `useLeaderboard()` and `useRooms()` and passes `{ data, loading, error, onRefresh }` down. Both data sets stay fresh regardless of the active tab — switching tabs is display-only.
 
+### Overview (the landing tab)
+
+A summary of the other tabs, and the entry point rather than a replacement for
+them: every card links to the tab it summarises.
+
+**It fetches almost nothing of its own.** Rooms and the leaderboard arrive as
+props — `App.tsx` already polls both — so the overview adds four one-shot
+requests: daily stats, weekly top, recent posts, open reservations. Do not add a
+`useRooms()` or `useLeaderboard()` call here; that would double the traffic for
+data the page already holds.
+
+`useOverview` batches those four with `Promise.allSettled`, and a rejected
+source degrades to an empty list. One failing endpoint therefore costs its own
+card, not the page. It polls with a `null` interval — a snapshot with a manual
+refresh, since only the room figures are genuinely live and those stay fresh
+through App's poll.
+
+**Two joins worth knowing:**
+
+- The weekly-top endpoint reports match counts, not characters. Portraits are
+  joined in from the leaderboard by npid, the same pairing the stats tab makes;
+  a player outside the leaderboard renders dashes rather than dropping columns.
+- `fetchRoomsAll` deliberately shuffles group order, so the "활성 방" hint reads
+  the groups back in `GROUP_ORDER`. Without that the KPI reorders itself on
+  every 5s poll.
+
+`MiniCharCell` is the row-sized counterpart to `shared/components/CharCell`:
+same portrait and rank badge, no win/loss column. Below 760px the row wraps to
+two lines and positions the two characters by **source order**
+(`:nth-of-type`), so main must render before sub — `Overview.test.tsx` pins
+that.
+
 ### Tabs
 
-The tab strip is **fixed layout, not derived from the response**: one tab per key in `GROUP_ORDER` (`config/tabConfig.ts`) — always rendered, even before rooms load or after the fetch fails — plus any unknown group the API returns appended after them, followed by the fixed `reservation`, `leaderboard`, `community`, and `stats` tabs. `tab` state is `string | null`; when null or stale it falls back to the first tab, which is therefore always `rank_match`.
+The tab strip is **fixed layout, not derived from the response**: `overview` first, then one tab per key in `GROUP_ORDER` (`config/tabConfig.ts`) — always rendered, even before rooms load or after the fetch fails — plus any unknown group the API returns appended after them, followed by the fixed `reservation`, `leaderboard`, `community`, and `stats` tabs. `tab` state is `string | null`; when null or stale it falls back to the first tab, which is therefore always `overview`.
+
+`FIXED_TABS` in `App.tsx` names the non-room tabs in one place; `isRoomTab` is its negation. Adding a tab that is not a room group means adding it there too, or it will be handed the rooms panel.
 
 Room data affects only the **count in the label**, never which tabs exist. Until the first successful load the count renders as `(—)` rather than `(0)`, so a pending or failed fetch is not mistaken for "no rooms"; afterwards a group the payload omits is genuinely `(0)`.
 
@@ -110,6 +146,11 @@ Editing (`PATCH /reservations/{id}`) is refused once anyone has joined: particip
 
 Cancelling is a soft delete (`status = 'cancelled'`) that also releases every participant. `GET /reservations` returns only `open` and `matched`, so a cancelled reservation disappears on the next poll without any client-side removal.
 
+Match-type labels and the KST time format live in `reservationLabels.ts`, not
+`reservationApi.ts`: the overview needs them too, and `Reservation.test.tsx`
+replaces the whole API module with a mock, so anything the UI reads at import
+time has to sit outside it.
+
 ### Error handling
 
 `main.tsx` registers a global `unhandledrejection` handler that shows a toast and calls `preventDefault()`. Rejected promises therefore surface to the user without a try/catch at every call site — but a caller that wants inline error state (as feature hooks do) must catch and store `e.message` itself.
@@ -119,6 +160,10 @@ Cancelling is a soft delete (`status = 'cancelled'`) that also releases every pa
 ## Styling
 
 Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. Design tokens are declared in an `@theme` block in `src/index.css` and become utilities automatically (`--color-primary` → `bg-primary`, `text-primary`, `border-primary`).
+
+`.app-layout` caps the page at `min(1360px, 100% - 32px)` — sidebar plus main
+column, so it sets the width of **every** tab. Changing it re-renders every
+visual baseline, not just the tab that prompted the change.
 
 Use tokens rather than raw hex or arbitrary values. **Pretendard** backs both
 `--font-sans` and `--font-display`, imported as an npm package in `main.tsx`
@@ -132,6 +177,19 @@ exemption. The one deliberate holdout is `.input-base:disabled`, where WCAG
 exempts inactive controls anyway.
 
 Rank/tier and medal colours live in `shared/tierColors.ts` and `shared/medalColors.ts`; character art paths in `shared/characterImage.ts`.
+
+Recharts renders SVG attributes, which cannot read CSS custom properties, so
+`shared/components/chartTheme.ts` mirrors the relevant `@theme` tokens as JS
+constants — keep the two in step when a token moves. `shared/components/DailyChart.tsx`
+is shared by the stats tab and the overview; its `axisGutter` prop exists because
+the stats panel is narrow enough for a negative left margin while the overview's
+wider chart clips its tick labels at the same value.
+
+Not every rank the API reports has artwork under `public/ranks/` — `Tekken Lord`
+and `Initiate` among them. `RankImage` removes itself on the load error rather
+than leaving the browser's broken-image glyph, and keys that failure to the rank
+**name**: React reuses the element across list rows, so a bare boolean would
+blank the next rank that does have art.
 
 ### Brand assets
 
@@ -160,10 +218,32 @@ Component tests are prop-driven and need no mocks. `App.test.tsx` mocks the feat
 **E2E — Playwright**, in `e2e/`, against two projects: `chromium` (Desktop Chrome) and `mobile` (Pixel 5). The config starts `npm run dev` automatically and reuses a running server outside CI.
 
 - `e2e/helpers/mock-api.ts` — route interception; E2E does not hit a real backend.
+  `mockAllApis` must route every endpoint the landing tab calls, the overview's
+  history/community/reservation reads included; anything unrouted reaches
+  whatever the dev server proxies to, which is **production** by default.
 - `e2e/specs/` — behavioural specs per feature.
 - `e2e/visual/screenshots.spec.ts` — visual regression against committed baselines.
 
+Helpers worth reaching for: `goToMatchTab` (the overview is the landing tab, so
+a rooms spec has to navigate first — there is no router to deep-link with),
+`dismissPatchNotes` (closes the dialog), and `skipPatchNotes` (marks it seen
+before load, for specs that cannot afford the paint at all — it reads
+`LATEST_PATCH_VERSION` so a version bump cannot silently stop suppressing it).
+
+**Do not wait out a poll in real time.** Install `page.clock` before the first
+navigation and use `fastForward`, not `runFor`: `runFor` replays every timer
+callback along the way, which measured 2.7s of the rooms auto-refresh test on
+its own. `fastForward` jumps to the target instant — that test went 5.6s → 1.6s.
+
 Visual baselines are environment-sensitive: snapshots rendered on Windows will not match CI's Linux. Refresh them with the `Update Visual Baselines` workflow (`workflow_dispatch`) and commit the artifact rather than regenerating locally.
+
+**Parallelism.** `workers` matches the core count — 4 on CI (`ubuntu-latest`),
+unset locally — with `retries: 1` on CI only. It was 1 on CI, the Playwright
+scaffold's default and never a response to an observed problem, which left three
+cores idle. Do not put it back, and do not reserve a core for the dev server:
+it only serves static files, since every backend call is intercepted. Locally
+there are no retries, so a full run flakes occasionally on an unrelated spec;
+re-run the single spec before believing it.
 
 ## Custom commands
 
