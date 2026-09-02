@@ -448,7 +448,14 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .mini-char-portrait { width: 56px; height: 56px; flex: 0 0 auto; object-fit: contain; }
 .mini-char-name { max-width: 100%; overflow: hidden; color: var(--color-txt-dim); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .overview-rank-pos { color: var(--color-txt-dim); font-family: var(--font-display); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.overview-rank-name { overflow: hidden; color: var(--color-txt); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.overview-rank-name { min-width: 0; overflow: hidden; color: var(--color-txt); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+/* Opens the same history panel the leaderboard does, so it takes the same
+   .player-btn affordance. The name column is the tightest on the page --- 61px
+   in 주간 철악귀 --- so the inline padding .player-btn normally carries is
+   dropped and the hover surface is inset instead of widening the cell. */
+.overview-rank-btn { position: relative; display: block; width: 100%; max-width: 100%; overflow: hidden; padding: 2px 4px; margin-left: -4px; color: var(--color-primary-text); font-size: inherit; font-weight: inherit; text-align: left; text-decoration: underline; text-decoration-color: rgba(230,57,70,.62); text-decoration-style: dashed; text-decoration-thickness: 1px; text-underline-offset: 3px; text-overflow: ellipsis; white-space: nowrap; }
+.overview-rank-btn:hover { background: rgba(230,57,70,.09); text-decoration-color: currentColor; text-decoration-style: solid; }
+
 /* The name and the figure are what the row is read for, and at 12/11px
    they were losing to a 66px row of character art. The figure carries
    --color-primary-text because it is what the list is ranked by --- the
@@ -661,6 +668,11 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
     grid-template-areas: "pos name name" "pos main sub";
     grid-template-columns: 18px minmax(0,1fr) minmax(0,1fr);
   }
+  /* The name sits on a 25px line, under the 44px the rest of the UI gives a
+     touch target. Vertical padding is what grows it: a positioned ::after
+     would be clipped away by the overflow the ellipsis needs, and the row is
+     tall enough to absorb the padding without changing its own height. */
+  .overview-rank-btn { padding-block: 10px; margin-block: -10px; }
   .overview-rank-pos { grid-area: pos; align-self: center; }
   .overview-rank-name { grid-area: name; }
   .overview-rank-detail { grid-area: detail; }

@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Activity, CalendarDays, Crown, MessageSquareText, RefreshCw, TrendingUp, Trophy, Users } from 'lucide-react'
 import DailyChart from '@/shared/components/DailyChart'
+import PlayerHistoryPanel from '@/shared/components/PlayerHistoryPanel'
 import { panelStatus } from '@/shared/util/panelStatus'
 import useOverview, { OVERVIEW_TOP_N } from '@/overview/useOverview'
 import { KpiCard, OpenReservations, OverviewSection, RecentPosts, TopFiveList, type TopFiveRow } from '@/overview/component'
@@ -54,6 +56,7 @@ const charsOf = (entry?: LeaderboardEntry) => ({
 const leaderboardRows = (entries: LeaderboardEntry[]): TopFiveRow[] =>
   entries.slice(0, OVERVIEW_TOP_N).map((e) => ({
     key: e.np_id,
+    npid: e.np_id,
     name: e.online_name,
     ...charsOf(e),
   }))
@@ -65,6 +68,7 @@ const weeklyRows = (players: WeeklyTopPlayer[], entries: LeaderboardEntry[]): To
   const byNpid = new Map(entries.map((e) => [e.np_id, e]))
   return players.map((p) => ({
     key: p.npid,
+    npid: p.npid,
     name: p.online_name,
     detail: `${p.match_count}판`,
     ...charsOf(byNpid.get(p.npid)),
@@ -73,6 +77,13 @@ const weeklyRows = (players: WeeklyTopPlayer[], entries: LeaderboardEntry[]): To
 
 export default function Overview({ rooms, roomsLoading, leaderboardEntries = [], leaderboardTotal, onNavigate }: OverviewProps) {
   const { data, loading, error, refresh } = useOverview()
+  const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
+
+  // The panel wants the leaderboard row when there is one; a weekly-top player
+  // outside the leaderboard simply opens without it, as it does on the stats tab.
+  const selectedEntry = selectedNpid
+    ? leaderboardEntries.find((e) => e.np_id === selectedNpid)
+    : undefined
 
   const status = panelStatus(loading, error, '개요 로딩 중...', refresh)
   if (status) return status
@@ -106,11 +117,11 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
 
       <div className="overview-grid">
         <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" onNavigate={() => onNavigate('leaderboard')}>
-          <TopFiveList rows={leaderboardRows(leaderboardEntries)} />
+          <TopFiveList rows={leaderboardRows(leaderboardEntries)} onSelect={setSelectedNpid} />
         </OverviewSection>
 
         <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" onNavigate={() => onNavigate('stats')}>
-          <TopFiveList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} detailLabel="매치" />
+          <TopFiveList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} detailLabel="매치" onSelect={setSelectedNpid} />
         </OverviewSection>
 
         <OverviewSection icon={CalendarDays} title="모집 중인 예약" subtitle="아직 자리가 남은 약속" linkLabel="예약" onNavigate={() => onNavigate('reservation')}>
@@ -121,6 +132,14 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
           <RecentPosts posts={data?.posts ?? []} />
         </OverviewSection>
       </div>
+
+      {selectedNpid && (
+        <PlayerHistoryPanel
+          npid={selectedNpid}
+          leaderboardEntry={selectedEntry}
+          onClose={() => setSelectedNpid(null)}
+        />
+      )}
     </div>
   )
 }

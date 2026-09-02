@@ -5,7 +5,16 @@ import type { OverviewData } from '@/overview/types'
 import type { RoomsData } from '@/match/types'
 import type { LeaderboardEntry } from '@/shared/types'
 
-const { mockedUseOverview } = vi.hoisted(() => ({ mockedUseOverview: vi.fn() }))
+const { mockedUseOverview, mockedGet } = vi.hoisted(() => ({
+  mockedUseOverview: vi.fn(),
+  mockedGet: vi.fn(),
+}))
+
+// The history panel fetches on open; without this its request escapes the test.
+vi.mock('@/shared/util/api', async () => {
+  const actual = await vi.importActual<typeof import('@/shared/util/api')>('@/shared/util/api')
+  return { ...actual, GET: mockedGet }
+})
 
 vi.mock('@/overview/useOverview', async () => {
   const actual = await vi.importActual<typeof import('@/overview/useOverview')>('@/overview/useOverview')
@@ -82,6 +91,7 @@ function renderOverview(props: Partial<React.ComponentProps<typeof Overview>> = 
 
 beforeEach(() => {
   mockedUseOverview.mockReturnValue(polled(OVERVIEW_DATA))
+  mockedGet.mockResolvedValue({ npid: 'p1', days_active: 3, times_seen: 12, first_seen: '2026-08-01', last_seen: '2026-09-01', room_type_counts: {}, top_played_with: [], active_hours: [] })
 })
 
 afterEach(() => {
@@ -202,6 +212,21 @@ describe('Overview', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /커뮤니티/ }))
     expect(onNavigate).toHaveBeenCalledWith('community')
+  })
+
+  it('opens the player history panel from a name in either list', async () => {
+    renderOverview()
+
+    fireEvent.click(screen.getByRole('button', { name: 'TopPlayer' }))
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(mockedGet).toHaveBeenCalledWith('history/players/p1', expect.anything())
+
+    // A weekly-top player is identified by the same npid the join uses, so the
+    // panel opens for someone the leaderboard may not carry.
+    fireEvent.click(screen.getByRole('button', { name: '플레이어 기록 닫기' }))
+    fireEvent.click(screen.getByRole('button', { name: 'WeeklyOne' }))
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(mockedGet).toHaveBeenCalledWith('history/players/w1', expect.anything())
   })
 
   it('renders each card empty rather than failing when a source returned nothing', () => {

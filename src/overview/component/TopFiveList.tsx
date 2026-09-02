@@ -4,6 +4,9 @@ import type { CharInfo } from '@/shared/types'
 
 export interface TopFiveRow {
   key: string
+  /** Identifies the player to the history panel. Distinct from `key`, which is
+   * React's list identity and free to change independently. */
+  npid: string
   name: string
   /** Right-hand figure — a match count, whatever the list ranks by. Omit it
    * when the position column already says the same thing. */
@@ -21,9 +24,11 @@ interface TopFiveListProps {
    * first column, so a "랭킹" of 1..5 beside a "#" of 1..5 said it twice. */
   detailLabel?: string
   emptyMsg?: string
+  /** Opens the player history panel, the same way the leaderboard does. */
+  onSelect: (npid: string) => void
 }
 
-export default function TopFiveList({ rows, detailLabel, emptyMsg = '데이터 없음' }: TopFiveListProps) {
+export default function TopFiveList({ rows, detailLabel, emptyMsg = '데이터 없음', onSelect }: TopFiveListProps) {
   if (rows.length === 0) return <p className="state-msg">{emptyMsg}</p>
 
   return (
@@ -40,7 +45,11 @@ export default function TopFiveList({ rows, detailLabel, emptyMsg = '데이터 �
             style={medal ? { borderLeftColor: medal.border } : undefined}
           >
             <span className="overview-rank-pos" style={medal ? { color: medal.color } : undefined}>{i + 1}</span>
-            <span className="overview-rank-name">{row.name}</span>
+            <span className="overview-rank-name">
+              <button type="button" className="player-btn overview-rank-btn" onClick={() => onSelect(row.npid)}>
+                {row.name}
+              </button>
+            </span>
             {row.detail && <span className="overview-rank-detail">{row.detail}</span>}
             <MiniCharCell char={row.mainChar} label="메인" />
             <MiniCharCell char={row.subChar} label="서브" />
