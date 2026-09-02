@@ -88,11 +88,13 @@ describe('Reservation', () => {
     const rankMatch = screen.getByRole('radio', { name: '랭크매치' })
     const playerMatch = screen.getByRole('radio', { name: '플레이어 매치' })
 
-    expect(rankMatch).toHaveAttribute('aria-checked', 'true')
+    // Native radios, so the browser owns the mutual exclusivity, one tab stop
+    // and arrow-key navigation rather than the component reimplementing them.
+    expect(rankMatch).toBeChecked()
     fireEvent.click(playerMatch)
 
-    expect(playerMatch).toHaveAttribute('aria-checked', 'true')
-    expect(rankMatch).toHaveAttribute('aria-checked', 'false')
+    expect(playerMatch).toBeChecked()
+    expect(rankMatch).not.toBeChecked()
     expect(screen.queryByRole('group', { name: /보유 계급/ })).not.toBeInTheDocument()
     expect(screen.getByLabelText('모집 인원')).toBeInTheDocument()
   })
@@ -331,7 +333,11 @@ describe('Reservation', () => {
     const edit = within(detail).getByRole('button', { name: '예약 수정' })
 
     expect(edit).toBeDisabled()
-    expect(edit).toHaveAttribute('title', expect.stringContaining('참가자가 있는 예약'))
+    // The reason has to be readable without hovering: a title tooltip on a
+    // disabled control never reaches keyboard or touch users.
+    const reason = within(detail).getByText(/참가자가 있는 예약은 수정할 수 없습니다/)
+    expect(reason).toBeVisible()
+    expect(edit).toHaveAttribute('aria-describedby', reason.id)
   })
 
   it('still allows deleting a reservation somebody joined', async () => {

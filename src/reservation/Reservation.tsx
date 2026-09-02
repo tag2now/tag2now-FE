@@ -113,8 +113,8 @@ function toForm(reservation: Reservation): FormState {
 
 function availabilityMeta(reservation: Reservation) {
   if (reservation.status === 'full') return { label: '마감', className: 'border-secondary text-secondary bg-secondary/10' }
-  if (reservation.type === '랭크매치') return { label: '모집중', className: 'border-primary text-primary bg-primary/10' }
-  return { label: `${reservation.joined}/${reservation.capacity}명`, className: 'border-primary text-primary bg-primary/10' }
+  if (reservation.type === '랭크매치') return { label: '모집중', className: 'border-primary text-primary-text bg-primary/10' }
+  return { label: `${reservation.joined}/${reservation.capacity}명`, className: 'border-primary text-primary-text bg-primary/10' }
 }
 
 function RankSummary({ ranks, imageClassName = 'h-8' }: { ranks: string[], imageClassName?: string }) {
@@ -122,7 +122,7 @@ function RankSummary({ ranks, imageClassName = 'h-8' }: { ranks: string[], image
   const sortedRanks = sortSelectedRanks(ranks)
   return <span className="relative flex shrink-0 items-center justify-center" aria-label={sortedRanks.join(', ')}>
     <RankImage rankInfo={{ name: sortedRanks[0], tier: sortedRanks[0] }} className={`${imageClassName} w-auto object-contain`} />
-    {ranks.length > 1 && <span aria-label={`추가 계급 ${ranks.length - 1}개`} className="absolute left-full ml-1 flex h-6 min-w-6 items-center justify-center rounded-full border border-primary-dim bg-primary/10 px-1 text-xs font-black text-primary">+{ranks.length - 1}</span>}
+    {ranks.length > 1 && <span aria-label={`추가 계급 ${ranks.length - 1}개`} className="absolute left-full ml-1 flex h-6 min-w-6 items-center justify-center rounded-full border border-primary-dim bg-primary/10 px-1 text-xs font-black text-primary-text">+{ranks.length - 1}</span>}
   </span>
 }
 
@@ -156,8 +156,8 @@ function TimePickerDialog({ draftTime, setDraftTime, onCancel, onConfirm }: {
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="시간 선택" className="w-full max-w-xs border border-primary-dim bg-bg-panel p-3 shadow-[0_12px_40px_rgba(0,0,0,0.75)]">
         <WheelPickerWrapper className="relative h-48 bg-bg-row">
           <span aria-hidden="true" className="pointer-events-none absolute inset-x-2 top-1/2 z-30 h-[30px] -translate-y-1/2 border-y border-primary-dim" />
-          <WheelPicker value={draftTime.split(':')[0]} onValueChange={(hour) => setDraftTime(`${hour}:${draftTime.split(':')[1]}`)} options={hourOptions} infinite visibleCount={20} classNames={{ optionItem: 'font-display text-base font-medium text-txt-dim', highlightWrapper: 'z-20 bg-bg-row text-primary', highlightItem: 'font-display text-base font-medium text-primary' }} />
-          <WheelPicker value={draftTime.split(':')[1]} onValueChange={(minute) => setDraftTime(`${draftTime.split(':')[0]}:${minute}`)} options={minuteOptions} infinite visibleCount={20} classNames={{ optionItem: 'font-display text-base font-medium text-txt-dim', highlightWrapper: 'z-20 bg-bg-row text-primary', highlightItem: 'font-display text-base font-medium text-primary' }} />
+          <WheelPicker value={draftTime.split(':')[0]} onValueChange={(hour) => setDraftTime(`${hour}:${draftTime.split(':')[1]}`)} options={hourOptions} infinite visibleCount={20} classNames={{ optionItem: 'font-display text-base font-medium text-txt-dim', highlightWrapper: 'z-20 bg-bg-row text-primary-text', highlightItem: 'font-display text-base font-medium text-primary-text' }} />
+          <WheelPicker value={draftTime.split(':')[1]} onValueChange={(minute) => setDraftTime(`${draftTime.split(':')[0]}:${minute}`)} options={minuteOptions} infinite visibleCount={20} classNames={{ optionItem: 'font-display text-base font-medium text-txt-dim', highlightWrapper: 'z-20 bg-bg-row text-primary-text', highlightItem: 'font-display text-base font-medium text-primary-text' }} />
         </WheelPickerWrapper>
         <div className="mt-2 flex justify-end gap-2"><button type="button" className="btn-ghost" onClick={onCancel}>취소</button><button type="button" className="btn-primary" onClick={onConfirm}>선택 완료</button></div>
       </div>
@@ -199,7 +199,7 @@ export default function Reservation() {
   const noticeBanner = notice.text && (
     <p
       role={notice.tone === 'error' ? 'alert' : 'status'}
-      className={`border-l-2 px-3 py-2 text-sm font-semibold ${notice.tone === 'error' ? 'border-error bg-error/8 text-error' : 'border-primary bg-primary/8 text-primary'}`}
+      className={`border-l-2 px-3 py-2 text-sm font-semibold ${notice.tone === 'error' ? 'border-error bg-error/8 text-error' : 'border-primary bg-primary/8 text-primary-text'}`}
     >{notice.text}</p>
   )
 
@@ -316,7 +316,7 @@ export default function Reservation() {
       <div className="relative">
         <div className="flex flex-col gap-4 border-b border-border-light pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="panel-meta mb-1 text-primary">MATCH APPOINTMENT / KST</p>
+            <p className="panel-meta mb-1 text-primary-text">MATCH APPOINTMENT / KST</p>
             <h2 className="font-display text-lg tracking-[0.08em] text-white">오늘의 예약</h2>
             <p className="mt-1 text-sm text-txt-dim">미리 약속하고, 접속 시간을 맞춰 보세요.</p>
           </div>
@@ -328,7 +328,7 @@ export default function Reservation() {
         {showForm && (
           <ReservationFormDialog onClose={closeForm} onSubmit={handleSubmit}>
             <div className="reservation-modal-header col-span-full">
-              <div><p className="panel-meta mb-1 text-primary">{editingId === null ? 'NEW MATCH REQUEST' : 'EDIT MATCH REQUEST'}</p><h3 id="reservation-modal-title" className="font-display text-xl font-black tracking-[0.06em] text-white">{editingId === null ? '예약 추가' : '예약 수정'}</h3><p className="modal-description">시간과 매치 조건을 설정해 참가자를 모집하세요.</p></div>
+              <div><p className="panel-meta mb-1 text-primary-text">{editingId === null ? 'NEW MATCH REQUEST' : 'EDIT MATCH REQUEST'}</p><h3 id="reservation-modal-title" className="font-display text-xl font-black tracking-[0.06em] text-white">{editingId === null ? '예약 추가' : '예약 수정'}</h3><p className="modal-description">시간과 매치 조건을 설정해 참가자를 모집하세요.</p></div>
               <button type="button" aria-label="닫기" className="modal-close" onClick={closeForm}><X size={16} /></button>
             </div>
             <fieldset className="modal-field relative">
@@ -346,12 +346,21 @@ export default function Reservation() {
             <fieldset className="modal-field">
               <legend className="field-label">매치 종류</legend>
               <div className="match-type-selector" role="radiogroup" aria-label="매치 종류">
-                {matchTypes.slice(1).map((type, index, options) => {
-                  const selected = form.type === type
-                  return <button key={type} type="button" role="radio" aria-checked={selected} onClick={() => { setForm({ ...form, type: type as MatchType }); setRankPickerOpen(false) }} className={`px-2 py-2 text-sm font-bold transition-colors ${index < options.length - 1 ? 'border-r border-border-light' : ''} ${selected ? 'bg-primary text-bg-deep shadow-[inset_0_-2px_0_rgba(255,255,255,0.35)]' : 'text-txt-dim hover:bg-primary-hover hover:text-primary'}`}>
-                    {type}
-                  </button>
-                })}
+                {/* Native radios: the browser supplies one tab stop, arrow-key
+                    navigation and the group semantics. The visible chip is the
+                    label, styled off :checked. */}
+                {matchTypes.slice(1).map((type) => (
+                  <label key={type} className="match-type-option">
+                    <input
+                      type="radio"
+                      name="reservation-match-type"
+                      value={type}
+                      checked={form.type === type}
+                      onChange={() => { setForm({ ...form, type: type as MatchType }); setRankPickerOpen(false) }}
+                    />
+                    <span>{type}</span>
+                  </label>
+                ))}
               </div>
             </fieldset>
             <div className="modal-field"><span className="field-label">예상 시간</span>
@@ -381,7 +390,7 @@ export default function Reservation() {
                     >
                       {selected && <span aria-hidden="true" className="rank-option-check"><Check size={11} /></span>}
                       <RankImage rankInfo={{ name: rank, tier: rank }} className="h-9 max-w-full w-auto object-contain" />
-                      <span className={`truncate text-[11px] tracking-[0.03em] ${selected ? 'text-primary' : 'text-txt-dim'}`}>{rank}</span>
+                      <span className={`truncate text-[11px] tracking-[0.03em] ${selected ? 'text-primary-text' : 'text-txt-dim'}`}>{rank}</span>
                     </button>
                   })}
                 </div>
@@ -430,7 +439,7 @@ export default function Reservation() {
                     const selected = reservation.id === selectedReservation?.id
                     return <button key={reservation.id} type="button" onClick={() => setSelectedId(reservation.id)} className={`reservation-card grid grid-cols-2 overflow-hidden text-left transition-colors ${selected ? 'selected' : ''}`}>
                       <span className="flex min-w-0 flex-col justify-between px-3 py-3"><strong className="truncate text-base tracking-[0.03em] text-white">{reservation.host}</strong><span className={`w-fit border px-1.5 py-0.5 text-xs font-bold tracking-[0.08em] ${availability.className}`}>{availability.label}</span></span>
-                      <span className="flex shrink-0 items-center justify-center border-l border-border bg-bg-row px-3">{reservation.type === '플레이어 매치' || (reservation.type === '상관없음' && reservation.ranks.length === 0) ? <span className="flex h-8 items-center border border-primary-dim px-2 text-center text-xs font-bold tracking-[0.04em] text-primary">{reservation.type === '상관없음' ? 'ANY MATCH' : 'PLAYER MATCH'}</span> : <RankSummary ranks={reservation.ranks} imageClassName="h-10" />}</span>
+                      <span className="flex shrink-0 items-center justify-center border-l border-border bg-bg-row px-3">{reservation.type === '플레이어 매치' || (reservation.type === '상관없음' && reservation.ranks.length === 0) ? <span className="flex h-8 items-center border border-primary-dim px-2 text-center text-xs font-bold tracking-[0.04em] text-primary-text">{reservation.type === '상관없음' ? 'ANY MATCH' : 'PLAYER MATCH'}</span> : <RankSummary ranks={reservation.ranks} imageClassName="h-10" />}</span>
                     </button>
                   })}
                 </div>
@@ -446,14 +455,19 @@ export default function Reservation() {
             const frozen = selectedReservation.joined > 0
             return <aside className={`reservation-detail ${selectedReservation.status === 'full' ? 'is-full' : ''}`} aria-label="선택한 예약 상세">
               <div className="flex items-start justify-between gap-3"><div><p className="panel-meta mb-1">선택한 예약</p><p className="font-display text-3xl font-black text-white">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
-              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-center justify-between"><span className="text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-9" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
+              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-center justify-between"><span className="text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-9" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary-text">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
               <p className="mt-4 min-h-10 text-sm text-txt-dim">{selectedReservation.memo}</p>
               {owned
-                ? <div className="mt-4 grid grid-cols-2 gap-2">
-                    <button type="button" className={`border py-2 text-sm font-bold transition-colors ${frozen ? 'cursor-not-allowed border-border bg-bg-panel text-txt-dim' : 'border-primary text-primary hover:bg-primary/10'}`} disabled={frozen} title={frozen ? '참가자가 있는 예약은 수정할 수 없습니다. 삭제 후 다시 등록해 주세요.' : undefined} onClick={() => openEditForm(selectedReservation)}>예약 수정</button>
-                    <button type="button" className="border border-error py-2 text-sm font-bold text-error transition-colors hover:bg-error/10" onClick={() => handleDelete(selectedReservation.id)}>예약 삭제</button>
+                ? <div className="mt-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" className={`border py-2 text-sm font-bold transition-colors ${frozen ? 'cursor-not-allowed border-border bg-bg-panel text-txt-dim' : 'border-primary text-primary-text hover:bg-primary/10'}`} disabled={frozen} aria-describedby={frozen ? 'reservation-edit-frozen' : undefined} onClick={() => openEditForm(selectedReservation)}>예약 수정</button>
+                      <button type="button" className="border border-error py-2 text-sm font-bold text-error transition-colors hover:bg-error/10" onClick={() => handleDelete(selectedReservation.id)}>예약 삭제</button>
+                    </div>
+                    {/* A title tooltip cannot be reached on a disabled control by
+                        keyboard or touch, so the reason is rendered in the flow. */}
+                    {frozen && <p id="reservation-edit-frozen" className="mt-2 text-xs text-txt-faint">참가자가 있는 예약은 수정할 수 없습니다. 삭제 후 다시 등록해 주세요.</p>}
                   </div>
-                : <button type="button" className={`mt-4 flex min-h-9 w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-bg-deep hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? <UserMinus size={15} /> : selectedReservation.status === 'full' ? <X size={15} /> : <LogIn size={15} />}{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 마감' : '참가하기'}</button>}
+                : <button type="button" className={`mt-4 flex min-h-9 w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary-text hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-bg-deep hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? <UserMinus size={15} /> : selectedReservation.status === 'full' ? <X size={15} /> : <LogIn size={15} />}{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 마감' : '참가하기'}</button>}
             </aside>
           })()}
         </div>
