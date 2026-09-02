@@ -426,10 +426,17 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .overview-link { flex: 0 0 auto; }
 
 .overview-rank-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
-.overview-rank-head, .overview-rank-row { display: grid; align-items: center; gap: 8px; grid-template-columns: 20px minmax(0,1fr) 144px 144px 40px; }
+.overview-rank-head, .overview-rank-row { display: grid; align-items: center; gap: 8px; grid-template-columns: 20px minmax(0,1fr) 40px 144px 144px; }
+/* The leaderboard list ranks by row position, so it renders no detail cell
+   and drops that track — the name column takes the freed width. */
+.overview-rank-list.has-no-detail .overview-rank-head,
+.overview-rank-list.has-no-detail .overview-rank-row { grid-template-columns: 20px minmax(0,1fr) 144px 144px; }
 .overview-rank-head { padding: 0 8px 4px; color: var(--color-txt-faint); font-size: 9px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
-.overview-rank-head > :nth-child(3), .overview-rank-head > :nth-child(4) { text-align: center; }
-.overview-rank-head > :last-child, .overview-rank-detail { text-align: right; }
+.overview-rank-head > :nth-child(4), .overview-rank-head > :nth-child(5) { text-align: center; }
+.overview-rank-head > :nth-child(3), .overview-rank-detail { text-align: right; }
+/* Without the detail cell Main and Sub shift left by one child. */
+.overview-rank-list.has-no-detail .overview-rank-head > :nth-child(3),
+.overview-rank-list.has-no-detail .overview-rank-head > :nth-child(4) { text-align: center; }
 .overview-rank-row { min-height: 66px; padding: 0 8px; border-left: 3px solid transparent; border-radius: 4px; background: var(--color-bg-row-alt); }
 
 /* Rank badge beside its portrait, the way the leaderboard's CharCell pairs
@@ -636,12 +643,19 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
      rank number, name and figure take the top line at full width, and the two
      characters sit beneath them. Nothing is dropped and nothing is truncated. */
   .overview-rank-head { display: none; }
+  /* Placed by area here, so the desktop column tracks must not leak in. */
   .overview-rank-row {
     min-height: 0;
     padding: 6px 8px;
     grid-template-areas: "pos name name detail" "pos main sub .";
     grid-template-columns: 18px minmax(0,1fr) minmax(0,1fr) auto;
     gap: 4px 6px;
+  }
+  /* With no detail cell the trailing track has nothing to size to, and left
+     in place it squeezed the two portraits to half their width. Drop it. */
+  .overview-rank-list.has-no-detail .overview-rank-row {
+    grid-template-areas: "pos name name" "pos main sub";
+    grid-template-columns: 18px minmax(0,1fr) minmax(0,1fr);
   }
   .overview-rank-pos { grid-area: pos; align-self: center; }
   .overview-rank-name { grid-area: name; }

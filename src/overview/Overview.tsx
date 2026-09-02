@@ -49,11 +49,12 @@ const charsOf = (entry?: LeaderboardEntry) => ({
   subChar: entry?.player_info?.sub_char_info,
 })
 
+/** No `detail`: the list is the leaderboard's own top five in order, so the
+ * rank it would show is the row position the first column already prints. */
 const leaderboardRows = (entries: LeaderboardEntry[]): TopFiveRow[] =>
   entries.slice(0, OVERVIEW_TOP_N).map((e) => ({
     key: e.np_id,
     name: e.online_name,
-    detail: String(e.rank),
     ...charsOf(e),
   }))
 
@@ -105,7 +106,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
 
       <div className="overview-grid">
         <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" onNavigate={() => onNavigate('leaderboard')}>
-          <TopFiveList rows={leaderboardRows(leaderboardEntries)} detailLabel="랭킹" />
+          <TopFiveList rows={leaderboardRows(leaderboardEntries)} />
         </OverviewSection>
 
         <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" onNavigate={() => onNavigate('stats')}>
