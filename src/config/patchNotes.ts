@@ -49,3 +49,26 @@ export const PATCH_NOTES: PatchNote[] = [
 ]
 
 export const LATEST_PATCH_VERSION = PATCH_NOTES[0].version
+
+/** How many lines the collapsed dialog is allowed to render — a version heading
+ * counts as one, and so does each of its items.
+ */
+export const PATCH_NOTE_LINE_BUDGET = 10
+
+/** The newest releases that fit the budget, whole versions only.
+ *
+ * A version is taken all-or-nothing: half a release reads as if the rest of it
+ * never shipped. The first is always included, so a single release longer than
+ * the budget still shows in full rather than collapsing to nothing.
+ */
+export function recentPatchNotes(notes: PatchNote[] = PATCH_NOTES): PatchNote[] {
+  const taken: PatchNote[] = []
+  let lines = 0
+  for (const note of notes) {
+    const cost = 1 + note.items.length
+    if (taken.length > 0 && lines + cost > PATCH_NOTE_LINE_BUDGET) break
+    taken.push(note)
+    lines += cost
+  }
+  return taken
+}
