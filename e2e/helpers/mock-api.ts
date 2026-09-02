@@ -1,4 +1,4 @@
-import { Page, Route } from '@playwright/test'
+import { expect, Page, Route } from '@playwright/test'
 import leaderboardData from '../fixtures/leaderboard.json'
 import roomsData from '../fixtures/rooms.json'
 import communityPostsData from '../fixtures/community-posts.json'
@@ -75,12 +75,18 @@ export async function signInAs(page: Page, username: string) {
 
 /**
  * Dismiss the PatchNotes modal. Call after page.goto().
+ *
+ * The dialog always shows on a fresh context, so wait for it rather than
+ * polling with a short budget: under a full parallel run it has been measured
+ * taking ~1.0-1.5s to paint, and the old 2s `.catch(() => false)` gave up
+ * silently when it lapsed. The modal then stayed open over the page and the
+ * test failed somewhere else entirely, on whatever content it covered.
  */
 export async function dismissPatchNotes(page: Page) {
   const closeBtn = page.locator('button[aria-label="Close"]')
-  if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await closeBtn.click()
-  }
+  await closeBtn.waitFor({ state: 'visible' })
+  await closeBtn.click()
+  await expect(page.locator('[aria-labelledby="patch-notes-title"]')).toHaveCount(0)
 }
 
 export async function mockAllApis(page: Page, overrides?: MockOverrides) {
