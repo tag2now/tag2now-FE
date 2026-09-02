@@ -317,7 +317,7 @@ export default function Reservation() {
         <div className="flex flex-col gap-4 border-b border-border-light pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="panel-meta mb-1 text-primary-text">MATCH APPOINTMENT / KST</p>
-            <h2 className="font-display text-lg tracking-[0.08em] text-white">오늘의 예약</h2>
+            <h3 className="font-display text-[15px] font-bold tracking-[0.08em] text-white">오늘의 예약</h3>
             <p className="mt-1 text-sm text-txt-dim">미리 약속하고, 접속 시간을 맞춰 보세요.</p>
           </div>
           <button className="btn-primary self-start sm:self-auto" type="button" aria-label="+ 예약 추가" onClick={openCreateForm}>

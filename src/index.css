@@ -57,14 +57,15 @@
      these were declared as `--font-size-*`, which registers nothing - so
      `text-sm`/`text-base`/`text-lg` silently fell back to Tailwind's stock
      sizes and `text-md` matched no rule at all, inheriting the 13px body.
-     Values below are the sizes those utilities actually rendered at, so
-     naming them changes no pixels; resizing the scale is a separate step. */
-  --text-2xs: 0.75rem;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-md: 0.8125rem;
-  --text-lg: 1.125rem;
+     Six steps on a ~1.15 ratio. The previous values were not monotonic -
+     `md` (13px) landed below `sm` (14px) and `2xs` tied with `xs` - so the
+     names could not predict the size and two of the six steps were dead. */
+  --text-2xs: 0.6875rem; /* 11px - dense chart and timeline labels */
+  --text-xs: 0.75rem;    /* 12px - UI labels, badges */
+  --text-sm: 0.875rem;   /* 14px - body, table data */
+  --text-base: 1rem;     /* 16px - emphasised data, inputs */
+  --text-md: 1.125rem;   /* 18px - section headings */
+  --text-lg: 1.375rem;   /* 22px - page headings */
   --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
   --font-display: "Pretendard Variable", Pretendard, system-ui, sans-serif;
   --text-display: clamp(1.05rem, 4vw, 1.8rem);
@@ -298,7 +299,7 @@
 .sidebar-status { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 6px 2px; border-top: 1px solid var(--color-border); color: var(--color-accent); }
 .sidebar-status div { display: flex; flex-direction: column; }
 .sidebar-status strong { color: var(--color-txt); font-size: 10px; }
-.sidebar-status span { color: var(--color-txt-dim); font-size: 9px; }
+.sidebar-status span { color: var(--color-txt-dim); font-size: 11px; }
 .app-main { min-width: 0; }
 .content-heading { display: flex; align-items: flex-end; justify-content: space-between; min-height: 52px; padding: 0 2px 8px; }
 .content-eyebrow { color: var(--color-primary-text); font-size: 9px; font-weight: 700; letter-spacing: .14em; }
@@ -322,7 +323,7 @@
 .compact-toolbar { margin-bottom: 16px; }
 .section-title { display: flex; min-width: 0; align-items: center; gap: 8px; }
 .section-icon { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(230,57,70,.24); border-radius: 6px; background: rgba(230,57,70,.10); color: var(--color-primary-text); }
-.section-title h3 { margin: 0; color: var(--color-txt); font-size: 13px; line-height: 1.25; font-weight: 700; }
+.section-title h3 { margin: 0; color: var(--color-txt); font-size: 15px; line-height: 1.25; font-weight: 700; }
 .section-title p { margin: 2px 0 0; color: var(--color-txt-dim); font-size: 10px; }
 .toolbar-actions { display: flex; align-items: center; gap: 6px; }
 .data-table-wrap { width: 100%; overflow: hidden; border: 1px solid var(--color-border); border-radius: 6px; }
@@ -386,7 +387,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .detail-tabs button[aria-selected="true"] { border-color: rgba(230,57,70,.25); background: rgba(230,57,70,.12); color: var(--color-primary-text); }
 .chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
 .chart-panel { min-width: 0; padding: 12px 8px 8px; border: 1px solid var(--color-border); border-radius: 6px; background: rgba(255,255,255,.015); }
-.chart-panel h4 { margin: 0 0 6px 2px; color: var(--color-txt-dim); font-size: 10px; font-weight: 650; letter-spacing: .04em; }
+.chart-panel h4 { margin: 0 0 6px 2px; color: var(--color-txt-dim); font-size: 11px; font-weight: 650; letter-spacing: .04em; }
 .filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px; border: 1px solid var(--color-border); border-radius: 6px; background: rgba(255,255,255,.015); }
 .filter-label { display: inline-flex; align-items: center; gap: 4px; color: var(--color-txt-dim); font-size: 10px; font-weight: 650; }
 .reservation-filter-bar { display: flex; min-height: 66px; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 2px; border-bottom: 1px solid var(--color-border-light); }
@@ -507,11 +508,11 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .activity-segment { fill: rgba(255,255,255,.045); stroke: transparent; transition: fill 150ms ease; }
 .activity-segment.is-active { fill: #e63946; }
 .activity-segment.is-active:hover { fill: #ff5a63; }
-.activity-hour-label { fill: var(--color-txt-faint); font-family: var(--font-sans); font-size: 7px; font-weight: 700; }
+.activity-hour-label { fill: var(--color-txt-faint); font-family: var(--font-sans); font-size: 9px; font-weight: 700; }
 .activity-ring-center { position: absolute; inset: 50% auto auto 50%; display: flex; width: 82px; transform: translate(-50%,-50%); align-items: center; flex-direction: column; text-align: center; pointer-events: none; }
 .activity-ring-center small { color: var(--color-txt-dim); font-size: 8px; font-weight: 650; letter-spacing: .04em; }
 .activity-ring-center strong { margin-top: 2px; color: var(--color-txt); font-size: 11px; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.activity-ring-center span { margin-top: 2px; color: var(--color-txt-faint); font-size: 7px; }
+.activity-ring-center span { margin-top: 2px; color: var(--color-txt-faint); font-size: 9px; }
 .activity-summary { display: flex; min-width: 0; flex-direction: column; gap: 12px; padding: 12px 8px 8px 12px; border-left: 1px solid var(--color-border); }
 .activity-summary-copy { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
 .activity-summary-copy > span { display: flex; align-items: center; gap: 4px; color: var(--color-txt-dim); font-size: 8px; font-weight: 750; letter-spacing: .08em; }
@@ -522,7 +523,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .activity-timeline-cells { display: grid; grid-template-columns: repeat(24,minmax(2px,1fr)); gap: 2px; height: 42px; align-items: end; padding: 6px 6px; border: 1px solid var(--color-border); border-radius: 6px; background: rgba(0,0,0,.1); }
 .activity-timeline-cells span { height: 8px; border-radius: 6px; background: rgba(255,255,255,.06); }
 .activity-timeline-cells span.is-active { height: 26px; background: var(--color-primary); }
-.activity-timeline-labels { display: flex; justify-content: space-between; margin-top: 4px; color: var(--color-txt-faint); font-size: 7px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.activity-timeline-labels { display: flex; justify-content: space-between; margin-top: 4px; color: var(--color-txt-faint); font-size: 9px; font-weight: 650; font-variant-numeric: tabular-nums; }
 .history-empty { display: grid; min-height: 172px; place-items: center; color: var(--color-txt-dim); font-size: 11px; text-align: center; }
 .history-state { margin: 16px; }
 .ranking-table { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }

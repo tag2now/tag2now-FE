@@ -52,7 +52,7 @@ function PatchNotesDialog({ onClose }: { onClose: () => void }) {
             </h3>
             <ul className="list-disc pl-5 m-0 space-y-1">
               {note.items.map((item, i) => (
-                <li key={i} className="whitespace-pre-wrap text-txt text-md">{item}</li>
+                <li key={i} className="whitespace-pre-wrap text-txt text-sm">{item}</li>
               ))}
             </ul>
           </div>
