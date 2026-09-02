@@ -426,7 +426,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .overview-link { flex: 0 0 auto; }
 
 .overview-rank-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
-.overview-rank-head, .overview-rank-row { display: grid; align-items: center; gap: 8px; grid-template-columns: 20px minmax(0,1fr) 40px 144px 144px; }
+.overview-rank-head, .overview-rank-row { display: grid; align-items: center; gap: 8px; grid-template-columns: 20px minmax(0,1fr) 48px 144px 144px; }
 /* The leaderboard list ranks by row position, so it renders no detail cell
    and drops that track — the name column takes the freed width. */
 .overview-rank-list.has-no-detail .overview-rank-head,
@@ -448,8 +448,12 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .mini-char-portrait { width: 56px; height: 56px; flex: 0 0 auto; object-fit: contain; }
 .mini-char-name { max-width: 100%; overflow: hidden; color: var(--color-txt-dim); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .overview-rank-pos { color: var(--color-txt-dim); font-family: var(--font-display); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.overview-rank-name { overflow: hidden; color: var(--color-txt); font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
-.overview-rank-detail { color: var(--color-txt-dim); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.overview-rank-name { overflow: hidden; color: var(--color-txt); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+/* The name and the figure are what the row is read for, and at 12/11px
+   they were losing to a 66px row of character art. The figure carries
+   --color-primary-text because it is what the list is ranked by --- the
+   same job the colour already does for .overview-time. */
+.overview-rank-detail { color: var(--color-primary-text); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .overview-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
 .overview-list-row { display: flex; min-height: 42px; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; background: var(--color-bg-row-alt); }
