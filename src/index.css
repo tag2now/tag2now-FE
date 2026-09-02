@@ -453,8 +453,8 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
    .player-btn affordance. The name column is the tightest on the page --- 61px
    in 주간 철악귀 --- so the inline padding .player-btn normally carries is
    dropped and the hover surface is inset instead of widening the cell. */
-.overview-rank-btn { position: relative; display: block; width: 100%; max-width: 100%; overflow: hidden; padding: 2px 4px; margin-left: -4px; color: var(--color-primary-text); font-size: inherit; font-weight: inherit; text-align: left; text-decoration: underline; text-decoration-color: rgba(230,57,70,.62); text-decoration-style: dashed; text-decoration-thickness: 1px; text-underline-offset: 3px; text-overflow: ellipsis; white-space: nowrap; }
-.overview-rank-btn:hover { background: rgba(230,57,70,.09); text-decoration-color: currentColor; text-decoration-style: solid; }
+.overview-rank-btn { position: relative; display: inline-block; max-width: 100%; overflow: hidden; padding: 2px 4px; margin-left: -4px; color: var(--color-txt); font-size: inherit; font-weight: inherit; text-align: left; text-decoration: underline; text-decoration-color: rgba(230,57,70,.62); text-decoration-style: dashed; text-decoration-thickness: 1px; text-underline-offset: 3px; text-overflow: ellipsis; white-space: nowrap; }
+.overview-rank-btn:hover { background: rgba(255,255,255,.15); text-decoration-color: currentColor; text-decoration-style: solid; }
 
 /* The name and the figure are what the row is read for, and at 12/11px
    they were losing to a 66px row of character art. The figure carries
