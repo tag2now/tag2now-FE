@@ -155,13 +155,17 @@
   }
 
   /* Pushed to the trailing edge so the counts line up in a column down the
-     sidebar rather than floating at the end of labels of differing width. */
-  .nav-badge {
-    @apply ml-auto inline-flex items-center justify-center min-w-6 h-5 px-1.5 rounded-full bg-white/8 text-xs font-bold text-txt-dim tabular-nums;
-  }
+     sidebar rather than floating at the end of labels of differing width.
 
-  .tab-btn.active .nav-badge {
-    @apply bg-primary/25 text-primary-text;
+     The count reads red on every tab, active or not — it is the one live
+     figure in the nav and the thing the eye should find. primary/12 is the
+     fill that clears 4.5:1 against --color-primary-text on both backdrops
+     it lands on: 5.20 on the panel, 4.59 over the active tab's own tint.
+     The active override this replaced used primary/25, which measured 3.89
+     and was failing. Use --color-primary-text, not --color-primary: the
+     latter is tuned as a fill and only reaches 4.38 as 12px text. */
+  .nav-badge {
+    @apply ml-auto inline-flex items-center justify-center min-w-6 h-5 px-1.5 rounded-full bg-primary/12 text-xs font-bold text-primary-text tabular-nums;
   }
 
   .refresh-btn {
@@ -305,7 +309,6 @@
 .app-nav { display: flex; flex-direction: column; gap: 2px; }
 .app-nav .tab-btn { width: 100%; }
 .app-nav .tab-btn::before { display: none; }
-.app-nav .tab-btn.active::after { content: ''; position: absolute; right: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--color-primary); }
 .sidebar-status { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 6px 2px; border-top: 1px solid var(--color-border); color: var(--color-accent); }
 .sidebar-status div { display: flex; flex-direction: column; }
 .sidebar-status strong { color: var(--color-txt); font-size: 10px; }
@@ -669,7 +672,10 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
   .app-nav { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; overflow: visible; }
   .app-nav::-webkit-scrollbar { display: none; }
   .app-nav .tab-btn { min-width: 0; min-height: 52px; flex-direction: column; justify-content: center; gap: 2px; padding: 4px 1px; font-size: 10px; }
-  .app-nav .tab-btn.active::after { inset: 2px auto auto 50%; width: 14px; height: 2px; border-radius: 6px; transform: translateX(-50%); }
+  /* The compact column has no room for the active fill to read, so the bar
+     is the active indicator here. On desktop the fill does that job and a
+     right-edge marker would sit under .nav-badge, so there is no ::after. */
+  .app-nav .tab-btn.active::after { content: ''; position: absolute; inset: 2px auto auto 50%; width: 14px; height: 2px; border-radius: 6px; background: var(--color-primary); transform: translateX(-50%); }
   .panel { min-height: 60vh; border-radius: 6px; }
   .room-tabs { align-items: stretch; gap: 4px; padding: 4px; }
   .room-tabs-label { display: none; }
