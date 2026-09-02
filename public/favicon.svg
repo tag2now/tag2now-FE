@@ -14,7 +14,7 @@
       <stop offset="60%" stop-color="#c8302e" stop-opacity="0.1"/>
       <stop offset="100%" stop-color="#c8302e" stop-opacity="0"/>
     </radialGradient>
-    <!-- Primary red for the "2", matching --color-primary / .header-accent -->
+    <!-- Primary red for the "2", matching the app's header accent -->
     <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#e63946"/>
       <stop offset="100%" stop-color="#a3222c"/>
