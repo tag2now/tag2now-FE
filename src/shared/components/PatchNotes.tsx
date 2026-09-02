@@ -60,7 +60,7 @@ function PatchNotesDialog({ onClose }: { onClose: () => void }) {
 
         <button
           onClick={dismiss}
-          className="refresh-btn w-full ml-0 mb-0 mt-2 rounded"
+          className="btn-ghost w-full mt-2"
         >
           다시 보지 않기
         </button>
