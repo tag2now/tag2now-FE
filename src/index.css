@@ -273,7 +273,12 @@
 .profile-editor input { width: 140px; min-height: 34px; padding: 0 9px; }
 .profile-editor button { width: 32px; padding: 0; }
 
-.app-layout { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; width: min(1180px, calc(100% - 32px)); margin: 18px auto 0; }
+/* The sidebar tracks the viewport instead of holding 190px, which at 768px
+   left it eating 26% of the width against 15% on a 1280px desktop. Measured
+   after: 150px/19.5% at 768px, 164px at 1024px, 190px from ~1190px up. The
+   16vw term only governs the middle of that range — below ~940px the 150px
+   floor takes over, which is what keeps the nav labels from wrapping. */
+.app-layout { display: grid; grid-template-columns: clamp(150px, 16vw, 190px) minmax(0, 1fr); gap: 16px; width: min(1180px, calc(100% - 32px)); margin: 18px auto 0; }
 .app-sidebar { position: sticky; top: 86px; align-self: start; padding: 10px; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-panel); }
 .sidebar-heading { display: flex; align-items: center; justify-content: space-between; padding: 5px 7px 10px; color: var(--color-txt-faint); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .app-nav { display: flex; flex-direction: column; gap: 3px; }
