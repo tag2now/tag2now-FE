@@ -7,6 +7,7 @@ import PatchNotes from "@/shared/components/PatchNotes";
 import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useRooms from "@/match/useRooms";
+import useReservations, { countOpen } from "@/reservation/useReservations";
 import Community from "@/community/Community";
 import Rooms from "@/match/Rooms";
 import type { Room } from "@/match/types";
@@ -39,6 +40,7 @@ export default function App() {
   const [tab, setTab] = useState<string | null>(null)
   const lb = useLeaderboard()
   const rooms = useRooms()
+  const reservations = useReservations()
 
   const groups = rooms.data?.groups ?? {}
   const roomsLoaded = rooms.data !== null
@@ -65,14 +67,22 @@ export default function App() {
   const isRoomTab = !FIXED_TABS.includes(activeTab as typeof FIXED_TABS[number])
   const activeRoomsData = isRoomTab ? { rooms: groups[activeTab] ?? [] } : null
 
+  // A badge is a live count, so it carries the same "unknown is not zero" rule
+  // as the room tabs: undefined until the first load settles, and the badge is
+  // simply not rendered until then. Zero is a real answer and stays visible -
+  // "매칭 0" tells the user the lobby is empty, which is worth knowing.
+  const openReservations = reservations.data && countOpen(reservations.data)
   const primaryTabs = useMemo(() => [
     { key: 'overview', label: '개요' },
-    { key: 'match', label: '매칭' },
-    { key: 'reservation', label: '예약' },
+    // `spoken` is the whole badge as assistive tech reads it, in one element:
+    // an accessible name is joined across element boundaries with a space, so
+    // splitting the number from its unit would say "방 3 개".
+    { key: 'match', label: '매칭', badge: roomsLoaded ? rooms.data?.total ?? 0 : undefined, spoken: (n: number) => ` 방 ${n}개` },
+    { key: 'reservation', label: '예약', badge: openReservations ?? undefined, spoken: (n: number) => ` 모집중 ${n}건` },
     { key: 'leaderboard', label: '리더보드' },
     { key: 'community', label: '커뮤니티' },
     { key: 'stats', label: '통계' },
-  ], [])
+  ], [roomsLoaded, rooms.data?.total, openReservations])
   const activePrimary = isRoomTab ? 'match' : activeTab
 
   const tabIcon = (key: string) => {
@@ -127,6 +137,12 @@ export default function App() {
                   >
                     <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
                     <span>{t.label}</span>
+                    {t.badge != null && (
+                      <span className="nav-badge">
+                        <span aria-hidden="true">{t.badge}</span>
+                        <span className="sr-only">{t.spoken(t.badge)}</span>
+                      </span>
+                    )}
                   </button>
                 )
               })()

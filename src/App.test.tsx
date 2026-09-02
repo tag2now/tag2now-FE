@@ -3,9 +3,10 @@ import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import App from "@/App";
 
 // Create stable mock functions accessible inside vi.mock factories
-const { mockedFetchLeaderboard, mockedFetchRoomsAll } = vi.hoisted(() => ({
+const { mockedFetchLeaderboard, mockedFetchRoomsAll, mockedFetchReservations } = vi.hoisted(() => ({
   mockedFetchLeaderboard: vi.fn(),
   mockedFetchRoomsAll: vi.fn(),
+  mockedFetchReservations: vi.fn(),
 }))
 
 // Overview fetches four sources of its own; these tests are about tab wiring,
@@ -22,6 +23,13 @@ vi.mock("@/shared/hooks/useLeaderboard", async () => {
     default: () => usePolledData(mockedFetchLeaderboard as any, null),
   }
 })
+
+// App polls reservations for the nav badge. Mock the request, not the hook, so
+// countOpen still runs against real payloads.
+vi.mock('@/reservation/reservationApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/reservation/reservationApi')>()),
+  fetchReservations: mockedFetchReservations,
+}))
 
 vi.mock('@/match/useRooms', async () => {
   return {
@@ -72,13 +80,23 @@ async function renderApp(tab?: string) {
   })
   if (!tab) return
   await act(async () => {
-    fireEvent.click(screen.getByRole('tab', { name: tab }))
+    // Anchored prefix, not the whole name: the 매칭 and 예약 tabs carry a count
+    // badge, so their accessible name trails a figure that changes per fixture.
+    fireEvent.click(screen.getByRole('tab', { name: new RegExp(`^${tab}`) }))
   })
 }
+
+const reservation = (over: Record<string, unknown> = {}) => ({
+  id: 1, start_at: '2026-01-01T12:00:00+09:00', duration_minutes: 60,
+  host_display_name: 'Host', host_ranks: [], match_type: 'rank_match',
+  capacity: 2, memo: '', status: 'open', participant_count: 0,
+  created_at: '2026-01-01T00:00:00+09:00', ...over,
+})
 
 beforeEach(() => {
   mockedFetchLeaderboard.mockResolvedValue(LEADERBOARD_DATA as any)
   mockedFetchRoomsAll.mockResolvedValue(ROOMS_DATA as any)
+  mockedFetchReservations.mockResolvedValue([reservation()] as any)
 })
 
 afterEach(() => {
@@ -184,11 +202,11 @@ describe('App', () => {
 
     unmount!()
 
-    // Rooms is the one App-level poll; the leaderboard passes a null interval
-    // and never registers one. The overview — now the default tab — fetches
-    // once without polling, and reservation's interval only runs while that tab
-    // is mounted.
-    expect(clearIntervalSpy).toHaveBeenCalledTimes(1)
+    // Two App-level polls — rooms, and reservations for the nav badge. The
+    // leaderboard passes a null interval and never registers one, and the
+    // overview fetches once without polling. The Reservation tab keeps its own
+    // faster interval, but that one lives and dies with the tab.
+    expect(clearIntervalSpy).toHaveBeenCalledTimes(2)
     clearIntervalSpy.mockRestore()
   })
 
@@ -250,11 +268,7 @@ describe('App', () => {
   it('does not show the rooms error on the reservation tab', async () => {
     mockedFetchRoomsAll.mockRejectedValue(new Error('NOT FOUND'))
 
-    await renderApp()
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole('tab', { name: '예약' }))
-    })
+    await renderApp('예약')
 
     expect(screen.queryByText('NOT FOUND')).not.toBeInTheDocument()
   })
@@ -290,4 +304,53 @@ describe('App', () => {
       expect(screen.getByText('Leaderboard fetch failed: 500')).toBeInTheDocument()
     })
   })
+
+  describe('nav count badges', () => {
+    it('counts every room across groups on the match tab', async () => {
+      mockedFetchRoomsAll.mockResolvedValue({
+        total: 3, totalUsers: 6,
+        groups: { rank_match: [{}, {}], player_match: [{}] },
+      } as any)
+
+      await renderApp()
+
+      expect(await screen.findByRole('tab', { name: '매칭 방 3개' })).toBeInTheDocument()
+    })
+
+    it('counts only reservations a user can still join', async () => {
+      mockedFetchReservations.mockResolvedValue([
+        reservation({ id: 1 }),
+        reservation({ id: 2, capacity: 2, participant_count: 2 }),  // full
+        reservation({ id: 3, status: 'matched' }),                  // no longer open
+        reservation({ id: 4 }),
+      ] as any)
+
+      await renderApp()
+
+      expect(await screen.findByRole('tab', { name: '예약 모집중 2건' })).toBeInTheDocument()
+    })
+
+    it('shows no badge until the first load settles', async () => {
+      // A pending fetch is not an assertion that there is nothing to see, so the
+      // badge stays absent rather than claiming zero.
+      mockedFetchRoomsAll.mockReturnValue(new Promise(() => {}) as any)
+      mockedFetchReservations.mockReturnValue(new Promise(() => {}) as any)
+
+      await renderApp()
+
+      expect(screen.getByRole('tab', { name: '매칭' })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: '예약' })).toBeInTheDocument()
+    })
+
+    it('keeps a zero badge, which is a real answer', async () => {
+      mockedFetchRoomsAll.mockResolvedValue({ total: 0, totalUsers: 0, groups: {} } as any)
+      mockedFetchReservations.mockResolvedValue([] as any)
+
+      await renderApp()
+
+      expect(await screen.findByRole('tab', { name: '매칭 방 0개' })).toBeInTheDocument()
+      expect(await screen.findByRole('tab', { name: '예약 모집중 0건' })).toBeInTheDocument()
+    })
+  })
+
 })

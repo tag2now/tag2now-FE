@@ -154,6 +154,16 @@
     @apply text-primary-text bg-primary/12 border-primary/25;
   }
 
+  /* Pushed to the trailing edge so the counts line up in a column down the
+     sidebar rather than floating at the end of labels of differing width. */
+  .nav-badge {
+    @apply ml-auto inline-flex items-center justify-center min-w-6 h-5 px-1.5 rounded-full bg-white/8 text-xs font-bold text-txt-dim tabular-nums;
+  }
+
+  .tab-btn.active .nav-badge {
+    @apply bg-primary/25 text-primary-text;
+  }
+
   .refresh-btn {
     @apply inline-flex items-center justify-center size-8 bg-transparent border border-border-light text-txt-dim rounded-md cursor-pointer transition-colors hover:bg-primary-glow hover:border-primary-dim hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed;
   }
