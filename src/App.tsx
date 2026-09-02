@@ -11,8 +11,10 @@ import Community from "@/community/Community";
 import Rooms from "@/match/Rooms";
 import type { Room } from "@/match/types";
 import Reservation from "@/reservation/Reservation";
+import Overview from "@/overview/Overview";
 import {
   BarChart3,
+  LayoutDashboard,
   CalendarDays,
   ChevronRight,
   MessageSquareText,
@@ -20,6 +22,10 @@ import {
   Swords,
   Trophy,
 } from 'lucide-react'
+
+// Tabs that are not room groups. Named once so the room-tab test, the tab
+// list, and the primary nav cannot disagree about what counts as a room tab.
+const FIXED_TABS = ['overview', 'reservation', 'leaderboard', 'community', 'stats'] as const
 
 // Before the first successful load the count is unknown, not zero - "(0)" would
 // assert there are no rooms while the fetch is still in flight or has failed.
@@ -45,6 +51,7 @@ export default function App() {
 
   const tabs = useMemo(
     () => [
+      { key: 'overview', label: '개요' },
       ...groupKeys.map((key) => ({ key, label: `${formatGroupName(key)} (${roomCountLabel(groups[key], roomsLoaded)})` })),
       { key: 'reservation', label: '예약' },
       { key: 'leaderboard', label: '리더보드' },
@@ -54,11 +61,12 @@ export default function App() {
     [groupKeys, groups, roomsLoaded],
   )
 
-  const activeTab = tab && tabs.some((item) => item.key === tab) ? tab : tabs[0]?.key ?? 'leaderboard'
-  const isRoomTab = !['reservation', 'leaderboard', 'community', 'stats'].includes(activeTab)
+  const activeTab = tab && tabs.some((item) => item.key === tab) ? tab : tabs[0]?.key ?? 'overview'
+  const isRoomTab = !FIXED_TABS.includes(activeTab as typeof FIXED_TABS[number])
   const activeRoomsData = isRoomTab ? { rooms: groups[activeTab] ?? [] } : null
 
   const primaryTabs = useMemo(() => [
+    { key: 'overview', label: '개요' },
     { key: 'match', label: '매칭' },
     { key: 'reservation', label: '예약' },
     { key: 'leaderboard', label: '리더보드' },
@@ -68,6 +76,7 @@ export default function App() {
   const activePrimary = isRoomTab ? 'match' : activeTab
 
   const tabIcon = (key: string) => {
+    if (key === 'overview') return LayoutDashboard
     if (key === 'match') return Swords
     if (key === 'reservation') return CalendarDays
     if (key === 'leaderboard') return Trophy
@@ -172,6 +181,15 @@ export default function App() {
                 groupKey={activeTab}
                 lastUpdated={rooms.lastUpdated}
                 leaderboardEntries={lb.data?.entries}
+              />
+            )}
+            {activeTab === 'overview' && (
+              <Overview
+                rooms={rooms.data}
+                roomsLoading={rooms.loading}
+                leaderboardEntries={lb.data?.entries}
+                leaderboardTotal={lb.data?.total_records}
+                onNavigate={setTab}
               />
             )}
             {activeTab === 'leaderboard' && <Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />}

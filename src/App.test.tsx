@@ -8,6 +8,13 @@ const { mockedFetchLeaderboard, mockedFetchRoomsAll } = vi.hoisted(() => ({
   mockedFetchRoomsAll: vi.fn(),
 }))
 
+// Overview fetches four sources of its own; these tests are about tab wiring,
+// so stub the hook and keep the module's constants intact.
+vi.mock('@/overview/useOverview', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/overview/useOverview')>()),
+  default: () => ({ data: { daily: [], weeklyTop: [], posts: [], reservations: [] }, loading: false, refreshing: false, error: null, lastUpdated: null, refresh: vi.fn() }),
+}))
+
 const { default: usePolledData } = await vi.importActual<typeof import('@/shared/hooks/usePolledData')>('@/shared/hooks/usePolledData')
 vi.mock("@/shared/hooks/useLeaderboard", async () => {
   return {
@@ -57,9 +64,15 @@ const ROOMS_DATA = {
   },
 } as const
 
-async function renderApp() {
+/** 개요 is now the landing tab, so a test about a room, the leaderboard, or the
+ * reservation tab has to get there first. */
+async function renderApp(tab?: string) {
   await act(async () => {
     render(<App />)
+  })
+  if (!tab) return
+  await act(async () => {
+    fireEvent.click(screen.getByRole('tab', { name: tab }))
   })
 }
 
@@ -81,12 +94,18 @@ describe('App', () => {
     expect(mockedFetchRoomsAll).toHaveBeenCalledOnce()
   })
 
-  it('default tab is rank match and shows its rooms content', async () => {
+  it('default tab is the overview', async () => {
     await renderApp()
+
+    expect(screen.getByRole('tab', { name: '개요' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('heading', { name: '한눈에 보기' })).toBeInTheDocument()
+  })
+
+  it('the match tab shows rooms content', async () => {
+    await renderApp('매칭')
 
     expect(screen.getByRole('tab', { name: '랭매 (1)' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('RoomOwner')).toBeInTheDocument()
-    expect(screen.queryByText('TestPlayer')).not.toBeInTheDocument()
   })
 
   it('clicking Leaderboard tab switches to leaderboard view', async () => {
@@ -101,7 +120,7 @@ describe('App', () => {
   })
 
   it('clicking Refresh on room tab calls fetchRoomsAll again', async () => {
-    await renderApp()
+    await renderApp('매칭')
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: '새로고침' }))
@@ -165,10 +184,11 @@ describe('App', () => {
 
     unmount!()
 
-    // rooms and leaderboard: the two App-level polls. Reservation owns a third
-    // interval, but it only runs while that tab is mounted and rank match is
-    // the default tab.
-    expect(clearIntervalSpy).toHaveBeenCalledTimes(2)
+    // Rooms is the one App-level poll; the leaderboard passes a null interval
+    // and never registers one. The overview — now the default tab — fetches
+    // once without polling, and reservation's interval only runs while that tab
+    // is mounted.
+    expect(clearIntervalSpy).toHaveBeenCalledTimes(1)
     clearIntervalSpy.mockRestore()
   })
 
@@ -185,7 +205,7 @@ describe('App', () => {
     mockedFetchLeaderboard.mockReturnValue(new Promise(() => {}))
     mockedFetchRoomsAll.mockReturnValue(new Promise(() => {}))
 
-    render(<App />)
+    await renderApp('매칭')
 
     expect(screen.getByText('방 목록 불러오는 중...')).toBeInTheDocument()
   })
@@ -193,7 +213,7 @@ describe('App', () => {
   it('auto-refresh keeps content visible and shows loading bar instead of loading message', async () => {
     vi.useFakeTimers()
 
-    await renderApp()
+    await renderApp('매칭')
 
     // Data is visible after initial load
     expect(screen.getByText('RoomOwner')).toBeInTheDocument()
@@ -221,7 +241,7 @@ describe('App', () => {
   it('keeps room tabs when the rooms fetch fails', async () => {
     mockedFetchRoomsAll.mockRejectedValue(new Error('NOT FOUND'))
 
-    await renderApp()
+    await renderApp('매칭')
 
     expect(screen.getByRole('tab', { name: '랭매 (—)' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: '플매 (—)' })).toBeInTheDocument()
@@ -242,13 +262,13 @@ describe('App', () => {
   it('shows the rooms error inside the room tab', async () => {
     mockedFetchRoomsAll.mockRejectedValue(new Error('NOT FOUND'))
 
-    await renderApp()
+    await renderApp('매칭')
 
     expect(screen.getByText('NOT FOUND')).toBeInTheDocument()
   })
 
   it('labels a group the API omitted as empty once rooms load', async () => {
-    await renderApp()
+    await renderApp('매칭')
 
     // ROOMS_DATA carries rank_match only; player_match is a known group.
     expect(screen.getByRole('tab', { name: '플매 (0)' })).toBeInTheDocument()
