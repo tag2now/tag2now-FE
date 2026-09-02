@@ -12,7 +12,7 @@ export default function KpiCard({ icon: Icon, label, value, hint, live }: KpiCar
   return (
     <div className="kpi-card">
       <div className="kpi-card-head">
-        <span className="kpi-card-icon"><Icon size={14} aria-hidden="true" /></span>
+        <span className="kpi-card-icon"><Icon size={20} aria-hidden="true" /></span>
         <span className="kpi-card-label">{label}</span>
         {live && <span className="kpi-card-live" aria-label="실시간 갱신" />}
       </div>
