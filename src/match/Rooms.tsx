@@ -19,7 +19,7 @@ interface RoomsProps {
 
 export default function Rooms({ data, loading, refreshing, error, onRefresh, groupKey, lastUpdated, leaderboardEntries }: RoomsProps) {
   const updatedAgo = useTimeSince(lastUpdated)
-  const s = panelStatus(loading, error, '방 목록 불러오는 중...')
+  const s = panelStatus(loading, error, '방 목록 불러오는 중...', onRefresh)
   if (s) return s
   if (!data) return null
 

@@ -65,7 +65,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
       <div className="header-live" aria-label={`${totalUsers ?? 0}명 온라인`}>
         <Radio size={15} aria-hidden="true" />
         <span>Live</span>
-        {totalUsers != null && totalUsers > 0 && <strong aria-label="total users">{totalUsers}</strong>}
+        {totalUsers != null && totalUsers > 0 && <strong>{totalUsers}</strong>}
       </div>
 
       <div className="profile-control">

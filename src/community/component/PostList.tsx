@@ -99,7 +99,7 @@ export default function PostList({
               <AuthorBadge name={post.author} entries={leaderboardEntries} className="hidden sm:inline-flex shrink-0" />
               <span className="sm:hidden text-xs truncate max-w-20 sm:max-w-none">{post.author}</span>
               <span className="hidden sm:flex gap-2 text-xs text-txt-dim shrink-0">
-                <span className="inline-flex items-center gap-1 text-primary"><ThumbsUp size={12} /> {post.thumbs_up}</span>
+                <span className="inline-flex items-center gap-1 text-primary-text"><ThumbsUp size={12} /> {post.thumbs_up}</span>
                 <span className="inline-flex items-center gap-1"><ThumbsDown size={12} /> {post.thumbs_down}</span>
               </span>
               <span className="hidden sm:inline text-xs text-txt-dim shrink-0">{formatTimeAgo(post.created_at)}</span>

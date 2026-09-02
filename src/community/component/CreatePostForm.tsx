@@ -29,7 +29,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
           <div className="section-title"><span className="section-icon"><FilePenLine size={15} /></span><div><h3>새 글 작성</h3><p>정보를 공유하거나 함께할 상대를 찾아보세요</p></div></div>
             <button
                 onClick={onCancel}
-                className="inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary text-xs font-bold cursor-pointer hover:text-white"
+                className="inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary-text text-xs font-bold cursor-pointer hover:text-white"
             >
                 <ArrowLeft size={14} aria-hidden="true" /> 목록
             </button>

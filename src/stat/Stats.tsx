@@ -291,7 +291,7 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
             aria-selected={subTab === t.key}
             className={`${
               subTab === t.key
-                ? 'border-primary text-primary'
+                ? 'border-primary text-primary-text'
                 : 'border-transparent text-txt-dim hover:text-txt'
             }`}
           >
@@ -315,15 +315,15 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
             </div>
             <div className="chart-grid">
             <section aria-labelledby="hourly-heading" className="chart-panel">
-              <h2 id="hourly-heading">
+              <h4 id="hourly-heading">
                 시간대별 접속자 <span className="text-2xs font-normal opacity-60">(KST)</span>
-              </h2>
+              </h4>
               <HourlyChart data={hourly} />
             </section>
             <section aria-labelledby="daily-heading" className="chart-panel">
-              <h2 id="daily-heading">
+              <h4 id="daily-heading">
                 일별 접속자
-              </h2>
+              </h4>
               <DailyChart data={daily} />
             </section>
             </div>

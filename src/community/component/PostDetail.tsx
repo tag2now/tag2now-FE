@@ -61,7 +61,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
     <article className="post-detail">
       <button
         onClick={onBack}
-        className="mb-4 inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary text-xs font-bold cursor-pointer hover:text-white"
+        className="mb-4 inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary-text text-xs font-bold cursor-pointer hover:text-white"
       >
         <ArrowLeft size={14} aria-hidden="true" /> 목록
       </button>

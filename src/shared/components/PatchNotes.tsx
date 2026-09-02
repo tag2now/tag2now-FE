@@ -47,9 +47,9 @@ function PatchNotesDialog({ onClose }: { onClose: () => void }) {
 
         {PATCH_NOTES.map(note => (
           <div key={note.version} className="mb-4">
-            <h2 className="text-primary font-bold text-sm tracking-[0.12em] uppercase m-0 mb-2">
+            <h3 className="text-primary-text font-bold text-sm tracking-[0.12em] uppercase m-0 mb-2">
               v{note.version}
-            </h2>
+            </h3>
             <ul className="list-disc pl-5 m-0 space-y-1">
               {note.items.map((item, i) => (
                 <li key={i} className="whitespace-pre-wrap text-txt text-md">{item}</li>

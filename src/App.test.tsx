@@ -121,7 +121,7 @@ describe('App', () => {
     })
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+      fireEvent.click(screen.getByRole('button', { name: '새로고침' }))
     })
 
     expect(mockedFetchLeaderboard).toHaveBeenCalledTimes(2)
@@ -177,7 +177,7 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Tag 2 Now' })).toBeInTheDocument()
     expect(screen.getByText('Live')).toBeInTheDocument()
-    expect(screen.getByLabelText('total users')).toHaveTextContent('2')
+    expect(screen.getByLabelText('2명 온라인')).toHaveTextContent('2')
   })
 
   it('shows loading state initially when fetch is slow', async () => {
@@ -236,7 +236,7 @@ describe('App', () => {
       fireEvent.click(screen.getByRole('tab', { name: '예약' }))
     })
 
-    expect(screen.queryByText('Error: NOT FOUND')).not.toBeInTheDocument()
+    expect(screen.queryByText('NOT FOUND')).not.toBeInTheDocument()
   })
 
   it('shows the rooms error inside the room tab', async () => {
@@ -244,7 +244,7 @@ describe('App', () => {
 
     await renderApp()
 
-    expect(screen.getByText('Error: NOT FOUND')).toBeInTheDocument()
+    expect(screen.getByText('NOT FOUND')).toBeInTheDocument()
   })
 
   it('labels a group the API omitted as empty once rooms load', async () => {
@@ -267,7 +267,7 @@ describe('App', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Error: Leaderboard fetch failed: 500')).toBeInTheDocument()
+      expect(screen.getByText('Leaderboard fetch failed: 500')).toBeInTheDocument()
     })
   })
 })

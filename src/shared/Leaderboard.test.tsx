@@ -20,12 +20,12 @@ const rowNames = () =>
 describe('Leaderboard', () => {
   it('shows loading message when loading=true', () => {
     render(<Leaderboard loading={true} data={null} error={null} />)
-    expect(screen.getByText('Loading leaderboard...')).toBeInTheDocument()
+    expect(screen.getByText('랭킹 불러오는 중...')).toBeInTheDocument()
   })
 
   it('shows error message when error is provided', () => {
     render(<Leaderboard loading={false} data={null} error="Network failure" />)
-    expect(screen.getByText('Error: Network failure')).toBeInTheDocument()
+    expect(screen.getByText('Network failure')).toBeInTheDocument()
   })
 
   it('renders nothing when data is null and not loading', () => {

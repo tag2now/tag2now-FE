@@ -19,7 +19,7 @@ type MatchingOverviewProps = {
 
 export default function MatchingOverview({ groups, loading, refreshing, error, onRefresh, lastUpdated, leaderboardEntries }: MatchingOverviewProps) {
   const updatedAgo = useTimeSince(lastUpdated)
-  const status = panelStatus(loading, error, '방 목록 불러오는 중...')
+  const status = panelStatus(loading, error, '방 목록 불러오는 중...', onRefresh)
   const groupKeys = [
     ...GROUP_ORDER.filter((key) => key in groups),
     ...Object.keys(groups).filter((key) => !GROUP_ORDER.includes(key)),

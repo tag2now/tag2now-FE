@@ -11,7 +11,7 @@ describe('Rooms', () => {
 
   it('shows error message when error is provided', () => {
     render(<Rooms loading={false} data={null} error="Connection refused" />)
-    expect(screen.getByText('Error: Connection refused')).toBeInTheDocument()
+    expect(screen.getByText('Connection refused')).toBeInTheDocument()
   })
 
   it('renders nothing when data is null and not loading', () => {

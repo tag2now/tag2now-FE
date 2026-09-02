@@ -30,7 +30,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
     [entries, search, character, collapsed],
   )
 
-  const s = panelStatus(loading, error, 'Loading leaderboard...')
+  const s = panelStatus(loading, error, '랭킹 불러오는 중...', onRefresh)
   if (s) return s
   if (!data) return null
 
@@ -43,7 +43,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
           <div><h3>전체 랭킹</h3><p>등록 플레이어 {data.total_records}명</p><span className="sr-only">Total records: {data.total_records}</span></div>
         </div>
         {onRefresh && (
-          <button className="refresh-btn" aria-label="Refresh" onClick={onRefresh} disabled={refreshing}>
+          <button className="refresh-btn" aria-label="새로고침" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw size={14} aria-hidden="true" />
           </button>
         )}
