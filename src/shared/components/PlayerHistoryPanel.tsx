@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react'
 import { GET } from '@/shared/util/api'
+import useModalDialog from '@/shared/hooks/useModalDialog'
 import CharCell from '@/shared/components/CharCell'
 import ActiveHoursClock from '@/shared/components/ActiveHoursClock'
 import type { LeaderboardEntry } from '@/shared/types'
@@ -35,6 +36,7 @@ interface Props {
 }
 
 export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: Props) {
+  const dialogRef = useModalDialog<HTMLDivElement>(onClose)
   const [days, setDays] = useState<Days>(30)
   const [data, setData] = useState<PlayerHistory | null>(null)
   const [loading, setLoading] = useState(true)
@@ -68,6 +70,7 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
   return (
     <div className="modal-backdrop history-backdrop" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="history-dialog"
         role="dialog"
         aria-modal="true"

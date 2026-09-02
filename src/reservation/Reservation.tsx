@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { WheelPicker, WheelPickerWrapper, type WheelPickerOption } from '@ncdai/react-wheel-picker'
 import '@ncdai/react-wheel-picker/style.css'
 import RankImage from '@/shared/components/RankImage'
+import useModalDialog from '@/shared/hooks/useModalDialog'
 import { getUsername } from '@/shared/util/cookie'
 import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
 import { CalendarPlus, Check, ChevronDown, Clock3, Filter, LogIn, UserMinus, X } from 'lucide-react'
@@ -123,6 +124,45 @@ function RankSummary({ ranks, imageClassName = 'h-8' }: { ranks: string[], image
     <RankImage rankInfo={{ name: sortedRanks[0], tier: sortedRanks[0] }} className={`${imageClassName} w-auto object-contain`} />
     {ranks.length > 1 && <span aria-label={`추가 계급 ${ranks.length - 1}개`} className="absolute left-full ml-1 flex h-6 min-w-6 items-center justify-center rounded-full border border-primary-dim bg-primary/10 px-1 text-xs font-black text-primary">+{ranks.length - 1}</span>}
   </span>
+}
+
+// Mounts with the form so the focus trap starts when the dialog opens, not when
+// the page does. Reservation() stays mounted across the showForm toggle, so a
+// hook called there would see a null ref and never re-run.
+function ReservationFormDialog({ onClose, onSubmit, children }: {
+  onClose: () => void
+  onSubmit: (event: React.FormEvent) => void
+  children: React.ReactNode
+}) {
+  const dialogRef = useModalDialog<HTMLFormElement>(onClose)
+  return (
+    <div className="modal-backdrop">
+      <form ref={dialogRef} onSubmit={onSubmit} role="dialog" aria-modal="true" aria-labelledby="reservation-modal-title" className="reservation-modal grid sm:grid-cols-2">
+        {children}
+      </form>
+    </div>
+  )
+}
+
+function TimePickerDialog({ draftTime, setDraftTime, onCancel, onConfirm }: {
+  draftTime: string
+  setDraftTime: (time: string) => void
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  const dialogRef = useModalDialog<HTMLDivElement>(onCancel)
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-bg-deep/75 p-4 backdrop-blur-sm">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="시간 선택" className="w-full max-w-xs border border-primary-dim bg-bg-panel p-3 shadow-[0_12px_40px_rgba(0,0,0,0.75)]">
+        <WheelPickerWrapper className="relative h-48 bg-bg-row">
+          <span aria-hidden="true" className="pointer-events-none absolute inset-x-2 top-1/2 z-30 h-[30px] -translate-y-1/2 border-y border-primary-dim" />
+          <WheelPicker value={draftTime.split(':')[0]} onValueChange={(hour) => setDraftTime(`${hour}:${draftTime.split(':')[1]}`)} options={hourOptions} infinite visibleCount={20} classNames={{ optionItem: 'font-display text-base font-medium text-txt-dim', highlightWrapper: 'z-20 bg-bg-row text-primary', highlightItem: 'font-display text-base font-medium text-primary' }} />
+          <WheelPicker value={draftTime.split(':')[1]} onValueChange={(minute) => setDraftTime(`${draftTime.split(':')[0]}:${minute}`)} options={minuteOptions} infinite visibleCount={20} classNames={{ optionItem: 'font-display text-base font-medium text-txt-dim', highlightWrapper: 'z-20 bg-bg-row text-primary', highlightItem: 'font-display text-base font-medium text-primary' }} />
+        </WheelPickerWrapper>
+        <div className="mt-2 flex justify-end gap-2"><button type="button" className="btn-ghost" onClick={onCancel}>취소</button><button type="button" className="btn-primary" onClick={onConfirm}>선택 완료</button></div>
+      </div>
+    </div>
+  )
 }
 
 export default function Reservation() {
@@ -286,8 +326,7 @@ export default function Reservation() {
         </div>
 
         {showForm && (
-          <div className="modal-backdrop">
-          <form onSubmit={handleSubmit} role="dialog" aria-modal="true" aria-labelledby="reservation-modal-title" className="reservation-modal grid sm:grid-cols-2">
+          <ReservationFormDialog onClose={closeForm} onSubmit={handleSubmit}>
             <div className="reservation-modal-header col-span-full">
               <div><p className="panel-meta mb-1 text-primary">{editingId === null ? 'NEW MATCH REQUEST' : 'EDIT MATCH REQUEST'}</p><h3 id="reservation-modal-title" className="font-display text-xl font-black tracking-[0.06em] text-white">{editingId === null ? '예약 추가' : '예약 수정'}</h3><p className="modal-description">시간과 매치 조건을 설정해 참가자를 모집하세요.</p></div>
               <button type="button" aria-label="닫기" className="modal-close" onClick={closeForm}><X size={16} /></button>
@@ -297,16 +336,12 @@ export default function Reservation() {
               <button type="button" aria-label={`시작 시각 ${form.time}`} aria-haspopup="dialog" aria-expanded={timePickerOpen} onClick={() => { setDraftTime(form.time); setTimePickerOpen((open) => !open) }} className="input-base control-button w-full font-bold">
                 <span>{form.time}</span><Clock3 size={15} aria-hidden="true" className="text-primary" />
               </button>
-              {timePickerOpen && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-bg-deep/75 p-4 backdrop-blur-sm">
-              <div role="dialog" aria-modal="true" aria-label="시간 선택" className="w-full max-w-xs border border-primary-dim bg-bg-panel p-3 shadow-[0_12px_40px_rgba(0,0,0,0.75)]">
-                <WheelPickerWrapper className="relative h-48 bg-bg-row">
-                  <span aria-hidden="true" className="pointer-events-none absolute inset-x-2 top-1/2 z-30 h-[30px] -translate-y-1/2 border-y border-primary-dim" />
-                  <WheelPicker value={draftTime.split(':')[0]} onValueChange={(hour) => setDraftTime(`${hour}:${draftTime.split(':')[1]}`)} options={hourOptions} infinite visibleCount={20} classNames={{ optionItem: 'font-display text-base font-medium text-txt-dim', highlightWrapper: 'z-20 bg-bg-row text-primary', highlightItem: 'font-display text-base font-medium text-primary' }} />
-                  <WheelPicker value={draftTime.split(':')[1]} onValueChange={(minute) => setDraftTime(`${draftTime.split(':')[0]}:${minute}`)} options={minuteOptions} infinite visibleCount={20} classNames={{ optionItem: 'font-display text-base font-medium text-txt-dim', highlightWrapper: 'z-20 bg-bg-row text-primary', highlightItem: 'font-display text-base font-medium text-primary' }} />
-                </WheelPickerWrapper>
-                <div className="mt-2 flex justify-end gap-2"><button type="button" className="btn-ghost" onClick={() => setTimePickerOpen(false)}>취소</button><button type="button" className="btn-primary" onClick={() => { setForm({ ...form, time: draftTime }); setTimePickerOpen(false) }}>선택 완료</button></div>
-              </div>
-              </div>}
+              {timePickerOpen && <TimePickerDialog
+                draftTime={draftTime}
+                setDraftTime={setDraftTime}
+                onCancel={() => setTimePickerOpen(false)}
+                onConfirm={() => { setForm({ ...form, time: draftTime }); setTimePickerOpen(false) }}
+              />}
             </fieldset>
             <fieldset className="modal-field">
               <legend className="field-label">매치 종류</legend>
@@ -362,8 +397,7 @@ export default function Reservation() {
             </label>
             {noticeBanner && <div className="col-span-full">{noticeBanner}</div>}
             <div className="reservation-modal-actions col-span-full"><button className="btn-ghost" type="button" onClick={closeForm}>취소</button><button className="btn-primary" type="submit" disabled={form.type === '랭크매치' && form.ranks.length === 0}><CalendarPlus size={14} /> {editingId === null ? '예약 등록' : '예약 수정'}</button></div>
-          </form>
-          </div>
+          </ReservationFormDialog>
         )}
 
         <div className="reservation-filter-bar">

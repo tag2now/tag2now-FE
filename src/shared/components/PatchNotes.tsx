@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { PATCH_NOTES, LATEST_PATCH_VERSION } from '@/config/patchNotes'
+import useModalDialog from '@/shared/hooks/useModalDialog'
 import { BellRing, X } from 'lucide-react'
 
 const LS_KEY = 'ttt2-patch-dismissed'
@@ -9,42 +10,20 @@ export default function PatchNotes() {
     return localStorage.getItem(LS_KEY) !== LATEST_PATCH_VERSION
   })
 
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const previousFocusRef = useRef<HTMLElement | null>(null)
-
-  useEffect(() => {
-    if (!visible) return
-    previousFocusRef.current = document.activeElement as HTMLElement
-    const dialog = dialogRef.current
-    dialog?.focus()
-
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { close(); return }
-      if (e.key !== 'Tab' || !dialog) return
-      const focusable = dialog.querySelectorAll<HTMLElement>('button, [href], input, [tabindex]:not([tabindex="-1"])')
-      const first = focusable[0], last = focusable[focusable.length - 1]
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() }
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [visible])
-
   if (!visible) return null
+  return <PatchNotesDialog onClose={() => setVisible(false)} />
+}
 
-  function close() {
-    setVisible(false)
-    previousFocusRef.current?.focus()
-  }
+function PatchNotesDialog({ onClose }: { onClose: () => void }) {
+  const dialogRef = useModalDialog<HTMLDivElement>(onClose)
 
   function dismiss() {
     localStorage.setItem(LS_KEY, LATEST_PATCH_VERSION)
-    setVisible(false)
-    previousFocusRef.current?.focus()
+    onClose()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={close} role="presentation">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose} role="presentation">
       <div
         ref={dialogRef}
         role="dialog"
@@ -55,7 +34,7 @@ export default function PatchNotes() {
         onClick={e => e.stopPropagation()}
       >
         <button
-          onClick={close}
+          onClick={onClose}
           className="absolute top-3 right-3 bg-transparent border-none text-txt-dim hover:text-txt text-4xl cursor-pointer leading-none p-2"
           aria-label="Close"
         >
