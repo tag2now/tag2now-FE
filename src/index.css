@@ -1,15 +1,5 @@
 @import "tailwindcss";
 
-.text-xs {
-  font-size: var(--text-xs); /* 0.75rem (12px) */
-  line-height: var(--text-xs--line-height); /* calc(1 / 0.75) */
-}
-
-.text-2xs {
-  font-size: 0.75rem;
-  line-height: calc(1/0.75);
-}
-
 /* ─── Design tokens ───────────────────────────────────────── */
 @theme {
   --color-bg-deep: #0c0c0e;
@@ -48,7 +38,10 @@
   /* Spacing scale. Every gap/padding/margin in this file resolves to one of
      these six steps. Before these existed the file used every integer from
      1-14px (250+ declarations), so each new component re-invented its own
-     rhythm. Pick the nearest step rather than adding a value. */
+     rhythm. Pick the nearest step rather than adding a value.
+     These are documentation, not utilities: Tailwind's spacing namespace is
+     `--spacing` (a single multiplier), so named steps cannot generate
+     `p-*`/`gap-*` classes. The rules below use the literal px. */
   --space-3xs: 2px;
   --space-2xs: 4px;
   --space-xs: 6px;
@@ -60,15 +53,21 @@
   --radius-control: 6px;
   --radius-panel: 8px;
 
-  --font-size-2xs: 0.7rem;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.85rem;
-  --font-size-base: 0.95rem;
-  --font-size-md: 1.05rem;
-  --font-size-lg: 1.15rem;
+  /* Type scale. Tailwind 4 reads font sizes from the `--text-*` namespace;
+     these were declared as `--font-size-*`, which registers nothing - so
+     `text-sm`/`text-base`/`text-lg` silently fell back to Tailwind's stock
+     sizes and `text-md` matched no rule at all, inheriting the 13px body.
+     Values below are the sizes those utilities actually rendered at, so
+     naming them changes no pixels; resizing the scale is a separate step. */
+  --text-2xs: 0.75rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 0.8125rem;
+  --text-lg: 1.125rem;
   --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
   --font-display: "Pretendard Variable", Pretendard, system-ui, sans-serif;
-  --font-size-display: clamp(1.05rem, 4vw, 1.8rem);
+  --text-display: clamp(1.05rem, 4vw, 1.8rem);
 }
 
 /* ─── Base ────────────────────────────────────────────────── */
