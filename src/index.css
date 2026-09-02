@@ -30,6 +30,12 @@
   /* Tertiary text: eyebrows, field hints, chart labels. Clears 4.5:1 on
      every surface it lands on, the #1b1b1f input fill included (5.29). */
   --color-txt-faint: #8e8e98;
+  /* The brand red as *text*. --color-primary is tuned to be a fill and only
+     reaches 4.38 on bg-panel and 4.22 under the dialog veil, so the 9px
+     eyebrows set in it were failing. Same hue (355°) and saturation (76%),
+     lightness raised 56%→66%, which clears 4.5:1 on every surface (5.19 on
+     bg-row, the tightest). Keep --color-primary for fills, borders and icons. */
+  --color-primary-text: #ea6671;
   --color-primary-hover: rgba(230, 57, 70, 0.10);
   --color-tier-green: #4ade80;
   --color-tier-yellow: #facc15;
@@ -194,7 +200,7 @@
   }
 
   .btn-primary {
-    @apply inline-flex min-h-8 items-center justify-center gap-1.5 px-3 bg-primary text-white text-xs font-bold border border-primary rounded-md cursor-pointer transition-colors hover:bg-primary/85 disabled:opacity-50;
+    @apply inline-flex min-h-8 items-center justify-center gap-1.5 px-3 bg-primary text-bg-deep text-xs font-bold border border-primary rounded-md cursor-pointer transition-colors hover:bg-primary/85 disabled:opacity-50;
   }
 
   .btn-primary:focus-visible {
@@ -212,7 +218,7 @@
   }
 
   .btn-danger {
-    @apply inline-flex min-h-8 items-center justify-center gap-1.5 px-2 bg-transparent border border-error text-error text-xs font-bold rounded-md cursor-pointer hover:bg-error hover:text-white;
+    @apply inline-flex min-h-8 items-center justify-center gap-1.5 px-2 bg-transparent border border-error text-error text-xs font-bold rounded-md cursor-pointer hover:bg-error hover:text-bg-deep;
   }
 
   .btn-danger:focus-visible {
@@ -265,7 +271,7 @@
 .profile-avatar { display: grid; place-items: center; width: 34px; height: 34px; overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-row); color: var(--color-txt-dim); }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .profile-copy { display: flex; min-width: 80px; flex-direction: column; line-height: 1.15; }
-.profile-copy small { color: var(--color-primary); font-size: 9px; font-weight: 700; }
+.profile-copy small { color: var(--color-primary-text); font-size: 9px; font-weight: 700; }
 .profile-name { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; padding: 0; border: 0; background: transparent; color: var(--color-txt); font-size: 12px; font-weight: 600; cursor: pointer; }
 .profile-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .profile-rank { display: flex; align-items: center; gap: 2px; padding-left: 8px; border-left: 1px solid var(--color-border-light); }
@@ -291,7 +297,7 @@
 .sidebar-status span { color: var(--color-txt-dim); font-size: 9px; }
 .app-main { min-width: 0; }
 .content-heading { display: flex; align-items: flex-end; justify-content: space-between; min-height: 52px; padding: 0 2px 10px; }
-.content-eyebrow { color: var(--color-primary); font-size: 9px; font-weight: 700; letter-spacing: .14em; }
+.content-eyebrow { color: var(--color-primary-text); font-size: 9px; font-weight: 700; letter-spacing: .14em; }
 .content-heading h2 { margin: 2px 0 0; color: var(--color-txt); font-size: 19px; line-height: 1.2; font-weight: 750; }
 .content-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-txt-dim); font-size: 10px; }
 .content-status span { width: 6px; height: 6px; border-radius: 50%; background: var(--color-accent); }
@@ -440,7 +446,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .history-title-group { display: flex; min-width: 0; align-items: center; gap: 12px; }
 .history-title-icon { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(230,57,70,.3); border-radius: 7px; background: rgba(230,57,70,.1); color: var(--color-primary); }
 .history-title-group > div { min-width: 0; }
-.history-eyebrow { margin-bottom: 2px; color: var(--color-primary); font-size: 9px; font-weight: 800; letter-spacing: .14em; }
+.history-eyebrow { margin-bottom: 2px; color: var(--color-primary-text); font-size: 9px; font-weight: 800; letter-spacing: .14em; }
 .history-title-group h2 { overflow: hidden; color: var(--color-txt); font-size: 18px; font-weight: 780; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .history-title-group div > p:last-child { margin-top: 2px; color: var(--color-txt-dim); font-size: 11px; }
 .modal-close { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px solid var(--color-border-light); border-radius: 6px; background: rgba(255,255,255,.02); color: var(--color-txt-dim); cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease; }
