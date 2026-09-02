@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { mockAllApis, dismissPatchNotes } from '../helpers/mock-api'
+import { mockAllApis, dismissPatchNotes, goToMatchTab } from '../helpers/mock-api'
 
 // panelStatus renders a failure as role="alert", so these assertions check what
 // actually reaches the user instead of the class the panel happens to carry.
@@ -8,6 +8,7 @@ test.describe('Error states', () => {
     await mockAllApis(page, { failEndpoints: ['rooms'] })
     await page.goto('/')
     await dismissPatchNotes(page)
+    await goToMatchTab(page)
 
     const alert = page.getByRole('alert')
     await expect(alert).toBeVisible()
@@ -33,6 +34,7 @@ test.describe('Error states', () => {
     await mockAllApis(page, { failEndpoints: ['rooms'] })
     await page.goto('/')
     await dismissPatchNotes(page)
+    await goToMatchTab(page)
 
     await expect(page.getByRole('alert')).toBeVisible()
 
@@ -43,6 +45,7 @@ test.describe('Error states', () => {
     // Re-navigating should recover
     await page.goto('/')
     await dismissPatchNotes(page)
+    await goToMatchTab(page)
     await expect(page.getByRole('alert')).toHaveCount(0)
     await expect(page.getByText(/업데이트 \d+초 전/)).toBeVisible()
   })
@@ -51,6 +54,7 @@ test.describe('Error states', () => {
     await mockAllApis(page, { failEndpoints: ['rooms'] })
     await page.goto('/')
     await dismissPatchNotes(page)
+    await goToMatchTab(page)
 
     const alert = page.getByRole('alert')
     await expect(alert).toBeVisible()
@@ -64,10 +68,11 @@ test.describe('Error states', () => {
     await expect(page.getByRole('alert')).toHaveCount(0)
   })
 
-  test('both APIs failing shows rooms error on default tab', async ({ page }) => {
+  test('both APIs failing shows the rooms error on the match tab', async ({ page }) => {
     await mockAllApis(page, { failEndpoints: ['rooms', 'leaderboard'] })
     await page.goto('/')
     await dismissPatchNotes(page)
+    await goToMatchTab(page)
 
     await expect(page.getByRole('alert').first()).toBeVisible()
   })

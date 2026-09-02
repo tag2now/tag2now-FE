@@ -3,6 +3,9 @@ import leaderboardData from '../fixtures/leaderboard.json'
 import roomsData from '../fixtures/rooms.json'
 import communityPostsData from '../fixtures/community-posts.json'
 import communityPostDetailData from '../fixtures/community-post-detail.json'
+import { LATEST_PATCH_VERSION } from '../../src/config/patchNotes'
+import dailyStatsData from '../fixtures/history-daily.json'
+import weeklyTopData from '../fixtures/history-weekly-top.json'
 
 interface ApiReservationLike {
   id: number
@@ -24,6 +27,9 @@ interface MockOverrides {
   posts?: unknown
   postDetail?: unknown
   reservations?: ApiReservationLike[]
+  daily?: unknown
+  weeklyTop?: unknown
+  hourly?: unknown
   failEndpoints?: string[]
 }
 
@@ -87,6 +93,31 @@ export async function dismissPatchNotes(page: Page) {
   await closeBtn.waitFor({ state: 'visible' })
   await closeBtn.click()
   await expect(page.locator('[aria-labelledby="patch-notes-title"]')).toHaveCount(0)
+}
+
+/**
+ * Land on the match tab.
+ *
+ * 개요 is the landing tab, so a spec about rooms has to navigate first. It goes
+ * through the tab's accessible name rather than a URL, because the SPA has no
+ * router — the tab strip is the only way in.
+ */
+/**
+ * Mark the patch notes as already seen, so the dialog never opens.
+ *
+ * Faster than dismissPatchNotes and, more importantly, usable by tests that
+ * cannot afford the modal's paint at all. The version comes from the app's own
+ * source of truth, so a version bump does not silently stop suppressing it.
+ */
+export async function skipPatchNotes(page: Page) {
+  await page.addInitScript((version) => {
+    localStorage.setItem('ttt2-patch-dismissed', version)
+  }, LATEST_PATCH_VERSION)
+}
+
+export async function goToMatchTab(page: Page) {
+  await page.getByRole('tab', { name: '매칭' }).click()
+  await expect(page.getByRole('tablist', { name: '매칭 종류 선택' })).toBeVisible()
 }
 
 export async function mockAllApis(page: Page, overrides?: MockOverrides) {
@@ -180,6 +211,19 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
 
     reservation.status = 'cancelled'
     return route.fulfill({ status: 204, body: '' })
+  })
+
+  // History statistics. The overview is the landing tab and calls these on
+  // every page load, so leaving them unrouted would send each spec's first
+  // paint to whatever the dev server proxies to — production, by default.
+  await page.route('**/api/history/stats**', async (route) => {
+    if (failing.has('history')) {
+      return route.fulfill({ status: 500, body: 'Internal Server Error' })
+    }
+    const url = route.request().url()
+    if (url.includes('/weekly-top')) return asJson(route, overrides?.weeklyTop ?? weeklyTopData)
+    if (url.includes('/daily')) return asJson(route, overrides?.daily ?? dailyStatsData)
+    return asJson(route, overrides?.hourly ?? [])
   })
 
   // Single handler for all community API calls

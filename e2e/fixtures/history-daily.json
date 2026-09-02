@@ -1,0 +1,9 @@
+[
+  { "date": "2026-08-27", "peak_players": 38, "avg_players": 19 },
+  { "date": "2026-08-28", "peak_players": 44, "avg_players": 22 },
+  { "date": "2026-08-29", "peak_players": 51, "avg_players": 27 },
+  { "date": "2026-08-30", "peak_players": 49, "avg_players": 25 },
+  { "date": "2026-08-31", "peak_players": 40, "avg_players": 20 },
+  { "date": "2026-09-01", "peak_players": 55, "avg_players": 30 },
+  { "date": "2026-09-02", "peak_players": 47, "avg_players": 24 }
+]

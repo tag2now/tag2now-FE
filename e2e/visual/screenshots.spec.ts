@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { mockAllApis, dismissPatchNotes } from '../helpers/mock-api'
+import { mockAllApis, dismissPatchNotes, goToMatchTab } from '../helpers/mock-api'
 
 const FROZEN_TIME = new Date('2026-03-30T12:00:00Z').getTime()
 
@@ -29,10 +29,19 @@ test.describe('Visual regression', () => {
     })
   }
 
+  test('overview view', async ({ page }) => {
+    await page.goto('/')
+    await dismissPatchNotes(page)
+    await disableAnimations(page)
+    await page.locator('.overview-panel').waitFor()
+    await expect(page).toHaveScreenshot('overview.png', { maxDiffPixelRatio: 0.01 })
+  })
+
   test('rooms - rank match view', async ({ page }) => {
     await page.goto('/')
     await dismissPatchNotes(page)
     await disableAnimations(page)
+    await goToMatchTab(page)
     await page.locator('.panel').waitFor()
     await expect(page).toHaveScreenshot('rooms-rank-match.png', { maxDiffPixelRatio: 0.01 })
   })
@@ -41,6 +50,7 @@ test.describe('Visual regression', () => {
     await page.goto('/')
     await dismissPatchNotes(page)
     await disableAnimations(page)
+    await goToMatchTab(page)
     await page.getByRole('tab', { name: /^플매/ }).click()
     await page.locator('table').waitFor()
     await expect(page).toHaveScreenshot('rooms-player-match.png', { maxDiffPixelRatio: 0.01 })
@@ -69,14 +79,20 @@ test.describe('Visual regression', () => {
     await page.goto('/')
     await dismissPatchNotes(page)
     await disableAnimations(page)
+    await goToMatchTab(page)
     await page.locator('.state-msg.error').waitFor()
     await expect(page).toHaveScreenshot('error-state.png', { maxDiffPixelRatio: 0.01 })
   })
 
   test('loading state', async ({ page }) => {
-    // Override routes to never respond — keeps app in loading state
+    // Override routes to never respond — keeps app in loading state. The
+    // overview is the landing tab, so its own sources have to hang too or the
+    // shot catches a loaded page.
     await page.route('**/api/rooms/all**', () => {})
     await page.route('**/api/leaderboard**', () => {})
+    await page.route('**/api/history/stats**', () => {})
+    await page.route('**/api/community/**', () => {})
+    await page.route('**/api/reservations**', () => {})
     await page.goto('/')
     await dismissPatchNotes(page)
     await disableAnimations(page)

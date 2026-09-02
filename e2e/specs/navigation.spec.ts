@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { mockAllApis, dismissPatchNotes } from '../helpers/mock-api'
+import { mockAllApis, dismissPatchNotes, goToMatchTab } from '../helpers/mock-api'
 
 // Locators here go through roles and accessible names on purpose: the tab strip
 // is an ARIA tabs widget, so what a user — or a screen reader — can reach is the
@@ -12,16 +12,27 @@ test.describe('Navigation', () => {
     await dismissPatchNotes(page)
   })
 
-  test('page loads with first room group tab active', async ({ page }) => {
+  test('page loads on the overview', async ({ page }) => {
+    await expect(page.getByRole('tab', { name: '개요' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('heading', { name: '한눈에 보기' })).toBeVisible()
+
+    // The room-type strip belongs to the match tab and stays out of the way.
+    await expect(page.getByRole('tablist', { name: '매칭 종류 선택' })).toHaveCount(0)
+  })
+
+  test('the match tab opens on the first room group', async ({ page }) => {
     // Room groups live under the "매칭" tab; rank_match is first in GROUP_ORDER.
+    await goToMatchTab(page)
+
     await expect(page.getByRole('tab', { name: '매칭' })).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByRole('tab', { name: /^랭매/ })).toHaveAttribute('aria-selected', 'true')
   })
 
   test('all expected tabs are visible', async ({ page }) => {
     const mainTabs = page.getByRole('tablist', { name: 'Main navigation' }).getByRole('tab')
-    await expect(mainTabs).toHaveText(['매칭', '예약', '리더보드', '커뮤니티', '통계'])
+    await expect(mainTabs).toHaveText(['개요', '매칭', '예약', '리더보드', '커뮤니티', '통계'])
 
+    await goToMatchTab(page)
     const roomTabs = page.getByRole('tablist', { name: '매칭 종류 선택' }).getByRole('tab')
     await expect(roomTabs).toHaveCount(2)
     await expect(roomTabs.nth(0)).toHaveAccessibleName(/랭매/)
@@ -29,6 +40,8 @@ test.describe('Navigation', () => {
   })
 
   test('tab shows room count in label', async ({ page }) => {
+    await goToMatchTab(page)
+
     // 2 rooms in the rank_match fixture
     await expect(page.getByRole('tab', { name: '랭매 (2)' })).toBeVisible()
   })
@@ -91,6 +104,6 @@ test.describe('Navigation', () => {
     await expect(leaderboardTab).toHaveAttribute('aria-selected', 'true')
 
     // Only one tab is ever selected, so the previous one has to give it up.
-    await expect(page.getByRole('tab', { name: '매칭' })).toHaveAttribute('aria-selected', 'false')
+    await expect(page.getByRole('tab', { name: '개요' })).toHaveAttribute('aria-selected', 'false')
   })
 })
