@@ -9,8 +9,12 @@ test.describe('Error states', () => {
     await page.goto('/')
     await dismissPatchNotes(page)
 
-    await expect(page.getByRole('alert')).toBeVisible()
-    await expect(page.getByRole('alert')).toContainText('Error:')
+    const alert = page.getByRole('alert')
+    await expect(alert).toBeVisible()
+    // What reaches the user is the instruction plus a way out; the raw server
+    // message stays as a detail line beneath it.
+    await expect(alert).toContainText('불러오지 못했습니다')
+    await expect(alert.getByRole('button', { name: '다시 시도' })).toBeVisible()
   })
 
   test('leaderboard API failure shows error on leaderboard tab', async ({ page }) => {
@@ -19,8 +23,10 @@ test.describe('Error states', () => {
     await dismissPatchNotes(page)
     await page.getByRole('tab', { name: '리더보드' }).click()
 
-    await expect(page.getByRole('alert')).toBeVisible()
-    await expect(page.getByRole('alert')).toContainText('Error:')
+    const alert = page.getByRole('alert')
+    await expect(alert).toBeVisible()
+    await expect(alert).toContainText('불러오지 못했습니다')
+    await expect(alert.getByRole('button', { name: '다시 시도' })).toBeVisible()
   })
 
   test('recovery after manual refresh', async ({ page }) => {
@@ -39,6 +45,23 @@ test.describe('Error states', () => {
     await dismissPatchNotes(page)
     await expect(page.getByRole('alert')).toHaveCount(0)
     await expect(page.getByText(/업데이트 \d+초 전/)).toBeVisible()
+  })
+
+  test('the retry button recovers without a reload', async ({ page }) => {
+    await mockAllApis(page, { failEndpoints: ['rooms'] })
+    await page.goto('/')
+    await dismissPatchNotes(page)
+
+    const alert = page.getByRole('alert')
+    await expect(alert).toBeVisible()
+
+    await page.unrouteAll({ behavior: 'ignoreErrors' })
+    await mockAllApis(page)
+    await alert.getByRole('button', { name: '다시 시도' }).click()
+
+    // The point of the control: the user gets out of the error state from
+    // inside it, without knowing to reload the page.
+    await expect(page.getByRole('alert')).toHaveCount(0)
   })
 
   test('both APIs failing shows rooms error on default tab', async ({ page }) => {
