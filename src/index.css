@@ -681,7 +681,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
   .overview-rank-row .mini-char { width: 100%; justify-content: flex-start; }
   .mini-char-rank { max-width: 72px; }
   .mini-char-portrait { width: 44px; height: 44px; }
-  .kpi-card-value { font-size: 22px; }
+  .kpi-card-value { font-size: 22px; text-align: center; }
   .app-shell { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
   .app-header { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; min-height: 60px; padding: 8px 12px; }
   .brand-lockup p, .profile-rank, .profile-copy small { display: none; }
