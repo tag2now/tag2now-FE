@@ -52,13 +52,57 @@ test.describe('Overview', () => {
 
   test('each section links to the tab it summarises', async ({ page }) => {
     const section = page.getByRole('region', { name: '주간 철악귀' })
-    await section.getByRole('button', { name: '통계' }).click()
+    // A real link, not a button: middle-click opens it in a tab and the back
+    // button undoes the jump, neither of which a click handler would give.
+    await section.getByRole('link', { name: '통계' }).click()
 
+    await expect(page).toHaveURL(/\/stats$/)
     // Scoped to the main nav: the stats tab has sub-tabs of its own whose names
     // would otherwise match ("접속자 통계").
     const nav = page.getByRole('tablist', { name: 'Main navigation' })
     await expect(nav.getByRole('tab', { name: '통계' })).toHaveAttribute('aria-selected', 'true')
     await expect(nav.getByRole('tab', { name: '개요' })).toHaveAttribute('aria-selected', 'false')
+  })
+
+  // The summary rows are entry points, not just readouts: clicking one opens
+  // the item it describes rather than dropping the reader at a list.
+  test('a post row opens that post', async ({ page }) => {
+    const section = page.getByRole('region', { name: '최신 게시글' })
+    // Not .getByRole('link').first() — that is the header's link to the tab.
+    await section.getByRole('listitem').first().getByRole('link').click()
+
+    await expect(page).toHaveURL(/\/community\/\d+$/)
+    await expect(page.getByRole('button', { name: /목록/ })).toBeVisible()
+  })
+
+  test('a reservation row opens that reservation', async ({ page }) => {
+    const section = page.getByRole('region', { name: '모집 중인 예약' })
+    await section.getByRole('link', { name: /모집중호스트/ }).click()
+
+    await expect(page).toHaveURL(/\/reservation\/1$/)
+    const nav = page.getByRole('tablist', { name: 'Main navigation' })
+    await expect(nav.getByRole('tab', { name: /^예약/ })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  // Deep links are the reason the tabs became routes at all: a shared link has
+  // to open on the post itself, cold, with no click path behind it.
+  test('a post link opens the post directly', async ({ page }) => {
+    await page.goto('/community/1')
+    await dismissPatchNotes(page)
+
+    await expect(page.getByRole('button', { name: /목록/ })).toBeVisible()
+    const nav = page.getByRole('tablist', { name: 'Main navigation' })
+    await expect(nav.getByRole('tab', { name: '커뮤니티' })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  test('the back button undoes a row click', async ({ page }) => {
+    await page.getByRole('region', { name: '최신 게시글' }).getByRole('listitem').first().getByRole('link').click()
+    await expect(page).toHaveURL(/\/community\/\d+$/)
+
+    await page.goBack()
+
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.getByRole('heading', { name: '한눈에 보기' })).toBeVisible()
   })
 
   test('a failing source costs only its own card', async ({ page }) => {

@@ -9,14 +9,13 @@ import type { LeaderboardEntry } from '@/shared/types'
 import type { RoomsData } from '@/match/types'
 import type { WeeklyTopPlayer } from '@/stat/types'
 import { formatGroupName, GROUP_ORDER } from '@/config/tabConfig'
+import { pathOf } from '@/config/routes'
 
 interface OverviewProps {
   rooms: RoomsData | null
   roomsLoading: boolean
   leaderboardEntries?: LeaderboardEntry[]
   leaderboardTotal?: number
-  /** Jumps to the tab a section summarises. */
-  onNavigate: (tab: string) => void
 }
 
 /** Rooms have not loaded yet — an em dash rather than "0", which would assert
@@ -37,13 +36,14 @@ function roomsKpi(rooms: RoomsData | null, loading: boolean): { players: string;
   return { players: String(rooms.totalUsers), active: String(rooms.total), breakdown }
 }
 
-function todayPeak(daily: { date: string; peak_players: number }[]): { value: string; hint: string } {
+function todayPeak(daily: { date: string; peak_players: number; unique_players?: number }[]): { value: string; hint: string } {
   const latest = daily.at(-1)
   if (!latest) return { value: UNKNOWN, hint: '기록 없음' }
 
   const previous = daily.at(-2)
-  const hint = previous ? `어제 ${previous.peak_players}명` : latest.date
-  return { value: String(latest.peak_players), hint }
+	const playerCount = (entry: { peak_players: number; unique_players?: number }) => entry.unique_players ?? entry.peak_players
+	const hint = previous ? `어제 ${playerCount(previous)}명` : latest.date
+	return { value: String(playerCount(latest)), hint }
 }
 
 const charsOf = (entry?: LeaderboardEntry) => ({
@@ -75,7 +75,7 @@ const weeklyRows = (players: WeeklyTopPlayer[], entries: LeaderboardEntry[]): To
   }))
 }
 
-export default function Overview({ rooms, roomsLoading, leaderboardEntries = [], leaderboardTotal, onNavigate }: OverviewProps) {
+export default function Overview({ rooms, roomsLoading, leaderboardEntries = [], leaderboardTotal }: OverviewProps) {
   const { data, loading, error, refresh } = useOverview()
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
 
@@ -106,29 +106,29 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
       <div className="kpi-grid">
         <KpiCard icon={Users} label="접속자" value={kpi.players} hint="지금 방에 있는 인원" live />
         <KpiCard icon={Activity} label="활성 방" value={kpi.active} hint={kpi.breakdown} live />
-        <KpiCard icon={TrendingUp} label="오늘 최대 접속" value={peak.value} hint={peak.hint} />
+        <KpiCard icon={TrendingUp} label="오늘 플레이 유저" value={peak.value} hint={peak.hint} />
         <KpiCard icon={Trophy} label="등록 플레이어" value={leaderboardTotal != null ? String(leaderboardTotal) : UNKNOWN} hint="리더보드 집계" />
       </div>
 
       <section className="chart-panel overview-chart" aria-labelledby="overview-daily-heading">
-        <h4 id="overview-daily-heading">최근 7일 접속자 추이</h4>
+        <h4 id="overview-daily-heading">최근 7일 플레이 유저 추이</h4>
         <DailyChart data={data?.daily ?? []} height={200} axisGutter={0} />
       </section>
 
       <div className="overview-grid">
-        <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" onNavigate={() => onNavigate('leaderboard')}>
+        <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" to={pathOf('leaderboard')}>
           <TopFiveList rows={leaderboardRows(leaderboardEntries)} onSelect={setSelectedNpid} />
         </OverviewSection>
 
-        <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" onNavigate={() => onNavigate('stats')}>
+        <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
           <TopFiveList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} detailLabel="매치" onSelect={setSelectedNpid} />
         </OverviewSection>
 
-        <OverviewSection icon={CalendarDays} title="모집 중인 예약" subtitle="아직 자리가 남은 약속" linkLabel="예약" onNavigate={() => onNavigate('reservation')}>
+        <OverviewSection icon={CalendarDays} title="모집 중인 예약" subtitle="아직 자리가 남은 약속" linkLabel="예약" to={pathOf('reservation')}>
           <OpenReservations reservations={data?.reservations ?? []} />
         </OverviewSection>
 
-        <OverviewSection icon={MessageSquareText} title="최신 게시글" subtitle="커뮤니티에 올라온 글" linkLabel="커뮤니티" onNavigate={() => onNavigate('community')}>
+        <OverviewSection icon={MessageSquareText} title="최신 게시글" subtitle="커뮤니티에 올라온 글" linkLabel="커뮤니티" to={pathOf('community')}>
           <RecentPosts posts={data?.posts ?? []} />
         </OverviewSection>
       </div>

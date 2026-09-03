@@ -464,6 +464,14 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 
 .overview-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
 .overview-list-row { display: flex; min-height: 42px; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; background: var(--color-bg-row-alt); }
+/* The row itself is the link, so it keeps .overview-list-row's layout and adds
+   only the affordances: a pointer, a hover lift, and a focus ring the keyboard
+   can find. Matches the hover treatment .overview-rank-btn uses for the same
+   job one list over. */
+.overview-list-link { color: inherit; text-decoration: none; transition: background-color .12s ease; }
+.overview-list-link:hover { background: rgba(255,255,255,.06); }
+.overview-list-link:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.overview-list-link:hover .overview-list-title { text-decoration: underline; text-decoration-color: rgba(230,57,70,.62); text-underline-offset: 3px; }
 .overview-list-main { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: 1px; }
 .overview-list-title { overflow: hidden; color: var(--color-txt); font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .overview-list-sub { overflow: hidden; color: var(--color-txt-faint); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }

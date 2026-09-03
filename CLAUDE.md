@@ -44,7 +44,7 @@ The proxy strips the `/api` prefix before forwarding.
 
 ## Stack
 
-React 19 + TypeScript + Vite 8 (rolldown) + Tailwind CSS 4. No router — a single page with tab state. No global state library; state lives in hooks.
+React 19 + TypeScript + Vite 8 (rolldown) + Tailwind CSS 4 + React Router 7. No global state library; state lives in hooks.
 
 Key dependencies: `recharts` (statistics charts), `react-hot-toast` (notifications).
 
@@ -56,7 +56,7 @@ The `@` alias resolves to `src/` and is configured in both `vite.config.ts` and 
 
 ```
 src/
-  App.tsx              tab state and layout; the only place tabs are assembled
+  App.tsx              route table and layout; the only place tabs are assembled
   main.tsx             root render, Toaster, global unhandledrejection handler
   index.css            Tailwind 4 @theme design tokens
   config/              tabConfig, patchNotes, test-setup
@@ -120,17 +120,46 @@ two lines and positions the two characters by **source order**
 (`:nth-of-type`), so main must render before sub — `Overview.test.tsx` pins
 that.
 
+### Routing
+
+**The URL is the navigation state.** There is no `tab` state — `useActiveTab`
+(`shared/hooks/useActiveTab.ts`) derives the selected tab from `useLocation()`,
+so a nav click, the back button, and a cold deep link all arrive the same way.
+
+| Path | Panel |
+|------|-------|
+| `/` | overview (the landing panel, so a bare link opens it) |
+| `/match/:group` | rooms for that group |
+| `/leaderboard`, `/stats` | those tabs |
+| `/reservation`, `/reservation/:id` | reservations, optionally opened on one |
+| `/community`, `/community/:postId` | the board, optionally opened on one post |
+| anything else | overview, via the catch-all route |
+
+`config/routes.ts` is the single answer to "what URL is this tab?" — `pathOf`,
+`postPath`, `reservationPath`, and `FIXED_TABS`/`isRoomTab`. The nav, the
+overview's section links, and the tests all read it, so none of them can drift
+apart. Adding a non-room tab means adding it to `FIXED_TABS` **and** `TAB_PATHS`
+there; miss the first and it is handed the rooms panel.
+
+**Detail views are routes, not local state.** `Community` reads `:postId` and
+`Reservation` reads `:id` rather than holding a selection of their own, which is
+what makes a post link shareable. `Community` keeps one genuinely local mode —
+`create` — because there is nothing to link to until the post exists; a `mode`
+value collapses it with the URL-derived detail so the branches stay exclusive.
+
+The catch-all matters in production: nginx serves `index.html` for every path
+(`try_files`), so a typo reaches the app rather than a 404 page and has to land
+somewhere sensible.
+
 ### Tabs
 
-The tab strip is **fixed layout, not derived from the response**: `overview` first, then one tab per key in `GROUP_ORDER` (`config/tabConfig.ts`) — always rendered, even before rooms load or after the fetch fails — plus any unknown group the API returns appended after them, followed by the fixed `reservation`, `leaderboard`, `community`, and `stats` tabs. `tab` state is `string | null`; when null or stale it falls back to the first tab, which is therefore always `overview`.
-
-`FIXED_TABS` in `App.tsx` names the non-room tabs in one place; `isRoomTab` is its negation. Adding a tab that is not a room group means adding it there too, or it will be handed the rooms panel.
+The tab strip is **fixed layout, not derived from the response**: `overview` first, then one tab per key in `GROUP_ORDER` (`config/tabConfig.ts`) — always rendered, even before rooms load or after the fetch fails — plus any unknown group the API returns appended after them, followed by the fixed `reservation`, `leaderboard`, `community`, and `stats` tabs.
 
 Room data affects only the **count in the label**, never which tabs exist. Until the first successful load the count renders as `(—)` rather than `(0)`, so a pending or failed fetch is not mistaken for "no rooms"; afterwards a group the payload omits is genuinely `(0)`.
 
 Do not gate room tabs on the rooms response. Doing so made the tab strip shift during load, silently moved the default tab to `reservation`, and required a fallback that rendered the rooms error panel on top of unrelated tabs.
 
-The tab bar implements the ARIA tabs pattern — `role="tablist"`/`tab`/`tabpanel`, roving `tabIndex`, and Arrow Left/Right navigation. Preserve this when touching the nav.
+The tab bar implements the ARIA tabs pattern — `role="tablist"`/`tab`/`tabpanel`, roving `tabIndex`, and Arrow Left/Right navigation. Preserve this when touching the nav. The nav buttons stay `<button>`s that `navigate()` rather than becoming `<a>`s, because the ARIA tabs contract is what the specs assert; the overview's section and row links **are** real `<Link>`s, since those are content, not a tabs widget.
 
 ### Community identity
 
@@ -225,7 +254,7 @@ Component tests are prop-driven and need no mocks. `App.test.tsx` mocks the feat
 - `e2e/visual/screenshots.spec.ts` — visual regression against committed baselines.
 
 Helpers worth reaching for: `goToMatchTab` (the overview is the landing tab, so
-a rooms spec has to navigate first — there is no router to deep-link with),
+a rooms spec can click through or `goto('/match/rank_match')`),
 `dismissPatchNotes` (closes the dialog), and `skipPatchNotes` (marks it seen
 before load, for specs that cannot afford the paint at all — it reads
 `LATEST_PATCH_VERSION` so a version bump cannot silently stop suppressing it).
@@ -299,6 +328,9 @@ org, shared with tag2now-BE; this repo defines only `ECR_REPOSITORY`
 
 Google Analytics (`G-S4Y67MPNPR`) is loaded via a gtag snippet in `index.html`. Device category and OS are collected automatically by Enhanced Measurement — no per-event code. Check *Reports → Tech → Tech details* before adding custom tracking.
 
-Because the SPA has no router, GA4 records one `page_view` per load; tab switches are not tracked.
+GA4 records one `page_view` per load. Client-side route changes are **not**
+tracked — gtag has no history listener by default, so a tab switch or a post
+opened from the overview goes uncounted. Sending them means calling `gtag` on
+a `useLocation()` change.
 
 The CloudFront distribution is on the **Free plan**, where standard and real-time access logging are locked behind paid tiers, so the S3 → Athena pipeline described in `aws-setup.md` cannot currently be enabled. GA4 is the only source actually collecting.

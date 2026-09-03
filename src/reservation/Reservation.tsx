@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { WheelPicker, WheelPickerWrapper, type WheelPickerOption } from '@ncdai/react-wheel-picker'
 import '@ncdai/react-wheel-picker/style.css'
 import RankImage from '@/shared/components/RankImage'
@@ -7,6 +8,7 @@ import { getUsername } from '@/shared/util/cookie'
 import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
 import { CalendarPlus, Check, ChevronDown, Clock3, Filter, LogIn, UserMinus, X } from 'lucide-react'
 import Select from '@/shared/components/Select'
+import { reservationPath } from '@/config/routes'
 import { kstTimeFormat, MATCH_TYPE_LABELS } from '@/reservation/reservationLabels'
 
 type MatchType = '랭크매치' | '플레이어 매치' | '상관없음'
@@ -170,7 +172,12 @@ export default function Reservation() {
   const [rankFilter, setRankFilter] = useState('전체')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [joinedIds, setJoinedIds] = useState<number[]>([])
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  // Which reservation the detail pane shows is the path's answer, so a shared
+  // link opens on it and the back button steps between the ones you looked at.
+  const { id: selectedParam } = useParams()
+  const navigate = useNavigate()
+  const selectedId = selectedParam ? Number(selectedParam) : null
+  const setSelectedId = (id: number) => navigate(reservationPath(id))
   const [showForm, setShowForm] = useState(false)
   const [rankPickerOpen, setRankPickerOpen] = useState(false)
   const [timePickerOpen, setTimePickerOpen] = useState(false)

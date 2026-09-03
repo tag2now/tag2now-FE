@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { Route, Routes, useNavigate } from 'react-router-dom'
 import Leaderboard from "@/shared/Leaderboard";
 import Stats from "@/stat/Stats"
 import Header from "@/shared/components/Header";
 import Footer from "@/shared/components/Footer";
 import PatchNotes from "@/shared/components/PatchNotes";
 import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
+import { firstRoomPath, isRoomTab as isRoomTabKey, pathOf } from '@/config/routes'
+import useActiveTab from '@/shared/hooks/useActiveTab'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useRooms from "@/match/useRooms";
 import useReservations, { countOpen } from "@/reservation/useReservations";
@@ -24,10 +27,6 @@ import {
   Trophy,
 } from 'lucide-react'
 
-// Tabs that are not room groups. Named once so the room-tab test, the tab
-// list, and the primary nav cannot disagree about what counts as a room tab.
-const FIXED_TABS = ['overview', 'reservation', 'leaderboard', 'community', 'stats'] as const
-
 // Before the first successful load the count is unknown, not zero - "(0)" would
 // assert there are no rooms while the fetch is still in flight or has failed.
 // Once rooms have loaded, a group the payload omits really is empty.
@@ -37,7 +36,8 @@ function roomCountLabel(rooms: Room[] | undefined, loaded: boolean): string {
 }
 
 export default function App() {
-  const [tab, setTab] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const activeTab = useActiveTab()
   const lb = useLeaderboard()
   const rooms = useRooms()
   const reservations = useReservations()
@@ -63,8 +63,7 @@ export default function App() {
     [groupKeys, groups, roomsLoaded],
   )
 
-  const activeTab = tab && tabs.some((item) => item.key === tab) ? tab : tabs[0]?.key ?? 'overview'
-  const isRoomTab = !FIXED_TABS.includes(activeTab as typeof FIXED_TABS[number])
+  const isRoomTab = isRoomTabKey(activeTab)
   const activeRoomsData = isRoomTab ? { rooms: groups[activeTab] ?? [] } : null
 
   // A badge is a live count, so it carries the same "unknown is not zero" rule
@@ -97,6 +96,30 @@ export default function App() {
 
   const activeLabel = tabs.find((item) => item.key === activeTab)?.label ?? '대시보드'
 
+  // Both panels close over App-level polled data, so they are built here rather
+  // than inline in the route table, which would make that table unreadable.
+  const overviewPanel = (
+    <Overview
+      rooms={rooms.data}
+      roomsLoading={rooms.loading}
+      leaderboardEntries={lb.data?.entries}
+      leaderboardTotal={lb.data?.total_records}
+    />
+  )
+
+  const roomsPanel = (
+    <Rooms
+      data={activeRoomsData}
+      loading={rooms.loading}
+      refreshing={rooms.refreshing}
+      error={rooms.error}
+      onRefresh={rooms.refresh}
+      groupKey={activeTab}
+      lastUpdated={rooms.lastUpdated}
+      leaderboardEntries={lb.data?.entries}
+    />
+  )
+
   return (
     <div className="app-shell">
       <a className="skip-link" href="#mainContent">본문으로 건너뛰기</a>
@@ -120,7 +143,7 @@ export default function App() {
                     aria-selected={activePrimary === t.key}
                     aria-controls={t.key === 'match' ? `tabpanel-${isRoomTab ? activeTab : groupKeys[0] ?? 'leaderboard'}` : `tabpanel-${t.key}`}
                     tabIndex={activePrimary === t.key ? 0 : -1}
-                    onClick={() => setTab(t.key === 'match' ? groupKeys[0] ?? 'leaderboard' : t.key)}
+                    onClick={() => navigate(t.key === 'match' ? firstRoomPath(groupKeys) : pathOf(t.key))}
                     onKeyDown={(e) => {
                       const idx = primaryTabs.findIndex(x => x.key === t.key)
                       let next = -1
@@ -129,7 +152,7 @@ export default function App() {
                       if (next >= 0) {
                         e.preventDefault()
                         const nextKey = primaryTabs[next].key
-                        setTab(nextKey === 'match' ? groupKeys[0] ?? 'leaderboard' : nextKey)
+                        navigate(nextKey === 'match' ? firstRoomPath(groupKeys) : pathOf(nextKey))
                         document.getElementById(`primary-tab-${nextKey}`)?.focus()
                       }
                     }}
@@ -175,7 +198,7 @@ export default function App() {
                     aria-selected={activeTab === key}
                     aria-controls={`tabpanel-${key}`}
                     tabIndex={activeTab === key ? 0 : -1}
-                    onClick={() => setTab(key)}
+                    onClick={() => navigate(pathOf(key))}
                     className={activeTab === key ? 'active' : ''}
                   >
                     <Swords size={14} aria-hidden="true" />
@@ -187,31 +210,21 @@ export default function App() {
             </nav>
           )}
           <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={isRoomTab ? `tab-${activeTab}` : `primary-tab-${activeTab}`} tabIndex={0}>
-            {isRoomTab && (
-              <Rooms
-                data={activeRoomsData}
-                loading={rooms.loading}
-                refreshing={rooms.refreshing}
-                error={rooms.error}
-                onRefresh={rooms.refresh}
-                groupKey={activeTab}
-                lastUpdated={rooms.lastUpdated}
-                leaderboardEntries={lb.data?.entries}
-              />
-            )}
-            {activeTab === 'overview' && (
-              <Overview
-                rooms={rooms.data}
-                roomsLoading={rooms.loading}
-                leaderboardEntries={lb.data?.entries}
-                leaderboardTotal={lb.data?.total_records}
-                onNavigate={setTab}
-              />
-            )}
-            {activeTab === 'leaderboard' && <Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />}
-            {activeTab === 'reservation' && <Reservation />}
-            {activeTab === 'community' && <Community leaderboardEntries={lb.data?.entries} />}
-            {activeTab === 'stats' && <Stats leaderboardEntries={lb.data?.entries} />}
+            <Routes>
+              {/* The overview owns "/" so a bare link opens the landing panel,
+                  and the catch-all sends an unknown path to that same screen —
+                  nginx serves index.html for every path, so a typo arrives here
+                  rather than at a 404 page. */}
+              <Route path="/" element={overviewPanel} />
+              <Route path="/match/:group" element={roomsPanel} />
+              <Route path="/leaderboard" element={<Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />} />
+              <Route path="/reservation" element={<Reservation />} />
+              <Route path="/reservation/:id" element={<Reservation />} />
+              <Route path="/community" element={<Community leaderboardEntries={lb.data?.entries} />} />
+              <Route path="/community/:postId" element={<Community leaderboardEntries={lb.data?.entries} />} />
+              <Route path="/stats" element={<Stats leaderboardEntries={lb.data?.entries} />} />
+              <Route path="*" element={overviewPanel} />
+            </Routes>
           </div>
         </main>
       </div>

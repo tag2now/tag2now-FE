@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import App from "@/App";
 
 // Create stable mock functions accessible inside vi.mock factories
@@ -72,17 +73,25 @@ const ROOMS_DATA = {
   },
 } as const
 
-/** 개요 is now the landing tab, so a test about a room, the leaderboard, or the
- * reservation tab has to get there first. */
+/** The panel is chosen by the URL, so a test can either land on a route or
+ * click its way there. `tab` still clicks, which is what keeps these tests
+ * about the nav widget rather than about routing. */
 async function renderApp(tab?: string) {
   await act(async () => {
-    render(<App />)
+    render(<MemoryRouter><App /></MemoryRouter>)
   })
   if (!tab) return
   await act(async () => {
     // Anchored prefix, not the whole name: the 매칭 and 예약 tabs carry a count
     // badge, so their accessible name trails a figure that changes per fixture.
     fireEvent.click(screen.getByRole('tab', { name: new RegExp(`^${tab}`) }))
+  })
+}
+
+/** Lands directly on a path, for the deep-link cases routing now makes possible. */
+async function renderAt(path: string) {
+  await act(async () => {
+    render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>)
   })
 }
 
@@ -196,7 +205,7 @@ describe('App', () => {
 
     let unmount: () => void
     await act(async () => {
-      const result = render(<App />)
+      const result = render(<MemoryRouter><App /></MemoryRouter>)
       unmount = result.unmount
     })
 
@@ -292,7 +301,7 @@ describe('App', () => {
     mockedFetchLeaderboard.mockRejectedValue(new Error('Leaderboard fetch failed: 500'))
 
     await act(async () => {
-      render(<App />)
+      render(<MemoryRouter><App /></MemoryRouter>)
     })
 
     // Switch to Leaderboard tab to see the error
@@ -302,6 +311,53 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Leaderboard fetch failed: 500')).toBeInTheDocument()
+    })
+  })
+
+  // Routing's whole point: a path selects the panel without a click, so a
+  // shared link and the back button land where the URL says.
+  describe('routing', () => {
+    it('opens the panel the path names', async () => {
+      await renderAt('/leaderboard')
+
+      expect(screen.getByRole('tab', { name: '리더보드' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByText('TestPlayer')).toBeInTheDocument()
+    })
+
+    it('opens a room group from its path', async () => {
+      await renderAt('/match/rank_match')
+
+      expect(screen.getByRole('tab', { name: '랭매 (1)' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByText('RoomOwner')).toBeInTheDocument()
+    })
+
+    // nginx serves index.html for every path, so a typo arrives in the app
+    // rather than at a 404 page; the overview is what it should find.
+    it('falls back to the overview on an unknown path', async () => {
+      await renderAt('/nope')
+
+      expect(screen.getByRole('tab', { name: '개요' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByRole('heading', { name: '한눈에 보기' })).toBeInTheDocument()
+    })
+
+    // The tab strip has to write the URL, not just read it — otherwise the back
+    // button would not undo a tab click, which is half of what routing buys.
+    it('clicking a tab moves the URL', async () => {
+      let seen = ''
+      function Probe() {
+        seen = useLocation().pathname
+        return null
+      }
+      await act(async () => {
+        render(<MemoryRouter><App /><Probe /></MemoryRouter>)
+      })
+      expect(seen).toBe('/')
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('tab', { name: '리더보드' }))
+      })
+
+      expect(seen).toBe('/leaderboard')
     })
   })
 

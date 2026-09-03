@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import Reservation from './Reservation'
 import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
 import { clearUsername, saveUsername } from '@/shared/util/cookie'
@@ -69,7 +70,7 @@ afterEach(() => {
 })
 
 function openReservationModal() {
-  render(<Reservation />)
+  render(<MemoryRouter><Reservation /></MemoryRouter>)
   fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
   return screen.getByRole('dialog', { name: '예약 추가' })
 }
@@ -151,7 +152,7 @@ describe('Reservation', () => {
   })
 
   it('offers the hour that is next when the form opens, not when the page loaded', () => {
-    render(<Reservation />)
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
     vi.setSystemTime(new Date('2026-08-28T06:20:00Z'))  // 15:20 KST, two hours later
     fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
 
@@ -258,7 +259,7 @@ describe('Reservation', () => {
     vi.mocked(fetchReservations).mockResolvedValue([
       { ...apiReservation, id: 2, host_display_name: '아무나', match_type: 'any', host_ranks: [], capacity: 2 },
     ])
-    render(<Reservation />)
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
     expect(await screen.findByRole('button', { name: /아무나/ })).toBeInTheDocument()
 
     for (const filter of ['랭크매치', '플레이어 매치']) {
@@ -269,7 +270,7 @@ describe('Reservation', () => {
 
   async function openDetail(reservation: ApiReservation = apiReservation) {
     vi.mocked(fetchReservations).mockResolvedValue([reservation])
-    render(<Reservation />)
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
     fireEvent.click(await screen.findByRole('button', { name: /나/ }))
     return screen.getByRole('complementary', { name: '선택한 예약 상세' })
   }
@@ -388,7 +389,7 @@ describe('Reservation', () => {
 
   it('renders a full card when the backend reports the reservation as matched', async () => {
     vi.mocked(fetchReservations).mockResolvedValue([{ ...apiReservation, status: 'matched', participant_count: 1 }])
-    render(<Reservation />)
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
 
     expect(await screen.findByRole('button', { name: /나 마감/ })).toBeInTheDocument()
   })
@@ -422,7 +423,7 @@ describe('Reservation participation', () => {
   }
 
   async function selectTheReservation() {
-    render(<Reservation />)
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
     fireEvent.click(await screen.findByRole('button', { name: /상대/ }))
     return screen.getByRole('complementary', { name: '선택한 예약 상세' })
   }
@@ -528,7 +529,7 @@ describe('Reservation participation', () => {
     vi.useFakeTimers()
     try {
       backendHolding(openReservation)
-      render(<Reservation />)
+      render(<MemoryRouter><Reservation /></MemoryRouter>)
       await act(async () => { await vi.advanceTimersByTimeAsync(0) })
       fireEvent.click(screen.getByRole('button', { name: /상대/ }))
       const detail = screen.getByRole('complementary', { name: '선택한 예약 상세' })

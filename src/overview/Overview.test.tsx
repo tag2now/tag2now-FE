@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import Overview from '@/overview/Overview'
 import type { OverviewData } from '@/overview/types'
 import type { RoomsData } from '@/match/types'
@@ -76,16 +77,19 @@ function polled(data: OverviewData | null, over: Partial<{ loading: boolean; err
   return { data, loading: false, refreshing: false, error: null, lastUpdated: null, refresh: vi.fn(), ...over }
 }
 
+// The section links and the list rows are real links now, so the panel needs a
+// router around it even for the tests that never navigate.
 function renderOverview(props: Partial<React.ComponentProps<typeof Overview>> = {}) {
   return render(
-    <Overview
-      rooms={ROOMS}
-      roomsLoading={false}
-      leaderboardEntries={ENTRIES}
-      leaderboardTotal={512}
-      onNavigate={vi.fn()}
-      {...props}
-    />,
+    <MemoryRouter>
+      <Overview
+        rooms={ROOMS}
+        roomsLoading={false}
+        leaderboardEntries={ENTRIES}
+        leaderboardTotal={512}
+        {...props}
+      />
+    </MemoryRouter>,
   )
 }
 
@@ -141,7 +145,7 @@ describe('Overview', () => {
 
   it("reports today's peak against yesterday", () => {
     renderOverview()
-    expect(kpiValue('오늘 최대 접속')).toBe('55')
+    expect(kpiValue('오늘 플레이 유저')).toBe('55')
     expect(screen.getByText('어제 40명')).toBeInTheDocument()
   })
 
@@ -203,15 +207,27 @@ describe('Overview', () => {
     expect(screen.getByText(/PostAuthor/)).toBeInTheDocument()
   })
 
-  it('navigates to the tab a section summarises', () => {
-    const onNavigate = vi.fn()
-    renderOverview({ onNavigate })
+  it('links each section to the tab it summarises', () => {
+    renderOverview()
 
-    fireEvent.click(screen.getByRole('button', { name: /리더보드/ }))
-    expect(onNavigate).toHaveBeenCalledWith('leaderboard')
+    expect(screen.getByRole('link', { name: /리더보드/ })).toHaveAttribute('href', '/leaderboard')
+    expect(screen.getByRole('link', { name: /커뮤니티/ })).toHaveAttribute('href', '/community')
+  })
 
-    fireEvent.click(screen.getByRole('button', { name: /커뮤니티/ }))
-    expect(onNavigate).toHaveBeenCalledWith('community')
+  // The row is the link, not just the title: a reader aiming at the comment
+  // count still means "open this post", and the same holds for a reservation's
+  // participant figure.
+  it('links a post row to that post', () => {
+    renderOverview()
+
+    // POSTS[0] is id 1; the row's accessible name carries the title.
+    expect(screen.getByRole('link', { name: /첫 게시글/ })).toHaveAttribute('href', '/community/1')
+  })
+
+  it('links a reservation row to that reservation', () => {
+    renderOverview()
+
+    expect(screen.getByRole('link', { name: /HostOne/ })).toHaveAttribute('href', '/reservation/1')
   })
 
   it('opens the player history panel from a name in either list', async () => {
