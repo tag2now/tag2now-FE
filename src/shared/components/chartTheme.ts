@@ -21,5 +21,6 @@ export const TOOLTIP_STYLE = {
 export const LEGEND_STYLE = { fontSize: 11, color: COLOR_TXT_DIM, paddingTop: 4 }
 
 export function seriesName(key: string) {
-  return key === 'peak_players' ? '최대' : '평균'
+	if (key === 'unique_players') return '접속자 수'
+  return key === 'peak_players' ? '최대 동시 접속' : '평균'
 }

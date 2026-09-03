@@ -36,14 +36,14 @@ function roomsKpi(rooms: RoomsData | null, loading: boolean): { players: string;
   return { players: String(rooms.totalUsers), active: String(rooms.total), breakdown }
 }
 
-function todayPeak(daily: { date: string; peak_players: number; unique_players?: number }[]): { value: string; hint: string } {
+function todayPeak(daily: { date: string; peak_players: number | null }[]): { value: string; hint: string } {
   const latest = daily.at(-1)
   if (!latest) return { value: UNKNOWN, hint: '기록 없음' }
 
   const previous = daily.at(-2)
-	const playerCount = (entry: { peak_players: number; unique_players?: number }) => entry.unique_players ?? entry.peak_players
-	const hint = previous ? `어제 ${playerCount(previous)}명` : latest.date
-	return { value: String(playerCount(latest)), hint }
+  if (latest.peak_players == null) return { value: UNKNOWN, hint: '피크 기록 없음' }
+  const hint = previous?.peak_players != null ? `어제 ${previous.peak_players}명` : latest.date
+  return { value: String(latest.peak_players), hint }
 }
 
 const charsOf = (entry?: LeaderboardEntry) => ({
@@ -106,12 +106,12 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
       <div className="kpi-grid">
         <KpiCard icon={Users} label="접속자" value={kpi.players} hint="지금 방에 있는 인원" live />
         <KpiCard icon={Activity} label="활성 방" value={kpi.active} hint={kpi.breakdown} live />
-        <KpiCard icon={TrendingUp} label="오늘 플레이 유저" value={peak.value} hint={peak.hint} />
+        <KpiCard icon={TrendingUp} label="오늘 최대 접속" value={peak.value} hint={peak.hint} />
         <KpiCard icon={Trophy} label="등록 플레이어" value={leaderboardTotal != null ? String(leaderboardTotal) : UNKNOWN} hint="리더보드 집계" />
       </div>
 
       <section className="chart-panel overview-chart" aria-labelledby="overview-daily-heading">
-        <h4 id="overview-daily-heading">최근 7일 플레이 유저 추이</h4>
+        <h4 id="overview-daily-heading">최근 7일 접속자 추이</h4>
         <DailyChart data={data?.daily ?? []} height={200} axisGutter={0} />
       </section>
 

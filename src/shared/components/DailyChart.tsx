@@ -32,8 +32,8 @@ export default function DailyChart({ data, height = 176, axisGutter = -20 }: { d
           formatter={(v, key) => [v, seriesName(String(key))]}
         />
         <Legend wrapperStyle={LEGEND_STYLE} formatter={seriesName} />
-        <Line type="monotone" dataKey="peak_players" stroke={COLOR_SECONDARY} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-        <Line type="monotone" dataKey="avg_players" stroke={COLOR_PRIMARY} strokeWidth={2} dot={false} activeDot={{ r: 4 }} strokeOpacity={0.8} />
+        <Line type="monotone" dataKey="peak_players" stroke={COLOR_SECONDARY} strokeWidth={2} dot={false} activeDot={{ r: 4 }} connectNulls={false} />
+        <Line type="monotone" dataKey="unique_players" stroke={COLOR_PRIMARY} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
       </LineChart>
     </ResponsiveContainer>
   )

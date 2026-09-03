@@ -145,8 +145,23 @@ describe('Overview', () => {
 
   it("reports today's peak against yesterday", () => {
     renderOverview()
-    expect(kpiValue('오늘 플레이 유저')).toBe('55')
+    expect(kpiValue('오늘 최대 접속')).toBe('55')
     expect(screen.getByText('어제 40명')).toBeInTheDocument()
+  })
+
+  it('uses peak concurrent players rather than daily unique players', () => {
+    mockedUseOverview.mockReturnValue(polled({
+      ...OVERVIEW_DATA,
+      daily: [
+        { date: '2026-08-31', peak_players: 31, avg_players: 12, unique_players: 4 },
+        { date: '2026-09-01', peak_players: 47, avg_players: 18, unique_players: 5 },
+      ],
+    }))
+
+    renderOverview()
+
+    expect(kpiValue('오늘 최대 접속')).toBe('47')
+    expect(screen.getByText('어제 31명')).toBeInTheDocument()
   })
 
   it('lists the top leaderboard entries with their character portraits', () => {

@@ -7,8 +7,9 @@ export interface HourlyActivity {
 
 export interface DailySummary {
   date: string
-  peak_players: number
-  avg_players: number
+  peak_players: number | null
+  avg_players: number | null
+  unique_players?: number
   peak_rooms?: number
   avg_rooms?: number
 }
