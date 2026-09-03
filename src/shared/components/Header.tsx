@@ -2,10 +2,11 @@ import { useState, useRef, useEffect } from 'react'
 import { charImageUrl } from '@/shared/characterImage'
 import { LATEST_PATCH_VERSION } from '@/config/patchNotes'
 import RankImage from './RankImage'
+import PlayerHistoryPanel from './PlayerHistoryPanel'
 import { getUsername as getSavedUsername, saveUsername, clearUsername } from '@/shared/util/cookie'
 import { setIdentity } from '@/community/communityApi'
 import { AppError } from '@/shared/util/AppError'
-import {LeaderboardEntry} from "@/shared/types";
+import {CharInfo, LeaderboardEntry} from "@/shared/types";
 import { Check, Pencil, Radio, UserRound, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -28,6 +29,7 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
   const [username, setUsername] = useState(() => getSavedUsername() ?? '')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
+  const [profileOpen, setProfileOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -70,8 +72,10 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
 
   const mainChar = entry?.player_info?.main_char_info
   const subChar = entry?.player_info?.sub_char_info
+  const chars = [mainChar, subChar].filter((c): c is CharInfo => !!c?.name)
 
   return (
+    <>
     <header className="app-header">
       <div className="brand-lockup">
         <div className="brand-mark" aria-hidden="true"><SwordsMark /></div>
@@ -98,24 +102,65 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
           </div>
         ) : username ? (
           <div className="profile-summary">
-            <div className="profile-avatar">{mainChar ? <img src={charImageUrl(mainChar.name)!} alt="" /> : <UserRound size={17} />}</div>
             <div className="profile-copy">
               <small>#{entry?.rank || "UNRANKED"}</small>
               <button
-                  onClick={startEditing}
-                  aria-label={`${username} 유저명 수정`}
+                  onClick={() => setProfileOpen(true)}
+                  disabled={!entry}
+                  aria-label={`${username} 내 전적 보기`}
                   className="profile-name"
               >
-                <span>{username}</span><Pencil size={12} aria-hidden="true" />
+                <span>{username}</span>
+              </button>
+              <button
+                  onClick={startEditing}
+                  aria-label={`${username} 유저명 수정`}
+                  className="profile-edit"
+              >
+                <Pencil size={14} aria-hidden="true" />
               </button>
             </div>
-            {entry && <div className="profile-rank">{[mainChar, subChar].map(char => char?.rank_info && <RankImage key={char.name} rankInfo={char.rank_info} className="h-7 w-auto" />)}</div>}
+            {chars.length > 0 && (
+              <div className="profile-chars">
+                {chars.map(char => <ProfileChar key={char.name} char={char} />)}
+              </div>
+            )}
           </div>
         ) : (
           <button onClick={startEditing} className="profile-empty"><UserRound size={15} /> 유저명 설정</button>
         )}
       </div>
     </header>
+    {/* Mounted outside <header>: the header is position:sticky, which makes it
+        the containing block for any fixed descendant --- the modal backdrop was
+        being clipped to the header's own 92px instead of filling the viewport. */}
+    {profileOpen && entry && (
+      <PlayerHistoryPanel
+        npid={entry.np_id}
+        leaderboardEntry={entry}
+        onClose={() => setProfileOpen(false)}
+      />
+    )}
+    </>
+  )
+}
+
+function ProfileChar({ char }: { char: CharInfo }) {
+  const url = charImageUrl(char.name)
+  const total = (char.wins ?? 0) + (char.losses ?? 0)
+  return (
+    <div className="profile-char" title={char.name}>
+      <RankImage rankInfo={char.rank_info} className="profile-char-rank" />
+      <div className="profile-avatar">
+        {url ? <img src={url} alt={char.name} /> : <UserRound size={17} />}
+      </div>
+      {total > 0 && (
+        <span className="profile-record">
+          <b>{char.wins ?? 0}<em>W</em></b>
+          <i>{char.losses ?? 0}<em>L</em></i>
+        </span>
+      )}
+    </div>
   )
 }
 

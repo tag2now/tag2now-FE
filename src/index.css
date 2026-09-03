@@ -271,7 +271,7 @@
 .app-header {
   position: sticky; top: 0; z-index: 40;
   display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 16px;
-  min-height: 68px; padding: 8px max(16px, calc((100vw - 1180px) / 2));
+  min-height: 92px; padding: 10px max(16px, calc((100vw - 1180px) / 2));
   background: rgba(12, 12, 14, .96); border-bottom: 1px solid var(--color-border-light);
   backdrop-filter: blur(12px);
 }
@@ -287,13 +287,44 @@
 .profile-empty, .profile-editor button { display: inline-flex; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt-dim); cursor: pointer; }
 .profile-empty:hover, .profile-editor button:hover { background: var(--color-bg-row); color: var(--color-txt); }
 .profile-summary { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.profile-avatar { display: grid; place-items: center; width: 34px; height: 34px; overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-row); color: var(--color-txt-dim); }
+.profile-avatar { display: grid; place-items: center; width: 52px; height: 52px; overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-row); color: var(--color-txt-dim); }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.profile-copy { display: flex; min-width: 80px; flex-direction: column; line-height: 1.15; }
-.profile-copy small { color: var(--color-primary-text); font-size: 9px; font-weight: 700; }
-.profile-name { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; padding: 0; border: 0; background: transparent; color: var(--color-txt); font-size: 12px; font-weight: 600; cursor: pointer; }
+/* Rank and name sit on one line: stacked, the short "#2" left a ragged half
+   row above the name and neither element lined up with the portraits. */
+.profile-copy { display: flex; min-width: 0; align-items: center; gap: 6px; line-height: 1.15; }
+.profile-copy small { flex: 0 0 auto; color: var(--color-primary-text); font-size: 15px; font-weight: 800; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+/* The pencil sat bare on the name with no border or ground, which read as
+   decoration rather than a control. Giving it the same chip treatment as
+   .profile-empty makes the whole name an obvious hit target. */
+.profile-name { display: inline-flex; align-items: center; max-width: 190px; min-height: 30px; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt); font-size: 15px; font-weight: 650; cursor: pointer; }
+.profile-name:hover:not(:disabled) { border-color: rgba(230,57,70,.5); background: var(--color-bg-row); color: var(--color-primary-text); }
+/* Unranked players have no np_id to look up, so the name is inert for them. */
+.profile-name:disabled { cursor: default; }
 .profile-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.profile-rank { display: flex; align-items: center; gap: 2px; padding-left: 8px; border-left: 1px solid var(--color-border-light); }
+/* The pencil is its own control now --- it opens the rename editor while the
+   name opens the history panel, so it carries the accent instead of reading as
+   an ornament inside the name chip. */
+.profile-edit { display: inline-grid; place-items: center; width: 30px; min-height: 30px; flex: 0 0 auto; padding: 0; border: 1px solid rgba(230,57,70,.42); border-radius: 6px; background: rgba(230,57,70,.14); color: var(--color-primary-text); cursor: pointer; transition: background .15s, border-color .15s; }
+.profile-edit:hover { border-color: var(--color-primary); background: rgba(230,57,70,.28); }
+.profile-edit:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+/* Main and sub character each carry their own rank badge and W/L, so they are
+   rendered as two self-contained cells rather than one avatar plus a detached
+   row of rank art — the old layout gave no clue which rank belonged to which. */
+.profile-chars { display: flex; align-items: center; gap: 10px; padding-left: 10px; border-left: 1px solid var(--color-border-light); }
+.profile-char { display: flex; align-items: center; gap: 6px; }
+/* Rank art is a wide banner, not a square badge --- the leaderboard's
+   .mini-char-rank sizes it by width with height:auto for that reason. Pinning a
+   height instead squeezed it to an illegible 18px strip. */
+.profile-char-rank { width: auto; max-width: 96px; height: auto; object-fit: contain; }
+.profile-record { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; color: var(--color-txt-dim); font-size: 13px; font-weight: 600; line-height: 1; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.profile-record b, .profile-record i { display: inline-flex; align-items: baseline; gap: 2px; font-style: normal; font-weight: 700; white-space: nowrap; }
+/* Wins green, losses red --- the convention everywhere else in fighting-game
+   UIs. --color-accent is the green (#34d399); --color-tier-red the loss red. */
+.profile-record b { color: var(--color-accent); }
+.profile-record i { color: var(--color-tier-red); }
+/* The W/L label rides smaller than the count it belongs to, so the eye lands on
+   the number first --- same emphasis split the leaderboard's CharCell uses. */
+.profile-record em { color: var(--color-txt-faint); font-size: 10px; font-style: normal; font-weight: 600; }
 .profile-editor { display: flex; align-items: center; gap: 4px; }
 .profile-editor input { width: 140px; min-height: 34px; padding: 0 8px; }
 .profile-editor button { width: 32px; padding: 0; }
@@ -691,12 +722,23 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
   .mini-char-portrait { width: 44px; height: 44px; }
   .kpi-card-value { font-size: 22px; text-align: center; }
   .app-shell { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
-  .app-header { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; min-height: 60px; padding: 8px 12px; }
-  .brand-lockup p, .profile-rank, .profile-copy small { display: none; }
+  .app-header { grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 8px; min-height: 68px; padding: 8px 12px; }
+  /* Both portraits stay on mobile; the rank banners and W/L do not. Two ranks
+     cost ~68px even shrunk, which at 375px came straight out of the username
+     and left it clipped to a few characters. Dropping them buys back enough
+     for full-size portraits and a readable name. */
+  .profile-control { justify-self: end; min-width: 0; }
+  .profile-summary { min-width: 0; gap: 6px; }
+  .profile-chars { min-width: 0; gap: 6px; padding-left: 6px; }
+  .profile-char { gap: 3px; min-width: 0; }
+  .profile-copy { min-width: 0; }
+  .profile-record, .profile-char-rank { display: none; }
+  .profile-avatar { width: 34px; height: 34px; flex: 0 0 auto; }
+  .profile-name { max-width: 140px; padding: 0 6px; }
+  .brand-lockup p, .profile-copy small { display: none; }
   .brand-mark { width: 32px; height: 32px; }
   .brand-lockup h1 { font-size: 14px; }
   .header-live { display: none; }
-  .profile-name { max-width: 92px; }
   .app-layout { display: block; width: 100%; margin-top: 0; }
   .app-main { padding: 12px 8px 0; }
   .content-heading { min-height: 48px; padding: 0 4px 8px; }

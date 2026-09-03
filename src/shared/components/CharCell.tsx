@@ -21,7 +21,7 @@ export default function CharCell({ name, rankInfo, wins, losses }: CharCellProps
         {url && <img src={url} alt={name} className="w-13 h-13 sm:w-15 sm:h-15 object-contain" />}
         {winRate != null && (
           <div className="hidden w-3/10 sm:block text-sm leading-tight whitespace-nowrap text-left tabular-nums">
-            <span className="text-primary-text">W </span>{wins} <span className="text-accent">L </span>{losses}
+            <span className="text-accent">{wins}<span className="text-txt-faint">W</span></span> <span className="text-tier-red">{losses}<span className="text-txt-faint">L</span></span>
             <br />
             <span className="text-txt-dim">WR:</span>{winRate}%
           </div>
