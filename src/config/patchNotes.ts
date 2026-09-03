@@ -10,6 +10,14 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.3',
+    items: [
+      '개요의 최신 게시글 / 모집 중인 예약을 눌러 바로 해당 항목으로 이동',
+      '게시글과 예약에 고유 주소가 생겨 링크 공유 가능',
+      '브라우저 뒤로 가기로 이전 화면으로 돌아가기',
+    ],
+  },
+  {
     version: '2.2',
     items: [
       '"개요" 탭 추가 — 접속자, 활성 방, 오늘 최대 접속, 등록 플레이어를 한눈에',
