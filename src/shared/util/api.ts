@@ -1,3 +1,5 @@
+import { AppError } from '@/shared/util/AppError'
+
 declare global {
   interface Window {
     __ENV__?: { API_BASE?: string }
@@ -10,7 +12,7 @@ const BASE = window.__ENV__?.API_BASE ?? '/api'
 const throwIfFailed = async (res: Response) => {
     if (res.ok) return
     const detail = await res.json().then((body) => body?.detail).catch(() => null)
-    throw new Error(typeof detail === 'string' ? detail : `request failed: ${res.status}`)
+    throw new AppError(typeof detail === 'string' ? detail : `request failed: ${res.status}`, res.status)
 }
 
 export const request = async (path: string, option: RequestInit) => {
