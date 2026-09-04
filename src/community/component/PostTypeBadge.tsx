@@ -17,7 +17,7 @@ export default function PostTypeBadge({ postType, size = 'sm' }: PostTypeBadgePr
   }
 
   return (
-    <span className={`${textClass} font-bold uppercase tracking-wider bg-primary-dim text-primary rounded`}>
+    <span className={`${textClass} font-bold uppercase tracking-wider bg-primary-glow text-primary-text border border-primary-dim rounded`}>
       {postType}
     </span>
   )
