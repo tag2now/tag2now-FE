@@ -826,6 +826,17 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
   .reservation-modal-actions > button { flex: 1; }
   .rank-picker-panel .grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
   .ranking-table tbody tr { height: 54px; }
+  /* The rank art and the VS column are fixed-width, so at 375px they took 59%
+     of the table and left each name 66px — narrower than the .player-btn
+     inside it, which then spilled past the wrap's hidden overflow and lost its
+     tail. Shrinking the art and the type buys the two name columns the room
+     they need; anything still too long now ellipsizes inside the cell. */
+  .match-table .tbl-td img { min-width: 0; max-width: 100%; height: 28px; }
+  .match-table col:first-child { width: 84px; }
+  .match-table col:nth-child(3) { width: 36px; }
+  .match-table .player-name { max-width: none; padding-inline: 4px; font-size: 13px; }
+  .match-table .player-btn { display: block; width: 100%; overflow: hidden; padding-inline: 4px; text-overflow: ellipsis; white-space: nowrap; }
+  .match-table .vs-label { font-size: 12px; }
   .ranking-table .player-btn { width: 100%; max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .leaderboard-table th:nth-child(1), .leaderboard-table td:nth-child(1) { width: 11%; }
   .leaderboard-table th:nth-child(2), .leaderboard-table td:nth-child(2) { width: 33%; }
