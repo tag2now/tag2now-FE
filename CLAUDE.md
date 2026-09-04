@@ -264,7 +264,7 @@ Component tests are prop-driven and need no mocks. `App.test.tsx` mocks the feat
   history/community/reservation reads included; anything unrouted reaches
   whatever the dev server proxies to, which is **production** by default.
 - `e2e/specs/` — behavioural specs per feature.
-- `e2e/visual/screenshots.spec.ts` — visual regression against committed baselines.
+- `e2e/visual/screenshots.spec.ts` — visual regression, **local only**; CI does not run it.
 
 Helpers worth reaching for: `goToMatchTab` (the overview is the landing tab, so
 a rooms spec can click through or `goto('/match/rank_match')`),
@@ -278,22 +278,26 @@ callback along the way, which measured 2.7s of the rooms auto-refresh test on
 its own. `fastForward` jumps to the target instant — that test went 5.6s → 1.6s.
 
 Visual baselines are environment-sensitive: snapshots rendered on Windows will
-not match CI's Linux.
+not match CI's Linux, which is why the filenames carry a `-win32` / `-linux`
+suffix.
 
-**They are not in the repository.** `.gitignore` excludes
-`e2e/visual/screenshots.spec.ts-snapshots/` entirely, so no baseline is tracked
-and `git add` will not stage one. Visual regression is therefore a CI-only
-check; locally the suite compares against whatever your own machine last
-produced, and a stale local baseline fails on unrelated changes — a version
-string in the header changing width is enough.
+**No baseline is in the repository.** `.gitignore` excludes
+`e2e/visual/screenshots.spec.ts-snapshots/` entirely, so nothing is tracked and
+`git add` will not stage one. CI therefore has nothing to compare against, and
+`toHaveScreenshot` fails there with "a snapshot doesn't exist" — so **both
+workflows run `npx playwright test e2e/specs` and skip `e2e/visual` outright**.
+Do not widen that back to a bare `npx playwright test` without committing linux
+baselines in the same change; that is exactly what broke the v2.3.1 deploy.
 
-Refresh CI's baselines with the `Update Visual Baselines` workflow
-(`workflow_dispatch`), which runs against **the pushed branch**: push your
-changes first, or it regenerates from code that predates them. It uploads the
-result as an artifact rather than committing it.
+What remains is a local check: the suite compares against whatever your own
+machine last produced. A stale local baseline fails on unrelated changes — a
+version string in the header changing width is enough. Delete the offending
+`*-win32.png` and let the next run recreate it.
 
-To silence a stale *local* baseline, delete the offending `*-win32.png` and let
-the next run recreate it.
+The `Update Visual Baselines` workflow (`workflow_dispatch`) still exists and
+runs against **the pushed branch**, but it only uploads an artifact; nothing
+consumes it. Deciding how baselines should be produced and stored — committed
+linux PNGs, an external service, or dropping the visual suite — is still open.
 
 **Parallelism.** `workers` matches the core count — 4 on CI (`ubuntu-latest`),
 unset locally — with `retries: 1` on CI only. It was 1 on CI, the Playwright
