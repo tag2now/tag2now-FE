@@ -8,6 +8,7 @@ import { getUsername } from '@/shared/util/cookie'
 import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
 import { CalendarPlus, Check, ChevronDown, Clock3, Filter, LogIn, UserMinus, X } from 'lucide-react'
 import Select from '@/shared/components/Select'
+import ToggleGroup from '@/shared/components/ToggleGroup'
 import { reservationPath } from '@/config/routes'
 import { kstTimeFormat, MATCH_TYPE_LABELS } from '@/reservation/reservationLabels'
 
@@ -27,7 +28,11 @@ type Reservation = {
   status: ReservationStatus
   contact?: string
 }
-const matchTypes: Array<MatchType | '전체'> = ['전체', '랭크매치', '플레이어 매치', '상관없음']
+type TypeFilter = '전체' | '랭크매치' | '플레이어 매치'
+// The form's '상관없음' is a host saying either game suits them, which is not
+// the filter's '전체'; the two lists only look alike.
+const typeFilters: TypeFilter[] = ['전체', '랭크매치', '플레이어 매치']
+const formMatchTypes: MatchType[] = ['랭크매치', '플레이어 매치', '상관없음']
 const durationOptions = [
   { value: '30', label: '약 30분' },
   { value: '60', label: '약 1시간' },
@@ -168,8 +173,7 @@ function TimePickerDialog({ draftTime, setDraftTime, onCancel, onConfirm }: {
 }
 
 export default function Reservation() {
-  const [typeFilter, setTypeFilter] = useState<MatchType | '전체'>('전체')
-  const [rankFilter, setRankFilter] = useState('전체')
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('전체')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [joinedIds, setJoinedIds] = useState<number[]>([])
   // Which reservation the detail pane shows is the path's answer, so a shared
@@ -245,10 +249,9 @@ export default function Reservation() {
   // A '상관없음' host takes either game, so both single-type filters keep them.
   const visibleReservations = useMemo(
     () => reservations.filter((reservation) =>
-      (typeFilter === '전체' || reservation.type === typeFilter || reservation.type === '상관없음')
-      && (rankFilter === '전체' || reservation.ranks.includes(rankFilter)),
+      typeFilter === '전체' || reservation.type === typeFilter || reservation.type === '상관없음',
     ),
-    [rankFilter, reservations, typeFilter],
+    [reservations, typeFilter],
   )
   const selectedReservation = visibleReservations.find((reservation) => reservation.id === selectedId) ?? visibleReservations[0]
   const reservationsByTime = useMemo(() => {
@@ -356,7 +359,7 @@ export default function Reservation() {
                 {/* Native radios: the browser supplies one tab stop, arrow-key
                     navigation and the group semantics. The visible chip is the
                     label, styled off :checked. */}
-                {matchTypes.slice(1).map((type) => (
+                {formMatchTypes.map((type) => (
                   <label key={type} className="match-type-option">
                     <input
                       type="radio"
@@ -425,8 +428,7 @@ export default function Reservation() {
             </div>
           </div>
           <div className="reservation-filter-controls">
-            <Select label="매치 종류 필터" value={typeFilter} options={matchTypes.map((type) => ({ value: type, label: type }))} onChange={setTypeFilter} />
-            <Select label="계급 필터" value={rankFilter} options={['전체', ...rankOptions].map((rank) => ({ value: rank, label: rank }))} onChange={setRankFilter} />
+            <ToggleGroup label="매치 종류 필터" value={typeFilter} options={typeFilters.map((type) => ({ value: type, label: type }))} onChange={setTypeFilter} />
           </div>
         </div>
 

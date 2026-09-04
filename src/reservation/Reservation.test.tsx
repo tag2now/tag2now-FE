@@ -75,6 +75,10 @@ function openReservationModal() {
   return screen.getByRole('dialog', { name: '예약 추가' })
 }
 
+// The filter bar offers radios with the same labels, so the form's own
+// match-type radios have to be reached through their group.
+const matchTypeControl = () => within(screen.getByRole('radiogroup', { name: '매치 종류' }))
+
 describe('Reservation', () => {
   it('opens and closes the reservation modal', () => {
     openReservationModal()
@@ -86,8 +90,8 @@ describe('Reservation', () => {
 
   it('uses a mutually exclusive match type control and hides ranks for player matches', () => {
     openReservationModal()
-    const rankMatch = screen.getByRole('radio', { name: '랭크매치' })
-    const playerMatch = screen.getByRole('radio', { name: '플레이어 매치' })
+    const rankMatch = matchTypeControl().getByRole('radio', { name: '랭크매치' })
+    const playerMatch = matchTypeControl().getByRole('radio', { name: '플레이어 매치' })
 
     // Native radios, so the browser owns the mutual exclusivity, one tab stop
     // and arrow-key navigation rather than the component reimplementing them.
@@ -219,7 +223,7 @@ describe('Reservation', () => {
 
   it('sends a player match without ranks and with the chosen capacity', async () => {
     openReservationModal()
-    fireEvent.click(screen.getByRole('radio', { name: '플레이어 매치' }))
+    fireEvent.click(matchTypeControl().getByRole('radio', { name: '플레이어 매치' }))
     fireEvent.change(screen.getByLabelText('모집 인원'), { target: { value: '3' } })
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
 
@@ -230,7 +234,7 @@ describe('Reservation', () => {
 
   it('offers ranks and a capacity together when either match type will do', async () => {
     openReservationModal()
-    fireEvent.click(screen.getByRole('radio', { name: '상관없음' }))
+    fireEvent.click(matchTypeControl().getByRole('radio', { name: '상관없음' }))
 
     expect(screen.getByRole('group', { name: /보유 계급/ })).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('모집 인원'), { target: { value: '2' } })
@@ -243,7 +247,7 @@ describe('Reservation', () => {
 
   it('lets a reservation for either type be posted without any rank', async () => {
     openReservationModal()
-    fireEvent.click(screen.getByRole('radio', { name: '상관없음' }))
+    fireEvent.click(matchTypeControl().getByRole('radio', { name: '상관없음' }))
     fireEvent.click(screen.getByRole('button', { name: /계급 선택, 현재/ }))
     const selectedTiles = within(document.getElementById('reservation-rank-picker')!).getAllByRole('button', { pressed: true })
     expect(selectedTiles).toHaveLength(1)
@@ -263,9 +267,18 @@ describe('Reservation', () => {
     expect(await screen.findByRole('button', { name: /아무나/ })).toBeInTheDocument()
 
     for (const filter of ['랭크매치', '플레이어 매치']) {
-      fireEvent.change(screen.getByLabelText('매치 종류 필터'), { target: { value: filter } })
+      fireEvent.click(screen.getByRole('radio', { name: filter }))
       expect(screen.getByRole('button', { name: /아무나/ })).toBeInTheDocument()
     }
+  })
+
+  it('offers the match-type filter as a toggle defaulting to 전체', () => {
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
+
+    const group = screen.getByRole('group', { name: '매치 종류 필터' })
+    expect(within(group).getAllByRole('radio').map((radio) => radio.getAttribute('value')))
+      .toEqual(['전체', '랭크매치', '플레이어 매치'])
+    expect(within(group).getByRole('radio', { name: '전체' })).toBeChecked()
   })
 
   async function openDetail(reservation: ApiReservation = apiReservation) {

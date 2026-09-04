@@ -419,6 +419,11 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .custom-select-menu button { display: flex; width: 100%; min-height: 32px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: var(--color-txt-dim); font-size: 11px; text-align: left; cursor: pointer; }
 .custom-select-menu button:hover { background: rgba(255,255,255,.045); color: var(--color-txt); }
 .custom-select-menu button[data-selected] { background: rgba(230,57,70,.14); color: var(--color-primary-text); }
+.toggle-group { display: flex; min-width: 0; gap: 4px; padding: 3px; border: 1px solid rgba(255,255,255,.11); border-radius: 8px; background: #1b1b1f; }
+.toggle-group-option { display: flex; min-height: 32px; flex: 1 1 auto; align-items: center; justify-content: center; padding: 0 14px; border-radius: 6px; color: var(--color-txt-dim); font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
+.toggle-group-option:hover { background: rgba(255,255,255,.045); color: var(--color-txt); }
+.toggle-group-option:has(input:checked) { background: rgba(230,57,70,.16); color: var(--color-primary-text); }
+.toggle-group-option:has(input:focus-visible) { outline: 2px solid rgba(230,57,70,.8); outline-offset: 1px; }
 .input-shell, .textarea-shell { position: relative; display: flex; align-items: center; }
 .input-shell > svg { position: absolute; left: 11px; z-index: 1; color: var(--color-txt-faint); pointer-events: none; }
 .input-shell .input-base { padding-left: 34px; }
@@ -531,8 +536,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .reservation-filter-icon { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(230,57,70,.2); border-radius: 6px; background: rgba(230,57,70,.08); color: var(--color-primary-text); }
 .reservation-filter-heading strong { display: block; color: var(--color-txt); font-size: 12px; font-weight: 700; }
 .reservation-filter-heading small { display: block; margin-top: 2px; color: var(--color-txt-dim); font-size: 10px; }
-.reservation-filter-controls { display: grid; grid-template-columns: minmax(148px,180px) minmax(148px,180px); gap: 6px; }
-.reservation-filter-controls .custom-select { min-width: 0; }
+.reservation-filter-controls { display: flex; min-width: 0; justify-content: flex-end; }
 .reservation-content-grid { margin-top: 16px; }
 .community-filter-bar { display: flex; min-height: 66px; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 2px; border-bottom: 1px solid var(--color-border-light); }
 .community-filter-heading { display: flex; min-width: 0; align-items: center; gap: 8px; }
@@ -796,8 +800,8 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
   .filter-bar { align-items: flex-start; flex-direction: column; }
   .reservation-filter-bar { align-items: stretch; flex-direction: column; gap: 8px; padding: 12px 0 12px; }
   .reservation-filter-heading small { display: none; }
-  .reservation-filter-controls { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .reservation-filter-controls .custom-select-trigger { min-height: 42px; }
+  .reservation-filter-controls .toggle-group { flex: 1 1 auto; }
+  .reservation-filter-controls .toggle-group-option { min-height: 38px; flex: 1 1 0; padding: 0 8px; }
   .reservation-content-grid { margin-top: 12px; }
   .community-filter-bar { align-items: stretch; flex-direction: column; gap: 8px; padding: 12px 0 12px; }
   .community-filter-heading small { display: none; }
