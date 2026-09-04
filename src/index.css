@@ -827,10 +827,9 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
   .rank-picker-panel .grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
   .ranking-table tbody tr { height: 54px; }
   .ranking-table .player-btn { width: 100%; max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .leaderboard-table th:nth-child(1), .leaderboard-table td:nth-child(1) { width: 14%; }
-  .leaderboard-table th:nth-child(2), .leaderboard-table td:nth-child(2) { width: 34%; }
-  .leaderboard-table th:nth-child(3), .leaderboard-table td:nth-child(3) { width: 52%; }
-  .leaderboard-table th:nth-child(4), .leaderboard-table td:nth-child(4) { display: none; }
+  .leaderboard-table th:nth-child(1), .leaderboard-table td:nth-child(1) { width: 11%; }
+  .leaderboard-table th:nth-child(2), .leaderboard-table td:nth-child(2) { width: 33%; }
+  .leaderboard-table th:nth-child(3), .leaderboard-table td:nth-child(3), .leaderboard-table th:nth-child(4), .leaderboard-table td:nth-child(4) { width: 28%; }
   .weekly-ranking-table th:nth-child(1), .weekly-ranking-table td:nth-child(1) { width: 13%; }
   .weekly-ranking-table th:nth-child(2), .weekly-ranking-table td:nth-child(2) { width: 35%; }
   .weekly-ranking-table th:nth-child(3), .weekly-ranking-table td:nth-child(3) { width: 16%; }
