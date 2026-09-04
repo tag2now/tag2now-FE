@@ -22,11 +22,16 @@ test.describe('Leaderboard', () => {
   })
 
   test('renders player entries from fixture', async ({ page }) => {
-    await expect(page.locator('text=TTT2_Master')).toBeVisible()
-    await expect(page.locator('text=KingOfIronFist')).toBeVisible()
-    await expect(page.locator('text=TagComboKing')).toBeVisible()
-    await expect(page.locator('text=BearPunchPro')).toBeVisible()
-    await expect(page.locator('text=NewChallenger')).toBeVisible()
+    // Scoped to the table: these names also appear in the overview's cards and
+    // in community post rows, so a bare text= matches several elements.
+    const names = page.locator('table tbody tr.tbl-row button.player-btn')
+    await expect(names).toHaveText([
+      'TTT2_Master',
+      'KingOfIronFist',
+      'TagComboKing',
+      'BearPunchPro',
+      'NewChallenger',
+    ])
   })
 
   test('shows rank numbers in order', async ({ page }) => {
