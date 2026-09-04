@@ -42,6 +42,19 @@ BE=local npm run dev
 
 The proxy strips the `/api` prefix before forwarding.
 
+### Running from a worktree
+
+Just run `npm run dev` from the worktree. Do not pass `--port`, do not add a
+`.claude/launch.json`, and do not stop a dev server that is already on :5173 —
+it is most likely the one the user is working in. Vite takes the next free port
+by itself and prints the URL it settled on; read that line instead of assuming
+:5173.
+
+Forcing a port makes things worse rather than better: `npm run dev -- --port N`
+routes through `npx`, which resolves `vite` from the npm cache rather than the
+worktree's own `node_modules`. That copy runs with the wrong root and serves 404
+for every request, including `/`, while still reporting a healthy startup.
+
 ## Stack
 
 React 19 + TypeScript + Vite 8 (rolldown) + Tailwind CSS 4 + React Router 7. No global state library; state lives in hooks.
@@ -264,7 +277,23 @@ navigation and use `fastForward`, not `runFor`: `runFor` replays every timer
 callback along the way, which measured 2.7s of the rooms auto-refresh test on
 its own. `fastForward` jumps to the target instant — that test went 5.6s → 1.6s.
 
-Visual baselines are environment-sensitive: snapshots rendered on Windows will not match CI's Linux. Refresh them with the `Update Visual Baselines` workflow (`workflow_dispatch`) and commit the artifact rather than regenerating locally.
+Visual baselines are environment-sensitive: snapshots rendered on Windows will
+not match CI's Linux.
+
+**They are not in the repository.** `.gitignore` excludes
+`e2e/visual/screenshots.spec.ts-snapshots/` entirely, so no baseline is tracked
+and `git add` will not stage one. Visual regression is therefore a CI-only
+check; locally the suite compares against whatever your own machine last
+produced, and a stale local baseline fails on unrelated changes — a version
+string in the header changing width is enough.
+
+Refresh CI's baselines with the `Update Visual Baselines` workflow
+(`workflow_dispatch`), which runs against **the pushed branch**: push your
+changes first, or it regenerates from code that predates them. It uploads the
+result as an artifact rather than committing it.
+
+To silence a stale *local* baseline, delete the offending `*-win32.png` and let
+the next run recreate it.
 
 **Parallelism.** `workers` matches the core count — 4 on CI (`ubuntu-latest`),
 unset locally — with `retries: 1` on CI only. It was 1 on CI, the Playwright
