@@ -84,7 +84,11 @@
     font-family: var(--font-sans);
     font-size: 13px;
     line-height: 1.5;
-    min-width: 320px;
+    /* 375px, the iPhone SE 2/3 width, is the narrowest viewport this project
+       supports; below it the page scrolls horizontally rather than reflowing.
+       Was 320px, which nothing tested --- Playwright's mobile project is a
+       Pixel 5 at 393px --- and which no longer matches any current handset. */
+    min-width: 375px;
     min-height: 100vh;
     background-image: linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
     background-size: 32px 32px;
@@ -270,8 +274,17 @@
 .skip-link:focus { top: 8px; outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .app-header {
   position: sticky; top: 0; z-index: 40;
-  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 16px;
-  min-height: 92px; padding: 10px max(16px, calc((100vw - 1180px) / 2));
+  /* auto auto 1fr, not 1fr auto auto: Live reads as a sibling of the brand ---
+     it is site-wide state, not part of the profile --- so the slack belongs to
+     the profile column, which pins it to the right edge. Under 1fr auto auto
+     the brand absorbed the slack and left the 62px Live badge stranded in the
+     middle of the header, between two blocks several hundred px wide. */
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 16px;
+  /* The 48px portrait is the tallest thing in here and sets the floor: with the
+     vertical padding at 6px the header cannot go below 60px, so 68px leaves 8px
+     of slack. 92px was sized for the rank banner back when it ran 96px wide;
+     at 76px wide it clears 35px tall and no longer drives the height. */
+  min-height: 68px; padding: 6px max(16px, calc((100vw - 1180px) / 2));
   background: rgba(12, 12, 14, .96); border-bottom: 1px solid var(--color-border-light);
   backdrop-filter: blur(12px);
 }
@@ -283,11 +296,11 @@
 .brand-lockup p b { margin-left: 4px; font-weight: 600; color: var(--color-txt-faint); }
 .header-live { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; color: var(--color-accent); font-size: 10px; font-weight: 700; letter-spacing: .1em; }
 .header-live strong { min-width: 22px; padding-left: 6px; border-left: 1px solid var(--color-border-light); color: var(--color-txt); text-align: center; letter-spacing: 0; font-variant-numeric: tabular-nums; }
-.profile-control { min-width: 0; }
+.profile-control { min-width: 0; justify-self: end; }
 .profile-empty, .profile-editor button { display: inline-flex; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt-dim); cursor: pointer; }
 .profile-empty:hover, .profile-editor button:hover { background: var(--color-bg-row); color: var(--color-txt); }
 .profile-summary { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.profile-avatar { display: grid; place-items: center; width: 52px; height: 52px; overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-row); color: var(--color-txt-dim); }
+.profile-avatar { display: grid; place-items: center; width: 48px; height: 48px; overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-row); color: var(--color-txt-dim); }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 /* Rank and name sit on one line: stacked, the short "#2" left a ragged half
    row above the name and neither element lined up with the portraits. */
@@ -314,8 +327,10 @@
 .profile-char { display: flex; align-items: center; gap: 6px; }
 /* Rank art is a wide banner, not a square badge --- the leaderboard's
    .mini-char-rank sizes it by width with height:auto for that reason. Pinning a
-   height instead squeezed it to an illegible 18px strip. */
-.profile-char-rank { width: auto; max-width: 96px; height: auto; object-fit: contain; }
+   height instead squeezed it to an illegible 18px strip.
+   Capped under the 48px portrait it sits beside: the banner's 2.2:1 aspect puts
+   76px at ~35px tall, so the portrait stays the larger of the two. */
+.profile-char-rank { width: auto; max-width: 76px; height: auto; object-fit: contain; }
 .profile-record { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; color: var(--color-txt-dim); font-size: 13px; font-weight: 600; line-height: 1; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .profile-record b, .profile-record i { display: inline-flex; align-items: baseline; gap: 2px; font-style: normal; font-weight: 700; white-space: nowrap; }
 /* Wins green, losses red --- the convention everywhere else in fighting-game
@@ -722,7 +737,20 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
   .mini-char-portrait { width: 44px; height: 44px; }
   .kpi-card-value { font-size: 22px; text-align: center; }
   .app-shell { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
-  .app-header { grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 8px; min-height: 68px; padding: 8px 12px; }
+  /* 1fr for the brand, auto for the profile --- not the reverse. Under
+     `minmax(0,auto)` the brand column's max is its content width, so it never
+     yielded and the profile chip painted over the wordmark: 44.5px of overlap
+     at 320px, and 29.2px at 375px once a username reached the 140px cap. The
+     profile is the fixed-size side (portraits and a capped name), so it takes
+     `auto` and the brand absorbs what is left. */
+  .app-header { grid-template-columns: minmax(0, 1fr) minmax(0, auto); gap: 8px; min-height: 68px; padding: 8px 12px; }
+  /* The wordmark is the one thing here that can lose characters silently, so
+     it clips rather than overflowing its column. min-width:0 is needed on the
+     lockup *and* on its inner text wrapper: a flex item defaults to
+     min-width:auto, which is its content width, so without both the column
+     refuses to shrink and the overlap survives the 1fr. */
+  .brand-lockup, .brand-lockup > div { min-width: 0; }
+  .brand-lockup h1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* Both portraits stay on mobile; the rank banners and W/L do not. Two ranks
      cost ~68px even shrunk, which at 375px came straight out of the username
      and left it clipped to a few characters. Dropping them buys back enough
