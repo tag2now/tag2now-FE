@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
+import { POST_TYPES } from '@/community/types'
 import { AlignLeft, ArrowLeft, FilePenLine, Send, Type, X } from 'lucide-react'
 
 interface CreatePostFormProps {
@@ -37,7 +38,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
       <div className="form-section writing-form">
       <div className="field-heading"><span className="field-label">게시글 유형</span><small>게시글 성격에 맞는 분류를 선택하세요.</small></div>
       <div className="segmented-control mb-3">
-        {['자유', '랭매구인'].map((t) => (
+        {POST_TYPES.map((t) => (
           <button
             key={t}
             onClick={() => setPostType(t)}

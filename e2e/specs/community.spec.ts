@@ -18,7 +18,8 @@ test.describe('Community', () => {
   test('filter buttons are visible', async ({ page }) => {
     await expect(page.locator('button', { hasText: '전체' })).toBeVisible()
     await expect(page.locator('button', { hasText: '자유' })).toBeVisible()
-    await expect(page.locator('button', { hasText: '랭매구인' })).toBeVisible()
+    await expect(page.locator('button', { hasText: '건의' })).toBeVisible()
+    await expect(page.locator('button', { hasText: '공략' })).toBeVisible()
   })
 
   test('clicking filter button triggers API call with post_type', async ({ page }) => {

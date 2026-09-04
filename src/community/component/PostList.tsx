@@ -2,6 +2,7 @@ import { formatTimeAgo } from '@/shared/util/timeFormat'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import PostTypeBadge from './PostTypeBadge'
 import type { LeaderboardEntry} from "@/shared/types";
+import { POST_TYPES } from "@/community/types";
 import type {PostSummary} from "@/community/types";
 import AuthorBadge from './AuthorBadge'
 import { ChevronLeft, ChevronRight, MessageSquare, MessagesSquare, PenLine, RefreshCw, SlidersHorizontal, ThumbsDown, ThumbsUp } from 'lucide-react'
@@ -51,7 +52,7 @@ export default function PostList({
         </div>
         <div className="community-filter-controls">
           <div className="segmented-control" role="group" aria-label="게시글 분류">
-            {['all', '자유', '랭매구인'].map((t) => {
+            {['all', ...POST_TYPES].map((t) => {
               const active = (t === 'all' && !postType) || postType === t
               return (
                 <button
