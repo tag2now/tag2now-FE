@@ -4,8 +4,20 @@ import { LATEST_PATCH_VERSION } from '@/config/patchNotes'
 import RankImage from './RankImage'
 import { getUsername as getSavedUsername, saveUsername, clearUsername } from '@/shared/util/cookie'
 import { setIdentity } from '@/community/communityApi'
+import { AppError } from '@/shared/util/AppError'
 import {LeaderboardEntry} from "@/shared/types";
 import { Check, Pencil, Radio, UserRound, X } from 'lucide-react'
+import toast from 'react-hot-toast'
+
+/**
+ * The API's own { detail } is Korean and written for users, so it is shown as
+ * it is — "유저명은 50자를 넘을 수 없습니다." beats any generic line. Anything
+ * else is a transport failure whose message is not user-facing text.
+ */
+function errorText(e: unknown): string {
+  if (e instanceof AppError && e.explained) return e.message
+  return '유저명을 저장하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.'
+}
 
 interface HeaderProps {
   totalUsers?: number
@@ -37,8 +49,15 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
         await setIdentity(trimmed)
         saveUsername(trimmed)
       } catch (e) {
+        // Reopen rather than rethrowing. The rethrow reached the global
+        // unhandledrejection handler, which toasts `e.message` verbatim — so a
+        // dropped connection showed "Failed to fetch" and a 5xx without a body
+        // showed "request failed: 500", both in English in an all-Korean UI.
+        // Worse, the editor had already closed, so the typed name was gone and
+        // the only way forward was to type it again from memory.
         setUsername(prev)
-        throw e
+        setEditing(true)
+        toast.error(errorText(e))
       }
     } else {
       clearUsername()

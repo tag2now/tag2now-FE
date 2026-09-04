@@ -24,10 +24,22 @@ describe('reportRejection', () => {
   })
 
   it('claims the rejection so the browser does not also report it', () => {
-    const { event, preventDefault } = rejectionOf(new AppError('request failed: 500', 500))
+    const { event, preventDefault } = rejectionOf(new AppError('예약을 삭제할 권한이 없습니다.'))
 
     reportRejection(event)
 
+    expect(preventDefault).toHaveBeenCalled()
+  })
+
+  // `throwIfFailed` builds this when a response carries no { detail }: there is
+  // nothing to show but the status line, which is not Korean and names no way
+  // out.
+  it('substitutes its own wording when the message is not fit to show', () => {
+    const { event, preventDefault } = rejectionOf(new AppError('request failed: 500', 500, false))
+
+    reportRejection(event)
+
+    expect(toast.error).toHaveBeenCalledWith('요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.')
     expect(preventDefault).toHaveBeenCalled()
   })
 

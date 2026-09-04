@@ -12,7 +12,8 @@ const BASE = window.__ENV__?.API_BASE ?? '/api'
 const throwIfFailed = async (res: Response) => {
     if (res.ok) return
     const detail = await res.json().then((body) => body?.detail).catch(() => null)
-    throw new AppError(typeof detail === 'string' ? detail : `request failed: ${res.status}`, res.status)
+    const explained = typeof detail === 'string'
+    throw new AppError(explained ? detail : `request failed: ${res.status}`, res.status, explained)
 }
 
 export const request = async (path: string, option: RequestInit) => {
