@@ -6,10 +6,9 @@ export type CreateReservationInput = { start_time: string; duration_minutes: num
 const participantKey = (id: number) => `reservation-participant-${id}`
 const ownerKey = (id: number) => `reservation-owner-${id}`
 
-export const fetchReservations = (): Promise<ApiReservation[]> => {
-  const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date())
-  return GET('reservations', { date })
-}
+// The window is the server's to decide — now until the next 06:00 KST — so the
+// client no longer names a date. A session that runs past midnight stays on one list.
+export const fetchReservations = (): Promise<ApiReservation[]> => GET('reservations')
 export async function createReservation(data: CreateReservationInput) {
   const result = await POST('reservations', data)
   localStorage.setItem(ownerKey(result.reservation.id), result.owner_token)
