@@ -75,6 +75,21 @@ function openReservationModal() {
   return screen.getByRole('dialog', { name: '예약 추가' })
 }
 
+// Highest first, matching the picker's own order, so a slice takes the tiles a
+// host would plausibly reach for.
+const rankNames = ['Yaksa', 'Raijin', 'Fujin', 'Suzaku', 'Seiryu', 'Byakko', 'Genbu', 'Savior', 'Conqueror', 'Destroyer',
+  'Vanquisher', 'Pugilist', 'Duelist', 'Avenger', 'Warrior', 'Berserker', 'Fighter', 'Marauder', 'Brawler', 'Grand Master',
+  'Master']
+
+/** Open the picker, press the named tiles, close it. Nothing is preselected, so
+ * every flow that posts a rank match has to go through here. */
+function selectRanks(...ranks: string[]) {
+  fireEvent.click(screen.getByRole('button', { name: /계급 선택/ }))
+  const picker = document.getElementById('reservation-rank-picker')!
+  for (const rank of ranks) fireEvent.click(within(picker).getByRole('button', { name: `${rank} ${rank}` }))
+  fireEvent.click(within(picker).getByRole('button', { name: '선택 완료' }))
+}
+
 // The filter bar offers radios with the same labels, so the form's own
 // match-type radios have to be reached through their group.
 const matchTypeControl = () => within(screen.getByRole('radiogroup', { name: '매치 종류' }))
@@ -106,12 +121,12 @@ describe('Reservation', () => {
 
   it('shows all 36 ranks with higher rows above and higher ranks on the right', () => {
     openReservationModal()
-    fireEvent.click(screen.getByRole('button', { name: /계급 선택, 현재/ }))
+    fireEvent.click(screen.getByRole('button', { name: /계급 선택/ }))
 
     const picker = document.getElementById('reservation-rank-picker')
     expect(picker).not.toBeNull()
     const tiles = within(picker!).getAllByRole('button', { pressed: false })
-      .concat(within(picker!).getAllByRole('button', { pressed: true }))
+      .concat(within(picker!).queryAllByRole('button', { pressed: true }))
       .filter((button) => button.getAttribute('aria-pressed') !== null)
     const imageNames = Array.from(picker!.querySelectorAll('button[aria-pressed] img')).map((image) => image.getAttribute('alt'))
 
@@ -122,14 +137,30 @@ describe('Reservation', () => {
 
   it('shows selected rank images from highest to lowest in the collapsed control', () => {
     openReservationModal()
-    fireEvent.click(screen.getByRole('button', { name: /계급 선택, 현재/ }))
-    const picker = document.getElementById('reservation-rank-picker')!
-    fireEvent.click(within(picker).getByRole('button', { name: /Yaksa/ }))
-    fireEvent.click(within(picker).getByRole('button', { name: '선택 완료' }))
+    selectRanks('Vanquisher', 'Yaksa')
 
     const summary = screen.getByRole('button', { name: '계급 선택, 현재 Yaksa, Vanquisher' })
     expect(Array.from(summary.querySelectorAll('img')).map((image) => image.alt)).toEqual(['Yaksa', 'Vanquisher'])
     expect(within(summary).queryByText('+1')).not.toBeInTheDocument()
+  })
+
+  it('starts with no rank chosen, so a host cannot post one they never picked', () => {
+    openReservationModal()
+
+    expect(screen.getByRole('button', { name: '계급 선택' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '예약 등록' })).toBeDisabled()
+  })
+
+  it('refuses a 21st rank, the limit the backend enforces', () => {
+    openReservationModal()
+    selectRanks(...rankNames.slice(0, 20))
+
+    fireEvent.click(screen.getByRole('button', { name: /계급 선택, 현재/ }))
+    const picker = within(document.getElementById('reservation-rank-picker')!)
+
+    expect(picker.getByRole('status')).toHaveTextContent('계급은 최대 20개까지 선택할 수 있습니다.')
+    expect(picker.getByRole('button', { name: `${rankNames[20]} ${rankNames[20]}` })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /계급 선택, 현재/ }).querySelectorAll('img')).toHaveLength(20)
   })
 
   it('defaults the start time to the next whole hour in Seoul', () => {
@@ -180,21 +211,37 @@ describe('Reservation', () => {
     expect(timeButton).toHaveAttribute('aria-label', '시작 시각 22:35')
   })
 
-  it('creates a rank reservation using the highest rank image and a +N badge', async () => {
+  it('creates a rank reservation whose card shows every rank the host picked', async () => {
     openReservationModal()
-    fireEvent.click(screen.getByRole('button', { name: /계급 선택, 현재/ }))
-    const picker = document.getElementById('reservation-rank-picker')!
-    fireEvent.click(within(picker).getByRole('button', { name: /Yaksa/ }))
+    selectRanks('Vanquisher', 'Yaksa')
     vi.mocked(fetchReservations).mockResolvedValue([apiReservation])
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
 
     const createdCard = await screen.findByRole('button', { name: /나 모집중 Yaksa, Vanquisher/ })
-    expect(within(createdCard).getByRole('img', { name: 'Yaksa' })).toBeInTheDocument()
-    expect(within(createdCard).getByText('+1')).toBeInTheDocument()
+    expect(Array.from(createdCard.querySelectorAll('img')).map((image) => image.alt)).toEqual(['Yaksa', 'Vanquisher'])
+    expect(within(createdCard).queryByText(/^\+/)).not.toBeInTheDocument()
+  })
+
+  // Three icons is what the card's rank cell fits; the rest are a count, and the
+  // detail panel is where the full list lives.
+  it('counts the ranks a card cannot fit and lists them all in the detail panel', async () => {
+    const ranks = ['Yaksa', 'Fujin', 'Warrior', 'Vanquisher', 'Mentor']
+    vi.mocked(fetchReservations).mockResolvedValue([{ ...apiReservation, host_ranks: ranks }])
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
+
+    const card = await screen.findByRole('button', { name: /나 모집중 Yaksa, Fujin, Vanquisher, Warrior, Mentor/ })
+    expect(Array.from(card.querySelectorAll('img')).map((image) => image.alt)).toEqual(['Yaksa', 'Fujin', 'Vanquisher'])
+    expect(within(card).getByText('+2')).toBeInTheDocument()
+
+    fireEvent.click(card)
+    const detail = screen.getByRole('complementary', { name: '선택한 예약 상세' })
+    expect(Array.from(detail.querySelectorAll('img')).map((image) => image.alt)).toEqual(['Yaksa', 'Fujin', 'Vanquisher', 'Warrior', 'Mentor'])
+    expect(within(detail).queryByText(/^\+/)).not.toBeInTheDocument()
   })
 
   it('sends the form values to the backend contract on submit', async () => {
     openReservationModal()
+    selectRanks('Vanquisher')
     fireEvent.change(screen.getByLabelText('예상 시간'), { target: { value: '120' } })
     fireEvent.change(screen.getByLabelText(/메모/), { target: { value: '가볍게 한 판' } })
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
@@ -213,6 +260,7 @@ describe('Reservation', () => {
   it('keeps the modal open and shows the reason when creation fails', async () => {
     vi.mocked(createReservation).mockRejectedValue(new Error('이미 같은 시간에 예약이 있습니다.'))
     openReservationModal()
+    selectRanks('Vanquisher')
 
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
 
@@ -237,6 +285,7 @@ describe('Reservation', () => {
     fireEvent.click(matchTypeControl().getByRole('radio', { name: '상관없음' }))
 
     expect(screen.getByRole('group', { name: /보유 계급/ })).toBeInTheDocument()
+    selectRanks('Vanquisher')
     fireEvent.change(screen.getByLabelText('모집 인원'), { target: { value: '2' } })
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
 
@@ -248,10 +297,8 @@ describe('Reservation', () => {
   it('lets a reservation for either type be posted without any rank', async () => {
     openReservationModal()
     fireEvent.click(matchTypeControl().getByRole('radio', { name: '상관없음' }))
-    fireEvent.click(screen.getByRole('button', { name: /계급 선택, 현재/ }))
-    const selectedTiles = within(document.getElementById('reservation-rank-picker')!).getAllByRole('button', { pressed: true })
-    expect(selectedTiles).toHaveLength(1)
-    fireEvent.click(selectedTiles[0])
+    fireEvent.click(screen.getByRole('button', { name: '계급 선택' }))
+    expect(within(document.getElementById('reservation-rank-picker')!).queryAllByRole('button', { pressed: true })).toHaveLength(0)
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
 
     await waitFor(() => expect(createReservation).toHaveBeenCalledWith(
@@ -382,6 +429,7 @@ describe('Reservation', () => {
     fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
     fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
+    selectRanks('Vanquisher')
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
 
     await waitFor(() => expect(createReservation).toHaveBeenCalled())

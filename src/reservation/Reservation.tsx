@@ -82,6 +82,9 @@ const minuteOptions: WheelPickerOption<string>[] = Array.from({ length: 60 }, (_
   return { value, label: `${value}분` }
 })
 
+// The backend rejects a 21st rank with a 422, so the picker stops at 20.
+const MAX_RANKS = 20
+
 function sortSelectedRanks(ranks: string[]) {
   return [...ranks].sort((left, right) => (rankOrder.get(right) ?? -1) - (rankOrder.get(left) ?? -1))
 }
@@ -102,7 +105,7 @@ function nextHourInSeoul(now = new Date()): string {
   return `${String(Math.min(hour + 1, 23)).padStart(2, '0')}:00`
 }
 
-const blankForm = (): FormState => ({ time: nextHourInSeoul(), duration: '60', type: '랭크매치', ranks: ['Vanquisher'], capacity: '1', memo: '' })
+const blankForm = (): FormState => ({ time: nextHourInSeoul(), duration: '60', type: '랭크매치', ranks: [], capacity: '1', memo: '' })
 
 const durationValues = new Map(Array.from(durationLabels, ([minutes, label]) => [label, String(minutes)]))
 
@@ -124,12 +127,19 @@ function availabilityMeta(reservation: Reservation) {
   return { label: `${reservation.joined}/${reservation.capacity}명`, className: 'border-primary text-primary-text bg-primary/10' }
 }
 
-function RankSummary({ ranks, imageClassName = 'h-8' }: { ranks: string[], imageClassName?: string }) {
+/** Ranks highest-first, with whatever does not fit counted in a badge.
+ *
+ * The badge sits in the flex flow rather than at `left-full`: the reservation
+ * card clips its overflow, so a badge outside the icon's own box was cut away
+ * and a five-rank post looked exactly like a one-rank post. */
+function RankSummary({ ranks, imageClassName = 'h-8', max = Infinity, className = 'justify-center' }: { ranks: string[], imageClassName?: string, max?: number, className?: string }) {
   if (ranks.length === 0) return null
   const sortedRanks = sortSelectedRanks(ranks)
-  return <span className="relative flex shrink-0 items-center justify-center" aria-label={sortedRanks.join(', ')}>
-    <RankImage rankInfo={{ name: sortedRanks[0], tier: sortedRanks[0] }} className={`${imageClassName} w-auto object-contain`} />
-    {ranks.length > 1 && <span aria-label={`추가 계급 ${ranks.length - 1}개`} className="absolute left-full ml-1 flex h-6 min-w-6 items-center justify-center rounded-full border border-primary-dim bg-primary/10 px-1 text-xs font-black text-primary-text">+{ranks.length - 1}</span>}
+  const shown = sortedRanks.slice(0, max)
+  const hidden = sortedRanks.length - shown.length
+  return <span className={`flex min-w-0 flex-wrap items-center gap-1 ${className}`} aria-label={sortedRanks.join(', ')}>
+    {shown.map((rank) => <RankImage key={rank} rankInfo={{ name: rank, tier: rank }} className={`${imageClassName} w-auto shrink-0 object-contain`} />)}
+    {hidden > 0 && <span aria-label={`추가 계급 ${hidden}개`} className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-primary-dim bg-primary/10 px-1 text-xs font-black text-primary-text">+{hidden}</span>}
   </span>
 }
 
@@ -388,15 +398,20 @@ export default function Reservation() {
                 <ChevronDown size={15} aria-hidden="true" className={`text-primary transition-transform ${rankPickerOpen ? 'rotate-180' : ''}`} />
               </button>
               {rankPickerOpen && <div id="reservation-rank-picker" className="rank-picker-panel">
+                {form.ranks.length >= MAX_RANKS && <p role="status" className="mb-2 text-xs font-normal text-txt-dim">계급은 최대 {MAX_RANKS}개까지 선택할 수 있습니다.</p>}
                 <div className="scroll-area grid max-h-72 grid-cols-4 gap-2 overflow-y-auto pr-1">
                   {rankPickerOptions.map((rank) => {
                     const selected = form.ranks.includes(rank)
+                    // At the cap the remaining tiles go dead rather than failing on
+                    // submit: the backend takes 20 ranks and rejects the 21st.
+                    const capped = !selected && form.ranks.length >= MAX_RANKS
                     return <button
                       key={rank}
                       type="button"
                       aria-pressed={selected}
+                      disabled={capped}
                       onClick={() => toggleRank(rank)}
-                      className={`rank-option ${selected ? 'selected' : ''}`}
+                      className={`rank-option ${selected ? 'selected' : ''} ${capped ? 'opacity-40' : ''}`}
                     >
                       {selected && <span aria-hidden="true" className="rank-option-check"><Check size={11} /></span>}
                       <RankImage rankInfo={{ name: rank, tier: rank }} className="h-9 max-w-full w-auto object-contain" />
@@ -448,7 +463,7 @@ export default function Reservation() {
                     const selected = reservation.id === selectedReservation?.id
                     return <button key={reservation.id} type="button" onClick={() => setSelectedId(reservation.id)} className={`reservation-card grid grid-cols-2 overflow-hidden text-left transition-colors ${selected ? 'selected' : ''}`}>
                       <span className="flex min-w-0 flex-col justify-between px-3 py-3"><strong className="truncate text-base tracking-[0.03em] text-white">{reservation.host}</strong><span className={`w-fit border px-1.5 py-0.5 text-xs font-bold tracking-[0.08em] ${availability.className}`}>{availability.label}</span></span>
-                      <span className="flex shrink-0 items-center justify-center border-l border-border bg-bg-row px-3">{reservation.type === '플레이어 매치' || (reservation.type === '상관없음' && reservation.ranks.length === 0) ? <span className="flex h-8 items-center border border-primary-dim px-2 text-center text-xs font-bold tracking-[0.04em] text-primary-text">{reservation.type === '상관없음' ? 'ANY MATCH' : 'PLAYER MATCH'}</span> : <RankSummary ranks={reservation.ranks} imageClassName="h-10" />}</span>
+                      <span className="flex min-w-0 items-center justify-center border-l border-border bg-bg-row px-2">{reservation.type === '플레이어 매치' || (reservation.type === '상관없음' && reservation.ranks.length === 0) ? <span className="flex h-8 items-center border border-primary-dim px-2 text-center text-xs font-bold tracking-[0.04em] text-primary-text">{reservation.type === '상관없음' ? 'ANY MATCH' : 'PLAYER MATCH'}</span> : <RankSummary ranks={reservation.ranks} imageClassName="h-7" max={3} />}</span>
                     </button>
                   })}
                 </div>
@@ -464,7 +479,7 @@ export default function Reservation() {
             const frozen = selectedReservation.joined > 0
             return <aside className={`reservation-detail ${selectedReservation.status === 'full' ? 'is-full' : ''}`} aria-label="선택한 예약 상세">
               <div className="flex items-start justify-between gap-3"><div><p className="panel-meta mb-1">선택한 예약</p><p className="font-display text-3xl font-black text-white">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
-              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-center justify-between"><span className="text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-9" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary-text">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
+              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-start justify-between gap-3"><span className="shrink-0 text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-8" className="flex-1 justify-end" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary-text">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
               <p className="mt-4 min-h-10 text-sm text-txt-dim">{selectedReservation.memo}</p>
               {owned
                 ? <div className="mt-4">

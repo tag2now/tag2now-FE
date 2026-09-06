@@ -1,6 +1,15 @@
 import { test, expect, type Locator } from '@playwright/test'
 import { dismissPatchNotes, mockAllApis, reservationAt, signInAs } from '../helpers/mock-api'
 
+/** Nothing is preselected, so a rank match stays unsubmittable until a rank is
+ * picked — every flow that posts one goes through here. */
+async function pickRank(modal: Locator, rank = 'Vanquisher') {
+  await modal.getByRole('button', { name: /계급 선택/ }).click()
+  const picker = modal.page().locator('#reservation-rank-picker')
+  await picker.getByRole('button', { name: new RegExp(rank) }).click()
+  await picker.getByRole('button', { name: '선택 완료' }).click()
+}
+
 test.describe('Reservation', () => {
   test.beforeEach(async ({ page }) => {
     // The default start time is the next whole hour in Seoul, so pin the clock
@@ -30,10 +39,11 @@ test.describe('Reservation', () => {
     await page.getByRole('dialog', { name: '시간 선택' }).getByRole('button', { name: '선택 완료' }).click()
     await expect(timeButton).toHaveAttribute('aria-label', '시작 시각 22:00')
 
-    await modal.getByRole('button', { name: /계급 선택, 현재/ }).click()
+    await modal.getByRole('button', { name: '계급 선택' }).click()
     const rankPicker = page.locator('#reservation-rank-picker')
     await expect(rankPicker.locator('button[aria-pressed]')).toHaveCount(36)
     await rankPicker.getByRole('button', { name: /Yaksa/ }).click()
+    await rankPicker.getByRole('button', { name: /Vanquisher/ }).click()
     await rankPicker.getByRole('button', { name: '선택 완료' }).click()
     await expect(modal.getByRole('button', { name: '계급 선택, 현재 Yaksa, Vanquisher' })).toBeVisible()
 
@@ -41,7 +51,35 @@ test.describe('Reservation', () => {
     const createdCard = page.getByRole('button', { name: /나 모집중 Yaksa, Vanquisher/ })
     await expect(createdCard).toBeVisible()
     await expect(createdCard.getByRole('img', { name: 'Yaksa' })).toBeVisible()
-    await expect(createdCard.getByText('+1')).toBeVisible()
+    await expect(createdCard.getByRole('img', { name: 'Vanquisher' })).toBeVisible()
+  })
+
+  /** `toBeVisible` is not enough here: it asks whether the element has a box and
+   * is not hidden, and an element clipped away by an ancestor's `overflow: hidden`
+   * passes that while being invisible on screen. The badge used to sit outside the
+   * card, and the suite stayed green. Compare the boxes instead. */
+  test('keeps the overflow badge inside the card that clips it', async ({ page }) => {
+    await mockAllApis(page, {
+      reservations: [reservationAt(21, { id: 7, host_display_name: '온프', host_ranks: ['Yaksa', 'Fujin', 'Warrior', 'Vanquisher', 'Mentor'] })],
+    })
+    await page.reload()
+    await dismissPatchNotes(page)
+    await page.getByRole('tab', { name: '예약' }).click()
+
+    const card = page.getByRole('button', { name: /온프/ })
+    const badge = card.getByText('+2')
+    await expect(badge).toBeVisible()
+
+    const cardBox = (await card.boundingBox())!
+    const badgeBox = (await badge.boundingBox())!
+    expect(badgeBox.x + badgeBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width)
+    expect(badgeBox.y + badgeBox.height).toBeLessThanOrEqual(cardBox.y + cardBox.height)
+
+    // The card counts what it cannot fit; the detail panel is where they all are.
+    await card.click()
+    const detail = page.getByRole('complementary', { name: '선택한 예약 상세' })
+    await expect(detail.locator('img[alt="Mentor"]')).toBeVisible()
+    await expect(detail.getByText('+2')).toHaveCount(0)
   })
 
   test('surfaces a list-refresh failure inside the modal while it is open', async ({ page }) => {
@@ -80,6 +118,7 @@ test.describe('Reservation', () => {
 
     await page.getByRole('button', { name: '+ 예약 추가' }).click()
     const modal = page.getByRole('dialog', { name: '예약 추가' })
+    await pickRank(modal)
     await modal.getByRole('button', { name: '예약 등록' }).click()
 
     // The modal stays open, so the banner has to live inside it.
@@ -144,6 +183,7 @@ test.describe('Reservation deletion', () => {
   async function createReservation(page: import('@playwright/test').Page) {
     await page.getByRole('button', { name: '+ 예약 추가' }).click()
     const modal = page.getByRole('dialog', { name: '예약 추가' })
+    await pickRank(modal)
     await modal.getByRole('button', { name: '예약 등록' }).click()
     await page.getByRole('button', { name: /나 모집중/ }).click()
     return page.getByRole('complementary', { name: '선택한 예약 상세' })
@@ -198,7 +238,9 @@ test.describe('Reservation editing', () => {
 
   async function createThenOpenEditor(page: import('@playwright/test').Page) {
     await page.getByRole('button', { name: '+ 예약 추가' }).click()
-    await page.getByRole('dialog', { name: '예약 추가' }).getByRole('button', { name: '예약 등록' }).click()
+    const modal = page.getByRole('dialog', { name: '예약 추가' })
+    await pickRank(modal)
+    await modal.getByRole('button', { name: '예약 등록' }).click()
     await page.getByRole('button', { name: /나 모집중/ }).click()
     const detail = page.getByRole('complementary', { name: '선택한 예약 상세' })
     await detail.getByRole('button', { name: '예약 수정' }).click()
