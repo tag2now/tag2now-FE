@@ -326,7 +326,7 @@ absolute URLs (`og:url`, `canonical`) must use the `match.` host.
 
 | Workflow | Trigger | Does |
 |----------|---------|------|
-| `test.yml` | PR to `dev`/`master` | unit tests + typecheck, then E2E |
+| `test.yml` | PR to `master` | unit tests + typecheck, then E2E |
 | `deploy.yml` | `v*` tag | full test suite, build and push to ECR, then deploy to production over SSH |
 | `update-snapshots.yml` | manual | regenerate visual baselines, upload as artifact |
 
