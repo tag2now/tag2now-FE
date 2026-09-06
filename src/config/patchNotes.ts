@@ -10,6 +10,13 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.3.3',
+    items: [
+      '예약 목록에서 보유 계급이 여러 개일 때 모두 표시 (상세에서 전체 확인)',
+      '자정을 넘겨도 예약 목록이 끊기지 않고 새벽 6시까지 이어짐',
+    ],
+  },
+  {
     version: '2.3.1',
     items: [
       '예약 매치 종류 필터를 토글로 변경 (전체 / 랭크매치 / 플레이어 매치)',
