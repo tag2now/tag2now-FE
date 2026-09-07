@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { WheelPicker, WheelPickerWrapper, type WheelPickerOption } from '@ncdai/react-wheel-picker'
 import '@ncdai/react-wheel-picker/style.css'
@@ -11,6 +11,7 @@ import Select from '@/shared/components/Select'
 import ToggleGroup from '@/shared/components/ToggleGroup'
 import { reservationPath } from '@/config/routes'
 import { kstTimeFormat, MATCH_TYPE_LABELS } from '@/reservation/reservationLabels'
+import CommentList from '@/reservation/component/CommentList'
 
 type MatchType = '랭크매치' | '플레이어 매치' | '상관없음'
 type ReservationStatus = 'open' | 'full'
@@ -186,7 +187,9 @@ export default function Reservation() {
   const [draftTime, setDraftTime] = useState(nextHourInSeoul)
   const [notice, setNotice] = useState<{ text: string; tone: 'info' | 'error' }>({ text: '', tone: 'info' })
   const showNotice = (text: string) => setNotice({ text, tone: 'info' })
-  const showError = (error: unknown, fallback: string) => setNotice({ text: error instanceof Error ? error.message : fallback, tone: 'error' })
+  // Stable across renders: CommentList takes this as a prop and reloads when its
+  // identity changes, so a fresh closure each render would refetch forever.
+  const showError = useCallback((error: unknown, fallback: string) => setNotice({ text: error instanceof Error ? error.message : fallback, tone: 'error' }), [])
   const clearNotice = () => setNotice({ text: '', tone: 'info' })
   const [form, setForm] = useState<FormState>(blankForm)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -476,6 +479,7 @@ export default function Reservation() {
                     {frozen && <p id="reservation-edit-frozen" className="mt-2 text-xs text-txt-faint">참가자가 있는 예약은 수정할 수 없습니다. 삭제 후 다시 등록해 주세요.</p>}
                   </div>
                 : <button type="button" className={`mt-4 flex min-h-9 w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary-text hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-bg-deep hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? <UserMinus size={15} /> : selectedReservation.status === 'full' ? <X size={15} /> : <LogIn size={15} />}{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 마감' : '참가하기'}</button>}
+              <CommentList reservationId={selectedReservation.id} username={getUsername()} onError={showError} />
             </aside>
           })()}
         </div>

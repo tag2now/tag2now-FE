@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import Reservation from './Reservation'
-import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
+import { cancelParticipation, cancelReservation, createComment, createReservation, deleteComment, fetchComments, fetchReservations, hasParticipation, isCommentAuthor, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
 import { clearUsername, saveUsername } from '@/shared/util/cookie'
 
 vi.mock('./reservationApi', () => ({
@@ -14,6 +14,10 @@ vi.mock('./reservationApi', () => ({
   updateReservation: vi.fn(),
   hasParticipation: vi.fn(),
   isOwner: vi.fn(),
+  fetchComments: vi.fn(),
+  createComment: vi.fn(),
+  deleteComment: vi.fn(),
+  isCommentAuthor: vi.fn(),
 }))
 
 const apiReservation = {
@@ -59,6 +63,8 @@ beforeEach(() => {
   vi.mocked(hasParticipation).mockReturnValue(false)
   vi.mocked(isOwner).mockReturnValue(false)
   vi.mocked(createReservation).mockResolvedValue(apiReservation)
+  vi.mocked(fetchComments).mockResolvedValue([])
+  vi.mocked(isCommentAuthor).mockReturnValue(false)
   saveUsername('나')
 })
 
@@ -617,5 +623,80 @@ describe('Reservation participation', () => {
     const detail = await selectTheReservation()
 
     expect(within(detail).getByRole('button', { name: '참가 취소' })).toBeInTheDocument()
+  })
+})
+
+describe('the comment thread on a reservation', () => {
+  const comment = (overrides: Partial<{ id: number, author: string, body: string }> = {}) => ({
+    id: 1, reservation_id: 1, author: '상대', body: '21시에 갈게요',
+    created_at: '2026-08-28T11:00:00Z', ...overrides,
+  })
+
+  async function openThread(comments = [comment()]) {
+    vi.mocked(fetchReservations).mockResolvedValue([apiReservation])
+    vi.mocked(fetchComments).mockResolvedValue(comments)
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
+    fireEvent.click(await screen.findByRole('button', { name: /나/ }))
+    return screen.getByRole('region', { name: '예약 댓글' })
+  }
+
+  it('shows what people have written on the selected reservation', async () => {
+    const thread = await openThread()
+
+    expect(await within(thread).findByText('21시에 갈게요')).toBeInTheDocument()
+    expect(within(thread).getByText('상대')).toBeInTheDocument()
+  })
+
+  it('says so plainly when nobody has commented yet', async () => {
+    const thread = await openThread([])
+
+    expect(await within(thread).findByText('아직 댓글이 없습니다.')).toBeInTheDocument()
+  })
+
+  it('posts the draft under the saved username and reloads the thread', async () => {
+    vi.mocked(createComment).mockResolvedValue(comment({ id: 2, body: '저도 갈게요' }))
+    const thread = await openThread([])
+
+    fireEvent.change(within(thread).getByLabelText('댓글 내용'), { target: { value: '저도 갈게요' } })
+    fireEvent.click(within(thread).getByRole('button', { name: '댓글 등록' }))
+
+    await waitFor(() => expect(createComment).toHaveBeenCalledWith(1, '나', '저도 갈게요'))
+    expect(fetchComments).toHaveBeenCalledTimes(2)
+  })
+
+  it('refuses to submit a draft that is only whitespace', async () => {
+    const thread = await openThread([])
+
+    fireEvent.change(within(thread).getByLabelText('댓글 내용'), { target: { value: '   ' } })
+
+    expect(within(thread).getByRole('button', { name: '댓글 등록' })).toBeDisabled()
+    expect(createComment).not.toHaveBeenCalled()
+  })
+
+  it('offers a delete button only on comments this browser wrote', async () => {
+    vi.mocked(isCommentAuthor).mockImplementation((id: number) => id === 1)
+    const thread = await openThread([comment(), comment({ id: 2, author: '남', body: '저는 못 가요' })])
+
+    expect(await within(thread).findByRole('button', { name: '상대님의 댓글 삭제' })).toBeInTheDocument()
+    expect(within(thread).queryByRole('button', { name: '남님의 댓글 삭제' })).toBeNull()
+  })
+
+  it('deletes a comment and reloads the thread', async () => {
+    vi.mocked(isCommentAuthor).mockReturnValue(true)
+    vi.mocked(deleteComment).mockResolvedValue(undefined)
+    const thread = await openThread()
+
+    fireEvent.click(await within(thread).findByRole('button', { name: '상대님의 댓글 삭제' }))
+
+    await waitFor(() => expect(deleteComment).toHaveBeenCalledWith(1, 1))
+    expect(fetchComments).toHaveBeenCalledTimes(2)
+  })
+
+  it('cannot be written to before a username is set', async () => {
+    clearUsername()
+    const thread = await openThread([])
+
+    expect(within(thread).getByLabelText('댓글 내용')).toBeDisabled()
+    expect(within(thread).getByPlaceholderText('먼저 유저명을 설정해 주세요')).toBeInTheDocument()
   })
 })
