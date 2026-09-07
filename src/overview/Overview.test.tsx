@@ -47,8 +47,8 @@ const OVERVIEW_DATA: OverviewData = {
     { id: 1, author: 'PostAuthor', title: '첫 게시글', body: '', post_type: 'free', thumbs_up: 3, thumbs_down: 0, created_at: new Date().toISOString(), comment_count: 2 },
   ],
   reservations: [
-    { id: 1, start_at: '2026-09-02T12:00:00Z', duration_minutes: 60, host_display_name: 'HostOne', host_ranks: [], match_type: 'rank_match', capacity: 4, memo: '', status: 'open', participant_count: 1, created_at: '2026-09-02T09:00:00Z' },
-    { id: 2, start_at: '2026-09-02T13:00:00Z', duration_minutes: 60, host_display_name: 'HostFull', host_ranks: [], match_type: 'any', capacity: 2, memo: '', status: 'open', participant_count: 2, created_at: '2026-09-02T09:00:00Z' },
+    { id: 1, start_at: '2026-09-02T12:00:00Z', host_display_name: 'HostOne', host_ranks: [], match_type: 'rank_match', capacity: 4, memo: '', status: 'open', participant_count: 1, created_at: '2026-09-02T09:00:00Z' },
+    { id: 2, start_at: '2026-09-02T13:00:00Z', host_display_name: 'HostFull', host_ranks: [], match_type: 'any', capacity: 2, memo: '', status: 'open', participant_count: 2, created_at: '2026-09-02T09:00:00Z' },
   ],
 }
 

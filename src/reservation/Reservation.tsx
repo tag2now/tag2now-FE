@@ -18,7 +18,6 @@ type ReservationStatus = 'open' | 'full'
 type Reservation = {
   id: number
   time: string
-  duration: string
   host: string
   ranks: string[]
   type: MatchType
@@ -33,13 +32,6 @@ type TypeFilter = '전체' | '랭크매치' | '플레이어 매치'
 // the filter's '전체'; the two lists only look alike.
 const typeFilters: TypeFilter[] = ['전체', '랭크매치', '플레이어 매치']
 const formMatchTypes: MatchType[] = ['랭크매치', '플레이어 매치', '상관없음']
-const durationOptions = [
-  { value: '30', label: '약 30분' },
-  { value: '60', label: '약 1시간' },
-  { value: '120', label: '약 2시간' },
-  { value: '180', label: '약 3시간' },
-]
-const durationLabels = new Map(durationOptions.map(({ value, label }) => [Number(value), label]))
 const matchTypeLabels = MATCH_TYPE_LABELS as Record<ApiReservation['match_type'], MatchType>
 const matchTypeValues: Record<MatchType, ApiReservation['match_type']> = { '랭크매치': 'rank_match', '플레이어 매치': 'player_match', '상관없음': 'any' }
 
@@ -47,7 +39,6 @@ function fromApi(item: ApiReservation): Reservation {
   return {
     id: item.id,
     time: kstTimeFormat.format(new Date(item.start_at)),
-    duration: durationLabels.get(item.duration_minutes) ?? `약 ${item.duration_minutes}분`,
     host: item.host_display_name,
     ranks: item.host_ranks,
     type: matchTypeLabels[item.match_type],
@@ -89,7 +80,7 @@ function sortSelectedRanks(ranks: string[]) {
   return [...ranks].sort((left, right) => (rankOrder.get(right) ?? -1) - (rankOrder.get(left) ?? -1))
 }
 
-type FormState = { time: string; duration: string; type: MatchType; ranks: string[]; capacity: string; memo: string }
+type FormState = { time: string; type: MatchType; ranks: string[]; capacity: string; memo: string }
 
 const kstHourFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', hour12: false })
 
@@ -105,15 +96,12 @@ function nextHourInSeoul(now = new Date()): string {
   return `${String(Math.min(hour + 1, 23)).padStart(2, '0')}:00`
 }
 
-const blankForm = (): FormState => ({ time: nextHourInSeoul(), duration: '60', type: '랭크매치', ranks: [], capacity: '1', memo: '' })
-
-const durationValues = new Map(Array.from(durationLabels, ([minutes, label]) => [label, String(minutes)]))
+const blankForm = (): FormState => ({ time: nextHourInSeoul(), type: '랭크매치', ranks: [], capacity: '1', memo: '' })
 
 /** Reverse of the create mapping, so editing starts from what the host posted. */
 function toForm(reservation: Reservation): FormState {
   return {
     time: reservation.time,
-    duration: durationValues.get(reservation.duration) ?? '60',
     type: reservation.type,
     ranks: reservation.ranks,
     capacity: String(reservation.capacity),
@@ -306,7 +294,6 @@ export default function Reservation() {
 
   const conditionsFromForm = () => ({
     start_time: `${form.time}:00`,
-    duration_minutes: Number(form.duration),
     ranks: form.type === '플레이어 매치' ? [] : form.ranks,
     match_type: matchTypeValues[form.type],
     capacity: form.type === '랭크매치' ? 1 : Number(form.capacity),
@@ -383,9 +370,6 @@ export default function Reservation() {
                 ))}
               </div>
             </fieldset>
-            <div className="modal-field"><span className="field-label">예상 시간</span>
-              <Select label="예상 시간" value={form.duration} options={durationOptions} onChange={(duration) => setForm({ ...form, duration })} />
-            </div>
             {form.type !== '플레이어 매치' && <fieldset className="modal-field col-span-full">
               <legend className="field-label">보유 계급 <span className="font-normal">(복수 선택 가능)</span></legend>
               <button type="button" aria-label={form.ranks.length > 0 ? `계급 선택, 현재 ${sortSelectedRanks(form.ranks).join(', ')}` : '계급 선택'} aria-expanded={rankPickerOpen} aria-controls="reservation-rank-picker" onClick={() => setRankPickerOpen((open) => !open)} className="input-base mt-1 flex min-h-12 w-full items-center justify-between gap-3 px-3 py-1.5 text-left">
@@ -479,7 +463,7 @@ export default function Reservation() {
             const frozen = selectedReservation.joined > 0
             return <aside className={`reservation-detail ${selectedReservation.status === 'full' ? 'is-full' : ''}`} aria-label="선택한 예약 상세">
               <div className="flex items-start justify-between gap-3"><div><p className="panel-meta mb-1">선택한 예약</p><p className="font-display text-3xl font-black text-white">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
-              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-start justify-between gap-3"><span className="shrink-0 text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-8" className="flex-1 justify-end" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary-text">{selectedReservation.type}</strong></p><p className="flex items-center justify-between"><span className="text-txt-dim">예상 시간</span><strong className="text-txt">{selectedReservation.duration}</strong></p></div>
+              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-start justify-between gap-3"><span className="shrink-0 text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-8" className="flex-1 justify-end" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary-text">{selectedReservation.type}</strong></p></div>
               <p className="mt-4 min-h-10 text-sm text-txt-dim">{selectedReservation.memo}</p>
               {owned
                 ? <div className="mt-4">

@@ -19,7 +19,6 @@ vi.mock('./reservationApi', () => ({
 const apiReservation = {
   id: 1,
   start_at: '2026-08-25T12:00:00+00:00',
-  duration_minutes: 60,
   host_display_name: '나',
   host_ranks: ['Yaksa', 'Vanquisher'],
   match_type: 'rank_match' as const,
@@ -242,13 +241,11 @@ describe('Reservation', () => {
   it('sends the form values to the backend contract on submit', async () => {
     openReservationModal()
     selectRanks('Vanquisher')
-    fireEvent.change(screen.getByLabelText('예상 시간'), { target: { value: '120' } })
     fireEvent.change(screen.getByLabelText(/메모/), { target: { value: '가볍게 한 판' } })
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
 
     await waitFor(() => expect(createReservation).toHaveBeenCalledWith({
       start_time: '21:00:00',
-      duration_minutes: 120,
       display_name: '나',
       ranks: ['Vanquisher'],
       match_type: 'rank_match',
@@ -378,13 +375,12 @@ describe('Reservation', () => {
 
   it('opens the form already filled in with what the host posted', async () => {
     vi.mocked(isOwner).mockReturnValue(true)
-    const detail = await openDetail({ ...apiReservation, memo: '초보 환영', duration_minutes: 120 })
+    const detail = await openDetail({ ...apiReservation, memo: '초보 환영' })
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
 
     expect(screen.getByRole('dialog', { name: '예약 수정' })).toBeInTheDocument()
     expect(screen.getByLabelText(/메모/)).toHaveValue('초보 환영')
-    expect(screen.getByLabelText('예상 시간')).toHaveValue('120')
   })
 
   it('refuses to open the editor once somebody has joined', async () => {

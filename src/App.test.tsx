@@ -96,7 +96,7 @@ async function renderAt(path: string) {
 }
 
 const reservation = (over: Record<string, unknown> = {}) => ({
-  id: 1, start_at: '2026-01-01T12:00:00+09:00', duration_minutes: 60,
+  id: 1, start_at: '2026-01-01T12:00:00+09:00',
   host_display_name: 'Host', host_ranks: [], match_type: 'rank_match',
   capacity: 2, memo: '', status: 'open', participant_count: 0,
   created_at: '2026-01-01T00:00:00+09:00', ...over,

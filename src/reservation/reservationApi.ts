@@ -1,8 +1,8 @@
 import { DELETE, GET, PATCH, POST } from '@/shared/util/api'
 import { AppError } from '@/shared/util/AppError'
 
-export type ApiReservation = { id: number; start_at: string; duration_minutes: number; host_display_name: string; host_ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string; status: 'open' | 'matched' | 'cancelled' | 'ended'; participant_count: number; created_at: string }
-export type CreateReservationInput = { start_time: string; duration_minutes: number; display_name: string; ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string }
+export type ApiReservation = { id: number; start_at: string; host_display_name: string; host_ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string; status: 'open' | 'matched' | 'cancelled' | 'ended'; participant_count: number; created_at: string }
+export type CreateReservationInput = { start_time: string; display_name: string; ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string }
 const participantKey = (id: number) => `reservation-participant-${id}`
 const ownerKey = (id: number) => `reservation-owner-${id}`
 
@@ -26,7 +26,7 @@ export async function cancelParticipation(id: number) {
   localStorage.removeItem(participantKey(id))
   return result as ApiReservation
 }
-export type UpdateReservationInput = Partial<Pick<CreateReservationInput, 'start_time' | 'duration_minutes' | 'ranks' | 'match_type' | 'capacity' | 'memo'>>
+export type UpdateReservationInput = Partial<Pick<CreateReservationInput, 'start_time' | 'ranks' | 'match_type' | 'capacity' | 'memo'>>
 
 export async function updateReservation(id: number, patch: UpdateReservationInput) {
   const token = localStorage.getItem(ownerKey(id))

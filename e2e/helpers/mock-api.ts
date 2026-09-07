@@ -10,7 +10,6 @@ import weeklyTopData from '../fixtures/history-weekly-top.json'
 interface ApiReservationLike {
   id: number
   start_at: string
-  duration_minutes: number
   host_display_name: string
   host_ranks: string[]
   match_type: 'rank_match' | 'player_match' | 'any'
@@ -36,7 +35,6 @@ interface MockOverrides {
 export interface ApiReservation {
   id: number
   start_at: string
-  duration_minutes: number
   host_display_name: string
   host_ranks: string[]
   match_type: 'rank_match' | 'player_match' | 'any'
@@ -54,7 +52,6 @@ export function reservationAt(hour: number, overrides: Partial<ApiReservation> =
   return {
     id: 1,
     start_at: start.toISOString(),
-    duration_minutes: 60,
     host_display_name: '상대',
     host_ranks: ['Vanquisher'],
     match_type: 'rank_match',
@@ -172,7 +169,6 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
         id: nextId,
         host_display_name: body.display_name,
         host_ranks: body.ranks,
-        duration_minutes: body.duration_minutes,
       })
       reservations.set(nextId, created)
       nextId += 1
