@@ -20,6 +20,14 @@ interface ApiReservationLike {
   created_at: string
 }
 
+interface ApiCommentLike {
+  id: number
+  reservation_id: number
+  author: string
+  body: string
+  created_at: string
+}
+
 interface MockOverrides {
   leaderboard?: unknown
   rooms?: unknown
@@ -152,6 +160,33 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
   const asJson = (route: Route, body: unknown, status = 200) =>
     route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
 
+  // Comments hang off the reservation URL, so they match the route below too
+  // and need a branch of their own. Without one the detail panel's comment
+  // fetch fell through to the handlers at the bottom: a GET reached the cancel
+  // and quietly soft-deleted the reservation the host was looking at, a POST
+  // counted as somebody joining it.
+  const comments = new Map<number, ApiCommentLike[]>()
+  let nextCommentId = 1
+
+  const handleComments = (route: Route, id: number) => {
+    const method = route.request().method()
+    const thread = comments.get(id) ?? []
+    if (method === 'GET') return asJson(route, thread)
+    if (method === 'POST') {
+      const { display_name, body } = route.request().postDataJSON()
+      const comment = { id: nextCommentId, reservation_id: id, author: display_name, body, created_at: new Date().toISOString() }
+      nextCommentId += 1
+      comments.set(id, [...thread, comment])
+      return asJson(route, { comment, author_token: `comment-${comment.id}` }, 201)
+    }
+    if (method === 'DELETE') {
+      const commentId = Number(route.request().url().match(/\/comments\/(\d+)/)?.[1])
+      comments.set(id, thread.filter((item) => item.id !== commentId))
+      return route.fulfill({ status: 204, body: '' })
+    }
+    return asJson(route, { detail: 'Not found' }, 404)
+  }
+
   await page.route('**/api/reservations**', async (route) => {
     if (failing.has('reservations')) {
       return route.fulfill({ status: 500, body: 'Internal Server Error' })
@@ -180,6 +215,8 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       return asJson(route, { detail: 'Reservation not found' }, 404)
     }
 
+    if (url.includes('/comments')) return handleComments(route, id)
+
     if (method === 'PATCH') {
       // Mirror the backend: a reservation somebody joined is frozen.
       if (reservation.participant_count > 0) {
@@ -205,8 +242,15 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       return asJson(route, reservation)
     }
 
-    reservation.status = 'cancelled'
-    return route.fulfill({ status: 204, body: '' })
+    if (method === 'DELETE') {
+      reservation.status = 'cancelled'
+      return route.fulfill({ status: 204, body: '' })
+    }
+
+    // An unmatched request is a gap in this mock, not licence to improvise.
+    // This used to fall through to the cancel above, which is how adding a
+    // comments fetch turned into a silent soft delete three commits later.
+    return asJson(route, { detail: 'Not found' }, 404)
   })
 
   // History statistics. The overview is the landing tab and calls these on

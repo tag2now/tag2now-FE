@@ -240,16 +240,20 @@ test.describe('Reservation editing', () => {
     await page.getByRole('button', { name: '+ 예약 추가' }).click()
     const modal = page.getByRole('dialog', { name: '예약 추가' })
     await pickRank(modal)
+    // This describe runs on the real clock, so the form opens on whatever the
+    // next whole hour happens to be. What the editor owes us is that time back,
+    // not a fixed one — carry it out rather than hard-coding it.
+    const postedTime = await modal.getByRole('button', { name: /시작 시각/ }).getAttribute('aria-label')
     await modal.getByRole('button', { name: '예약 등록' }).click()
     await page.getByRole('button', { name: /나 모집중/ }).click()
     const detail = page.getByRole('complementary', { name: '선택한 예약 상세' })
     await detail.getByRole('button', { name: '예약 수정' }).click()
-    return page.getByRole('dialog', { name: '예약 수정' })
+    return { modal: page.getByRole('dialog', { name: '예약 수정' }), postedTime }
   }
 
   test('the host edits a reservation through the create form', async ({ page }) => {
     await openReservationTab(page, [])
-    const modal = await createThenOpenEditor(page)
+    const { modal } = await createThenOpenEditor(page)
 
     await modal.getByLabel(/메모/).fill('자리 하나 남음')
     const editRequest = page.waitForRequest((request) => request.method() === 'PATCH')
@@ -263,10 +267,10 @@ test.describe('Reservation editing', () => {
 
   test('the editor opens on the values the reservation already has', async ({ page }) => {
     await openReservationTab(page, [])
-    const modal = await createThenOpenEditor(page)
+    const { modal, postedTime } = await createThenOpenEditor(page)
 
-    await expect(modal.getByLabel('예상 시간')).toHaveValue('60')
-    await expect(modal.getByRole('button', { name: /시작 시각/ })).toBeVisible()
+    await expect(modal.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', postedTime!)
+    await expect(modal.getByRole('button', { name: '계급 선택, 현재 Vanquisher' })).toBeVisible()
   })
 
   test('a reservation hosted by someone else offers no edit button', async ({ page }) => {
@@ -295,7 +299,7 @@ test.describe('Reservation editing', () => {
   // it cannot — somebody joining while the editor is already open.
   test('the backend reason shows when a joined reservation is edited', async ({ page }) => {
     await openReservationTab(page, [])
-    const modal = await createThenOpenEditor(page)
+    const { modal } = await createThenOpenEditor(page)
 
     // Somebody joins between opening the editor and submitting it.
     await page.evaluate(() => fetch('/api/reservations/1/participants', {
