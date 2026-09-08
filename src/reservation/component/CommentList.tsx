@@ -8,8 +8,6 @@ const MAX_BODY = 500
 type Props = {
   reservationId: number
   username: string | null
-  /** Cancelled reservations take no comments; the backend refuses them with a 400. */
-  disabled?: boolean
   onError: (error: unknown, fallback: string) => void
 }
 
@@ -19,7 +17,7 @@ type Props = {
  * written in bursts while the listing changes slowly, and reloading the whole
  * reservation list to pick up one new line would be the wrong trade.
  */
-export default function CommentList({ reservationId, username, disabled = false, onError }: Props) {
+export default function CommentList({ reservationId, username, onError }: Props) {
   const [comments, setComments] = useState<ApiComment[]>([])
   const [draft, setDraft] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -102,33 +100,31 @@ export default function CommentList({ reservationId, username, disabled = false,
 
       {comments.length === 0 && <p className="mt-3 text-xs text-txt-faint">아직 댓글이 없습니다.</p>}
 
-      {disabled
-        ? <p className="mt-3 text-xs text-txt-faint">취소된 예약에는 댓글을 쓸 수 없습니다.</p>
-        : <form className="mt-3 flex items-start gap-2" onSubmit={submit}>
-            <label className="sr-only" htmlFor="reservation-comment-body">댓글 내용</label>
-            <textarea
-              id="reservation-comment-body"
-              className="input-base flex-1 resize-y py-1"
-              rows={1}
-              // textarea.input-base carries a 140px min-height for the long
-              // form fields elsewhere; an element selector outranks the utility
-              // class, so the override has to be inline. These are one-liners.
-              style={{ minHeight: '2.25rem' }}
-              maxLength={MAX_BODY}
-              placeholder={username ? '예: 21시에 갈게요' : '먼저 유저명을 설정해 주세요'}
-              value={draft}
-              disabled={!username || submitting}
-              onChange={(event) => setDraft(event.target.value)}
-            />
-            <button
-              type="submit"
-              className="btn-primary shrink-0 self-stretch px-3"
-              disabled={!username || submitting || draft.trim().length === 0}
-            >
-              <Send size={14} aria-hidden="true" />
-              <span className="sr-only">댓글 등록</span>
-            </button>
-          </form>}
+      <form className="mt-3 flex items-start gap-2" onSubmit={submit}>
+        <label className="sr-only" htmlFor="reservation-comment-body">댓글 내용</label>
+        <textarea
+          id="reservation-comment-body"
+          className="input-base flex-1 resize-y py-1"
+          rows={1}
+          // textarea.input-base carries a 140px min-height for the long
+          // form fields elsewhere; an element selector outranks the utility
+          // class, so the override has to be inline. These are one-liners.
+          style={{ minHeight: '2.25rem' }}
+          maxLength={MAX_BODY}
+          placeholder={username ? '예: 21시에 갈게요' : '먼저 유저명을 설정해 주세요'}
+          value={draft}
+          disabled={!username || submitting}
+          onChange={(event) => setDraft(event.target.value)}
+        />
+        <button
+          type="submit"
+          className="btn-primary shrink-0 self-stretch px-3"
+          disabled={!username || submitting || draft.trim().length === 0}
+        >
+          <Send size={14} aria-hidden="true" />
+          <span className="sr-only">댓글 등록</span>
+        </button>
+      </form>
     </section>
   )
 }
