@@ -55,6 +55,12 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: production
+    # Job-level: both ssh steps address the same box, and a second copy is one
+    # more place to miss when one of these is renamed.
+    env:
+      PROD_HOST: ${{ secrets.PROD_HOST }}
+      PROD_USER: ${{ secrets.PROD_USER }}
+      PROD_DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH }}
 
     steps:
       - name: Configure SSH
@@ -70,9 +76,6 @@ jobs:
 
       - name: Pin the frontend image tag
         env:
-          PROD_HOST: ${{ secrets.PROD_HOST }}
-          PROD_USER: ${{ secrets.PROD_USER }}
-          PROD_DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH }}
           IMAGE_TAG: ${{ github.ref_name }}
         run: |
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes "$PROD_USER@$PROD_HOST" \
@@ -86,9 +89,6 @@ jobs:
 
       - name: Release the frontend
         env:
-          PROD_HOST: ${{ secrets.PROD_HOST }}
-          PROD_USER: ${{ secrets.PROD_USER }}
-          PROD_DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH }}
           AWS_REGION: ${{ vars.AWS_REGION }}
           IMAGE: ${{ needs.build.outputs.image }}
         run: |
