@@ -12,6 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # contract.test.ts only proves we agree with the copy in src/config; this
+      # proves the copy is still what tag2now-BE publishes. Without it a backend
+      # rename leaves both repositories green and breaks production instead.
+      - name: Check the vendored API contract is current
+        run: |
+          curl -sSfo /tmp/openapi.json https://raw.githubusercontent.com/tag2now/tag2now-BE/master/openapi.json
+          if diff -u src/config/openapi.json /tmp/openapi.json; then exit 0; fi
+          echo "::error::src/config/openapi.json is behind tag2now-BE. Copy the published file over it and update src/config/contract.test.ts to match the diff above."
+          exit 1
       - uses: actions/setup-node@v7
         with:
           node-version: 24

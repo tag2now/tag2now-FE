@@ -307,6 +307,33 @@ it only serves static files, since every backend call is intercepted. Locally
 there are no retries, so a full run flakes occasionally on an unrelated spec;
 re-run the single spec before believing it.
 
+### Contract with the backend
+
+Neither suite above can see the seam between the two repositories. Unit tests
+replace `reservationApi` with a mock, and `mockAllApis` answers with whatever
+this frontend already believed — so a backend rename leaves both green and
+breaks production. `tag2now-BE`'s own integration tests are no help either:
+they build their own requests, so they only ask that service about names that
+service chose.
+
+`src/config/openapi.json` is a copy of the schema tag2now-BE commits at its
+repository root. `src/config/contract.test.ts` asserts this frontend's actual
+assumptions against it — every path and method it calls, plus the query
+parameters, request fields, headers and response fields it names — and the
+`unit-test` job re-fetches the published file first, so the copy cannot go
+stale silently.
+
+Refresh the copy when that check fails:
+
+```bash
+curl -sSfo src/config/openapi.json https://raw.githubusercontent.com/tag2now/tag2now-BE/master/openapi.json
+```
+
+**It covers about half the surface.** Ten of the calls listed there reach routes
+with no `response_model`, so their schema is `{}` and nothing can be asserted
+about the payload — `NO_RESPONSE_MODEL` in that file names them. Adding
+response models on the backend is what would close the rest.
+
 ## Custom commands
 
 `.claude/commands/` provides `/a11y-audit`, `/design-audit`, and `/design-review`.
@@ -326,7 +353,7 @@ absolute URLs (`og:url`, `canonical`) must use the `match.` host.
 
 | Workflow | Trigger | Does |
 |----------|---------|------|
-| `test.yml` | PR to `master` | unit tests + typecheck, then E2E |
+| `test.yml` | PR to `master`, push to `master`, `workflow_call` | API contract check, unit tests + typecheck, then E2E |
 | `deploy.yml` | `v*` tag | full test suite, build and push to ECR, then deploy to production over SSH |
 | `update-snapshots.yml` | manual | regenerate visual baselines, upload as artifact |
 
