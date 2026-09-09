@@ -120,17 +120,13 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
         <KpiCard icon={Trophy} label="등록 플레이어" value={leaderboardTotal != null ? String(leaderboardTotal) : UNKNOWN} hint="리더보드 집계" linkLabel="리더보드" to={pathOf('leaderboard')} />
       </div>
 
-      <section className="chart-panel overview-chart" aria-labelledby="overview-daily-heading">
-        <h4 id="overview-daily-heading">최근 7일 접속자 추이</h4>
-        <DailyChart data={data?.daily ?? []} height={200} axisGutter={0} />
-      </section>
-
+      {/* The two cards that expire, above the chart rather than below it. Both
+          carry something the reader can still act on --- a reservation with a
+          seat left, a post nobody has answered --- and the chart is a seven-day
+          trend that reads the same tomorrow. Sitting behind its 244px they were
+          the last thing reached on a phone, which is backwards for the only
+          part of this page with a deadline. */}
       <div className="overview-grid">
-        {/* Reservations and posts lead the grid, not the rankings. A ranking is
-            slow-moving reference data with a tab of its own one click away; an
-            open reservation expires and a new post goes unread. The rank lists
-            are also twice as tall (5 x 66px rows), so putting them first pushed
-            both actionable cards a full viewport below the fold. */}
         <OverviewSection icon={CalendarDays} title="모집 중인 예약" subtitle="아직 자리가 남은 약속" linkLabel="예약" to={pathOf('reservation')}>
           <OpenReservations reservations={data?.reservations ?? []} />
         </OverviewSection>
@@ -138,7 +134,17 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
         <OverviewSection icon={MessageSquareText} title="최신 게시글" subtitle="커뮤니티에 올라온 글" linkLabel="커뮤니티" to={pathOf('community')}>
           <RecentPosts posts={data?.posts ?? []} />
         </OverviewSection>
+      </div>
 
+      <section className="chart-panel overview-chart" aria-labelledby="overview-daily-heading">
+        <h4 id="overview-daily-heading">최근 7일 접속자 추이</h4>
+        <DailyChart data={data?.daily ?? []} height={200} axisGutter={0} />
+      </section>
+
+      {/* Kept below the chart: a ranking is slow-moving reference data with a
+          tab of its own one click away, and these two lists are twice the
+          height of the cards above (5 x 66px rows). */}
+      <div className="overview-grid">
         <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" to={pathOf('leaderboard')}>
           <TopFiveList rows={leaderboardRows(leaderboardEntries)} onSelect={setSelectedNpid} />
         </OverviewSection>
