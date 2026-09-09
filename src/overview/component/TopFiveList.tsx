@@ -46,8 +46,13 @@ export default function TopFiveList({ rows, detailLabel, emptyMsg = '데이터 �
           >
             <span className="overview-rank-pos" style={medal ? { color: medal.color } : undefined}>{i + 1}</span>
             <span className="overview-rank-name">
+              {/* The button stretches over the whole row in CSS, so a reader
+                  aiming at the portrait or the match count opens the same
+                  player the name does. The label is a span of its own because
+                  the ellipsis needs `overflow: hidden`, and that would clip
+                  the very overlay that does the stretching. */}
               <button type="button" className="player-btn overview-rank-btn" onClick={() => onSelect(row.npid)}>
-                {row.name}
+                <span className="overview-rank-btn-label">{row.name}</span>
               </button>
             </span>
             {row.detail && <span className="overview-rank-detail">{row.detail}</span>}

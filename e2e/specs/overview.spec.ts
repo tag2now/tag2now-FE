@@ -84,6 +84,23 @@ test.describe('Overview', () => {
     await expect(nav.getByRole('tab', { name: /^예약/ })).toHaveAttribute('aria-selected', 'true')
   })
 
+  // The rank rows used to offer only the name — 61px of text in a 66px row,
+  // with the portraits and the match count beside it describing that same
+  // player. A raw coordinate click is the point of this one: whether a pixel
+  // out at the row's edge opens anything is a hit test, and the unit suite has
+  // no layout engine to answer it.
+  test('a top-five row opens the player from anywhere along it', async ({ page }) => {
+    const top = page.getByRole('region', { name: '주간 철악귀' }).locator('.overview-rank-row').first()
+
+    // Bottom-left of the row: the position number's column, nowhere near the
+    // name, and inside the row in both the desktop and the wrapped layout.
+    // Clicked through the row rather than at page coordinates so Playwright
+    // scrolls it into view first, and so its hit test still has to pass.
+    await top.click({ position: { x: 10, y: 60 } })
+
+    await expect(page.getByRole('button', { name: '플레이어 기록 닫기' })).toBeVisible()
+  })
+
   // Deep links are the reason the tabs became routes at all: a shared link has
   // to open on the post itself, cold, with no click path behind it.
   test('a post link opens the post directly', async ({ page }) => {
