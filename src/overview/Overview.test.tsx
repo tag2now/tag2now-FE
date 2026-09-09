@@ -47,8 +47,11 @@ const OVERVIEW_DATA: OverviewData = {
     { id: 1, author: 'PostAuthor', title: '첫 게시글', body: '', post_type: 'free', thumbs_up: 3, thumbs_down: 0, created_at: new Date().toISOString(), comment_count: 2 },
   ],
   reservations: [
-    { id: 1, start_at: '2026-09-02T12:00:00Z', host_display_name: 'HostOne', host_ranks: [], match_type: 'rank_match', capacity: 4, memo: '', status: 'open', participant_count: 1, created_at: '2026-09-02T09:00:00Z' },
+    // Ranks out of order and three of them, so the row has to sort and to
+    // count what it cannot fit rather than simply printing the list.
+    { id: 1, start_at: '2026-09-02T12:00:00Z', host_display_name: 'HostOne', host_ranks: ['Master', 'Raijin', 'Fujin'], match_type: 'rank_match', capacity: 4, memo: '', status: 'open', participant_count: 1, created_at: '2026-09-02T09:00:00Z' },
     { id: 2, start_at: '2026-09-02T13:00:00Z', host_display_name: 'HostFull', host_ranks: [], match_type: 'any', capacity: 2, memo: '', status: 'open', participant_count: 2, created_at: '2026-09-02T09:00:00Z' },
+    { id: 3, start_at: '2026-09-02T14:00:00Z', host_display_name: 'HostPlayer', host_ranks: [], match_type: 'player_match', capacity: 3, memo: '', status: 'open', participant_count: 0, created_at: '2026-09-02T09:00:00Z' },
   ],
 }
 
@@ -214,6 +217,26 @@ describe('Overview', () => {
     renderOverview()
     expect(screen.getByText('HostOne')).toBeInTheDocument()
     expect(screen.queryByText('HostFull')).not.toBeInTheDocument()
+  })
+
+  // Which ranks the host holds is what decides whether a reader can be matched
+  // against them at all, so the summary row is not useful without it.
+  it('shows the host ranks highest-first, counting the ones that do not fit', () => {
+    renderOverview()
+    const row = screen.getByRole('link', { name: /HostOne/ })
+
+    expect([...row.querySelectorAll('img')].map((img) => img.getAttribute('alt'))).toEqual(['Raijin', 'Fujin'])
+    expect(screen.getByLabelText('추가 계급 1개')).toBeInTheDocument()
+  })
+
+  // Not an empty rank strip but no strip at all: the row already says
+  // "플레이어 매치" on the line under the host, and a second element saying the
+  // same thing would spend width the name needs on a phone.
+  it('renders no rank strip for a player match', () => {
+    renderOverview()
+    const row = screen.getByRole('link', { name: /HostPlayer/ })
+
+    expect(row.querySelector('img')).toBeNull()
   })
 
   it('shows the latest community posts', () => {

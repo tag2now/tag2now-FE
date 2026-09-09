@@ -518,10 +518,25 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .overview-list-link:hover { background: rgba(255,255,255,.06); }
 .overview-list-link:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
 .overview-list-link:hover .overview-list-title { text-decoration: underline; text-decoration-color: rgba(230,57,70,.62); text-underline-offset: 3px; }
-.overview-list-main { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: 1px; }
+/* Takes its content's width, not the row's. Growing to fill left a 300px hole
+   between a five-character host name and that host's ranks, far enough apart
+   that they stopped reading as one fact. Shrinks when the row is tight, down
+   to a floor: without one, a row carrying two ranks and an overflow badge
+   drove the name to 0px on a 375px screen and left the reservation anonymous.
+   40px still shows a few characters and the ellipsis. */
+.overview-list-main { display: flex; min-width: 40px; flex: 0 1 auto; flex-direction: column; gap: 1px; }
 .overview-list-title { overflow: hidden; color: var(--color-txt); font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .overview-list-sub { overflow: hidden; color: var(--color-txt-faint); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.overview-list-meta { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; color: var(--color-txt-dim); font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Sits against the host it describes rather than at the far edge of the row.
+   Neither shrinks nor wraps: letting it shrink cut a rank banner mid-image —
+   "Yaksa" rendered as "sa" — which reads as a broken asset rather than a
+   cropped one, the same failure RankImage removes itself to avoid. Two badges
+   at this size fit the narrowest row beside the name's floor, so there is
+   nothing to shrink; a third would not, which is what `max` is set from. */
+.overview-list-ranks { flex: 0 0 auto; flex-wrap: nowrap; }
+/* The one column that stays right-aligned, so the counts line up down the list
+   and can be compared without reading the rows. */
+.overview-list-meta { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; margin-left: auto; color: var(--color-txt-dim); font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .overview-list-meta > span { display: inline-flex; align-items: center; gap: 3px; }
 .overview-time { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 3px; color: var(--color-primary-text); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px; border: 1px solid var(--color-border); border-radius: 6px; background: rgba(255,255,255,.015); }
