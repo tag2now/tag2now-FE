@@ -152,6 +152,17 @@ describe('Overview', () => {
     expect(kpiValue('등록 플레이어')).toBe('512')
   })
 
+  // Nothing caught the h1-to-h3 gap that opened when .content-heading and its
+  // h2 were removed, because every heading assertion here matched on the name
+  // and never the level. Screen-reader users navigate this outline.
+  it('nests its headings without skipping a level', () => {
+    renderOverview()
+
+    expect(screen.getByRole('heading', { name: '한눈에 보기', level: 2 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '모집 중인 예약', level: 3 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '최근 7일 접속자 추이', level: 3 })).toBeInTheDocument()
+  })
+
   // Every card on this page summarises a tab and opens it. The KPI row was the
   // one place that stated a figure and left the reader to find its tab alone.
   it('opens the tab each KPI is drawn from', () => {
@@ -164,12 +175,16 @@ describe('Overview', () => {
   })
 
   // The card's own text says what the number is, never where it leads, so the
-  // destination is named in the accessible name — with the visible label kept
-  // in front of it, which is what WCAG's Label in Name asks for.
-  it('names the destination in the link', () => {
+  // destination is appended to the accessible name. Appended, not set as an
+  // aria-label: a label replaces the content it is put on, and the hint is the
+  // only place the per-group breakdown appears — naming the destination that
+  // way cost a screen reader the whole card body.
+  it('names the destination without dropping the card content', () => {
     renderOverview()
 
-    expect(screen.getByRole('link', { name: '등록 플레이어 512, 리더보드 탭으로 이동' })).toBeInTheDocument()
+    const card = screen.getByRole('link', { name: /활성 방/ })
+    expect(card).toHaveAccessibleName(/랭매 2 · 플매 1/)
+    expect(card).toHaveAccessibleName(/매치 탭으로 이동$/)
   })
 
   // fetchRoomsAll shuffles the groups, so a destination read from the payload

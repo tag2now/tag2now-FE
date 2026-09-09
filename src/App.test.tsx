@@ -128,6 +128,16 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: '한눈에 보기' })).toBeInTheDocument()
   })
 
+  // The panel heading has to sit directly under the app's h1. Only App renders
+  // both, so this is the one place the whole chain is visible: Overview's own
+  // suite can pin the h2 but never what precedes it.
+  it('puts the panel heading one level under the app heading', async () => {
+    await renderApp()
+
+    expect(screen.getByRole('heading', { name: 'Tag 2 Now', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '한눈에 보기', level: 2 })).toBeInTheDocument()
+  })
+
   it('the match tab shows rooms content', async () => {
     await renderApp('매칭')
 

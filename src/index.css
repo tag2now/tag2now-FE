@@ -385,7 +385,10 @@
 .compact-toolbar { margin-bottom: 16px; }
 .section-title { display: flex; min-width: 0; align-items: center; gap: 8px; }
 .section-icon { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(230,57,70,.24); border-radius: 6px; background: rgba(230,57,70,.10); color: var(--color-primary-text); }
-.section-title h3 { margin: 0; color: var(--color-txt); font-size: 15px; line-height: 1.25; font-weight: 700; }
+/* Level varies with depth --- a panel's own title is h2, a card's inside it is
+   h3 --- while the treatment does not. Semantics pick the tag, this picks the
+   size, which is the only way both can be right at once. */
+.section-title :is(h2, h3) { margin: 0; color: var(--color-txt); font-size: 15px; line-height: 1.25; font-weight: 700; }
 .section-title p { margin: 2px 0 0; color: var(--color-txt-dim); font-size: 10px; }
 .toolbar-actions { display: flex; align-items: center; gap: 6px; }
 .data-table-wrap { width: 100%; overflow: hidden; border: 1px solid var(--color-border); border-radius: 6px; }
@@ -454,7 +457,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .detail-tabs button[aria-selected="true"] { border-color: rgba(230,57,70,.25); background: rgba(230,57,70,.12); color: var(--color-primary-text); }
 .chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
 .chart-panel { min-width: 0; padding: 12px 8px 8px; border: 1px solid var(--color-border); border-radius: 6px; background: rgba(255,255,255,.015); }
-.chart-panel h4 { margin: 0 0 6px 2px; color: var(--color-txt-dim); font-size: 11px; font-weight: 650; letter-spacing: .04em; }
+.chart-panel :is(h3, h4) { margin: 0 0 6px 2px; color: var(--color-txt-dim); font-size: 11px; font-weight: 650; letter-spacing: .04em; }
 
 /* ---- Overview (개요) ---- */
 .overview-panel { display: flex; flex-direction: column; gap: 16px; }

@@ -102,7 +102,10 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
       <div className="section-toolbar compact-toolbar">
         <div className="section-title">
           <span className="section-icon"><TrendingUp size={15} aria-hidden="true" /></span>
-          <div><h3>한눈에 보기</h3><p>지금 서버에서 벌어지는 일</p></div>
+          {/* h2, not h3: this names the whole panel, and the cards below are
+              h3. The h2 that used to sit above it went with .content-heading,
+              which left the page jumping h1 to h3. */}
+          <div><h2>한눈에 보기</h2><p>지금 서버에서 벌어지는 일</p></div>
         </div>
         {/* Four requests go out and nothing already on screen changes until all
             of them land, so without a state here the click reads as ignored.
@@ -137,7 +140,8 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
       </div>
 
       <section className="chart-panel overview-chart" aria-labelledby="overview-daily-heading">
-        <h4 id="overview-daily-heading">최근 7일 접속자 추이</h4>
+        {/* A sibling of the four card sections, so it takes their level. */}
+        <h3 id="overview-daily-heading">최근 7일 접속자 추이</h3>
         <DailyChart data={data?.daily ?? []} height={200} axisGutter={0} />
       </section>
 
