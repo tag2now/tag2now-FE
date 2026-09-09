@@ -116,20 +116,25 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
       </section>
 
       <div className="overview-grid">
-        <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" to={pathOf('leaderboard')}>
-          <TopFiveList rows={leaderboardRows(leaderboardEntries)} onSelect={setSelectedNpid} />
-        </OverviewSection>
-
-        <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
-          <TopFiveList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} detailLabel="매치" onSelect={setSelectedNpid} />
-        </OverviewSection>
-
+        {/* Reservations and posts lead the grid, not the rankings. A ranking is
+            slow-moving reference data with a tab of its own one click away; an
+            open reservation expires and a new post goes unread. The rank lists
+            are also twice as tall (5 x 66px rows), so putting them first pushed
+            both actionable cards a full viewport below the fold. */}
         <OverviewSection icon={CalendarDays} title="모집 중인 예약" subtitle="아직 자리가 남은 약속" linkLabel="예약" to={pathOf('reservation')}>
           <OpenReservations reservations={data?.reservations ?? []} />
         </OverviewSection>
 
         <OverviewSection icon={MessageSquareText} title="최신 게시글" subtitle="커뮤니티에 올라온 글" linkLabel="커뮤니티" to={pathOf('community')}>
           <RecentPosts posts={data?.posts ?? []} />
+        </OverviewSection>
+
+        <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" to={pathOf('leaderboard')}>
+          <TopFiveList rows={leaderboardRows(leaderboardEntries)} onSelect={setSelectedNpid} />
+        </OverviewSection>
+
+        <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
+          <TopFiveList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} detailLabel="매치" onSelect={setSelectedNpid} />
         </OverviewSection>
       </div>
 

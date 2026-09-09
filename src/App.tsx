@@ -51,18 +51,6 @@ export default function App() {
     return [...GROUP_ORDER, ...extra]
   }, [groups])
 
-  const tabs = useMemo(
-    () => [
-      { key: 'overview', label: '개요' },
-      ...groupKeys.map((key) => ({ key, label: `${formatGroupName(key)} (${roomCountLabel(groups[key], roomsLoaded)})` })),
-      { key: 'reservation', label: '예약' },
-      { key: 'leaderboard', label: '리더보드' },
-      { key: 'community', label: '커뮤니티' },
-      { key: 'stats', label: '통계' },
-    ],
-    [groupKeys, groups, roomsLoaded],
-  )
-
   const isRoomTab = isRoomTabKey(activeTab)
   const activeRoomsData = isRoomTab ? { rooms: groups[activeTab] ?? [] } : null
 
@@ -93,8 +81,6 @@ export default function App() {
     if (key === 'stats') return BarChart3
     return Swords
   }
-
-  const activeLabel = tabs.find((item) => item.key === activeTab)?.label ?? '대시보드'
 
   // Both panels close over App-level polled data, so they are built here rather
   // than inline in the route table, which would make that table unreadable.
@@ -178,13 +164,6 @@ export default function App() {
         </aside>
 
         <main id="mainContent" className="app-main">
-          <div className="content-heading">
-            <div>
-              <span className="content-eyebrow">TAG2NOW / LIVE DATA</span>
-              <h2>{activeLabel}</h2>
-            </div>
-            <span className="content-status"><span /> 실시간</span>
-          </div>
           {isRoomTab && groupKeys.length > 0 && (
             <nav className="room-tabs" role="tablist" aria-label="매칭 종류 선택">
               <span className="room-tabs-label">매칭 종류</span>
