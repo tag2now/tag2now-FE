@@ -76,7 +76,7 @@ const weeklyRows = (players: WeeklyTopPlayer[], entries: LeaderboardEntry[]): To
 }
 
 export default function Overview({ rooms, roomsLoading, leaderboardEntries = [], leaderboardTotal }: OverviewProps) {
-  const { data, loading, error, refresh } = useOverview()
+  const { data, loading, error, refreshing, refresh } = useOverview()
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
 
   // The panel wants the leaderboard row when there is one; a weekly-top player
@@ -98,8 +98,12 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
           <span className="section-icon"><TrendingUp size={15} aria-hidden="true" /></span>
           <div><h3>한눈에 보기</h3><p>지금 서버에서 벌어지는 일</p></div>
         </div>
-        <button type="button" className="btn-ghost" onClick={refresh}>
-          <RefreshCw size={14} aria-hidden="true" /> 새로고침
+        {/* Four requests go out and nothing already on screen changes until all
+            of them land, so without a state here the click reads as ignored.
+            The reduced-motion rule freezes the spinner, which is why the
+            disabled dimming carries the signal rather than merely echoing it. */}
+        <button type="button" className="btn-ghost" onClick={refresh} disabled={refreshing}>
+          <RefreshCw size={14} aria-hidden="true" className={refreshing ? 'animate-spin' : undefined} /> 새로고침
         </button>
       </div>
 

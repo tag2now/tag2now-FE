@@ -240,6 +240,14 @@
     outline-offset: 2px;
   }
 
+  /* The step .icon-btn and .btn-primary already carry, missing only here. The
+     hover reset is not redundant: Chromium still matches :hover on a disabled
+     button, so without it the overview's refresh lights up mid-request as
+     though it were still takeable. */
+  .btn-ghost:disabled {
+    @apply opacity-50 cursor-not-allowed hover:bg-transparent hover:text-txt-dim;
+  }
+
   .btn-danger {
     @apply inline-flex min-h-8 items-center justify-center gap-1.5 px-2 bg-transparent border border-error text-error text-xs font-bold rounded-md cursor-pointer hover:bg-error hover:text-bg-deep;
   }

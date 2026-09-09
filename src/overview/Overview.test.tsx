@@ -76,7 +76,7 @@ function kpiValue(label: string): string | null {
   return card?.querySelector('.kpi-card-value')?.textContent ?? null
 }
 
-function polled(data: OverviewData | null, over: Partial<{ loading: boolean; error: string | null; refresh: () => void }> = {}) {
+function polled(data: OverviewData | null, over: Partial<{ loading: boolean; refreshing: boolean; error: string | null; refresh: () => void }> = {}) {
   return { data, loading: false, refreshing: false, error: null, lastUpdated: null, refresh: vi.fn(), ...over }
 }
 
@@ -120,6 +120,22 @@ describe('Overview', () => {
     expect(screen.getByText('boom')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /다시 시도/ }))
     expect(refresh).toHaveBeenCalledOnce()
+  })
+
+  // A refresh replaces data the page is already showing, so nothing moves
+  // while the four requests are out. The button is the only thing that can say
+  // the click landed, and blocking it also stops a second click piling on.
+  it('blocks the refresh control while a refresh is in flight', () => {
+    mockedUseOverview.mockReturnValue(polled(OVERVIEW_DATA, { refreshing: true }))
+    renderOverview()
+
+    expect(screen.getByRole('button', { name: '새로고침' })).toBeDisabled()
+  })
+
+  it('leaves the refresh control takeable once the data has settled', () => {
+    renderOverview()
+
+    expect(screen.getByRole('button', { name: '새로고침' })).toBeEnabled()
   })
 
   it('renders live room KPIs from props rather than fetching them', () => {
