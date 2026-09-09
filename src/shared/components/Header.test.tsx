@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import Header from './Header'
 import { setIdentity } from '@/community/communityApi'
 import { AppError } from '@/shared/util/AppError'
+import { USERNAME_KEY } from '@/shared/util/cookie'
 
 vi.mock('@/community/communityApi', () => ({ setIdentity: vi.fn() }))
 vi.mock('react-hot-toast', () => ({ default: { error: vi.fn() } }))
@@ -24,7 +25,12 @@ async function submitName(name: string) {
 describe('Header username save', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    document.cookie = 'tag2now_username=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+    // A successful save writes the name to localStorage, and the header reads
+    // it back on mount — so without this a later test renders already named
+    // and never sees the "유저명 설정" button. The cookie line cleared
+    // "tag2now_username", which is not the key the app writes.
+    localStorage.clear()
+    document.cookie = `${USERNAME_KEY}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
   })
 
   it('keeps the typed name in an open editor when the save fails', async () => {
@@ -33,16 +39,16 @@ describe('Header username save', () => {
     mockSetIdentity.mockRejectedValue(new TypeError('Failed to fetch'))
     renderHeader()
 
-    await submitName('철권고수')
+    await submitName('TekkenGosu')
 
-    await waitFor(() => expect(screen.getByLabelText('유저명 입력')).toHaveValue('철권고수'))
+    await waitFor(() => expect(screen.getByLabelText('유저명 입력')).toHaveValue('TekkenGosu'))
   })
 
   it('answers a transport failure in Korean, not with the browser message', async () => {
     mockSetIdentity.mockRejectedValue(new TypeError('Failed to fetch'))
     renderHeader()
 
-    await submitName('철권고수')
+    await submitName('TekkenGosu')
 
     await waitFor(() =>
       expect(mockToastError).toHaveBeenCalledWith(
@@ -70,7 +76,7 @@ describe('Header username save', () => {
     mockSetIdentity.mockRejectedValue(new AppError('request failed: 500', 500, false))
     renderHeader()
 
-    await submitName('철권고수')
+    await submitName('TekkenGosu')
 
     await waitFor(() =>
       expect(mockToastError).toHaveBeenCalledWith(
@@ -83,10 +89,48 @@ describe('Header username save', () => {
     mockSetIdentity.mockResolvedValue(undefined as never)
     renderHeader()
 
-    await submitName('철권고수')
+    await submitName('TekkenGosu')
 
     await waitFor(() => expect(screen.queryByLabelText('유저명 입력')).not.toBeInTheDocument())
     expect(mockToastError).not.toHaveBeenCalled()
-    expect(screen.getByText('철권고수')).toBeInTheDocument()
+    expect(screen.getByText('TekkenGosu')).toBeInTheDocument()
+  })
+
+  // The backend cannot carry a name above U+00FF: it comes back as a cookie
+  // value, and POST /community/identity answers a bare 500 rather than
+  // anything the toast could quote. Stopping here is what turns that into a
+  // sentence the user can act on — and it goes away when the backend does not
+  // put the raw name in a header.
+  it('refuses a name the backend cannot carry, without asking it', async () => {
+    renderHeader()
+
+    await submitName('철권고수')
+
+    await waitFor(() =>
+      expect(mockToastError).toHaveBeenCalledWith(
+        '유저명에 한글·이모지는 아직 쓸 수 없습니다. 영문·숫자로 입력해 주세요.',
+      ),
+    )
+    expect(mockSetIdentity).not.toHaveBeenCalled()
+  })
+
+  it('leaves the refused name in the editor to be corrected', async () => {
+    renderHeader()
+
+    await submitName('철권고수')
+
+    await waitFor(() => expect(screen.getByLabelText('유저명 입력')).toHaveValue('철권고수'))
+  })
+
+  // Latin-1 survives the round trip — the server escapes it into the cookie and
+  // reads it back — so the guard must not widen into an ASCII-only rule.
+  it('accepts an accented name, which the backend does carry', async () => {
+    mockSetIdentity.mockResolvedValue(undefined as never)
+    renderHeader()
+
+    await submitName('café')
+
+    await waitFor(() => expect(mockSetIdentity).toHaveBeenCalledWith('café'))
+    expect(mockToastError).not.toHaveBeenCalled()
   })
 })

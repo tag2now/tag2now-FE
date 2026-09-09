@@ -3,7 +3,7 @@ import { charImageUrl } from '@/shared/characterImage'
 import { LATEST_PATCH_VERSION } from '@/config/patchNotes'
 import RankImage from './RankImage'
 import PlayerHistoryPanel from './PlayerHistoryPanel'
-import { getUsername as getSavedUsername, saveUsername, clearUsername } from '@/shared/util/cookie'
+import { getUsername as getSavedUsername, saveUsername, clearUsername, isTransportableUsername, UNTRANSPORTABLE_USERNAME_MSG } from '@/shared/util/cookie'
 import { setIdentity } from '@/community/communityApi'
 import { AppError } from '@/shared/util/AppError'
 import {CharInfo, LeaderboardEntry} from "@/shared/types";
@@ -43,6 +43,13 @@ export default function Header({ totalUsers, leaderboardEntries }: HeaderProps) 
 
   async function commitUsername() {
     const trimmed = draft.trim()
+    // Refused before anything moves, so the editor simply stays open on what
+    // was typed — the same recovery the failed-save path builds by reverting,
+    // reached here without a request the backend would answer with a bare 500.
+    if (!isTransportableUsername(trimmed)) {
+      toast.error(UNTRANSPORTABLE_USERNAME_MSG)
+      return
+    }
     const prev = username
     setUsername(trimmed)
     setEditing(false)
