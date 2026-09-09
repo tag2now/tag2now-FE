@@ -10,8 +10,9 @@ import { CalendarPlus, Check, ChevronDown, Clock3, Filter, LogIn, UserMinus, X }
 import Select from '@/shared/components/Select'
 import ToggleGroup from '@/shared/components/ToggleGroup'
 import { reservationPath } from '@/config/routes'
-import { kstTimeFormat, MATCH_TYPE_LABELS } from '@/reservation/reservationLabels'
+import { kstTimeFormat, MATCH_TYPE_LABELS, RANK_ORDER, sortRanksDescending } from '@/reservation/reservationLabels'
 import CommentList from '@/reservation/component/CommentList'
+import RankSummary from '@/reservation/component/RankSummary'
 
 type MatchType = '랭크매치' | '플레이어 매치' | '상관없음'
 type ReservationStatus = 'open' | 'full'
@@ -49,21 +50,10 @@ function fromApi(item: ApiReservation): Reservation {
     status: item.status === 'open' && item.participant_count < item.capacity ? 'open' : 'full',
   }
 }
-const rankOptions = [
-  'Beginner', '9th kyu', '8th kyu', '7th kyu',
-  '6th kyu', '5th kyu', '4th kyu', '3rd kyu',
-  '2nd kyu', '1st kyu', '1st dan', '2nd dan',
-  '3rd dan', 'Disciple', 'Mentor', 'Master',
-  'Grand Master', 'Brawler', 'Marauder', 'Fighter',
-  'Berserker', 'Warrior', 'Avenger', 'Duelist',
-  'Pugilist', 'Vanquisher', 'Destroyer', 'Conqueror',
-  'Savior', 'Genbu', 'Byakko', 'Seiryu',
-  'Suzaku', 'Fujin', 'Raijin', 'Yaksa',
-]
-const rankOrder = new Map(rankOptions.map((rank, index) => [rank, index]))
+// The picker reads bottom-up: four ranks a row, highest row first.
 const rankPickerOptions = Array.from(
-  { length: Math.ceil(rankOptions.length / 4) },
-  (_, rowIndex) => rankOptions.slice(rowIndex * 4, rowIndex * 4 + 4),
+  { length: Math.ceil(RANK_ORDER.length / 4) },
+  (_, rowIndex) => RANK_ORDER.slice(rowIndex * 4, rowIndex * 4 + 4),
 ).reverse().flat()
 const hourOptions: WheelPickerOption<string>[] = Array.from({ length: 24 }, (_, hour) => {
   const value = String(hour).padStart(2, '0')
@@ -76,10 +66,6 @@ const minuteOptions: WheelPickerOption<string>[] = Array.from({ length: 60 }, (_
 
 // The backend rejects a 21st rank with a 422, so the picker stops at 20.
 const MAX_RANKS = 20
-
-function sortSelectedRanks(ranks: string[]) {
-  return [...ranks].sort((left, right) => (rankOrder.get(right) ?? -1) - (rankOrder.get(left) ?? -1))
-}
 
 type FormState = { time: string; type: MatchType; ranks: string[]; capacity: string; memo: string }
 
@@ -114,22 +100,6 @@ function availabilityMeta(reservation: Reservation) {
   if (reservation.status === 'full') return { label: '마감', className: 'border-secondary text-secondary bg-secondary/10' }
   if (reservation.type === '랭크매치') return { label: '모집중', className: 'border-primary text-primary-text bg-primary/10' }
   return { label: `${reservation.joined}/${reservation.capacity}명`, className: 'border-primary text-primary-text bg-primary/10' }
-}
-
-/** Ranks highest-first, with whatever does not fit counted in a badge.
- *
- * The badge sits in the flex flow rather than at `left-full`: the reservation
- * card clips its overflow, so a badge outside the icon's own box was cut away
- * and a five-rank post looked exactly like a one-rank post. */
-function RankSummary({ ranks, imageClassName = 'h-8', max = Infinity, className = 'justify-center' }: { ranks: string[], imageClassName?: string, max?: number, className?: string }) {
-  if (ranks.length === 0) return null
-  const sortedRanks = sortSelectedRanks(ranks)
-  const shown = sortedRanks.slice(0, max)
-  const hidden = sortedRanks.length - shown.length
-  return <span className={`flex min-w-0 flex-wrap items-center gap-1 ${className}`} aria-label={sortedRanks.join(', ')}>
-    {shown.map((rank) => <RankImage key={rank} rankInfo={{ name: rank, tier: rank }} className={`${imageClassName} w-auto shrink-0 object-contain`} />)}
-    {hidden > 0 && <span aria-label={`추가 계급 ${hidden}개`} className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-primary-dim bg-primary/10 px-1 text-xs font-black text-primary-text">+{hidden}</span>}
-  </span>
 }
 
 // Mounts with the form so the focus trap starts when the dialog opens, not when
@@ -241,7 +211,7 @@ export default function Reservation() {
   const toggleRank = (rank: string) => {
     setForm((current) => ({
       ...current,
-      ranks: sortSelectedRanks(current.ranks.includes(rank)
+      ranks: sortRanksDescending(current.ranks.includes(rank)
         ? current.ranks.filter((selectedRank) => selectedRank !== rank)
         : [...current.ranks, rank]),
     }))
@@ -375,11 +345,11 @@ export default function Reservation() {
             </fieldset>
             {form.type !== '플레이어 매치' && <fieldset className="modal-field col-span-full">
               <legend className="field-label">보유 계급 <span className="font-normal">(복수 선택 가능)</span></legend>
-              <button type="button" aria-label={form.ranks.length > 0 ? `계급 선택, 현재 ${sortSelectedRanks(form.ranks).join(', ')}` : '계급 선택'} aria-expanded={rankPickerOpen} aria-controls="reservation-rank-picker" onClick={() => setRankPickerOpen((open) => !open)} className="input-base mt-1 flex min-h-12 w-full items-center justify-between gap-3 px-3 py-1.5 text-left">
+              <button type="button" aria-label={form.ranks.length > 0 ? `계급 선택, 현재 ${sortRanksDescending(form.ranks).join(', ')}` : '계급 선택'} aria-expanded={rankPickerOpen} aria-controls="reservation-rank-picker" onClick={() => setRankPickerOpen((open) => !open)} className="input-base mt-1 flex min-h-12 w-full items-center justify-between gap-3 px-3 py-1.5 text-left">
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="shrink-0 text-xs font-normal text-txt-dim">{form.ranks.length > 0 ? `${form.ranks.length}개 선택` : '계급을 선택해 주세요'}</span>
                   {form.ranks.length > 0 && <span className="scroll-area flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
-                    {sortSelectedRanks(form.ranks).map((rank) => <RankImage key={rank} rankInfo={{ name: rank, tier: rank }} className="h-8 w-auto shrink-0 object-contain" />)}
+                    {sortRanksDescending(form.ranks).map((rank) => <RankImage key={rank} rankInfo={{ name: rank, tier: rank }} className="h-8 w-auto shrink-0 object-contain" />)}
                   </span>}
                 </span>
                 <ChevronDown size={15} aria-hidden="true" className={`text-primary transition-transform ${rankPickerOpen ? 'rotate-180' : ''}`} />
