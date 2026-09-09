@@ -475,6 +475,20 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .overview-panel { display: flex; flex-direction: column; gap: 16px; }
 .overview-panel > .section-toolbar { margin-bottom: 0; }
 
+/* The panel arrives in reading order rather than all at once. panelStatus
+   returns early until the four sources land, so this mounts with the data and
+   plays once per visit --- not on a poll, which replaces values inside blocks
+   that are already on screen.
+   `backwards` holds the first frame during the delay; without it every block
+   paints in full, then blinks out to start. The global reduced-motion rule
+   collapses the duration, which lands each block on its final frame. */
+@keyframes overview-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.overview-panel > * { animation: overview-rise 260ms cubic-bezier(0.2, 0, 0, 1) backwards; }
+.overview-panel > :nth-child(2) { animation-delay: 60ms; }
+.overview-panel > :nth-child(3) { animation-delay: 120ms; }
+.overview-panel > :nth-child(4) { animation-delay: 180ms; }
+.overview-panel > :nth-child(5) { animation-delay: 240ms; }
+
 .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
 /* A link, not a panel: each card summarises a tab and opens it, the same rule
    the sections below already follow. `color: inherit` keeps the browser's link
@@ -490,11 +504,18 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
    is the one corner on this page that broke the 8/6/4 nesting. */
 .kpi-card-icon { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; border-radius: 4px; background: rgba(230,57,70,.10); color: var(--color-primary-text); transition: background-color 150ms ease; }
 .kpi-card-label { min-width: 0; overflow: hidden; color: var(--color-txt); font-size: 14px; font-weight: 700; letter-spacing: .02em; text-overflow: ellipsis; white-space: nowrap; }
-.kpi-card-live { width: 6px; height: 6px; flex: 0 0 auto; margin-left: auto; border-radius: 50%; background: var(--color-accent); animation: kpi-pulse 2s ease-in-out infinite; }
+/* Three bars rather than one blinking dot: a signal that is moving reads as
+   live, where a dot only reads as present. Each bar rests at full height and
+   dips, so the frame the reduced-motion rule freezes them on is the tallest
+   one --- the indicator stays legible when nothing animates. */
+.kpi-card-live { display: inline-flex; height: 10px; flex: 0 0 auto; align-items: center; gap: 2px; margin-left: auto; }
+.kpi-card-live i { width: 2px; height: 100%; border-radius: 1px; background: var(--color-accent); animation: live-bar 1.1s ease-in-out infinite; }
+.kpi-card-live i:nth-child(2) { animation-delay: .18s; }
+.kpi-card-live i:nth-child(3) { animation-delay: .36s; }
+@keyframes live-bar { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.4); } }
 .kpi-card-value { color: var(--color-txt); font-family: var(--font-display); font-size: 26px; line-height: 1.1; font-weight: 750; font-variant-numeric: tabular-nums; }
 .kpi-card-hint { overflow: hidden; color: var(--color-txt-faint); font-size: 11px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 
-@keyframes kpi-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
 
 .overview-chart { padding: 12px 8px 8px; }
 
@@ -528,6 +549,29 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
    them. The 240x105 banner is what sets the column width: it has to stay wide
    enough for the rank name to read next to the character it labels. */
 .mini-char { display: inline-flex; width: 100%; min-width: 0; align-items: center; justify-content: center; gap: 4px; }
+
+/* A glint across the podium, the way a rank banner catches the light in the
+   game itself. Only the medal rows carry it, and it rests for most of the cycle
+   --- a sheen that never stops is a strobe. The three are offset so it reads as
+   one pass down the podium rather than three rows flashing together.
+   One layer on the row, not one per character cell: positioning the cells to
+   host it lifted them above the name button's row-wide overlay, and they took
+   the click that opens the player. The row is already the overlay's containing
+   block, so it can carry this without moving anything.
+   `pointer-events: none` is still required --- a row's ::after paints after its
+   children, this one included. */
+.overview-rank-row.is-medal { overflow: hidden; }
+.overview-rank-row.is-medal::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,.10) 50%, transparent 58%);
+  animation: rank-sheen 4.5s ease-in-out infinite;
+}
+.overview-rank-row.is-medal:nth-child(3)::after { animation-delay: .35s; }
+.overview-rank-row.is-medal:nth-child(4)::after { animation-delay: .7s; }
+@keyframes rank-sheen {
+  0%, 74% { transform: translateX(-115%); }
+  92%, 100% { transform: translateX(115%); }
+}
 .mini-char.is-empty { color: var(--color-txt-faint); font-size: 11px; }
 .mini-char-rank { width: auto; min-width: 0; max-width: 84px; height: auto; object-fit: contain; }
 .mini-char-portrait { width: 56px; height: 56px; flex: 0 0 auto; object-fit: contain; }

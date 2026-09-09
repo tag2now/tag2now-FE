@@ -41,7 +41,9 @@ export default function TopFiveList({ rows, detailLabel, emptyMsg = '데이터 �
         return (
           <li
             key={row.key}
-            className="overview-rank-row"
+            // The podium takes a sheen the rest of the list does not, so the
+            // top three read as a group before the numbers are.
+            className={medal ? 'overview-rank-row is-medal' : 'overview-rank-row'}
             style={medal ? { borderLeftColor: medal.border } : undefined}
           >
             <span className="overview-rank-pos" style={medal ? { color: medal.color } : undefined}>{i + 1}</span>

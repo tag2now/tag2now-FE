@@ -101,6 +101,25 @@ test.describe('Overview', () => {
     await expect(page.getByRole('button', { name: '플레이어 기록 닫기' })).toBeVisible()
   })
 
+  // The podium rows paint a sheen over their character art, and that layer sits
+  // above the name button's row-wide overlay in paint order. Without
+  // pointer-events: none it takes this click and the row stops opening.
+  test('the podium sheen does not swallow the row click', async ({ page }) => {
+    // Parked over the row rather than left to sweep. Unpinned it sits outside
+    // the row for three quarters of its cycle, so a click usually misses it and
+    // the test would only fail on the rare run that caught the pass --- worse
+    // than no guard. This holds it where it does the damage.
+    await page.addStyleTag({
+      content: '.overview-rank-row.is-medal::after { animation: none !important; transform: none !important; }',
+    })
+    const medal = page.getByRole('region', { name: '주간 철악귀' }).locator('.overview-rank-row.is-medal').first()
+    const box = (await medal.boundingBox())!
+
+    await medal.click({ position: { x: box.width - 20, y: box.height / 2 } })
+
+    await expect(page.getByRole('button', { name: '플레이어 기록 닫기' })).toBeVisible()
+  })
+
   // Deep links are the reason the tabs became routes at all: a shared link has
   // to open on the post itself, cold, with no click path behind it.
   test('a post link opens the post directly', async ({ page }) => {

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
+import useCountUp from '@/shared/hooks/useCountUp'
 
 interface KpiCardProps {
   icon: LucideIcon
@@ -18,6 +19,12 @@ interface KpiCardProps {
 }
 
 export default function KpiCard({ icon: Icon, label, value, hint, live, linkLabel, to }: KpiCardProps) {
+  // `value` is already display-ready and is not always a figure: rooms in
+  // flight render an em dash. Only a plain count is worth counting to, and
+  // everything else passes through untouched.
+  const counted = useCountUp(/^\d+$/.test(value) ? Number(value) : null)
+  const shown = counted === null ? value : String(counted)
+
   return (
     // The whole card is the link. Its parts describe one figure, so a reader
     // aiming at the value or the hint still means "show me this".
@@ -25,9 +32,15 @@ export default function KpiCard({ icon: Icon, label, value, hint, live, linkLabe
       <div className="kpi-card-head">
         <span className="kpi-card-icon"><Icon size={20} aria-hidden="true" /></span>
         <span className="kpi-card-label">{label}</span>
-        {live && <span className="kpi-card-live" aria-label="실시간 갱신" />}
+        {/* role="img": the bars are one graphic carrying one meaning, and
+            aria-label is only valid on an element that has a role to label. */}
+        {live && (
+          <span className="kpi-card-live" role="img" aria-label="실시간 갱신">
+            <i /><i /><i />
+          </span>
+        )}
       </div>
-      <strong className="kpi-card-value">{value}</strong>
+      <strong className="kpi-card-value">{shown}</strong>
       {hint && <span className="kpi-card-hint">{hint}</span>}
       {/* Appended rather than set as the link's aria-label. A label would have
           replaced everything above it, and the hint is not repeated anywhere
