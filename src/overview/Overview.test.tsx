@@ -76,6 +76,11 @@ function kpiValue(label: string): string | null {
   return card?.querySelector('.kpi-card-value')?.textContent ?? null
 }
 
+/** The whole card is the link, so its href is what the tile does. */
+function kpiHref(label: string): string | null {
+  return screen.getByText(label).closest('a')?.getAttribute('href') ?? null
+}
+
 function polled(data: OverviewData | null, over: Partial<{ loading: boolean; refreshing: boolean; error: string | null; refresh: () => void }> = {}) {
   return { data, loading: false, refreshing: false, error: null, lastUpdated: null, refresh: vi.fn(), ...over }
 }
@@ -145,6 +150,36 @@ describe('Overview', () => {
     expect(kpiValue('활성 방')).toBe('3')
     expect(screen.getByText('랭매 2 · 플매 1')).toBeInTheDocument()
     expect(kpiValue('등록 플레이어')).toBe('512')
+  })
+
+  // Every card on this page summarises a tab and opens it. The KPI row was the
+  // one place that stated a figure and left the reader to find its tab alone.
+  it('opens the tab each KPI is drawn from', () => {
+    renderOverview()
+
+    expect(kpiHref('접속자')).toBe('/match/rank_match')
+    expect(kpiHref('활성 방')).toBe('/match/rank_match')
+    expect(kpiHref('오늘 최대 접속')).toBe('/stats')
+    expect(kpiHref('등록 플레이어')).toBe('/leaderboard')
+  })
+
+  // The card's own text says what the number is, never where it leads, so the
+  // destination is named in the accessible name — with the visible label kept
+  // in front of it, which is what WCAG's Label in Name asks for.
+  it('names the destination in the link', () => {
+    renderOverview()
+
+    expect(screen.getByRole('link', { name: '등록 플레이어 512, 리더보드 탭으로 이동' })).toBeInTheDocument()
+  })
+
+  // fetchRoomsAll shuffles the groups, so a destination read from the payload
+  // would move between polls. Same reversal the breakdown test uses.
+  it('keeps the room KPIs on one tab when the payload reorders the groups', () => {
+    renderOverview({
+      rooms: { ...ROOMS, groups: { player_match: ROOMS.groups.player_match, rank_match: ROOMS.groups.rank_match } },
+    })
+
+    expect(kpiHref('접속자')).toBe('/match/rank_match')
   })
 
   it('orders the room breakdown regardless of the shuffled payload', () => {
@@ -261,11 +296,13 @@ describe('Overview', () => {
     expect(screen.getByText(/PostAuthor/)).toBeInTheDocument()
   })
 
+  // Exact names, not a substring match: a KPI card names the same tab in its
+  // own accessible name, so /리더보드/ now finds two links and picks neither.
   it('links each section to the tab it summarises', () => {
     renderOverview()
 
-    expect(screen.getByRole('link', { name: /리더보드/ })).toHaveAttribute('href', '/leaderboard')
-    expect(screen.getByRole('link', { name: /커뮤니티/ })).toHaveAttribute('href', '/community')
+    expect(screen.getByRole('link', { name: '리더보드' })).toHaveAttribute('href', '/leaderboard')
+    expect(screen.getByRole('link', { name: '커뮤니티' })).toHaveAttribute('href', '/community')
   })
 
   // The row is the link, not just the title: a reader aiming at the comment

@@ -22,6 +22,12 @@ interface OverviewProps {
  * emptiness while the fetch is still in flight. Matches the tab-label rule. */
 const UNKNOWN = '—'
 
+/** Where both room figures lead. Fixed rather than read from the response: the
+ * tab strip renders this group whatever the API returns — room data sets the
+ * count in a label, never which tabs exist — and `fetchRoomsAll` shuffles the
+ * groups, so the response's own first key would move the target every poll. */
+const ROOMS_PATH = pathOf(GROUP_ORDER[0])
+
 function roomsKpi(rooms: RoomsData | null, loading: boolean): { players: string; active: string; breakdown: string } {
   if (!rooms) return { players: UNKNOWN, active: UNKNOWN, breakdown: loading ? '불러오는 중' : '연결 실패' }
 
@@ -108,10 +114,10 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
       </div>
 
       <div className="kpi-grid">
-        <KpiCard icon={Users} label="접속자" value={kpi.players} hint="지금 방에 있는 인원" live />
-        <KpiCard icon={Activity} label="활성 방" value={kpi.active} hint={kpi.breakdown} live />
-        <KpiCard icon={TrendingUp} label="오늘 최대 접속" value={peak.value} hint={peak.hint} />
-        <KpiCard icon={Trophy} label="등록 플레이어" value={leaderboardTotal != null ? String(leaderboardTotal) : UNKNOWN} hint="리더보드 집계" />
+        <KpiCard icon={Users} label="접속자" value={kpi.players} hint="지금 방에 있는 인원" live linkLabel="매치" to={ROOMS_PATH} />
+        <KpiCard icon={Activity} label="활성 방" value={kpi.active} hint={kpi.breakdown} live linkLabel="매치" to={ROOMS_PATH} />
+        <KpiCard icon={TrendingUp} label="오늘 최대 접속" value={peak.value} hint={peak.hint} linkLabel="통계" to={pathOf('stats')} />
+        <KpiCard icon={Trophy} label="등록 플레이어" value={leaderboardTotal != null ? String(leaderboardTotal) : UNKNOWN} hint="리더보드 집계" linkLabel="리더보드" to={pathOf('leaderboard')} />
       </div>
 
       <section className="chart-panel overview-chart" aria-labelledby="overview-daily-heading">
