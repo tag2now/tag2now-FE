@@ -131,6 +131,6 @@ test.describe('Overview', () => {
     // The history endpoints are down, but rooms still are not: the KPI row and
     // the reservation card have to survive their neighbour failing.
     await expect(page.getByRole('heading', { name: '한눈에 보기' })).toBeVisible()
-    await expect(page.getByRole('region', { name: '주간 철악귀' })).toContainText('데이터 없음')
+    await expect(page.getByRole('region', { name: '주간 철악귀' })).toContainText('주간 기록 없음')
   })
 })

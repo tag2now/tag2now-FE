@@ -6,7 +6,12 @@ import { formatTimeAgo } from '@/shared/util/timeFormat'
 import type { PostSummary } from '@/community/types'
 
 export default function RecentPosts({ posts }: { posts: PostSummary[] }) {
-  if (posts.length === 0) return <p className="state-msg">게시글 없음</p>
+  if (posts.length === 0) return (
+    <div className="state-msg">
+      <p>게시글 없음</p>
+      <p className="state-msg-detail">커뮤니티 탭에서 첫 글을 남겨보세요</p>
+    </div>
+  )
 
   return (
     <ul className="overview-list">

@@ -11,7 +11,17 @@ const isJoinable = (r: ApiReservation) => r.status === 'open' && r.participant_c
 
 export default function OpenReservations({ reservations, limit = 3 }: { reservations: ApiReservation[]; limit?: number }) {
   const joinable = reservations.filter(isJoinable).slice(0, limit)
-  if (joinable.length === 0) return <p className="state-msg">모집 중인 예약 없음</p>
+  // Two lines, the shape panelStatus already uses: the terse uppercase label
+  // .state-msg is styled for, then a way forward. An empty board is the best
+  // moment to post one, and the card said only that there was nothing here.
+  // The second line holds whether the list is genuinely empty or its fetch
+  // failed — useOverview degrades a rejection to [], so this cannot claim why.
+  if (joinable.length === 0) return (
+    <div className="state-msg">
+      <p>모집 중인 예약 없음</p>
+      <p className="state-msg-detail">예약 탭에서 새 약속을 만들 수 있습니다</p>
+    </div>
+  )
 
   return (
     <ul className="overview-list">

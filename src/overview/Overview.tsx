@@ -47,7 +47,7 @@ function todayPeak(daily: { date: string; peak_players: number | null }[]): { va
   if (!latest) return { value: UNKNOWN, hint: '기록 없음' }
 
   const previous = daily.at(-2)
-  if (latest.peak_players == null) return { value: UNKNOWN, hint: '피크 기록 없음' }
+  if (latest.peak_players == null) return { value: UNKNOWN, hint: '최대 접속 기록 없음' }
   const hint = previous?.peak_players != null ? `어제 ${previous.peak_players}명` : latest.date
   return { value: String(latest.peak_players), hint }
 }
@@ -91,7 +91,9 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
     ? leaderboardEntries.find((e) => e.np_id === selectedNpid)
     : undefined
 
-  const status = panelStatus(loading, error, '개요 로딩 중...', refresh)
+  // "불러오는 중", not "로딩 중": the KPI hint below already says the first and
+  // the match and history panels say it too, so this was the odd one out.
+  const status = panelStatus(loading, error, '개요를 불러오는 중...', refresh)
   if (status) return status
 
   const kpi = roomsKpi(rooms, roomsLoading)
@@ -150,11 +152,17 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
           height of the cards above (5 x 66px rows). */}
       <div className="overview-grid">
         <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" to={pathOf('leaderboard')}>
-          <TopFiveList rows={leaderboardRows(leaderboardEntries)} onSelect={setSelectedNpid} />
+          {/* Names what is missing rather than "데이터". The list is empty both
+              before the leaderboard lands and when its fetch failed, so the
+              copy stops at what is absent and claims no reason for it. */}
+          <TopFiveList rows={leaderboardRows(leaderboardEntries)} emptyMsg="리더보드 순위 없음" onSelect={setSelectedNpid} />
         </OverviewSection>
 
         <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
-          <TopFiveList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} detailLabel="매치" onSelect={setSelectedNpid} />
+          {/* MATCH, not 매치: the header row is otherwise #/Player/Main/Sub, and
+              this app sets Latin caps as a motif elsewhere (PLAYER INSIGHTS,
+              ANY MATCH). One Korean word mid-row read as an oversight. */}
+          <TopFiveList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} detailLabel="MATCH" emptyMsg="주간 기록 없음" onSelect={setSelectedNpid} />
         </OverviewSection>
       </div>
 

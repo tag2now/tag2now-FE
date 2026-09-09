@@ -114,7 +114,7 @@ describe('Overview', () => {
   it('shows loading state before the first load', () => {
     mockedUseOverview.mockReturnValue(polled(null, { loading: true }))
     renderOverview()
-    expect(screen.getByText('개요 로딩 중...')).toBeInTheDocument()
+    expect(screen.getByText('개요를 불러오는 중...')).toBeInTheDocument()
   })
 
   it('shows the error and a retry control when the fetch fails', () => {
@@ -353,10 +353,18 @@ describe('Overview', () => {
 
   it('renders each card empty rather than failing when a source returned nothing', () => {
     mockedUseOverview.mockReturnValue(polled({ daily: [], weeklyTop: [], posts: [], reservations: [] }))
-    renderOverview()
+    // The leaderboard card reads props, not useOverview, so emptying the four
+    // fetched sources alone leaves it populated and "each card" untested.
+    renderOverview({ leaderboardEntries: [] })
 
     expect(screen.getByText('게시글 없음')).toBeInTheDocument()
     expect(screen.getByText('모집 중인 예약 없음')).toBeInTheDocument()
-    expect(screen.getAllByText('데이터 없음').length).toBeGreaterThan(0)
+    // Each list names what is missing rather than sharing one "데이터 없음",
+    // which said nothing about which card the reader was looking at.
+    expect(screen.getByText('리더보드 순위 없음')).toBeInTheDocument()
+    expect(screen.getByText('주간 기록 없음')).toBeInTheDocument()
+    // The two cards a reader can act on also say where to go next.
+    expect(screen.getByText('예약 탭에서 새 약속을 만들 수 있습니다')).toBeInTheDocument()
+    expect(screen.getByText('커뮤니티 탭에서 첫 글을 남겨보세요')).toBeInTheDocument()
   })
 })

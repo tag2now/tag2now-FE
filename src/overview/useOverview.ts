@@ -13,7 +13,8 @@ export const OVERVIEW_POSTS = 3
  * `allSettled` keeps a single failing source from blanking the whole page: a
  * down community endpoint should cost the user the posts card, not the KPIs.
  * A rejected source degrades to an empty list, which every card already renders
- * as "데이터 없음".
+ * as its own empty state. Those name what is absent, never why — a failure and
+ * a genuinely empty list arrive here as the same value.
  */
 export const fetchOverview = async (): Promise<OverviewData> => {
   const [daily, weeklyTop, posts, reservations] = await Promise.allSettled([
