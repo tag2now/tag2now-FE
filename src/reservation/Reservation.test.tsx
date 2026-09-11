@@ -74,6 +74,57 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
+describe('participant roster', () => {
+  it('shows the names even after recruitment completes', async () => {
+    vi.mocked(fetchReservations).mockResolvedValue([{
+      ...apiReservation, capacity: 2, participant_count: 2, status: 'matched',
+      participants: [{ id: 21, display_name: '철권친구' }, { id: 22, display_name: '대전상대' }],
+    }])
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
+    const roster = await screen.findByRole('region', { name: '참가자 명단' })
+    expect(roster).toHaveTextContent('참가자 2/2명')
+    expect(within(roster).getAllByRole('listitem').map(item => item.getAttribute('aria-label'))).toEqual(['철권친구', '대전상대'])
+    expect(within(roster).queryByText('나')).not.toBeInTheDocument()
+  })
+
+  it('distinguishes an empty roster from an older response without names', async () => {
+    vi.mocked(fetchReservations).mockResolvedValue([{ ...apiReservation, participants: [] }])
+    const first = render(<MemoryRouter><Reservation /></MemoryRouter>)
+    expect(await screen.findByText('아직 참가자가 없습니다.')).toBeInTheDocument()
+    first.unmount()
+    vi.mocked(fetchReservations).mockResolvedValue([{ ...apiReservation, participant_count: 1 }])
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
+    expect(await screen.findByText('참가자 명단을 아직 확인할 수 없습니다.')).toBeInTheDocument()
+    expect(screen.queryByText('아직 참가자가 없습니다.')).not.toBeInTheDocument()
+  })
+
+  it('refreshes names and counts after joining and cancelling', async () => {
+    let current: ApiReservation = { ...apiReservation, host_display_name: '방장', participants: [] }
+    let joined = false
+    vi.mocked(fetchReservations).mockImplementation(async () => [current])
+    vi.mocked(hasParticipation).mockImplementation(() => joined)
+    vi.mocked(joinReservation).mockImplementation(async () => {
+      joined = true
+      current = { ...current, status: 'matched', participant_count: 1, participants: [{ id: 23, display_name: '나' }] }
+      return current
+    })
+    vi.mocked(cancelParticipation).mockImplementation(async () => {
+      joined = false
+      current = { ...current, status: 'open', participant_count: 0, participants: [] }
+      return current
+    })
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
+    fireEvent.click(await screen.findByRole('button', { name: '참가하기' }))
+    const roster = screen.getByRole('region', { name: '참가자 명단' })
+    expect(await within(roster).findByRole('listitem', { name: '나' })).toBeInTheDocument()
+    expect(roster).toHaveTextContent('참가자 1/1명')
+    fireEvent.click(await screen.findByRole('button', { name: '참가 취소' }))
+    expect(await within(roster).findByText('아직 참가자가 없습니다.')).toBeInTheDocument()
+    expect(roster).toHaveTextContent('참가자 0/1명')
+    expect(within(roster).queryByText('나')).not.toBeInTheDocument()
+  })
+})
+
 function openReservationModal() {
   render(<MemoryRouter><Reservation /></MemoryRouter>)
   fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
@@ -454,7 +505,7 @@ describe('Reservation', () => {
     vi.mocked(fetchReservations).mockResolvedValue([{ ...apiReservation, status: 'matched', participant_count: 1 }])
     render(<MemoryRouter><Reservation /></MemoryRouter>)
 
-    expect(await screen.findByRole('button', { name: /나 마감/ })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /나 모집 완료/ })).toBeInTheDocument()
   })
 })
 
@@ -557,12 +608,12 @@ describe('Reservation participation', () => {
 
   it('surfaces the backend message when joining is refused', async () => {
     backendHolding(openReservation)
-    vi.mocked(joinReservation).mockRejectedValue(new Error('이미 마감된 예약입니다.'))
+    vi.mocked(joinReservation).mockRejectedValue(new Error('이미 모집이 완료된 예약입니다.'))
 
     const detail = await selectTheReservation()
     fireEvent.click(within(detail).getByRole('button', { name: '참가하기' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('이미 마감된 예약입니다.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('이미 모집이 완료된 예약입니다.')
   })
 
   it('surfaces the backend message when cancelling is refused', async () => {
@@ -582,7 +633,7 @@ describe('Reservation participation', () => {
 
     const detail = await selectTheReservation()
 
-    const button = within(detail).getByRole('button', { name: '모집 마감' })
+    const button = within(detail).getByRole('button', { name: '모집 완료' })
     expect(button).toBeDisabled()
     fireEvent.click(button)
     expect(joinReservation).not.toHaveBeenCalled()
@@ -601,7 +652,7 @@ describe('Reservation participation', () => {
       vi.mocked(fetchReservations).mockResolvedValue([{ ...openReservation, status: 'matched', participant_count: 1 }])
       await act(async () => { await vi.advanceTimersByTimeAsync(10_000) })
 
-      expect(within(detail).getByRole('button', { name: '모집 마감' })).toBeDisabled()
+      expect(within(detail).getByRole('button', { name: '모집 완료' })).toBeDisabled()
     } finally {
       vi.useRealTimers()
     }

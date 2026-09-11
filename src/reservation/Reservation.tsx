@@ -6,13 +6,14 @@ import RankImage from '@/shared/components/RankImage'
 import useModalDialog from '@/shared/hooks/useModalDialog'
 import { getUsername } from '@/shared/util/cookie'
 import { cancelParticipation, cancelReservation, createReservation, fetchReservations, hasParticipation, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
-import { CalendarPlus, Check, ChevronDown, Clock3, Filter, LogIn, UserMinus, X } from 'lucide-react'
+import { CalendarPlus, Check, ChevronDown, Clock3, Filter, LogIn, Plus, UserMinus, X } from 'lucide-react'
 import Select from '@/shared/components/Select'
 import ToggleGroup from '@/shared/components/ToggleGroup'
 import { reservationPath } from '@/config/routes'
 import { kstTimeFormat, MATCH_TYPE_LABELS, RANK_ORDER, sortRanksDescending } from '@/reservation/reservationLabels'
 import CommentList from '@/reservation/component/CommentList'
 import RankSummary from '@/reservation/component/RankSummary'
+import type { LeaderboardEntry } from '@/shared/types'
 
 type MatchType = '랭크매치' | '플레이어 매치' | '상관없음'
 type ReservationStatus = 'open' | 'full'
@@ -25,6 +26,7 @@ type Reservation = {
   type: MatchType
   capacity: number
   joined: number
+  participants: ApiReservation['participants']
   memo: string
   status: ReservationStatus
   contact?: string
@@ -46,6 +48,7 @@ function fromApi(item: ApiReservation): Reservation {
     type: matchTypeLabels[item.match_type],
     capacity: item.capacity,
     joined: item.participant_count,
+    participants: item.participants,
     memo: item.memo,
     status: item.status === 'open' && item.participant_count < item.capacity ? 'open' : 'full',
   }
@@ -97,7 +100,7 @@ function toForm(reservation: Reservation): FormState {
 }
 
 function availabilityMeta(reservation: Reservation) {
-  if (reservation.status === 'full') return { label: '마감', className: 'border-secondary text-secondary bg-secondary/10' }
+  if (reservation.status === 'full') return { label: '모집 완료', className: 'border-secondary text-secondary bg-secondary/10' }
   if (reservation.type === '랭크매치') return { label: '모집중', className: 'border-primary text-primary-text bg-primary/10' }
   return { label: `${reservation.joined}/${reservation.capacity}명`, className: 'border-primary text-primary-text bg-primary/10' }
 }
@@ -141,7 +144,7 @@ function TimePickerDialog({ draftTime, setDraftTime, onCancel, onConfirm }: {
   )
 }
 
-export default function Reservation() {
+export default function Reservation({ leaderboardEntries = [] }: { leaderboardEntries?: LeaderboardEntry[] }) {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('전체')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [joinedIds, setJoinedIds] = useState<number[]>([])
@@ -437,6 +440,41 @@ export default function Reservation() {
             return <aside className={`reservation-detail ${selectedReservation.status === 'full' ? 'is-full' : ''}`} aria-label="선택한 예약 상세">
               <div className="flex items-start justify-between gap-3"><div><p className="panel-meta mb-1">선택한 예약</p><p className="font-display text-3xl font-black text-white">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
               <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-start justify-between gap-3"><span className="shrink-0 text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-8" className="flex-1 justify-end" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary-text">{selectedReservation.type}</strong></p></div>
+              <section className="reservation-roster" aria-label="참가자 명단">
+                <div className="reservation-roster-heading">
+                  <h4>참가자 <span className="reservation-roster-count">{selectedReservation.joined}/{selectedReservation.capacity}명</span></h4>
+                  <span className="reservation-roster-helper">방장 제외</span>
+                </div>
+                {selectedReservation.participants === undefined
+                  ? <p className="reservation-roster-message">참가자 명단을 아직 확인할 수 없습니다.</p>
+                  : <>
+                    {selectedReservation.participants.length === 0 && <p className="reservation-roster-message">아직 참가자가 없습니다.</p>}
+                    <ul className="reservation-roster-slots">
+                      {selectedReservation.participants.map((participant) => {
+                        const entry = leaderboardEntries.find(item => item.online_name === participant.display_name)
+                        const ranks = [entry?.player_info?.main_char_info?.rank_info, entry?.player_info?.sub_char_info?.rank_info]
+                        const highestName = sortRanksDescending(ranks.flatMap(rank => rank?.name ? [rank.name] : []))[0]
+                        const highestRank = ranks.find(rank => rank?.name === highestName)
+                        return <li key={participant.id} className="reservation-roster-slot is-occupied" aria-label={participant.display_name}>
+                          <span className="reservation-roster-position" aria-label={entry ? `리더보드 ${entry.rank}위` : '리더보드 순위 없음'}>
+                            <strong>{entry ? `#${entry.rank}` : '—'}</strong>
+                          </span>
+                          <div className="reservation-roster-inline">
+                            <span className="reservation-roster-best-rank" aria-label={`최고 계급 ${highestName ?? '정보 없음'}`}>
+                              <RankImage rankInfo={highestRank} className="reservation-roster-rank-image" />
+                            </span>
+                            <strong className="reservation-roster-name" title={participant.display_name}>{participant.display_name}</strong>
+                            <span className="reservation-roster-status"><Check size={12} strokeWidth={3} aria-hidden="true" />참가 완료</span>
+                          </div>
+                        </li>
+                      })}
+                      {Array.from({ length: Math.max(0, selectedReservation.capacity - selectedReservation.joined) }, (_, index) => <li key={`empty-${index}`} className="reservation-roster-slot is-empty" aria-label="참가 대기">
+                        <span className="reservation-roster-avatar" aria-hidden="true"><Plus size={20} strokeWidth={1.5} /></span>
+                        <div className="reservation-roster-person"><strong>참가 대기</strong><span className="reservation-roster-waiting">함께할 플레이어를 기다리고 있어요</span></div>
+                      </li>)}
+                    </ul>
+                  </>}
+              </section>
               <p className="mt-4 min-h-10 text-sm text-txt-dim">{selectedReservation.memo}</p>
               {owned
                 ? <div className="mt-4">
@@ -448,7 +486,7 @@ export default function Reservation() {
                         keyboard or touch, so the reason is rendered in the flow. */}
                     {frozen && <p id="reservation-edit-frozen" className="mt-2 text-xs text-txt-faint">참가자가 있는 예약은 수정할 수 없습니다. 삭제 후 다시 등록해 주세요.</p>}
                   </div>
-                : <button type="button" className={`mt-4 flex min-h-9 w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary-text hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-bg-deep hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? <UserMinus size={15} /> : selectedReservation.status === 'full' ? <X size={15} /> : <LogIn size={15} />}{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 마감' : '참가하기'}</button>}
+                : <button type="button" className={`mt-4 flex min-h-9 w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary-text hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-bg-deep hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? <UserMinus size={15} /> : selectedReservation.status === 'full' ? <X size={15} /> : <LogIn size={15} />}{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 완료' : '참가하기'}</button>}
               <CommentList reservationId={selectedReservation.id} username={getUsername()} onError={showError} />
             </aside>
           })()}

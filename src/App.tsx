@@ -197,8 +197,8 @@ export default function App() {
               <Route path="/" element={overviewPanel} />
               <Route path="/match/:group" element={roomsPanel} />
               <Route path="/leaderboard" element={<Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />} />
-              <Route path="/reservation" element={<Reservation />} />
-              <Route path="/reservation/:id" element={<Reservation />} />
+              <Route path="/reservation" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
+              <Route path="/reservation/:id" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
               <Route path="/community" element={<Community leaderboardEntries={lb.data?.entries} />} />
               <Route path="/community/:postId" element={<Community leaderboardEntries={lb.data?.entries} />} />
               <Route path="/stats" element={<Stats leaderboardEntries={lb.data?.entries} />} />

@@ -1,7 +1,8 @@
 import { DELETE, GET, PATCH, POST } from '@/shared/util/api'
 import { AppError } from '@/shared/util/AppError'
 
-export type ApiReservation = { id: number; start_at: string; host_display_name: string; host_ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string; status: 'open' | 'matched' | 'cancelled' | 'ended'; participant_count: number; created_at: string }
+export type ApiParticipant = { id: number; display_name: string }
+export type ApiReservation = { id: number; start_at: string; host_display_name: string; host_ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string; status: 'open' | 'matched' | 'cancelled' | 'ended'; participant_count: number; participants?: ApiParticipant[]; created_at: string }
 export type CreateReservationInput = { start_time: string; display_name: string; ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string }
 export type ApiComment = { id: number; reservation_id: number; author: string; body: string; created_at: string }
 const participantKey = (id: number) => `reservation-participant-${id}`
