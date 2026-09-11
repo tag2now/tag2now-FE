@@ -2,7 +2,7 @@ import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import { PlayerMatchTable, RankMatchTable } from '@/match/component'
 import type { RankMatchRoom, Room } from '@/match/types'
 import LoadingBar from '@/shared/components/LoadingBar'
-import useTimeSince from '@/shared/hooks/useTimeSince'
+import TimeSince from '@/shared/components/TimeSince'
 import type { LeaderboardEntry } from '@/shared/types'
 import { panelStatus } from '@/shared/util/panelStatus'
 import { RefreshCw } from 'lucide-react'
@@ -18,7 +18,6 @@ type MatchingOverviewProps = {
 }
 
 export default function MatchingOverview({ groups, loading, refreshing, error, onRefresh, lastUpdated, leaderboardEntries }: MatchingOverviewProps) {
-  const updatedAgo = useTimeSince(lastUpdated)
   const status = panelStatus(loading, error, '방 목록 불러오는 중...', onRefresh)
   const groupKeys = [
     ...GROUP_ORDER.filter((key) => key in groups),
@@ -36,7 +35,7 @@ export default function MatchingOverview({ groups, loading, refreshing, error, o
           <p className="mt-1 text-xs text-txt-dim">현재 열려 있는 랭크 · 플레이어 매치</p>
         </div>
         <div className="flex items-center gap-3">
-          {updatedAgo && <span className="text-xs text-txt-dim">업데이트 {updatedAgo}</span>}
+          <TimeSince date={lastUpdated} />
           {onRefresh && <button className="refresh-btn" aria-label="새로고침" onClick={onRefresh} disabled={refreshing}><RefreshCw size={14} aria-hidden="true" /></button>}
         </div>
       </div>

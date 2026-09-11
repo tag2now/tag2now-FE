@@ -1,4 +1,4 @@
-import useTimeSince from "@/shared/hooks/useTimeSince";
+import TimeSince from "@/shared/components/TimeSince";
 import { panelStatus} from "@/shared/util/panelStatus";
 import type {LeaderboardEntry} from "@/shared/types";
 import LoadingBar from "@/shared/components/LoadingBar";
@@ -18,7 +18,6 @@ interface RoomsProps {
 }
 
 export default function Rooms({ data, loading, refreshing, error, onRefresh, groupKey, lastUpdated, leaderboardEntries }: RoomsProps) {
-  const updatedAgo = useTimeSince(lastUpdated)
   const s = panelStatus(loading, error, '방 목록 불러오는 중...', onRefresh)
   if (s) return s
   if (!data) return null
@@ -34,9 +33,7 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
           <div><h3>실시간 방 목록</h3><p>현재 접속 가능한 매칭 세션</p></div>
         </div>
         <div className="flex items-center gap-3">
-          {updatedAgo && (
-            <span className="text-txt-dim text-xs">업데이트 {updatedAgo}</span>
-          )}
+          <TimeSince date={lastUpdated} />
           {onRefresh && (
             <button className="refresh-btn" aria-label="새로고침" onClick={onRefresh} disabled={refreshing}>
               <RefreshCw size={14} aria-hidden="true" />
