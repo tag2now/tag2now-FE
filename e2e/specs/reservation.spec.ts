@@ -333,7 +333,7 @@ test.describe('Reservation participation', () => {
 
     await expect(page.getByRole('status')).toHaveText(/매칭이 성사되었습니다/)
     await expect(detail.getByRole('button', { name: '참가 취소' })).toBeVisible()
-    await expect(page.getByRole('button', { name: /상대 마감/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /상대 모집 완료/ })).toBeVisible()
   })
 
   test('cancelling a participation puts the reservation back up for grabs', async ({ page }) => {
@@ -364,7 +364,7 @@ test.describe('Reservation participation', () => {
       reservationAt(21, { id: 10, status: 'matched', participant_count: 1 }),
     ])
 
-    await expect(detail.getByRole('button', { name: '모집 마감' })).toBeDisabled()
+    await expect(detail.getByRole('button', { name: '모집 완료' })).toBeDisabled()
   })
 
   test('the participation survives a reload', async ({ page }) => {
