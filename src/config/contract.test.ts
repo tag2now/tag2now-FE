@@ -56,8 +56,9 @@ const CONTRACT: Expectation[] = [
 
   { method: 'post', path: '/community/identity', body: ['name'] },
   { method: 'get', path: '/community/posts', query: ['page', 'page_size', 'post_type'] },
-  { method: 'post', path: '/community/posts', body: ['title', 'body', 'post_type'] },
-  { method: 'get', path: '/community/posts/{post_id}' },
+  { method: 'post', path: '/community/posts', body: ['title', 'body', 'post_type', 'youtube_video_id'] },
+  { method: 'get', path: '/community/posts/{post_id}', reads: ['youtube_video_id'] },
+  { method: 'patch', path: '/community/posts/{post_id}', body: ['title', 'body', 'post_type', 'youtube_video_id'] },
   { method: 'delete', path: '/community/posts/{post_id}' },
   { method: 'post', path: '/community/posts/{post_id}/comments', body: ['body', 'parent_id'] },
   { method: 'post', path: '/community/posts/{post_id}/thumb', body: ['direction'] },

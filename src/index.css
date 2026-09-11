@@ -457,7 +457,7 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .field-label { display: block; margin: 0 0 6px; color: var(--color-txt-dim); font-size: 10px; font-weight: 650; letter-spacing: .04em; }
 .form-section { padding: 16px; border: 1px solid var(--color-border); border-radius: 6px; background: rgba(255,255,255,.015); }
 .form-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
-.writing-form { max-width: 760px; margin-inline: auto; padding: 16px; background: #121214; }
+.writing-form { padding: 16px; background: #121214; }
 .segmented-control { display: inline-flex; min-height: 32px; overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-deep); }
 .segmented-control button { min-height: 30px; padding: 0 8px; border: 0; border-left: 1px solid var(--color-border); background: transparent; color: var(--color-txt-dim); font-size: 10px; font-weight: 650; }
 .segmented-control button:first-child { border-left: 0; }
@@ -1006,3 +1006,13 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .reservation-roster-slot.is-occupied { padding: 6px; gap: 6px; }
 .reservation-roster-name { flex: 1; min-width: 0; color: var(--color-txt); font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .reservation-roster-rank-image { width: auto; height: 36px; max-width: 84px; object-fit: contain; }
+
+/* Attached videos follow the community board's black/red panel styling. */
+.youtube-video { margin: 1rem 0; overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 8px; background: #090909; }
+.youtube-video-heading { display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.85rem; color: var(--color-txt-dim); font-size: 0.75rem; font-weight: 700; }
+.youtube-video-heading svg { color: var(--color-error); }
+.youtube-video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
+.youtube-video-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 0.85rem; color: var(--color-txt-dim); font-size: 0.75rem; }
+.youtube-video-footer a { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--color-primary-text); }
+.youtube-video-footer a:hover { color: white; }
+.youtube-video-footer a:focus-visible { outline: 2px solid var(--color-primary-text); outline-offset: 3px; }

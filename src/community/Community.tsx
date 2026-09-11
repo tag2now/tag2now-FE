@@ -61,9 +61,9 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
     community.loadPosts(page, postType || undefined).then()
   }
 
-  const handleCreatePost = async (title: string, body: string, type: string) => {
+  const handleCreatePost = async (title: string, body: string, type: string, youtubeVideoId?: string) => {
     await ensureIdentity()
-    await createPost(title, body, type)
+    await createPost(title, body, type, youtubeVideoId)
     setView('list')
     community.loadPosts(1, postType || undefined).then()
   }
@@ -101,10 +101,14 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
       )}
       {mode === 'detail' && community.selectedPost && (
         <PostDetail
+          key={community.selectedPost.id}
           post={community.selectedPost}
           username={getUsername()}
           onBack={handleBack}
-          onRefresh={community.refreshDetail}
+          onRefresh={() => {
+            community.refreshDetail()
+            community.loadPosts(community.page, postType || undefined).then()
+          }}
           ensureIdentity={ensureIdentity}
           onDeleted={handleDeleted}
           leaderboardEntries={leaderboardEntries}
