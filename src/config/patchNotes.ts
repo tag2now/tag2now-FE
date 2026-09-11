@@ -10,6 +10,16 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.5',
+    items: [
+      '게시글에 YouTube 링크를 첨부해 미리보기와 영상 재생 가능 (Shorts 지원)',
+      '내가 작성한 게시글의 제목·내용·유형 수정과 첨부 영상 교체·제거 가능',
+      '글쓰기·수정 화면의 좌우 여백을 줄여 입력 영역을 넓게 표시',
+      '예약 상세에서 참여자 명단·계급과 남은 모집 자리 확인 가능',
+      '예약 댓글을 Enter 키로 등록 가능',
+    ],
+  },
+  {
     version: '2.4',
     items: [
       '예약 상세에서 댓글을 읽고 쓸 수 있음',
