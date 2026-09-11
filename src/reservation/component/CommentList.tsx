@@ -38,7 +38,7 @@ export default function CommentList({ reservationId, username, onError }: Props)
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
     const body = draft.trim()
-    if (!body || !username) return
+    if (!body || !username || submitting) return
     setSubmitting(true)
     try {
       await createComment(reservationId, username, body)
@@ -115,6 +115,13 @@ export default function CommentList({ reservationId, username, onError }: Props)
           value={draft}
           disabled={!username || submitting}
           onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' || event.shiftKey) return
+            // Some IMEs report composition-ending Enter with keyCode 229.
+            if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return
+            event.preventDefault()
+            event.currentTarget.form?.requestSubmit()
+          }}
         />
         <button
           type="submit"

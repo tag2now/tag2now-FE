@@ -664,10 +664,48 @@ describe('the comment thread on a reservation', () => {
     expect(fetchComments).toHaveBeenCalledTimes(2)
   })
 
+  it('posts a comment on Enter and clears the draft', async () => {
+    vi.mocked(createComment).mockResolvedValue(comment({ id: 2, body: '저도 갈게요' }))
+    const thread = await openThread([])
+    const input = within(thread).getByLabelText('댓글 내용')
+    fireEvent.change(input, { target: { value: '저도 갈게요' } })
+
+    expect(fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })).toBe(false)
+
+    await waitFor(() => expect(input).toHaveValue(''))
+    expect(createComment).toHaveBeenCalledExactlyOnceWith(1, '나', '저도 갈게요')
+    expect(fetchComments).toHaveBeenCalledTimes(2)
+  })
+
+  it('leaves Shift+Enter available for a newline without posting', async () => {
+    const thread = await openThread([])
+    const input = within(thread).getByLabelText('댓글 내용')
+    fireEvent.change(input, { target: { value: '저도 갈게요' } })
+
+    // jsdom does not insert newlines; verify the browser default is not prevented.
+    expect(fireEvent.keyDown(input, { key: 'Enter', shiftKey: true })).toBe(true)
+    expect(createComment).not.toHaveBeenCalled()
+    expect(input).toHaveValue('저도 갈게요')
+  })
+
+  it.each([
+    { isComposing: true },
+    { isComposing: false, keyCode: 229 },
+  ])('does not post when Enter belongs to IME composition: %j', async (composition) => {
+    const thread = await openThread([])
+    const input = within(thread).getByLabelText('댓글 내용')
+    fireEvent.change(input, { target: { value: '저도 갈게요' } })
+
+    expect(fireEvent.keyDown(input, { key: 'Enter', ...composition })).toBe(true)
+    expect(createComment).not.toHaveBeenCalled()
+    expect(input).toHaveValue('저도 갈게요')
+  })
+
   it('refuses to submit a draft that is only whitespace', async () => {
     const thread = await openThread([])
 
     fireEvent.change(within(thread).getByLabelText('댓글 내용'), { target: { value: '   ' } })
+    fireEvent.keyDown(within(thread).getByLabelText('댓글 내용'), { key: 'Enter' })
 
     expect(within(thread).getByRole('button', { name: '댓글 등록' })).toBeDisabled()
     expect(createComment).not.toHaveBeenCalled()
