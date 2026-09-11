@@ -1,4 +1,4 @@
-import { GET, POST, DELETE } from '@/shared/util/api'
+import { GET, POST, PATCH, DELETE } from '@/shared/util/api'
 import {PostDetail, PostListResponse} from "@/community/types";
 
 export const setIdentity = (name: string) =>
@@ -13,8 +13,11 @@ export const fetchPosts = (page: number, pageSize: number, postType?: string): P
 export const fetchPostDetail = (postId: number): Promise<PostDetail> =>
   GET(`community/posts/${postId}`)
 
-export const createPost = (title: string, body: string, postType: string) =>
-  POST('community/posts', { title, body, post_type: postType })
+export const createPost = (title: string, body: string, postType: string, youtubeVideoId?: string) =>
+  POST('community/posts', { title, body, post_type: postType, ...(youtubeVideoId && { youtube_video_id: youtubeVideoId }) })
+
+export const updatePost = (postId: number, title: string, body: string, postType: string, youtubeVideoId?: string) =>
+  PATCH(`community/posts/${postId}`, { title, body, post_type: postType, youtube_video_id: youtubeVideoId ?? null })
 
 export const deletePost = (postId: number) =>
   DELETE(`community/posts/${postId}`)

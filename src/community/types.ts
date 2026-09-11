@@ -5,6 +5,7 @@ export interface PostSummary {
   title: string
   body: string
   post_type: string
+  youtube_video_id?: string | null
   thumbs_up: number
   thumbs_down: number
   created_at: string
@@ -34,6 +35,7 @@ export interface PostDetail {
   title: string
   body: string
   post_type: string
+  youtube_video_id?: string | null
   thumbs_up: number
   thumbs_down: number
   created_at: string

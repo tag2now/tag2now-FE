@@ -1,12 +1,14 @@
 import { useState } from 'react'
+import YouTubeVideo from './YouTubeVideo'
+import CreatePostForm from './CreatePostForm'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
-import { thumbPost, createComment, deletePost } from '@/community/communityApi'
+import { thumbPost, createComment, deletePost, updatePost } from '@/community/communityApi'
 import PostTypeBadge from './PostTypeBadge'
 import CommentTree from './CommentTree'
 import type { LeaderboardEntry } from "@/shared/types";
 import type { PostDetail } from '@/community/types'
 import AuthorBadge from './AuthorBadge'
-import { ArrowLeft, Send, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react'
+import { ArrowLeft, FilePenLine, Send, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react'
 
 interface PostDetailProps {
   post: PostDetail
@@ -22,6 +24,14 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
   const [commentText, setCommentText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [thumbing, setThumbing] = useState(false)
+  const [editing, setEditing] = useState(false)
+
+  const handleUpdate = async (title: string, body: string, postType: string, youtubeVideoId?: string) => {
+    await ensureIdentity()
+    await updatePost(post.id, title, body, postType, youtubeVideoId)
+    setEditing(false)
+    onRefresh()
+  }
 
   const handleThumb = async (direction: 'up' | 'down') => {
     if (thumbing) return
@@ -57,6 +67,8 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
     } catch (_) {}
   }
 
+  if (editing) return <CreatePostForm initialPost={post} onSubmit={handleUpdate} onCancel={() => setEditing(false)} />
+
   return (
     <article className="post-detail">
       <button
@@ -71,18 +83,24 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
           <PostTypeBadge postType={post.post_type} size="md" />
           <span className="text-sm text-txt-dim">{formatTimeAgo(post.created_at)}</span>
           {username && post.author === username && (
+            <div className="ml-auto flex gap-2">
+            <button onClick={() => setEditing(true)} className="btn-ghost inline-flex items-center gap-1">
+              <FilePenLine size={13} aria-hidden="true" /> 수정
+            </button>
             <button
               onClick={handleDelete}
               className="btn-danger ml-auto uppercase tracking-[0.12em]"
             >
               <Trash2 size={13} aria-hidden="true" /> 삭제
             </button>
+            </div>
           )}
         </div>
         <AuthorBadge name={post.author} entries={leaderboardEntries} className="inline-flex text-sm mb-2" />
         <h2>{post.title}</h2>
       </header>
       <div className="post-detail-body"><p>{post.body}</p></div>
+      {post.youtube_video_id && <YouTubeVideo videoId={post.youtube_video_id} />}
 
       <div className="flex gap-2 mb-4 pb-4 border-b border-border-light">
         <button

@@ -1,24 +1,35 @@
 import { useState } from 'react'
+import { parseYouTubeVideoId } from '@/community/youtube'
+import YouTubeVideo from './YouTubeVideo'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import { POST_TYPES } from '@/community/types'
 import { AlignLeft, ArrowLeft, FilePenLine, Send, Type, X } from 'lucide-react'
 
 interface CreatePostFormProps {
-  onSubmit: (title: string, body: string, postType: string) => Promise<void>
+  initialPost?: { title: string; body: string; post_type: string; youtube_video_id?: string | null }
+  onSubmit: (title: string, body: string, postType: string, youtubeVideoId?: string) => Promise<void>
   onCancel: () => void
 }
 
-export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormProps) {
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
-  const [postType, setPostType] = useState('자유')
+export default function CreatePostForm({ onSubmit, onCancel, initialPost }: CreatePostFormProps) {
+  const editing = !!initialPost
+  const [title, setTitle] = useState(initialPost?.title ?? '')
+  const [body, setBody] = useState(initialPost?.body ?? '')
+  const [postType, setPostType] = useState(initialPost?.post_type ?? '자유')
+  const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [youtubeUrl, setYoutubeUrl] = useState(initialPost?.youtube_video_id ? `https://www.youtube.com/watch?v=${initialPost.youtube_video_id}` : '')
+  const youtubeVideoId = parseYouTubeVideoId(youtubeUrl)
+  const invalidYoutubeUrl = !!youtubeUrl.trim() && !youtubeVideoId
 
   const handleSubmit = async () => {
-    if (!title.trim() || !body.trim() || body.length > 1000) return
+    if (submitting || !title.trim() || title.length > 100 || !body.trim() || body.length > 1000 || invalidYoutubeUrl) return
     setSubmitting(true)
+    setError('')
     try {
-      await onSubmit(title.trim(), body.trim(), postType)
+      await onSubmit(title.trim(), body.trim(), postType, youtubeVideoId ?? undefined)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : '저장하지 못했습니다. 다시 시도해 주세요.')
     } finally {
       setSubmitting(false)
     }
@@ -27,12 +38,13 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
   return (
     <div className="detail-form">
         <div className="section-toolbar">
-          <div className="section-title"><span className="section-icon"><FilePenLine size={15} /></span><div><h3>새 글 작성</h3><p>정보를 공유하거나 함께할 상대를 찾아보세요</p></div></div>
+          <div className="section-title"><span className="section-icon"><FilePenLine size={15} /></span><div><h3>{editing ? '게시글 수정' : '새 글 작성'}</h3><p>{editing ? '내용과 첨부 영상을 변경한 뒤 저장하세요.' : '정보를 공유하거나 함께할 상대를 찾아보세요'}</p></div></div>
             <button
                 onClick={onCancel}
+                disabled={submitting}
                 className="inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary-text text-xs font-bold cursor-pointer hover:text-white"
             >
-                <ArrowLeft size={14} aria-hidden="true" /> 목록
+                <ArrowLeft size={14} aria-hidden="true" /> {editing ? '돌아가기' : '목록'}
             </button>
         </div>
       <div className="form-section writing-form">
@@ -61,6 +73,7 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
       <input
         id="post-title"
         type="text"
+        maxLength={100}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="제목을 입력하세요"
@@ -83,23 +96,46 @@ export default function CreatePostForm({ onSubmit, onCancel }: CreatePostFormPro
       />
       </div>
       <div className={`character-count ${body.length > 900 ? 'near-limit' : ''}`}>{body.length.toLocaleString()} / 1,000</div>
+      <div className="field-heading mt-4">
+        <label htmlFor="post-youtube" className="field-label">YouTube 영상 <span className="text-txt-dim">(선택)</span></label>
+        <small>글에 영상 1개를 연결할 수 있어요.</small>
+      </div>
+      <div className="input-shell">
+        <input
+          id="post-youtube"
+          type="url"
+          value={youtubeUrl}
+          onChange={(event) => setYoutubeUrl(event.target.value)}
+          placeholder="https://www.youtube.com/watch?v=..."
+          aria-invalid={invalidYoutubeUrl}
+          aria-describedby="post-youtube-help"
+          className="input-base w-full text-base"
+        />
+        {youtubeUrl && <button type="button" onClick={() => setYoutubeUrl('')} aria-label="YouTube 영상 제거" className="btn-ghost shrink-0"><X size={16} aria-hidden="true" /></button>}
+      </div>
+      <p id="post-youtube-help" className={`mt-2 text-xs ${invalidYoutubeUrl ? 'text-error' : 'text-txt-dim'}`} role={invalidYoutubeUrl ? 'alert' : undefined}>
+        {invalidYoutubeUrl ? '올바른 YouTube 영상 링크를 입력해 주세요.' : '일반 영상, 공유 링크(youtu.be), Shorts 링크를 지원합니다.'}
+      </p>
+      {youtubeVideoId && <YouTubeVideo videoId={youtubeVideoId} />}
       </div>
 
       <div className="form-actions">
         <button
           onClick={onCancel}
+          disabled={submitting}
           className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-error bg-transparent px-3 text-xs font-bold text-error cursor-pointer hover:bg-error hover:text-white"
         >
           <X size={14} aria-hidden="true" /> 취소
         </button>
         <button
           onClick={handleSubmit}
-          disabled={submitting || !title.trim() || !body.trim() || body.length > 1000}
+          disabled={submitting || !title.trim() || title.length > 100 || !body.trim() || body.length > 1000 || invalidYoutubeUrl}
           className="btn-primary px-4 py-1.5 uppercase tracking-[0.12em]"
         >
-          {!submitting && <Send size={14} aria-hidden="true" />}{submitting ? '작성 중...' : '작성'}
+          {!submitting && <Send size={14} aria-hidden="true" />}{submitting ? '저장 중...' : editing ? '저장' : '작성'}
         </button>
       </div>
+      {error && <p role="alert" className="mt-2 text-sm text-error">{error}</p>}
     </div>
   )
 }
