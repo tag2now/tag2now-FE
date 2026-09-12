@@ -2,6 +2,8 @@
 
 /* ─── Design tokens ───────────────────────────────────────── */
 @theme {
+  /* Header content and .app-layout share this width so their edges align. */
+  --content-max: 1050px;
   --color-bg-deep: #0c0c0e;
   --color-bg-panel: #151517;
   --color-bg-row: #1f1f23;
@@ -299,7 +301,8 @@
      vertical padding at 6px the header cannot go below 60px, so 68px leaves 8px
      of slack. 92px was sized for the rank banner back when it ran 96px wide;
      at 76px wide it clears 35px tall and no longer drives the height. */
-  min-height: 68px; padding: 6px max(16px, calc((100vw - 1180px) / 2));
+  /* %, not vw: 100vw includes the scrollbar, which shifted the header ~7px off .app-layout. */
+  min-height: 68px; padding: 6px max(16px, calc((100% - var(--content-max)) / 2));
   background: rgba(12, 12, 14, .96); border-bottom: 1px solid var(--color-border-light);
   backdrop-filter: blur(12px);
 }
@@ -364,7 +367,8 @@
    after: 150px/19.5% at 768px, 164px at 1024px, 190px from ~1190px up. The
    16vw term only governs the middle of that range — below ~940px the 150px
    floor takes over, which is what keeps the nav labels from wrapping. */
-.app-layout { display: grid; grid-template-columns: clamp(150px, 16vw, 190px) minmax(0, 1fr); gap: 16px; width: min(1360px, calc(100% - 32px)); margin: 16px auto 0; }
+/* Shares --content-max with the header so the two edges line up. */
+.app-layout { display: grid; grid-template-columns: clamp(150px, 16vw, 190px) minmax(0, 1fr); gap: 16px; width: min(var(--content-max), calc(100% - 32px)); margin: 16px auto 0; }
 .app-sidebar { position: sticky; top: 86px; align-self: start; padding: 8px; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-panel); }
 .sidebar-heading { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 8px; color: var(--color-txt-faint); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .app-nav { display: flex; flex-direction: column; gap: 2px; }
@@ -526,11 +530,11 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
 .overview-link { flex: 0 0 auto; }
 
 .overview-rank-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
-.overview-rank-head, .overview-rank-row { display: grid; align-items: center; gap: 8px; grid-template-columns: 20px minmax(0,1fr) 48px 144px 144px; }
+.overview-rank-head, .overview-rank-row { display: grid; align-items: center; gap: 8px; grid-template-columns: 20px minmax(0,1fr) 48px 130px 130px; }
 /* The leaderboard list ranks by row position, so it renders no detail cell
    and drops that track — the name column takes the freed width. */
 .overview-rank-list.has-no-detail .overview-rank-head,
-.overview-rank-list.has-no-detail .overview-rank-row { grid-template-columns: 20px minmax(0,1fr) 144px 144px; }
+.overview-rank-list.has-no-detail .overview-rank-row { grid-template-columns: 20px minmax(0,1fr) 130px 130px; }
 .overview-rank-head { padding: 0 8px 4px; color: var(--color-txt-faint); font-size: 9px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
 .overview-rank-head > :nth-child(4), .overview-rank-head > :nth-child(5) { text-align: center; }
 .overview-rank-head > :nth-child(3), .overview-rank-detail { text-align: right; }
@@ -573,8 +577,9 @@ select.input-base option { background: #1b1b1f; color: var(--color-txt); }
   92%, 100% { transform: translateX(115%); }
 }
 .mini-char.is-empty { color: var(--color-txt-faint); font-size: 11px; }
-.mini-char-rank { width: auto; min-width: 0; max-width: 84px; height: auto; object-fit: contain; }
-.mini-char-portrait { width: 56px; height: 56px; flex: 0 0 auto; object-fit: contain; }
+/* 76 + 4 gap + 50 = the 130px column; sized so the rank rows fit a 1050px layout. */
+.mini-char-rank { width: auto; min-width: 0; max-width: 76px; height: auto; object-fit: contain; }
+.mini-char-portrait { width: 50px; height: 50px; flex: 0 0 auto; object-fit: contain; }
 .mini-char-name { max-width: 100%; overflow: hidden; color: var(--color-txt-dim); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .overview-rank-pos { color: var(--color-txt-dim); font-family: var(--font-display); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .overview-rank-name { min-width: 0; overflow: hidden; color: var(--color-txt); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }

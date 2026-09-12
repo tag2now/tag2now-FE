@@ -203,9 +203,14 @@ time has to sit outside it.
 
 Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. Design tokens are declared in an `@theme` block in `src/index.css` and become utilities automatically (`--color-primary` → `bg-primary`, `text-primary`, `border-primary`).
 
-`.app-layout` caps the page at `min(1360px, 100% - 32px)` — sidebar plus main
-column, so it sets the width of **every** tab. Changing it re-renders every
-visual baseline, not just the tab that prompted the change.
+`.app-layout` caps the page at `min(var(--content-max), 100% - 32px)` — sidebar
+plus main column, so it sets the width of **every** tab. Changing it re-renders
+every visual baseline, not just the tab that prompted the change.
+
+`--content-max` (1050px) is shared with `.app-header`'s horizontal padding so
+the header's content edges line up with the layout's. That padding is computed
+from `100%`, not `100vw`: `100vw` counts the scrollbar and put the header ~7px
+off the content below it.
 
 Use tokens rather than raw hex or arbitrary values. **Pretendard** backs both
 `--font-sans` and `--font-display`, imported as an npm package in `main.tsx`
