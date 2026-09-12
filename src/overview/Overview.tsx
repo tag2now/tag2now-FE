@@ -42,14 +42,15 @@ function roomsKpi(rooms: RoomsData | null, loading: boolean): { players: string;
   return { players: String(rooms.totalUsers), active: String(rooms.total), breakdown }
 }
 
-function todayPeak(daily: { date: string; peak_players: number | null }[]): { value: string; hint: string } {
+/** 그날 한 번이라도 접속한 인원(unique_players). 동시 접속 피크는 이보다 작아 KPI로 쓰지 않는다. */
+function todayPlayers(daily: { date: string; unique_players?: number }[]): { value: string; hint: string } {
   const latest = daily.at(-1)
   if (!latest) return { value: UNKNOWN, hint: '기록 없음' }
 
   const previous = daily.at(-2)
-  if (latest.peak_players == null) return { value: UNKNOWN, hint: '최대 접속 기록 없음' }
-  const hint = previous?.peak_players != null ? `어제 ${previous.peak_players}명` : latest.date
-  return { value: String(latest.peak_players), hint }
+  if (latest.unique_players == null) return { value: UNKNOWN, hint: '접속 기록 없음' }
+  const hint = previous?.unique_players != null ? `어제 ${previous.unique_players}명` : latest.date
+  return { value: String(latest.unique_players), hint }
 }
 
 const charsOf = (entry?: LeaderboardEntry) => ({
@@ -97,7 +98,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
   if (status) return status
 
   const kpi = roomsKpi(rooms, roomsLoading)
-  const peak = todayPeak(data?.daily ?? [])
+  const today = todayPlayers(data?.daily ?? [])
 
   return (
     <div className="panel overview-panel">
@@ -121,7 +122,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
       <div className="kpi-grid">
         <KpiCard icon={Users} label="접속자" value={kpi.players} hint="지금 방에 있는 인원" live linkLabel="매치" to={ROOMS_PATH} />
         <KpiCard icon={Activity} label="활성 방" value={kpi.active} hint={kpi.breakdown} live linkLabel="매치" to={ROOMS_PATH} />
-        <KpiCard icon={TrendingUp} label="오늘 최대 접속" value={peak.value} hint={peak.hint} linkLabel="통계" to={pathOf('stats')} />
+        <KpiCard icon={TrendingUp} label="오늘 접속자 수" value={today.value} hint={today.hint} linkLabel="통계" to={pathOf('stats')} />
         <KpiCard icon={Trophy} label="등록 플레이어" value={leaderboardTotal != null ? String(leaderboardTotal) : UNKNOWN} hint="리더보드 집계" linkLabel="리더보드" to={pathOf('leaderboard')} />
       </div>
 

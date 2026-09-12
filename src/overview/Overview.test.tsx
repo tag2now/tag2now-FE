@@ -36,8 +36,8 @@ vi.mock('recharts', async () => {
 
 const OVERVIEW_DATA: OverviewData = {
   daily: [
-    { date: '2026-08-31', peak_players: 40, avg_players: 20 },
-    { date: '2026-09-01', peak_players: 55, avg_players: 30 },
+    { date: '2026-08-31', peak_players: 40, avg_players: 20, unique_players: 128 },
+    { date: '2026-09-01', peak_players: 55, avg_players: 30, unique_players: 172 },
   ],
   weeklyTop: [
     { npid: 'w1', online_name: 'WeeklyOne', match_count: 120 },
@@ -170,7 +170,7 @@ describe('Overview', () => {
 
     expect(kpiHref('접속자')).toBe('/match/rank_match')
     expect(kpiHref('활성 방')).toBe('/match/rank_match')
-    expect(kpiHref('오늘 최대 접속')).toBe('/stats')
+    expect(kpiHref('오늘 접속자 수')).toBe('/stats')
     expect(kpiHref('등록 플레이어')).toBe('/leaderboard')
   })
 
@@ -212,25 +212,22 @@ describe('Overview', () => {
     expect(kpiValue('활성 방')).toBe('—')
   })
 
-  it("reports today's peak against yesterday", () => {
+  it("reports today's unique players against yesterday, not the concurrent peak", () => {
     renderOverview()
-    expect(kpiValue('오늘 최대 접속')).toBe('55')
-    expect(screen.getByText('어제 40명')).toBeInTheDocument()
+    expect(kpiValue('오늘 접속자 수')).toBe('172')
+    expect(screen.getByText('어제 128명')).toBeInTheDocument()
   })
 
-  it('uses peak concurrent players rather than daily unique players', () => {
+  it('shows an em dash when today has no unique-player count', () => {
     mockedUseOverview.mockReturnValue(polled({
       ...OVERVIEW_DATA,
-      daily: [
-        { date: '2026-08-31', peak_players: 31, avg_players: 12, unique_players: 4 },
-        { date: '2026-09-01', peak_players: 47, avg_players: 18, unique_players: 5 },
-      ],
+      daily: [{ date: '2026-09-01', peak_players: 47, avg_players: 18 }],
     }))
 
     renderOverview()
 
-    expect(kpiValue('오늘 최대 접속')).toBe('47')
-    expect(screen.getByText('어제 31명')).toBeInTheDocument()
+    expect(kpiValue('오늘 접속자 수')).toBe('—')
+    expect(screen.getByText('접속 기록 없음')).toBeInTheDocument()
   })
 
   it('lists the top leaderboard entries with their character portraits', () => {

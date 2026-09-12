@@ -16,13 +16,12 @@ test.describe('Overview', () => {
     await dismissPatchNotes(page)
   })
 
-  test('shows live room figures alongside the historical peak', async ({ page }) => {
+  test("shows live room figures alongside today's unique players", async ({ page }) => {
     const players = page.getByText('접속자', { exact: true }).locator('..').locator('..')
     await expect(players).toContainText('6')  // rooms fixture: 6 users across both groups
 
-    // The daily fixture ends 55 then 47: today's peak is the last entry, and
-    // the hint compares it against the one before.
-    await expect(page.getByText('어제 55명')).toBeVisible()
+    // 일별 fixture의 unique_players가 172 → 149로 끝나므로 힌트는 전날 값.
+    await expect(page.getByText('어제 172명')).toBeVisible()
   })
 
   test('summarises each feature from its own endpoint', async ({ page }) => {
