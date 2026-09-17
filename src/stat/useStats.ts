@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { GET} from "@/shared/util/api";
 import { API } from "@/config/endpoints";
 import type { HourlyActivity, DailySummary} from "@/stat/types";
+import { completedDays } from "@/stat/completedDays";
 
 export type StatsDays = 7 | 30 | 90
 
@@ -32,7 +33,12 @@ export default function useStats(): StatsState {
       .then(([h, d]) => {
         if (cancelled) return
         setHourly(h as HourlyActivity[])
-        setDaily(d as DailySummary[])
+        // Charted days only, so the day still being counted does not read as a
+        // collapse at the end of the line. The overview's "오늘 접속자" card
+        // reads the same endpoint through useOverview and keeps today, which is
+        // the figure it is about --- so this is cut here rather than in the
+        // shared DailyChart or in the API layer.
+        setDaily(completedDays(d as DailySummary[]))
         setLoading(false)
       })
       .catch((e: unknown) => {

@@ -203,8 +203,11 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
               <section aria-labelledby="daily-heading" className="chart-panel">
                 {/* 06시, not the 08시 above it: these rows arrive already bucketed by
                       the backend's statistics day, so the label reports what the
-                      data is rather than what this app would prefer. */}
-                <h4 id="daily-heading">일별 접속자 <span className="text-2xs font-medium opacity-60">(서버 집계 기준 06시)</span></h4>
+                      data is rather than what this app would prefer. The label
+                      names the exclusion too --- a reader looking for today
+                      should learn it is absent from the heading, not by
+                      counting the points. */}
+                <h4 id="daily-heading">일별 접속자 <span className="text-2xs font-medium opacity-60">(서버 집계 기준 06시 · 당일 제외)</span></h4>
                 <DailyChart data={daily} />
               </section>
             </div>
