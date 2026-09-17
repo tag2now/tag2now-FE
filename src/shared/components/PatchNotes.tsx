@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { PATCH_NOTES, LATEST_PATCH_VERSION, recentPatchNotes } from '@/config/patchNotes'
 import useModalDialog from '@/shared/hooks/useModalDialog'
+import { STORAGE_KEYS } from '@/shared/util/storage'
 import { BellRing, ChevronDown, X } from 'lucide-react'
 
-const LS_KEY = 'ttt2-patch-dismissed'
+const LS_KEY = STORAGE_KEYS.seenPatchVersion
 
 export default function PatchNotes() {
   const [visible, setVisible] = useState(() => {
@@ -27,8 +28,12 @@ function PatchNotesDialog({ onClose }: { onClose: () => void }) {
     onClose()
   }
 
+  // The shared backdrop, not a private `bg-black/60`: the scrim is
+  // --color-scrim and every other dialog on the site already reads it from
+  // there. Centring stays as utilities --- .modal-backdrop sets the layer and
+  // the colour and lets each dialog place itself.
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose} role="presentation">
+    <div className="modal-backdrop items-center justify-center" onClick={onClose} role="presentation">
       <div
         ref={dialogRef}
         role="dialog"

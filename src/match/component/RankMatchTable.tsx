@@ -1,8 +1,8 @@
+import RankImage from '@/shared/components/RankImage'
 import { Fragment, memo, useState } from 'react'
 import { TIER_STYLES, TIER_HEX } from '@/shared/tierColors'
 import type { CSSProperties } from 'react'
 import type {LeaderboardEntry} from "@/shared/types";
-import RankImage from "@/shared/components/RankImage";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import {RankMatchRoom} from "@/match/types";
 import { Search } from 'lucide-react'
@@ -25,7 +25,7 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
   return (
     <div className="data-table-wrap">
       <table className="match-table border-collapse w-full">
-        <caption className="sr-only">Rank match rooms</caption>
+        <caption className="sr-only">랭크 매치 방 목록</caption>
         <colgroup>
           <col className="w-32" />
           <col />
@@ -36,36 +36,51 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
           <tr>
             <th scope="col" className="tbl-th">랭크</th>
             <th scope="col" className="tbl-th">플레이어 1</th>
-            <th scope="col" className="tbl-th"></th>
+            {/* Not an empty header. A column with no name is read out as
+                "column 3" and its cells carry the room's state. */}
+            <th scope="col" className="tbl-th"><span className="sr-only">상태</span></th>
             <th scope="col" className="tbl-th">플레이어 2</th>
           </tr>
         </thead>
         <tbody>
           {tierGroups.map(([tier, tierRooms]) => {
             const hex = TIER_HEX[tier]
+            // The band used to paint a flat tint across the full 806px of the
+            // table under a heading three characters long, which read as a row
+            // of data rather than a label on the rows below it. `--tier` hands
+            // the colour to the stylesheet, which fades the tint out across the
+            // width and keeps the label at the left edge where the accent is.
+            // A near-black ground is what sets the alphas: 12%/16% tints landed
+            // within a few values of the ground and were simply invisible.
             const separatorStyle: CSSProperties = hex
-              ? { ...TIER_STYLES[tier], borderLeft: `3px solid ${hex}`, background: `${hex}12` }
+              ? { ...TIER_STYLES[tier], '--tier': hex } as CSSProperties
               : TIER_STYLES[tier]
             const rowAccentStyle: CSSProperties = hex
-              ? { borderLeft: `2px solid ${hex}28` }
+              ? { borderLeft: `4px solid ${hex}40` }
               : {}
             const inGame = tierRooms.filter(r => r.users?.length === 2)
+            // One row per room, like the matches above them. These used to be
+            // grouped by rank into a single full-width `colSpan={4}` cell with
+            // its own layout and its own banner size, so the waiting players
+            // broke every column the rest of the table had established.
             const searching = tierRooms.filter(r => r.users?.length !== 2)
-            const groupedSearching = Array.from(Map.groupBy(searching, s => s.rank_info.id))
             return (
               <Fragment key={tier}>
                 <tr className="tier-separator">
-                  <th scope="colgroup" colSpan={4}
-                    className="tier-heading py-1.5 px-3 text-left"
-                    style={separatorStyle}
-                  >
-                    <span className="tracking-widest">{tier}</span>
+                  <th scope="colgroup" colSpan={4} className="tier-heading" style={separatorStyle}>
+                    {/* The count sits beside the band, not at the far edge: a
+                        figure 800px from the word it belongs to is a second
+                        column, and this row has no columns. */}
+                    <span className="tier-heading-inner">
+                      <span className="tier-heading-name">{tier}</span>
+                      <span className="tier-heading-count">{tierRooms.length}개 방</span>
+                    </span>
                   </th>
                 </tr>
                 {inGame.map((r) => (
                   <tr key={r.room_id} className="tbl-row" style={rowAccentStyle}>
                     <td className="tbl-td">
-                      <RankImage rankInfo={r.rank_info} className="min-w-19.75 h-9 w-auto mx-auto" />
+                      <RankImage rankInfo={r.rank_info} className="rank-art" />
                     </td>
                     <td className="player-name">
                       {r.users?.[0] ? <button onClick={() => setSelectedNpid(r.users![0].np_id)} className="player-btn">{r.users[0].online_name}</button> : '—'}
@@ -80,28 +95,35 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
                     </td>
                   </tr>
                 ))}
-                {groupedSearching.map(([rankId, searching]) => (
-                  <tr key={'s-' + rankId} className="tbl-row" style={rowAccentStyle}>
-                    <td colSpan={4} className="px-3 py-1.5">
-                      <div className="searching-players flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span className="searching-icon shrink-0 text-tier-yellow"><Search size={16} aria-hidden="true" /></span>
-                        <RankImage rankInfo={searching[0].rank_info} className="h-7 w-auto shrink-0" />
-                        {searching.map(({room_id, users: searchUsers}) => searchUsers?.[0] && (
-                          <button key={room_id} onClick={() => setSelectedNpid(searchUsers[0].np_id)} className="player-btn">
-                            {searchUsers[0].online_name}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {searching.map((r) => {
+                  const waiting = r.users?.[0]
+                  if (!waiting) return null
+                  return (
+                    <tr key={'s-' + waiting.np_id} className="tbl-row is-searching" style={rowAccentStyle}>
+                      <td className="tbl-td">
+                        <RankImage rankInfo={r.rank_info} className="rank-art" />
+                      </td>
+                      <td className="player-name">
+                        <button onClick={() => setSelectedNpid(waiting.np_id)} className="player-btn">
+                          {waiting.online_name}
+                        </button>
+                      </td>
+                      <td className="tbl-td px-1">
+                        <span className="searching-icon" title="상대 찾는 중" aria-label="상대 찾는 중">
+                          <Search size={14} aria-hidden="true" />
+                        </span>
+                      </td>
+                      <td className="tbl-td waiting-slot">상대 찾는 중</td>
+                    </tr>
+                  )
+                })}
               </Fragment>
             )
           })}
         </tbody>
       </table>
       {selectedNpid !== null && (
-        <PlayerHistoryPanel npid={selectedNpid} leaderboardEntry={selectedEntry} onClose={() => setSelectedNpid(null)} />
+        <PlayerHistoryPanel npid={selectedNpid} leaderboardEntry={selectedEntry} leaderboardEntries={leaderboardEntries} onClose={() => setSelectedNpid(null)} />
       )}
     </div>
   )

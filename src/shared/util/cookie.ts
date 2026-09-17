@@ -1,4 +1,6 @@
-export const USERNAME_KEY = 'ttt2-username'
+import { STORAGE_KEYS } from '@/shared/util/storage'
+
+export const USERNAME_KEY = STORAGE_KEYS.username
 
 export function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`))

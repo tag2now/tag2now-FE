@@ -3,15 +3,17 @@ import { Route, Routes, useNavigate } from 'react-router-dom'
 import Leaderboard from "@/shared/Leaderboard";
 import Stats from "@/stat/Stats"
 import Header from "@/shared/components/Header";
+import LiveBadge from "@/shared/components/LiveBadge";
+import PlayerProfileCard from '@/shared/components/PlayerProfileCard'
 import Footer from "@/shared/components/Footer";
 import PatchNotes from "@/shared/components/PatchNotes";
-import PlayerProfileCard from '@/shared/components/PlayerProfileCard'
 import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import { firstRoomPath, isRoomTab as isRoomTabKey, pathOf } from '@/config/routes'
 import useActiveTab from '@/shared/hooks/useActiveTab'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useRooms from "@/match/useRooms";
 import useReservations, { countOpen } from "@/reservation/useReservations";
+import { POLL } from '@/config/polling'
 import Community from "@/community/Community";
 import Rooms from "@/match/Rooms";
 import type { Room } from "@/match/types";
@@ -23,7 +25,6 @@ import {
   CalendarDays,
   ChevronRight,
   MessageSquareText,
-  Radio,
   Swords,
   Trophy,
 } from 'lucide-react'
@@ -41,9 +42,17 @@ export default function App() {
   const activeTab = useActiveTab()
   const lb = useLeaderboard()
   const rooms = useRooms()
-  const reservations = useReservations()
+  // One reservation poll for the whole app, shared with the panel. The rate
+  // follows the active tab: a user looking at a roster fill wants it fast, and
+  // a user on any other tab only needs the badge to be honest. Both are the
+  // same request — the panel used to run a second 10s poll of its own.
+  const reservations = useReservations(
+    activeTab === 'reservation' ? POLL.reservationsActive : POLL.reservationsBackground,
+  )
 
   const groups = rooms.data?.groups ?? {}
+  // Everyone currently in a room, so the profile card can say whether you
+  // are one of them.
   const roomUsers = useMemo(
     () => Object.values(groups).flatMap(group => group.flatMap(room => room.users ?? [])),
     [groups],
@@ -65,14 +74,21 @@ export default function App() {
   // "매칭 0" tells the user the lobby is empty, which is worth knowing.
   const openReservations = reservations.data && countOpen(reservations.data)
   const primaryTabs = useMemo(() => [
-    { key: 'overview', label: '개요' },
+    // '홈', not '개요'. This tab owns "/" and is where the site opens, and what
+    // it shows is what is happening right now — not a summary of a document.
+    // The panel's own heading (한눈에 보기) already does the summarising, so
+    // naming the tab that too gave one screen three names.
+    { key: 'overview', label: '홈' },
     // `spoken` is the whole badge as assistive tech reads it, in one element:
     // an accessible name is joined across element boundaries with a space, so
     // splitting the number from its unit would say "방 3 개".
     { key: 'match', label: '매칭', badge: roomsLoaded ? rooms.data?.total ?? 0 : undefined, spoken: (n: number) => ` 방 ${n}개` },
     { key: 'reservation', label: '예약', badge: openReservations ?? undefined, spoken: (n: number) => ` 모집중 ${n}건` },
-    { key: 'leaderboard', label: '리더보드' },
+    // 커뮤니티 before 리더보드: the first three tabs are things happening now
+    // and the last three are places to read, and of those two the board is the
+    // one that changes daily.
     { key: 'community', label: '커뮤니티' },
+    { key: 'leaderboard', label: '리더보드' },
     { key: 'stats', label: '통계' },
   ], [roomsLoaded, rooms.data?.total, openReservations])
   const activePrimary = isRoomTab ? 'match' : activeTab
@@ -115,15 +131,22 @@ export default function App() {
     <div className="app-shell">
       <a className="skip-link" href="#mainContent">본문으로 건너뛰기</a>
       <PatchNotes />
-      <Header totalUsers={rooms.data?.totalUsers} />
+      <Header />
       <div className="app-layout">
         <aside className="app-sidebar" aria-label="서비스 메뉴">
+          {/* Live above the nav, with the badges it belongs beside — not in the
+              header, where it was a lone figure between the wordmark and the
+              profile, belonging to neither. */}
+          <LiveBadge totalUsers={rooms.data?.totalUsers} />
+          {/* One PlayerProfileCard renders both surfaces — this card and, through
+              a portal, the header slot that replaces it on a phone — so the
+              username being edited is one piece of state rather than two. */}
           <div className="sidebar-nav-card">
-            <div className="sidebar-heading">
-              <span>Navigation</span>
-              <ChevronRight size={14} aria-hidden="true" />
-            </div>
-            <nav className="app-nav" role="tablist" aria-label="Main navigation">
+          <div className="sidebar-heading">
+            <span>Navigation</span>
+            <ChevronRight size={14} aria-hidden="true" />
+          </div>
+          <nav className="app-nav" role="tablist" aria-label="Main navigation">
             {primaryTabs.map((t) => (
               (() => {
                 const Icon = tabIcon(t.key)
@@ -162,13 +185,9 @@ export default function App() {
                 )
               })()
             ))}
-            </nav>
+          </nav>
           </div>
           <PlayerProfileCard leaderboardEntries={lb.data?.entries} roomUsers={roomUsers} />
-          <div className="sidebar-status">
-            <Radio size={15} aria-hidden="true" />
-            <div><strong>Live service</strong><span>실시간 데이터 연결됨</span></div>
-          </div>
         </aside>
 
         <main id="mainContent" className="app-main">

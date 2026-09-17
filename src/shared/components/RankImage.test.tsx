@@ -9,29 +9,32 @@ describe('RankImage', () => {
   })
 
   it('builds the asset path from the rank name', () => {
-    render(<RankImage rankInfo={{ name: 'Tekken God', tier: 'God' }} />)
+    render(<RankImage rankInfo={{ name: 'Tekken God', tier: '황금단' }} />)
     expect(screen.getByRole('img', { name: 'Tekken God' })).toHaveAttribute('src', '/ranks/Tekken_God.png')
   })
 
-  it('disappears rather than showing a broken image when the asset is missing', () => {
-    // Several ranks the API reports have no artwork; the browser's broken-image
-    // glyph reads as a bug, so the element removes itself instead.
-    render(<RankImage rankInfo={{ name: 'Initiate', tier: 'Initiate' }} />)
-    const img = screen.getByRole('img', { name: 'Initiate' })
+  it('falls back to a named plate when the asset is missing', () => {
+    // The seven ranks above Toshin ship no banner. Removing the element left a
+    // hole the size of the art beside it; the plate fills the same frame with
+    // the rank's name in its band's colour, so a column holding both keeps one
+    // width and one height.
+    render(<RankImage rankInfo={{ name: 'Tekken God' }} />)
+    fireEvent.error(screen.getByRole('img', { name: 'Tekken God' }))
 
-    fireEvent.error(img)
-
-    expect(screen.queryByRole('img', { name: 'Initiate' })).not.toBeInTheDocument()
+    const plate = screen.getByRole('img', { name: 'Tekken God' })
+    expect(plate.tagName).toBe('SPAN')
+    expect(plate).toHaveClass('rank-plate')
+    expect(plate).toHaveTextContent('Tekken God')
   })
 
   it('a rank that does have art still renders after a different one failed', () => {
     // The failure is keyed by name because React reuses this element across
     // rows; a bare boolean would blank the next rank in the list.
-    const { rerender } = render(<RankImage rankInfo={{ name: 'Initiate', tier: 'Initiate' }} />)
-    fireEvent.error(screen.getByRole('img', { name: 'Initiate' }))
+    const { rerender } = render(<RankImage rankInfo={{ name: 'Tekken God' }} />)
+    fireEvent.error(screen.getByRole('img', { name: 'Tekken God' }))
 
-    rerender(<RankImage rankInfo={{ name: 'Vanquisher', tier: 'Vanquisher' }} />)
+    rerender(<RankImage rankInfo={{ name: 'Vanquisher', tier: '주황단' }} />)
 
-    expect(screen.getByRole('img', { name: 'Vanquisher' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Vanquisher' }).tagName).toBe('IMG')
   })
 })

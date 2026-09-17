@@ -13,8 +13,8 @@ test.describe('Navigation', () => {
   })
 
   test('page loads on the overview', async ({ page }) => {
-    await expect(page.getByRole('tab', { name: '개요' })).toHaveAttribute('aria-selected', 'true')
-    await expect(page.getByRole('region', { name: '모집 중인 예약' })).toBeVisible()
+    await expect(page.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('heading', { name: '한눈에 보기' })).toBeVisible()
 
     // The room-type strip belongs to the match tab and stays out of the way.
     await expect(page.getByRole('tablist', { name: '매칭 종류 선택' })).toHaveCount(0)
@@ -31,7 +31,7 @@ test.describe('Navigation', () => {
   test('all expected tabs are visible', async ({ page }) => {
     const mainTabs = page.getByRole('tablist', { name: 'Main navigation' }).getByRole('tab')
     // 매칭 and 예약 trail a count badge, so match the label, not the whole text.
-    await expect(mainTabs).toHaveText([/^개요/, /^매칭/, /^예약/, /^리더보드/, /^커뮤니티/, /^통계/])
+    await expect(mainTabs).toHaveText([/^홈/, /^매칭/, /^예약/, /^커뮤니티/, /^리더보드/, /^통계/])
 
     await goToMatchTab(page)
     const roomTabs = page.getByRole('tablist', { name: '매칭 종류 선택' }).getByRole('tab')
@@ -105,10 +105,13 @@ test.describe('Navigation', () => {
     await expect(leaderboardTab).toHaveAttribute('aria-selected', 'true')
 
     // Only one tab is ever selected, so the previous one has to give it up.
-    await expect(page.getByRole('tab', { name: '개요' })).toHaveAttribute('aria-selected', 'false')
+    await expect(page.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-selected', 'false')
   })
 
-  test('the header exposes the username and its editor', async ({ page }) => {
+  // Phones only: the sidebar card is the profile on a wider screen, and showing
+  // the header control as well put two edit pencils for one username on screen.
+  test('the header exposes the username and its editor', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'The sidebar card carries the editor on desktop.')
     await signInAs(page, 'KingOfIronFist')
     await skipPatchNotes(page)
     await page.reload()
@@ -167,18 +170,20 @@ test.describe('Navigation', () => {
       const currentCenterY = identityBoxes[index]!.y + identityBoxes[index]!.height / 2
       expect(Math.abs(previousCenterY - currentCenterY)).toBeLessThanOrEqual(2)
     }
+    // No pencil in the heading any more: the name itself is the rename control,
+    // and a pencil beside it was a second button for the one thing the name
+    // already did.
     const headingItems = [
       card.locator('.sidebar-profile-heading > span'),
       card.locator('.sidebar-profile-presence'),
-      card.locator('.sidebar-profile-edit'),
     ]
     await Promise.all(headingItems.map(item => expect(item).toBeVisible()))
+    await expect(card.locator('.sidebar-profile-edit')).toHaveCount(0)
     const headingBoxes = await Promise.all(headingItems.map(item => item.boundingBox()))
     headingBoxes.forEach(box => expect(box).not.toBeNull())
     expect(headingBoxes[0]!.x + headingBoxes[0]!.width).toBeLessThan(headingBoxes[1]!.x)
-    expect(headingBoxes[1]!.x + headingBoxes[1]!.width).toBeLessThan(headingBoxes[2]!.x)
     await expect(rows).toHaveCount(2)
-    await expect(card.locator('.char-cell-record')).toHaveText([/250W 80LWR:76%/, /180W 60LWR:75%/])
+    await expect(card.locator('.char-cell-record')).toHaveText([/76%250W 80L/, /75%180W 60L/])
 
     for (let index = 0; index < 2; index += 1) {
       const rank = rows.nth(index).locator('.char-cell-rank')
@@ -194,18 +199,18 @@ test.describe('Navigation', () => {
       expect(rankBox).not.toBeNull()
       expect(recordBox).not.toBeNull()
       expect(portraitBox).not.toBeNull()
-      expect(rankBox!.x + rankBox!.width).toBeLessThan(portraitBox!.x)
-      expect(portraitBox!.x + portraitBox!.width).toBeLessThan(recordBox!.x)
-      const leftSpace = rankBox!.x - cardBox!.x
-      const rightSpace = cardBox!.x + cardBox!.width - (recordBox!.x + recordBox!.width)
-      // 10, not 8: CI's Linux fonts set the record text ~1px wider than
-      // Windows and measured 9. A card that has lost its balance is off by far
-      // more than a glyph's rounding.
-      expect(Math.abs(leftSpace - rightSpace)).toBeLessThanOrEqual(10)
-      expect(rankBox!.width).toBeLessThanOrEqual(56)
+      // Portrait first, then the rank over the record beside it --- the same
+      // arrangement CharCell uses in the leaderboard table, which is the point
+      // of reusing it. The rank used to lead here, which made the one cell that
+      // is meant to look familiar the one that did not.
+      expect(portraitBox!.x + portraitBox!.width).toBeLessThanOrEqual(rankBox!.x)
+      expect(portraitBox!.x + portraitBox!.width).toBeLessThanOrEqual(recordBox!.x)
+      // The rank sits above the record, not beside it.
+      expect(rankBox!.y + rankBox!.height).toBeLessThanOrEqual(recordBox!.y)
+      // Everything stays inside the card.
+      expect(portraitBox!.x).toBeGreaterThanOrEqual(cardBox!.x)
+      expect(recordBox!.x + recordBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width + 1)
       expect(rankBox!.height).toBeLessThan(portraitBox!.height)
-      expect(portraitBox!.width).toBe(52)
-      expect(portraitBox!.height).toBe(52)
     }
   })
 })

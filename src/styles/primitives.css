@@ -1,0 +1,294 @@
+/* @layer components: the classes other rules are allowed to build on.
+   Layered on purpose — every unlayered rule in the files below outranks these
+   regardless of source order, which is what lets a feature override a shared
+   control without an !important. */
+
+/* ─── Component classes ───────────────────────────────────── */
+/* Everything here is layered, so any unlayered rule below beats it no matter
+   how specific either one is. That makes this section the home of the classes
+   the app shell does NOT restyle — buttons, cells, the loading bar, sr-only.
+   A class defined both here and in the shell section would have its @apply
+   silently dropped, so keep the two sets disjoint: style a shell-owned class
+   in the shell section instead of adding a competing rule here. */
+@layer components {
+  /* Pseudo-elements (can't be done with @apply) */
+  .tab-btn.active::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    height: 2px;
+    background: var(--color-primary);
+  }
+
+  /* Reusable layout classes */
+  .state-msg.error {
+    @apply text-error;
+  }
+
+  .player-name {
+    @apply px-2.5 py-2 text-base font-bold text-txt tracking-[0.03em] max-w-28 overflow-hidden text-ellipsis whitespace-nowrap text-center;
+  }
+
+  .char-td {
+    @apply text-secondary text-sm font-semibold text-center py-1;
+  }
+
+  .char-rank {
+    @apply text-base font-bold text-txt-dim whitespace-nowrap overflow-hidden text-ellipsis tabular-nums;
+  }
+
+  .tier-separator {
+    @apply bg-bg-deep;
+  }
+
+  .tab-btn {
+    @apply relative flex items-center gap-2 min-h-9 px-2.5 bg-transparent border border-transparent font-sans text-sm font-semibold cursor-pointer transition-colors duration-150 text-txt-dim hover:text-txt hover:bg-surface-tint/4 rounded-md tabular-nums;
+  }
+
+  .tab-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .tab-btn.active {
+    @apply text-primary-text bg-primary/12 border-primary/25;
+  }
+
+  /* Pushed to the trailing edge so the counts line up in a column down the
+     sidebar rather than floating at the end of labels of differing width.
+
+     The count reads red on every tab, active or not — it is the one live
+     figure in the nav and the thing the eye should find. primary/12 is the
+     fill that clears 4.5:1 against --color-primary-text on both backdrops
+     it lands on: 5.20 on the panel, 4.59 over the active tab's own tint.
+     The active override this replaced used primary/25, which measured 3.89
+     and was failing. Use --color-primary-text, not --color-primary: the
+     latter is tuned as a fill and only reaches 4.38 as 12px text. */
+  .nav-badge {
+    @apply ml-auto inline-flex items-center justify-center min-w-6 h-5 px-1.5 rounded-full bg-primary/12 text-xs font-bold text-primary-text tabular-nums;
+  }
+
+  .refresh-btn {
+    @apply inline-flex items-center justify-center size-8 bg-transparent border border-border-light text-txt-dim rounded-md cursor-pointer transition-colors hover:bg-primary-glow hover:border-primary-dim hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed;
+  }
+
+  /* Dim, not orange. It is a separator between two names, and painting it the
+     brightest thing in the row pulled the eye to the one cell that carries no
+     information. */
+  .vs-label {
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-max);
+    letter-spacing: 0.08em;
+    color: var(--color-txt-faint);
+  }
+
+  .loading-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    overflow: hidden;
+    z-index: 10;
+    opacity: 1;
+    transition: opacity 0.2s;
+  }
+
+  .loading-bar-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -2px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .player-btn {
+    @apply px-2 py-0.5 font-bold bg-transparent cursor-pointer transition-colors rounded-lg hover:bg-primary-glow;
+  }
+
+  .player-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-8 items-center justify-center gap-1.5 px-3 bg-primary text-bg-deep text-xs font-bold border border-primary rounded-md cursor-pointer transition-colors hover:bg-primary/85 disabled:opacity-50;
+  }
+
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .btn-ghost {
+    @apply inline-flex min-h-8 items-center justify-center gap-1.5 px-3 bg-transparent border border-border-light text-txt-dim rounded-md cursor-pointer text-xs font-bold hover:bg-surface-tint/4 hover:text-txt;
+  }
+
+  .btn-ghost:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* The step .icon-btn and .btn-primary already carry, missing only here. The
+     hover reset is not redundant: Chromium still matches :hover on a disabled
+     button, so without it the overview's refresh lights up mid-request as
+     though it were still takeable. */
+  .btn-ghost:disabled {
+    @apply opacity-50 cursor-not-allowed hover:bg-transparent hover:text-txt-dim;
+  }
+
+  .btn-danger {
+    @apply inline-flex min-h-8 items-center justify-center gap-1.5 px-2 bg-transparent border border-error text-error text-xs font-bold rounded-md cursor-pointer hover:bg-error hover:text-bg-deep;
+  }
+
+  .btn-danger:focus-visible {
+    outline: 2px solid var(--color-error);
+    outline-offset: 2px;
+  }
+
+}
+
+/* ─── Skeletons ───────────────────────────────────────────── */
+/* Placeholders that hold the height the real content will take, so a panel
+   does not jump by hundreds of pixels when the first response lands. Sizes
+   here mirror the real rules: .skeleton-row matches .tbl-row's 42px, and the
+   head matches .tbl-th's 34px. Change one and change the other. */
+.skeleton-table { width: 100%; }
+.skeleton-row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; align-items: center; height: 42px; gap: 8px; padding: 0 8px; border-bottom: 1px solid var(--color-border); }
+.skeleton-row.is-head { height: 34px; background: var(--color-bg-head); border-bottom-color: var(--color-border-light); }
+.skeleton-row:last-child { border-bottom: 0; }
+.skeleton-list { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-list-row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px; }
+.skeleton-lines { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: 6px; }
+.skeleton-avatar { width: 38px; height: 38px; flex: 0 0 auto; border-radius: 6px; }
+.skeleton-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.skeleton-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; }
+.skeleton-figure { height: 26px; }
+
+/* One shared shimmer. `background-size: 200%` with an animated position is what
+   makes the sweep read as a single pass across a row rather than each cell
+   flashing on its own clock. */
+.skeleton-cell { display: block; height: 10px; min-width: 24px; border-radius: 4px; background: linear-gradient(90deg,
+    color-mix(in srgb, var(--color-surface-tint) 4%, transparent) 25%,
+    color-mix(in srgb, var(--color-surface-tint) 8%, transparent) 37%,
+    color-mix(in srgb, var(--color-surface-tint) 4%, transparent) 63%);
+  background-size: 400% 100%; animation: skeleton-sweep 1.4s ease-in-out infinite; }
+.skeleton-cell.is-short { width: 40%; min-width: 0; }
+
+@keyframes skeleton-sweep {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* A skeleton is a hint that something is coming, not content. With motion
+   reduced it holds the layout and stops pulsing. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-cell { animation: none; }
+}
+
+/* ─── Character portrait ──────────────────────────────────── */
+/* Sized by height everywhere; the width is the art's own. `cover` rather than
+   `contain` only guards against sub-pixel rounding — the box already matches
+   the image, so nothing is actually cropped. */
+.char-art { aspect-ratio: var(--char-art-ratio); width: auto; flex: 0 0 auto; object-fit: cover; display: block; }
+
+/* ─── Rank mark ───────────────────────────────────────────── */
+/* The position, everywhere it appears: the leaderboard, the weekly table, and
+   the overview's two summary cards. It replaces a bordered box that printed
+   "1ST" for the podium and a bare number for everyone else — two shapes and
+   two vocabularies in one column, and a treatment that did not survive being
+   shrunk into a 20px summary cell.
+   Colour carries the medal, and only that. `--medal` is set inline from the
+   one table of gold/silver/bronze the app has. */
+.rank-no { display: inline-block; min-width: 2ch; color: var(--color-txt-faint); font-family: var(--font-display); font-size: var(--text-sm); font-weight: var(--weight-display); font-variant-numeric: tabular-nums; text-align: center; }
+.rank-no.is-podium { color: var(--medal); }
+
+/* ─── Podium accent ───────────────────────────────────────── */
+/* An inset, rounded bar rather than a flush 3px border. The border ran the
+   full height of the row and squared off against its rounded corner, which
+   read as a rendering seam; this one is set in from both ends so it reads as
+   a mark placed on the row. `--medal` comes from the one medal table. */
+.rank-row.is-podium { position: relative; }
+.rank-row.is-podium::before {
+  content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--medal) 45%, transparent),
+    var(--medal) 50%,
+    color-mix(in srgb, var(--medal) 45%, transparent));
+  /* Lit, not painted on. The bar and the numeral are the whole podium
+     treatment now that the sheen is gone, so the one that marks the edge
+     carries a little of its own light --- the same trick the numeral's
+     text-shadow uses, at the same strength. */
+  box-shadow: 0 0 10px color-mix(in srgb, var(--medal) 38%, transparent);
+}
+/* The overview rows already reserve a left border for this; without clearing
+   it the bar would sit 3px in from the edge it is meant to mark. */
+.rank-row.is-podium { border-left-color: transparent; }
+
+/* The medal's own colour, washed in from the bar at the left edge.
+ *
+ * One rule for both lists: the leaderboard's top three and the overview's
+ * summary of the same three people had two different ways of saying "podium",
+ * and they sit one click apart. The stop is in px rather than %, so the wash
+ * covers the same physical distance on an 808px table row as on a 370px
+ * summary row instead of scaling with the column it happens to be in.
+ *
+ * `background-image`, never the `background` shorthand: the hover and is-me
+ * rules set background-color alone, so the two layers compose instead of one
+ * erasing the other.
+ *
+ * This replaced a white band that swept the row every 4.5s. Nothing moves now
+ * except on hover --- a ranking is reference data people scan, and a loop
+ * inside a scan target is friction dressed as polish. The pointer still gets
+ * an answer: the wash deepens and reaches further, which is motion the reader
+ * asked for rather than motion they have to ignore. */
+.rank-row.is-podium {
+  background-image: linear-gradient(95deg, color-mix(in srgb, var(--medal) 13%, transparent), transparent 200px);
+  transition: background-color 150ms ease, background-image 180ms ease;
+}
+.rank-row.is-podium:has(.rank-btn:hover),
+.rank-row.is-podium:has(.rank-btn:focus-visible) {
+  background-image: linear-gradient(95deg, color-mix(in srgb, var(--medal) 26%, transparent), transparent 260px);
+}
+
+/* The number itself carries the medal, so it is set a step larger and lit from
+   its own colour — at the same size and weight as every other rank, "gold" was
+   doing all the work alone and silver was losing to the body text. */
+.rank-no.is-podium {
+  font-size: var(--text-md);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--medal) 40%, transparent);
+}
+
+/* ─── Rank plate ──────────────────────────────────────────── */
+/* Stands in for a rank banner that has no artwork. Same frame as the image it
+   replaces, so a column holding both keeps one width and one height. */
+.rank-plate {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: var(--rank-art-w); height: var(--rank-art-h);
+  padding: 0 6px; overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--tier) 45%, transparent);
+  border-radius: 4px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tier) 16%, transparent),
+    color-mix(in srgb, var(--tier) 7%, transparent));
+  color: var(--tier);
+  font-family: var(--font-display);
+  font-size: var(--text-5xs); font-weight: var(--weight-display); letter-spacing: .02em;
+  line-height: 1; text-align: center; white-space: nowrap; text-overflow: ellipsis;
+}
+/* In the picker the tile is taller than a table cell, so the plate can fill it
+   the way the banner art does. */
+.rank-option .rank-plate { width: 100%; height: 36px; font-size: var(--text-3xs); }

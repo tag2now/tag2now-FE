@@ -1,11 +1,12 @@
+import { useState } from 'react'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
-import { CharacterMultiPicker } from '@/shared/components/CharacterGridPicker'
+import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import PostTypeBadge from './PostTypeBadge'
 import type { LeaderboardEntry} from "@/shared/types";
 import { MAX_POST_CHARACTERS, POST_TYPES } from "@/community/types";
 import type {PostSummary} from "@/community/types";
 import AuthorBadge from './AuthorBadge'
-import { ChevronLeft, ChevronRight, MessageSquare, MessagesSquare, PenLine, RefreshCw, SlidersHorizontal, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, MessageSquare, MessagesSquare, PenLine, RefreshCw, SlidersHorizontal, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
 
 interface PostListProps {
   posts: PostSummary[]
@@ -16,8 +17,9 @@ interface PostListProps {
   error: string | null
   postType: string
   onPostTypeChange: (type: string) => void
+  /** Characters the list is filtered to, at most two. */
   characters: string[]
-  onCharactersChange: (names: string[]) => void
+  onCharactersChange: (characters: string[]) => void
   onPageChange: (page: number) => void
   onSelectPost: (id: number) => void
   onRefresh: () => void
@@ -27,8 +29,10 @@ interface PostListProps {
 
 export default function PostList({
   posts, total, page, pageSize, loading, error,
-  postType, onPostTypeChange, characters, onCharactersChange, onPageChange, onSelectPost, onRefresh, onWrite, leaderboardEntries,
+  postType, onPostTypeChange, characters, onCharactersChange,
+  onPageChange, onSelectPost, onRefresh, onWrite, leaderboardEntries,
 }: PostListProps) {
+  const [pickerOpen, setPickerOpen] = useState(false)
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   return (
@@ -44,15 +48,15 @@ export default function PostList({
         </div>
       </div>
 
-      <div className="community-filter-bar">
-        <div className="community-filter-heading">
-          <span className="community-filter-icon" aria-hidden="true"><SlidersHorizontal size={14} /></span>
+      <div className="section-toolbar filter-toolbar">
+        <div className="section-title">
+          <span className="section-icon" aria-hidden="true"><SlidersHorizontal size={14} /></span>
           <div>
             <strong>게시글 분류</strong>
-            <small>게시글 유형과 캐릭터(최대 {MAX_POST_CHARACTERS}명)를 선택하세요.</small>
+            <small>보고 싶은 게시글 유형을 선택하세요.</small>
           </div>
         </div>
-        <div className="community-filter-controls">
+        <div className="section-controls">
           <div className="segmented-control" role="group" aria-label="게시글 분류">
             {['all', ...POST_TYPES].map((t) => {
               const active = (t === 'all' && !postType) || postType === t
@@ -72,9 +76,51 @@ export default function PostList({
         </div>
       </div>
 
-      <div className="character-filter">
-        <CharacterMultiPicker value={characters} onChange={onCharactersChange} max={MAX_POST_CHARACTERS} />
+      {/* Filters the list by character, independently of the category above —
+          the two used to be the same control, so narrowing to 공략 and
+          narrowing to Jin were mutually exclusive.
+
+          Folded away until asked for, the way the leaderboard's picker already
+          is. Sixty portraits are taller than a phone screen: opening this tab
+          showed the filter and not one post, and the grid is a thing you reach
+          for occasionally while the posts are what you came for. */}
+      <div className="character-filter-bar">
+        <button
+          type="button"
+          className={`lb-char-toggle${characters.length > 0 ? ' is-active' : ''}`}
+          aria-expanded={pickerOpen}
+          aria-controls="community-character-picker"
+          aria-label={characters.length > 0 ? `캐릭터 필터: ${characters.join(', ')}` : '캐릭터 필터'}
+          onClick={() => setPickerOpen((open) => !open)}
+        >
+          <Users size={14} aria-hidden="true" />
+          <span>{characters.length > 0 ? characters.join(', ') : '캐릭터'}</span>
+          <ChevronDown size={14} aria-hidden="true" className={pickerOpen ? 'is-open' : undefined} />
+        </button>
+        {/* Clearing is its own control: with the grid folded away, deselecting
+            had no reachable UI. */}
+        {characters.length > 0 && (
+          <button type="button" className="btn-ghost" onClick={() => onCharactersChange([])}>해제</button>
+        )}
       </div>
+      {pickerOpen && (
+        <div id="community-character-picker" className="character-filter">
+          <CharacterGridPicker
+            selected={characters}
+            onToggle={(name) => onCharactersChange(
+              characters.includes(name)
+                ? characters.filter((entry) => entry !== name)
+                : characters.length >= MAX_POST_CHARACTERS ? characters : [...characters, name],
+            )}
+            max={MAX_POST_CHARACTERS}
+          />
+        </div>
+      )}
+      {characters.length > 0 && (
+        <p className="selected-characters" role="status">
+          <strong>{characters.join(', ')}</strong> 관련 글만 표시 중
+        </p>
+      )}
 
       {loading && <p className="state-msg">로딩 중...</p>}
       {error && <p className="state-msg error">{error}</p>}
@@ -89,23 +135,32 @@ export default function PostList({
             <button
               key={post.id}
               onClick={() => onSelectPost(post.id)}
-              aria-label={`${post.title} — ${[post.post_type, ...(post.characters ?? [])].join(', ')}`}
+              aria-label={[post.title, post.post_type, ...(post.characters ?? [])].join(' — ')}
               className="post-row"
             >
-              <span className="w-14 shrink-0 flex items-center justify-center">
-                <PostTypeBadge postType={post.post_type} characters={post.characters} />
+              <span className="post-row-tags">
+                <PostTypeBadge postType={post.post_type} characters={post.characters ?? []} />
               </span>
-              <div className="flex flex-1 min-w-0 items-center font-bold">
-                <span className="text-sm text-txt truncate">{post.title}</span>
-                { post.comment_count > 0 && (<span className="ml-1 inline-flex items-center gap-0.5 text-txt-dim"><MessageSquare size={11} />{post.comment_count}</span>)}
-              </div>
-              <AuthorBadge name={post.author} entries={leaderboardEntries} className="hidden sm:inline-flex shrink-0" />
-              <span className="sm:hidden text-xs truncate max-w-20 sm:max-w-none">{post.author}</span>
-              <span className="hidden sm:flex gap-2 text-xs text-txt-dim shrink-0">
-                <span className="inline-flex items-center gap-1 text-primary-text"><ThumbsUp size={12} /> {post.thumbs_up}</span>
-                <span className="inline-flex items-center gap-1"><ThumbsDown size={12} /> {post.thumbs_down}</span>
+              <span className="post-row-title">{post.title}</span>
+              <AuthorBadge name={post.author} entries={leaderboardEntries} className="post-row-author" />
+              {/* One cluster for how the post is doing. The comment count used
+                  to be welded to the title and the two votes sat at the far
+                  end, so three figures of the same kind were read in two
+                  places. A figure only appears once it is not zero: every row
+                  printed "☝ 0 ☟ 0", which is the same as saying nothing while
+                  taking the space and the eye of something that says a lot. */}
+              <span className="post-row-stats">
+                {post.comment_count > 0 && (
+                  <span className="post-stat"><MessageSquare size={11} aria-hidden="true" />{post.comment_count}<span className="sr-only"> 댓글</span></span>
+                )}
+                {post.thumbs_up > 0 && (
+                  <span className="post-stat is-up"><ThumbsUp size={11} aria-hidden="true" />{post.thumbs_up}<span className="sr-only"> 추천</span></span>
+                )}
+                {post.thumbs_down > 0 && (
+                  <span className="post-stat"><ThumbsDown size={11} aria-hidden="true" />{post.thumbs_down}<span className="sr-only"> 비추천</span></span>
+                )}
               </span>
-              <span className="hidden sm:inline text-xs text-txt-dim shrink-0">{formatTimeAgo(post.created_at)}</span>
+              <span className="post-row-time">{formatTimeAgo(post.created_at)}</span>
             </button>
           ))}
         </div>

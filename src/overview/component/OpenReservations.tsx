@@ -1,18 +1,30 @@
 import { Link } from 'react-router-dom'
-import { Clock3, Users } from 'lucide-react'
-import { reservationPath } from '@/config/routes'
+import { ArrowRight, Clock3, Users } from 'lucide-react'
+import { pathOf, reservationPath } from '@/config/routes'
 import type { ApiReservation } from '@/reservation/reservationApi'
-import { kstDayLabel, kstTimeFormat, MATCH_TYPE_LABELS } from '@/reservation/reservationLabels'
+import { isJoinable, kstDayLabel, kstTimeFormat, MATCH_TYPE_LABELS } from '@/reservation/reservationLabels'
 import RankSummary from '@/reservation/component/RankSummary'
 
-/** Only reservations still taking people — a full or matched one is not
- * something the reader can act on from a summary screen. */
-const isJoinable = (r: ApiReservation) => r.status === 'open' && r.participant_count < r.capacity
-
-// Two, matching OVERVIEW_POSTS in the card beside it; the rest are one click
-// away, and the nav badge still counts them all.
+/** The soonest few, and how many it could not fit.
+ *
+ * `fetchReservations` hands over the whole list, so this component *knows* the
+ * total — and the KPI card above it prints that total. Slicing to `limit`
+ * without saying so put "모집 중인 예약 4" directly above three rows under
+ * the same heading, and the only way to tell which was wrong was to open the
+ * tab. The remainder is a row of its own rather than a badge on the heading:
+ * it lands where the reader's eye already is, at the end of the list, and it
+ * doubles as the way to the rest.
+ *
+ * 최신 게시글 needs none of this. `fetchPosts(1, 3)` asks the backend for three
+ * and is given three, so there is no total to contradict — a "latest" list is
+ * a slice by definition and nothing on the page claims otherwise.
+ */
+// Two, matching OVERVIEW_POSTS in the card beside it: the pair share a grid
+// row, so a third here sets the height of both. Nothing is dropped -- the
+// remainder row below says how many are left and leads to them.
 export default function OpenReservations({ reservations, limit = 2 }: { reservations: ApiReservation[]; limit?: number }) {
-  const joinable = reservations.filter(isJoinable).slice(0, limit)
+  const joinable = reservations.filter(isJoinable)
+  const shown = joinable.slice(0, limit)
   // Two lines, the shape panelStatus already uses: the terse uppercase label
   // .state-msg is styled for, then a way forward. An empty board is the best
   // moment to post one, and the card said only that there was nothing here.
@@ -25,10 +37,14 @@ export default function OpenReservations({ reservations, limit = 2 }: { reservat
     </div>
   )
 
+  const hidden = joinable.length - shown.length
+  // Which day, not just which hour: the listing runs to the next morning, so
+  // a bare time cannot tell tonight's 23:00 from the 01:00 after it.
   const now = new Date()
+
   return (
     <ul className="overview-list">
-      {joinable.map((r) => (
+      {shown.map((r) => (
         <li key={r.id}>
           <Link className="overview-list-row overview-list-link" to={reservationPath(r.id)}>
             <span className="overview-time"><Clock3 size={11} aria-hidden="true" />{kstDayLabel(new Date(r.start_at), now)} {kstTimeFormat.format(new Date(r.start_at))}</span>
@@ -47,6 +63,14 @@ export default function OpenReservations({ reservations, limit = 2 }: { reservat
           </Link>
         </li>
       ))}
+      {hidden > 0 && (
+        <li>
+          <Link className="overview-list-row overview-list-more" to={pathOf('reservation')}>
+            외 {hidden}건 더 보기
+            <ArrowRight size={12} aria-hidden="true" />
+          </Link>
+        </li>
+      )}
     </ul>
   )
 }

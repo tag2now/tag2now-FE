@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { parseYouTubeVideoId } from '@/community/youtube'
 import YouTubeVideo from './YouTubeVideo'
-import { CharacterMultiPicker } from '@/shared/components/CharacterGridPicker'
+import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import { MAX_POST_CHARACTERS, POST_TYPES } from '@/community/types'
+import type { PostInput } from '@/community/communityApi'
 import { AlignLeft, ArrowLeft, FilePenLine, Send, Type, X } from 'lucide-react'
 
 interface CreatePostFormProps {
   initialPost?: { title: string; body: string; post_type: string; characters?: string[]; youtube_video_id?: string | null }
-  onSubmit: (title: string, body: string, postType: string, characters: string[], youtubeVideoId?: string) => Promise<void>
+  onSubmit: (input: PostInput) => Promise<void>
   onCancel: () => void
 }
 
@@ -16,7 +17,14 @@ export default function CreatePostForm({ onSubmit, onCancel, initialPost }: Crea
   const [title, setTitle] = useState(initialPost?.title ?? '')
   const [body, setBody] = useState(initialPost?.body ?? '')
   const [postType, setPostType] = useState(initialPost?.post_type ?? '자유')
+  // Separate from the category: a post is a 자유/건의/공략 *and* may be about
+  // one or two characters. They shared one field until now, so choosing a
+  // character silently replaced the category.
   const [characters, setCharacters] = useState<string[]>(initialPost?.characters ?? [])
+  const toggleCharacter = (name: string) => setCharacters((current) =>
+    current.includes(name)
+      ? current.filter((entry) => entry !== name)
+      : current.length >= MAX_POST_CHARACTERS ? current : [...current, name])
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [youtubeUrl, setYoutubeUrl] = useState(initialPost?.youtube_video_id ? `https://www.youtube.com/watch?v=${initialPost.youtube_video_id}` : '')
@@ -28,7 +36,7 @@ export default function CreatePostForm({ onSubmit, onCancel, initialPost }: Crea
     setSubmitting(true)
     setError('')
     try {
-      await onSubmit(title.trim(), body.trim(), postType, characters, youtubeVideoId ?? undefined)
+      await onSubmit({ title: title.trim(), body: body.trim(), postType, characters, youtubeVideoId: youtubeVideoId ?? undefined })
     } catch (error) {
       setError(error instanceof Error ? error.message : '저장하지 못했습니다. 다시 시도해 주세요.')
     } finally {
@@ -43,7 +51,7 @@ export default function CreatePostForm({ onSubmit, onCancel, initialPost }: Crea
             <button
                 onClick={onCancel}
                 disabled={submitting}
-                className="inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary-text text-xs font-bold cursor-pointer hover:text-white"
+                className="inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary-text text-xs font-bold cursor-pointer hover:text-txt"
             >
                 <ArrowLeft size={14} aria-hidden="true" /> {editing ? '돌아가기' : '목록'}
             </button>
@@ -64,10 +72,21 @@ export default function CreatePostForm({ onSubmit, onCancel, initialPost }: Crea
         ))}
       </div>
 
-      <div className="field-heading"><span className="field-label">캐릭터 <span className="text-txt-dim">(선택)</span></span><small>다루는 팀 캐릭터를 최대 {MAX_POST_CHARACTERS}명까지 고르세요.</small></div>
-      <div className="character-filter mb-4">
-        <CharacterMultiPicker value={characters} onChange={setCharacters} max={MAX_POST_CHARACTERS} />
+      <div className="field-heading mt-4">
+        <span className="field-label">
+          관련 캐릭터 <span className="text-txt-dim">(선택)</span>
+        </span>
+        <small>최대 {MAX_POST_CHARACTERS}명 — 태그 조합이면 둘 다 고르세요.</small>
       </div>
+      <div className="character-filter mb-4">
+        <CharacterGridPicker selected={characters} onToggle={toggleCharacter} max={MAX_POST_CHARACTERS} />
+      </div>
+      {characters.length > 0 && (
+        <p className="selected-characters" role="status">
+          선택: <strong>{characters.join(', ')}</strong>
+          <button type="button" className="btn-ghost" onClick={() => setCharacters([])}>모두 해제</button>
+        </p>
+      )}
 
       <div className="field-heading"><label htmlFor="post-title" className="field-label">제목</label><small>내용을 한눈에 이해할 수 있게 작성하세요.</small></div>
       <div className="input-shell">
@@ -125,7 +144,7 @@ export default function CreatePostForm({ onSubmit, onCancel, initialPost }: Crea
         <button
           onClick={onCancel}
           disabled={submitting}
-          className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-error bg-transparent px-3 text-xs font-bold text-error cursor-pointer hover:bg-error hover:text-white"
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-error bg-transparent px-3 text-xs font-bold text-error cursor-pointer hover:bg-error hover:text-txt"
         >
           <X size={14} aria-hidden="true" /> 취소
         </button>

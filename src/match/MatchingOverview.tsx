@@ -6,6 +6,7 @@ import TimeSince from '@/shared/components/TimeSince'
 import type { LeaderboardEntry } from '@/shared/types'
 import { panelStatus } from '@/shared/util/panelStatus'
 import { RefreshCw } from 'lucide-react'
+import { TableSkeleton } from '@/shared/components/Skeleton'
 
 type MatchingOverviewProps = {
   groups: Record<string, Room[]>
@@ -18,7 +19,11 @@ type MatchingOverviewProps = {
 }
 
 export default function MatchingOverview({ groups, loading, refreshing, error, onRefresh, lastUpdated, leaderboardEntries }: MatchingOverviewProps) {
-  const status = panelStatus(loading, error, '방 목록 불러오는 중...', onRefresh)
+  const status = panelStatus(loading, error, {
+    loadingMsg: '방 목록을 불러오는 중',
+    onRetry: onRefresh,
+    skeleton: <TableSkeleton rows={6} columns={5} label="방 목록을 불러오는 중" />,
+  })
   const groupKeys = [
     ...GROUP_ORDER.filter((key) => key in groups),
     ...Object.keys(groups).filter((key) => !GROUP_ORDER.includes(key)),
@@ -31,7 +36,7 @@ export default function MatchingOverview({ groups, loading, refreshing, error, o
       <LoadingBar visible={refreshing} />
       <div className="panel-meta flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-bold tracking-[0.08em] text-white">매칭 현황</p>
+          <p className="text-sm font-bold tracking-[0.08em] text-txt">매칭 현황</p>
           <p className="mt-1 text-xs text-txt-dim">현재 열려 있는 랭크 · 플레이어 매치</p>
         </div>
         <div className="flex items-center gap-3">
@@ -47,7 +52,7 @@ export default function MatchingOverview({ groups, loading, refreshing, error, o
         return (
           <section key={groupKey} className="border border-border-light bg-bg-row">
             <header className="flex items-center justify-between border-b border-border px-4 py-3">
-              <h2 className="font-display text-lg font-black text-white">{formatGroupName(groupKey)}</h2>
+              <h2 className="font-display text-lg font-extrabold text-txt">{formatGroupName(groupKey)}</h2>
               <span className="text-xs font-bold tracking-[0.08em] text-txt-dim">{rooms.length}개 방</span>
             </header>
             {rooms.length === 0 ? (
@@ -55,7 +60,7 @@ export default function MatchingOverview({ groups, loading, refreshing, error, o
             ) : groupKey === 'rank_match' ? (
               <RankMatchTable rooms={rooms as RankMatchRoom[]} leaderboardEntries={leaderboardEntries} />
             ) : (
-              <PlayerMatchTable rooms={rooms} />
+              <PlayerMatchTable rooms={rooms} leaderboardEntries={leaderboardEntries} />
             )}
           </section>
         )

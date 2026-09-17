@@ -1,85 +1,85 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import {PlayerMatchTable} from "@/match/component";
 import type {Room, RoomUser} from "@/match/types";
 
+/** A row is a room, the way it is on the rank tab. These used to assert one row
+ * per person under a band naming the host, which is why the toolbar could say
+ * "방 2개" above three rows. */
+const rowFor = (host: string) =>
+  screen.getByRole('row', { name: new RegExp(host) })
+
 describe('PlayerMatchTable', () => {
-  it('renders room separator with owner name and user count', () => {
+  it('names its columns in the same language as the rank tab', () => {
+    render(<PlayerMatchTable rooms={[]} />)
+
+    expect(screen.getByRole('columnheader', { name: '호스트' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: '참가자' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: '인원' })).toBeInTheDocument()
+  })
+
+  it('renders one row per room, with the host apart from the guests', () => {
     const rooms: Room[] = [
       {
         room_id: 1,
         owner_online_name: 'Alice',
         rank_info: null,
+        max_slots: 4,
         users: [
-          { online_name: 'Alice', np_id: 'Alice' },
-          { online_name: 'Bob', np_id: 'Bob' },
+          { online_name: 'Alice', np_id: 'a' },
+          { online_name: 'Bob', np_id: 'b' },
         ] as RoomUser[],
       },
     ]
     render(<PlayerMatchTable rooms={rooms} />)
 
-    expect(screen.getByText('#')).toBeInTheDocument()
-    expect(screen.getByText('User')).toBeInTheDocument()
-    expect(screen.getByText('Alice (2)')).toBeInTheDocument()
+    // One room, one row — not one row for Alice and another for Bob.
+    expect(screen.getAllByRole('row')).toHaveLength(2)  // header + the room
+    const row = rowFor('Alice')
+    // The host is named once. Listing them as a guest as well was the old
+    // table's doing: the band said "Alice" and row 1 said "Alice".
+    expect(within(row).getAllByText('Alice')).toHaveLength(1)
+    expect(within(row).getByText('Bob')).toBeInTheDocument()
   })
 
-  it('renders each user as a separate row', () => {
+  it('shows how full the lobby is, which the old table never said', () => {
     const rooms: Room[] = [
-      {
-        room_id: 1,
-        owner_online_name: 'Host',
-        rank_info: null,
-        users: [
-          { online_name: 'Player1', np_id: 'p1' },
-          { online_name: 'Player2', np_id: 'p2' },
-          { online_name: 'Player3', np_id: 'p3' },
-        ] as RoomUser[],
-      },
+      { room_id: 1, owner_online_name: 'Host', rank_info: null, max_slots: 8, users: [
+        { online_name: 'Host', np_id: 'h' },
+        { online_name: 'P1', np_id: 'p1' },
+        { online_name: 'P2', np_id: 'p2' },
+      ] as RoomUser[] },
     ]
     render(<PlayerMatchTable rooms={rooms} />)
 
-    expect(screen.getByText('Player1')).toBeInTheDocument()
-    expect(screen.getByText('Player2')).toBeInTheDocument()
-    expect(screen.getByText('Player3')).toBeInTheDocument()
+    expect(rowFor('Host').textContent).toContain('3/8')
   })
 
-  it('renders multiple rooms with their users', () => {
+  it('renders every room', () => {
     const rooms: Room[] = [
-      {
-        room_id: 1,
-        owner_online_name: 'Room1Owner',
-        rank_info: null,
-        users: [{ online_name: 'UserA', np_id: 'a' }] as RoomUser[],
-      },
-      {
-        room_id: 2,
-        owner_online_name: 'Room2Owner',
-        rank_info: null,
-        users: [
-          { online_name: 'UserB', np_id: 'b' },
-          { online_name: 'UserC', np_id: 'c' },
-        ] as RoomUser[],
-      },
+      { room_id: 1, owner_online_name: 'Room1Owner', rank_info: null, max_slots: 2, users: [{ online_name: 'UserA', np_id: 'a' }] as RoomUser[] },
+      { room_id: 2, owner_online_name: 'Room2Owner', rank_info: null, max_slots: 4, users: [
+        { online_name: 'Room2Owner', np_id: 'b' },
+        { online_name: 'UserC', np_id: 'c' },
+      ] as RoomUser[] },
     ]
     render(<PlayerMatchTable rooms={rooms} />)
 
-    expect(screen.getByText('Room1Owner (1)')).toBeInTheDocument()
-    expect(screen.getByText('Room2Owner (2)')).toBeInTheDocument()
+    expect(screen.getAllByRole('row')).toHaveLength(3)
+    expect(screen.getByText('Room1Owner')).toBeInTheDocument()
     expect(screen.getByText('UserA')).toBeInTheDocument()
-    expect(screen.getByText('UserB')).toBeInTheDocument()
     expect(screen.getByText('UserC')).toBeInTheDocument()
   })
 
-  it('handles rooms with no users gracefully', () => {
+  // A lobby nobody has joined is the same state the rank tab calls "상대 찾는
+  // 중", so it is stated rather than left as an empty cell.
+  it('says a lobby is still waiting rather than leaving the cell blank', () => {
     const rooms: Room[] = [
-      {
-        room_id: 1,
-        owner_online_name: 'EmptyRoom',
-        rank_info: null,
-      } as Room,
+      { room_id: 1, owner_online_name: 'EmptyRoom', rank_info: null, max_slots: 4 } as Room,
     ]
     render(<PlayerMatchTable rooms={rooms} />)
 
-    expect(screen.getByText('EmptyRoom (0)')).toBeInTheDocument()
+    expect(screen.getByText('참가자 대기 중')).toBeInTheDocument()
+    expect(screen.getByText('EmptyRoom')).toBeInTheDocument()
   })
 })

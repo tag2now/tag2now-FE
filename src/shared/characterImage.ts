@@ -1,10 +1,20 @@
 /**
- * Maps backend character names (from TTT2_CHARACTERS in data.py)
- * to their portrait filenames under /characters/*.webp
+ * Maps backend character names (from TTT2_CHARACTERS in data.py) to their
+ * portrait filenames under /characters/TTT2_*.webp
+ *
+ * The value is the filename *without* the shared `TTT2_` prefix, which
+ * `charImageUrl` adds — the prefix is on all 59 assets, so repeating it in
+ * every entry would be 59 chances to typo it.
+ *
+ * Four entries do not match the backend's spelling of the character, and two of
+ * those are the asset's own misspelling rather than a naming choice:
+ * `Ancient_Orge` and `Rojer_Jr`. They are written here exactly as the files are
+ * named, because that is what the URL has to say; renaming the files and these
+ * two lines together would fix both.
  */
 const NAME_TO_FILE: Record<string, string> = {
   'Paul':         'Paul',
-  'Law':          'Law',
+  'Law':          'Marshall',
   'Lei':          'Lei',
   'Yoshimitsu':   'Yoshimitsu',
   'Nina':         'Nina',
@@ -19,7 +29,7 @@ const NAME_TO_FILE: Record<string, string> = {
   'Kazuya':       'Kazuya',
   'Lee':          'Lee',
   'Steve':        'Steve',
-  'Roger Jr.':    'Roger_Jr',
+  'Roger Jr.':    'Rojer_Jr',      // the asset is spelled this way
   'Mokujin':      'Mokujin',
   'Jack':         'Jack-6',
   'Marduk':       'Marduk',
@@ -41,7 +51,7 @@ const NAME_TO_FILE: Record<string, string> = {
   'Lars':         'Lars',
   'Alisa':        'Alisa',
   'Jinpachi':     'Jinpachi',
-  'True Ogre':    'True_Ogre',
+  'True Ogre':    'Ogre',
   'Jun':          'Jun',
   'Combot':       'Combot',
   'Unknown':      'Unknown',
@@ -49,7 +59,7 @@ const NAME_TO_FILE: Record<string, string> = {
   'Michelle':     'Michelle',
   'Forest Law':   'Forest',
   'Miharu':       'Miharu',
-  'Ancient Ogre': 'Ancient_Ogre',
+  'Ancient Ogre': 'Ancient_Orge',  // the asset is spelled this way
   'P-Jack':       'Prototype_Jack',
   'Sebastian':    'Sebastian',
   'Violet':       'Violet',
@@ -76,5 +86,5 @@ export const CHARACTER_GRID: string[][] = [
  */
 export function charImageUrl(name: string): string | null {
   const file = NAME_TO_FILE[name]
-  return file ? `/characters/${file}.webp` : null
+  return file ? `/characters/TTT2_${file}.webp` : null
 }

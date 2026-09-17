@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { GET} from "@/shared/util/api";
+import { API } from "@/config/endpoints";
 import type { WeeklyTopPlayer} from "@/stat/types";
 
 export type WeeklyTopLimit = 10 | 25 | 50
@@ -22,7 +23,7 @@ export default function useWeeklyTop(): WeeklyTopState {
     let cancelled = false
     setLoading(true)
     setError(null)
-    GET('history/stats/weekly-top', { limit })
+    GET(API.weeklyTop().path, { limit })
       .then((res) => {
         if (cancelled) return
         setData(res as WeeklyTopPlayer[])

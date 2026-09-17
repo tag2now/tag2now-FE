@@ -21,13 +21,18 @@ test.describe('Rooms', () => {
     await expect(page.getByText('TagComboKing')).toBeVisible()
   })
 
-  test('player match tab renders PlayerMatchTable', async ({ page }) => {
+  // A row is a lobby here, the same as on the rank tab — it used to be a person,
+  // so the toolbar's room count sat above a different number of rows.
+  test('player match tab lists one row per lobby', async ({ page }) => {
     await page.getByRole('tab', { name: /^플매/ }).click()
 
-    // PlayerMatchTable has columns: #, User
-    await expect(page.getByRole('columnheader', { name: '#' })).toBeVisible()
-    await expect(page.getByRole('columnheader', { name: 'User' })).toBeVisible()
-    await expect(page.getByText('BearPunchPro').first()).toBeVisible()
+    for (const name of ['호스트', '참가자', '인원']) {
+      await expect(page.getByRole('columnheader', { name })).toBeVisible()
+    }
+    const row = page.getByRole('row', { name: /BearPunchPro/ })
+    await expect(row).toHaveCount(1)
+    // The host is named once, in its own column, not repeated as a guest.
+    await expect(row.getByText('BearPunchPro')).toHaveCount(1)
   })
 
   test('refresh button is visible and triggers API call', async ({ page }) => {
@@ -107,7 +112,7 @@ test.describe('Rooms', () => {
     await page.goto('/')
     await goToMatchTab(page)
 
-    await expect(page.getByText('방이 없습니다.')).toBeVisible()
+    await expect(page.getByText(/방이 없습니다/)).toBeVisible()
   })
 })
 

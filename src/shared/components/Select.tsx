@@ -52,7 +52,7 @@ export default function Select<T extends string>({ value, options, onChange, lab
         <ChevronDown size={15} aria-hidden="true" />
       </button>
       {open && (
-        <div aria-hidden="true" className="custom-select-menu scroll-area">
+        <div aria-hidden="true" className="custom-select-menu">
           {options.map((option) => (
             <button
               key={option.value}

@@ -1,0 +1,130 @@
+/* The ranking list.
+ *
+ * One list, three tabs: the leaderboard, 이번 주 활동왕 on 통계, and the two
+ * summary cards on the home page. They showed the same five things about the
+ * same players — position, name, the figure the list is ranked by, main, sub —
+ * as two <table>s of differing column counts and a grid of <li>s, so the same
+ * player looked like different data depending on which tab you reached them
+ * from. The home row is the one they all take, and RankList is the only thing
+ * that renders it.
+ *
+ * Imported directly after overview.css, which is where these rules were
+ * written: moving them earlier or later would reorder them against the
+ * unlayered rules in boards.css, leaderboard.css and responsive.css. */
+
+.rank-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; }
+/* Four columns, matching the leaderboard's rhythm minus its record column.
+   Five did not fit: these cards are half the page wide, and 26+48+118+118 plus
+   gaps left 38px for the player name — one character and an ellipsis. The
+   ranked-by figure moved under the name, where it has room. */
+/* 128px a character, not 100: the cell carries a portrait, a rank banner and
+   the record now, and at 100 the record wrapped under the banner on every row. */
+.rank-head, .rank-row { display: grid; align-items: center; gap: 6px; grid-template-columns: 22px minmax(0,1fr) 108px 116px 116px; }
+/* The leaderboard list ranks by row position, so it renders no detail cell
+   and drops that track — the name column takes the freed width. */
+
+.rank-head { border-left: 3px solid transparent; padding: 0 8px 4px; color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-row); letter-spacing: .08em; text-transform: uppercase; }
+/* Each heading clips to its own column. Without this the Player heading — in a
+   `minmax(0,1fr)` track that collapses at the overview's card width — overflowed
+   into the 48px detail column and painted "PLAYMATCH" over it. */
+.rank-head > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Matches the inset the name button's hover frame sits at. */
+.rank-head > :nth-child(2) { padding-left: 5px; }
+/* Centred over its track, like every heading on the leaderboard table this
+   list summarises --- and the figure under it is centred too. Ranged right,
+   the pair sat hard against the first character cell while the columns on
+   either side were centred, so the one column the two lists differed on was
+   the one carrying the figure they are ranked by. */
+.rank-head > :nth-child(3) { text-align: center; }
+.rank-head > :nth-child(4), .rank-head > :nth-child(5) { text-align: center; }
+.rank-list.has-no-detail .rank-head > :nth-child(3) { text-align: center; }
+
+/* A list with nothing to rank by drops the track rather than leaving a hole. */
+.rank-list.has-no-detail .rank-head,
+.rank-list.has-no-detail .rank-row { grid-template-columns: 22px minmax(0,1fr) 116px 116px; }
+/* Positioned so the name button's overlay can stretch across it. */
+.rank-row { position: relative; min-height: 60px; padding: 0 8px; border-left: 3px solid transparent; border-radius: 4px; background-color: var(--color-bg-row-alt); transition: background-color 150ms ease; }
+/* The overlay carries the hover, so pointing anywhere on the row lights both
+   the row and the name it will open. Keyboard focus says the same thing: the
+   outline stays tight around the name, and this shows which row that is. */
+.rank-row:has(.rank-btn:hover),
+.rank-row:has(.rank-btn:focus-visible) { background-color: color-mix(in srgb, var(--color-primary) 7%, transparent); }
+
+/* Rank badge beside its portrait, the way the leaderboard's CharCell pairs
+   them. The 240x105 banner is what sets the column width: it has to stay wide
+   enough for the rank name to read next to the character it labels. */
+/* Portrait first, then the rank — the reading order CharCell uses. This had
+   them reversed, which is why a player's two cards looked unrelated. */
+.mini-char { display: inline-flex; width: 100%; min-width: 0; align-items: center; justify-content: center; gap: 8px; }
+
+/* The podium wash itself is in primitives.css --- the leaderboard's top three
+   and this summary of the same three people share one rule. */
+.mini-char.is-empty { color: var(--color-txt-faint); font-size: var(--text-2xs); }
+/* The same frame and the same portrait height as the leaderboard's CharCell —
+   these two lists show the same art and differing on size made them look like
+   different data. */
+.mini-char-rank { width: var(--rank-art-w); height: var(--rank-art-h); flex: 0 0 auto; object-fit: cover; }
+/* Rank over the record, beside the portrait --- CharCell's arrangement at the
+   size a summary row has for it. Wraps the same way the profile card's does,
+   so a narrow column stacks the two instead of pushing the record out. */
+.mini-char-meta { display: inline-flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 1px; }
+.mini-char-record { display: inline-flex; min-width: 0; flex-wrap: wrap; align-items: baseline; gap: 0 4px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.mini-char-wr { color: var(--color-txt); font-size: var(--text-2xs); font-weight: var(--weight-strong); }
+.mini-char-wl { color: var(--color-txt-faint); font-size: var(--text-5xs); font-weight: var(--weight-label); white-space: nowrap; }
+.mini-char-wl span { opacity: .7; }
+.mini-char-portrait { height: 46px; border-radius: 4px; }
+.mini-char-name { max-width: 100%; overflow: hidden; color: var(--color-txt-dim); font-size: var(--text-4xs); text-overflow: ellipsis; white-space: nowrap; }
+/* Opens the same history panel the leaderboard does, so it takes the same
+   .player-btn affordance. The name column is the tightest on the page --- 61px
+   in 주간 철악귀 --- so the inline padding .player-btn normally carries is
+   dropped and the hover surface is inset instead of widening the cell. */
+/* No underline. A red dashed rule under every name read as a spell-checker
+   marking it wrong, and it sat under all five rows at once — the row's own
+   hover tint and the pointer already say the name opens something, which is
+   how the leaderboard states the same thing. */
+/* No negative margin. The hover frame used to start 5px left of the cell, and
+   the row clips its overflow for the podium sheen — so the frame's left edge
+   was sliced off on exactly the rows that carry it. The header takes the same
+   inset below, so the column still lines up. */
+.rank-btn { display: inline-block; max-width: 100%; padding: 1px 5px; border: 1px solid transparent; border-radius: 5px; color: var(--color-txt); font-size: inherit; font-weight: inherit; text-align: left; text-decoration: none; transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease; }
+/* The leaderboard's own name treatment, so the same control looks the same in
+   both places. The grey fill this replaces read as a text selection. */
+.rank-btn:hover { border-color: color-mix(in srgb, var(--color-primary) 30%, transparent); background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary-text); }
+/* Makes the whole 66px row the hit area for the one thing it can do. The row
+   is the containing block, so the name keeps its own tight focus outline
+   instead of the ring ballooning to the full row. What this costs is the
+   `title` tooltip on the portraits underneath: a hover-only, desktop-only
+   affordance, and the character and rank it repeats are already in the two
+   images' alt text. */
+.rank-btn::after { content: ''; position: absolute; inset: 0; border-radius: 4px; }
+/* The truncation the button used to do itself. It cannot stay on the button:
+   `overflow: hidden` there would clip the overlay above back to the name. */
+.rank-btn-label { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The name and, on the reader's own row, the badge marking it — side by side,
+   because the figure that used to stack under them here has a column of its
+   own now. */
+.rank-name { display: flex; min-width: 0; align-items: center; gap: 0; overflow: hidden; color: var(--color-txt); font-size: var(--text-sm); font-weight: var(--weight-row); white-space: nowrap; }
+/* What the list is ranked by, said quietly. In primary red at full weight it
+   sat under the name looking like a warning about the player rather than the
+   figure that put them there. */
+/* The same pairing the leaderboard tab uses for the same fact: the figure at
+   reading size with what it was taken over riding behind it. Right-aligned in
+   its own track, so the column can be read down without reading the rows. */
+.rank-detail { display: inline-flex; align-items: baseline; justify-content: center; gap: 5px; font-variant-numeric: tabular-nums; }
+.rank-detail strong { color: var(--color-txt); font-size: var(--text-sm); font-weight: var(--weight-display); }
+.rank-detail > span:not(.sr-only) { color: var(--color-txt-faint); font-size: var(--text-3xs); font-weight: var(--weight-label); }
+
+/* No figure at all, rather than a dash standing in for one: a player with no
+   recorded matches has an absence to report, not a value. */
+.rank-detail-empty { color: var(--color-txt-faint); font-size: var(--text-3xs); }
+/* The reader's own row. Finding yourself on a 344-row board meant scrolling or
+   typing your own name from memory; the row is marked instead, so it is
+   visible the moment it is on screen.
+   `background-color`, never the shorthand: the podium wash is a
+   background-image, and the shorthand would erase it on a row that is both. */
+.rank-row.is-me { background-color: color-mix(in srgb, var(--color-primary) 9%, transparent); }
+.rank-row.is-me:has(.rank-btn:hover) { background-color: color-mix(in srgb, var(--color-primary) 13%, transparent); }
+/* Sits after the name inside its cell, so it rides with the truncation rather
+   than being pushed out by it. */
+.lb-you { display: inline-flex; align-items: center; min-height: 18px; flex: 0 0 auto; margin-left: 6px; padding: 0 6px; border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent); border-radius: 4px; background: color-mix(in srgb, var(--color-primary) 16%, transparent); color: var(--color-primary-text); font-size: var(--text-4xs); font-weight: var(--weight-strong); }

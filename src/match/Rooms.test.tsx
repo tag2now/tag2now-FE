@@ -4,9 +4,13 @@ import Rooms from "@/match/Rooms";
 import {Room} from "@/match/types";
 
 describe('Rooms', () => {
-  it('shows loading message when loading=true', () => {
+  // The first load shows a skeleton shaped like the table, so the announcement
+  // is the sr-only status rather than visible text — the placeholder holds the
+  // height the rows will take instead of collapsing the panel to one line.
+  it('announces the first load and reserves the table height', () => {
     render(<Rooms loading={true} data={null} error={null} />)
-    expect(screen.getByText('방 목록 불러오는 중...')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('방 목록을 불러오는 중')
+    expect(document.querySelectorAll('.skeleton-row').length).toBeGreaterThan(1)
   })
 
   it('shows error message when error is provided', () => {
@@ -19,10 +23,14 @@ describe('Rooms', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('shows "No active rooms." when rooms array is empty', () => {
+  // The empty state names the mode it is empty *for*, and says the page is
+  // still watching — a live tab with a blank list otherwise leaves the reader
+  // unsure whether to wait or to reload.
+  it('names the mode and says the list keeps watching when there are no rooms', () => {
     const data = { rooms: [] as any[] }
-    render(<Rooms loading={false} data={data} error={null} />)
-    expect(screen.getByText('방이 없습니다.')).toBeInTheDocument()
+    render(<Rooms loading={false} data={data} error={null} groupKey="rank_match" />)
+    expect(screen.getByRole('status')).toHaveTextContent('지금 열린 랭매 방이 없습니다')
+    expect(screen.getByRole('status')).toHaveTextContent('5초마다')
   })
 
   it('renders PlayerMatchTable when groupKey is not rank_match', () => {
@@ -37,9 +45,8 @@ describe('Rooms', () => {
       ],
     }
     render(<Rooms loading={false} data={data} error={null} />)
-    expect(screen.getByText('#')).toBeInTheDocument()
-    expect(screen.getByText('User')).toBeInTheDocument()
-    expect(screen.getByText('Alice (1)')).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: '호스트' })).toBeInTheDocument()
+    expect(screen.getByText('Alice')).toBeInTheDocument()
   })
 
   it('renders RankMatchTable when groupKey is rank_match', () => {
@@ -59,7 +66,7 @@ describe('Rooms', () => {
   it('falls back to empty array when data.rooms is undefined', () => {
     const data = {} as { rooms?: any[] }
     render(<Rooms loading={false} data={data} error={null} />)
-    expect(screen.getByText('방이 없습니다.')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('방이 없습니다')
   })
 
   it('shows loading bar when refreshing=true', () => {

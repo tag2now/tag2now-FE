@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { API } from '@/config/endpoints'
 import {
   Activity,
+  ArrowLeft,
   CalendarDays,
   Clock3,
   Eye,
@@ -32,21 +34,49 @@ function formatDate(iso: string | null) {
 interface Props {
   npid: string
   leaderboardEntry?: LeaderboardEntry
+  /** The whole board, so a partner opened from inside the panel can be shown
+   * with their rank and characters too. Optional: a caller that does not have
+   * it still gets a working panel, the partner simply opens without the rank
+   * summary — the same thing that already happens for a player who is not on
+   * the leaderboard at all. */
+  leaderboardEntries?: LeaderboardEntry[]
   onClose: () => void
 }
 
-export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: Props) {
+export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboardEntries, onClose }: Props) {
   const dialogRef = useModalDialog<HTMLDivElement>(onClose)
   const [days, setDays] = useState<Days>(30)
   const [data, setData] = useState<PlayerHistory | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  /** Who the panel is showing, and the way back.
+   *
+   * 자주 함께한 플레이어 named four people and did nothing when you pressed
+   * one, which is the one place in this dialog where a name is not already a
+   * dead end. Opening one pushes; the header offers the way back, because a
+   * reader who drills two deep and wants the player they started from should
+   * not have to close the dialog and find them again in the table underneath.
+   *
+   * Reset when the caller opens a different player: the same dialog instance is
+   * reused across rows, and a trail from the previous player is not this
+   * player's history. */
+  const [trail, setTrail] = useState<string[]>([npid])
+  useEffect(() => { setTrail([npid]) }, [npid])
+  const viewing = trail[trail.length - 1]
+  const cameFrom = trail.length > 1 ? trail[trail.length - 2] : null
+
+  // The entry for whoever is on screen. The prop covers the player the caller
+  // opened; anyone reached from inside is looked up on the board.
+  const entry = viewing === npid
+    ? leaderboardEntry
+    : leaderboardEntries?.find((e) => e.np_id === viewing)
+
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    GET(`history/players/${npid}`, { days })
+    GET(API.playerHistory(viewing).path, { days })
       .then((res) => {
         if (cancelled) return
         setData(res as PlayerHistory)
@@ -58,7 +88,7 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
         setLoading(false)
       })
     return () => { cancelled = true }
-  }, [npid, days])
+  }, [viewing, days])
 
   const metrics = data ? [
     { label: '확인된 플레이', value: `${data.times_seen}회`, icon: Eye },
@@ -82,35 +112,50 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
             <span className="history-title-icon" aria-hidden="true"><UserRound size={18} /></span>
             <div>
               <p className="history-eyebrow">PLAYER INSIGHTS</p>
-              <h2 id="history-title">{npid}</h2>
+              <h2 id="history-title">{viewing}</h2>
               <p>플레이 기록과 활동 패턴을 한눈에 확인하세요.</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="modal-close" aria-label="플레이어 기록 닫기">
-            <X size={17} aria-hidden="true" />
-          </button>
+          <div className="history-header-actions">
+            {/* Only when there is somewhere to go back to, and it names where:
+                "뒤로" alone would leave the reader guessing whether it steps
+                back a player or closes the dialog. */}
+            {cameFrom && (
+              <button
+                type="button"
+                className="history-back"
+                onClick={() => setTrail((t) => t.slice(0, -1))}
+              >
+                <ArrowLeft size={14} aria-hidden="true" />
+                <span>{cameFrom}</span>
+              </button>
+            )}
+            <button type="button" onClick={onClose} className="modal-close" aria-label="플레이어 기록 닫기">
+              <X size={17} aria-hidden="true" />
+            </button>
+          </div>
         </header>
 
         <div className="history-toolbar">
-          {leaderboardEntry ? (
+          {entry ? (
             <div className="history-rank-summary">
               <span className="history-rank-icon" aria-hidden="true"><Trophy size={16} /></span>
               <div className="history-rank-copy">
                 <small>현재 순위</small>
-                <strong>#{leaderboardEntry.rank}</strong>
+                <strong>#{entry.rank}</strong>
               </div>
               <div className="history-character-pair" aria-label="주 캐릭터와 부 캐릭터">
                 <CharCell
-                  name={leaderboardEntry.player_info?.main_char_info?.name}
-                  rankInfo={leaderboardEntry.player_info?.main_char_info?.rank_info}
-                  wins={leaderboardEntry.player_info?.main_char_info?.wins}
-                  losses={leaderboardEntry.player_info?.main_char_info?.losses}
+                  name={entry.player_info?.main_char_info?.name}
+                  rankInfo={entry.player_info?.main_char_info?.rank_info}
+                  wins={entry.player_info?.main_char_info?.wins}
+                  losses={entry.player_info?.main_char_info?.losses}
                 />
                 <CharCell
-                  name={leaderboardEntry.player_info?.sub_char_info?.name}
-                  rankInfo={leaderboardEntry.player_info?.sub_char_info?.rank_info}
-                  wins={leaderboardEntry.player_info?.sub_char_info?.wins}
-                  losses={leaderboardEntry.player_info?.sub_char_info?.losses}
+                  name={entry.player_info?.sub_char_info?.name}
+                  rankInfo={entry.player_info?.sub_char_info?.rank_info}
+                  wins={entry.player_info?.sub_char_info?.wins}
+                  losses={entry.player_info?.sub_char_info?.losses}
                 />
               </div>
             </div>
@@ -154,9 +199,18 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, onClose }: 
                   <ol className="history-partner-list">
                     {data.top_played_with.slice(0, 4).map((player, index) => (
                       <li key={player.npid}>
-                        <span className="history-partner-rank">{index + 1}</span>
-                        <span className="history-partner-name">{player.online_name}</span>
-                        <strong>{player.times_together}<small>회</small></strong>
+                        {/* The whole row opens that player — the position and
+                            the count describe the same person the name does. */}
+                        <button
+                          type="button"
+                          className="history-partner-row"
+                          onClick={() => setTrail((t) => [...t, player.npid])}
+                          aria-label={`${player.online_name} 기록 보기`}
+                        >
+                          <span className="history-partner-rank">{index + 1}</span>
+                          <span className="history-partner-name">{player.online_name}</span>
+                          <strong>{player.times_together}<small>회</small></strong>
+                        </button>
                       </li>
                     ))}
                   </ol>

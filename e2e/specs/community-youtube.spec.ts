@@ -27,6 +27,8 @@ test('preview, validation, removal and posting an attached video', async ({ page
   await input.fill('https://www.youtube.com/shorts/dQw4w9WgXcQ')
   const request = page.waitForRequest(req => req.method() === 'POST' && req.url().endsWith('/api/community/posts'))
   await page.getByRole('button', { name: '작성', exact: true }).click()
+  // `characters` is always sent, empty when none were tagged — the field is
+  // separate from post_type now, so a post can be a 자유 *and* about someone.
   expect((await request).postDataJSON()).toEqual({ title: '영상 공략', body: '콤보 설명', post_type: '자유', characters: [], youtube_video_id: 'dQw4w9WgXcQ' })
 })
 

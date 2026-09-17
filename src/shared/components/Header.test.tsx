@@ -165,8 +165,11 @@ describe('Player profile username save', () => {
     expect(document.querySelectorAll('.char-cell--compact')).toHaveLength(2)
     const records = document.querySelectorAll('.char-cell--compact .char-cell-record')
     expect(records).toHaveLength(2)
-    expect(records[0]).toHaveTextContent('250W 80LWR:76%')
-    expect(records[1]).toHaveTextContent('180W 60LWR:75%')
+    // Rate first, raw record behind it --- the same emphasis the leaderboard
+    // gives the same figure. The card used to lead with the record and label
+    // the rate "WR:", which made one number read two ways on one screen.
+    expect(records[0]).toHaveTextContent('76%250W 80L')
+    expect(records[1]).toHaveTextContent('75%180W 60L')
   })
 
   it('shares the username editor with the header profile control', async () => {

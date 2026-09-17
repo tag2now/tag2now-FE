@@ -27,7 +27,7 @@ export default function useCommunity() {
     detailError: null,
   })
 
-  const loadPosts = useCallback(async (page: number, postType?: string, characters?: string[]) => {
+  const loadPosts = useCallback(async (page: number, postType?: string, characters: string[] = []) => {
     setState((s) => ({ ...s, loading: true, error: null }))
     try {
       const res = await fetchPosts(page, PAGE_SIZE, postType, characters)
@@ -51,13 +51,19 @@ export default function useCommunity() {
     setState((s) => ({ ...s, selectedPost: null, detailError: null }))
   }, [])
 
+  /** Re-reads the open post after a write (a comment, a thumb).
+   *
+   * A failure here must not replace the post on screen with an error — the
+   * reader is still looking at it, and the write may well have succeeded. But
+   * it must not be silent either: `catch {}` meant a comment that never
+   * appeared looked exactly like a comment the server had rejected. Re-throwing
+   * hands it to the global unhandledrejection handler, which toasts the reason
+   * over content that stays put. */
   const refreshDetail = useCallback(async () => {
     const postId = state.selectedPost?.id
     if (postId == null) return
-    try {
-      const detail = await fetchPostDetail(postId)
-      setState((s) => ({ ...s, selectedPost: detail }))
-    } catch (_) {}
+    const detail = await fetchPostDetail(postId)
+    setState((s) => ({ ...s, selectedPost: detail }))
   }, [state.selectedPost?.id])
 
   return {

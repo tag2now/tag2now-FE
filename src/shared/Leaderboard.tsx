@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react'
-import { RANK_COLORS } from '@/shared/tierColors'
-import { MEDAL } from '@/shared/medalColors'
 import LoadingBar from "@/shared/components/LoadingBar";
-import CharCell from "@/shared/components/CharCell";
+import RankList from "@/shared/components/RankList";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import LeaderboardControls from "@/shared/components/LeaderboardControls";
 import {panelStatus} from "@/shared/util/panelStatus";
-import {filterEntries, COLLAPSED_VISIBLE} from "@/shared/util/leaderboardFilter";
+import {filterEntries, tiersPresent, totals, COLLAPSED_VISIBLE, type SortKey} from "@/shared/util/leaderboardFilter";
+import { getUsername } from '@/shared/util/cookie'
 import {LeaderboardData} from "@/shared/types";
 import { RefreshCw, Trophy } from 'lucide-react'
+import { TableSkeleton } from '@/shared/components/Skeleton'
 
 interface LeaderboardProps {
   data: LeaderboardData | null
@@ -22,15 +22,29 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [character, setCharacter] = useState('')
-  const [collapsed, setCollapsed] = useState(false)
+  const [tier, setTier] = useState('')
+  const [sort, setSort] = useState<SortKey>('rank')
+  // Collapsed by default. Expanded, 344 rows made the page ~27,000px tall — a
+  // scrollbar thumb a few pixels high, and nobody reads to 344th place from the
+  // top. The control to see everything is right there in the toolbar, and any
+  // search or character filter shows its full result regardless.
+  const [collapsed, setCollapsed] = useState(true)
 
   const entries = data?.entries ?? []
   const visible = useMemo(
-    () => filterEntries(entries, { search, character, collapsed }),
-    [entries, search, character, collapsed],
+    () => filterEntries(entries, { search, character, tier, sort, collapsed }),
+    [entries, search, character, tier, sort, collapsed],
   )
+  const tiers = useMemo(() => tiersPresent(entries), [entries])
+  // Finding yourself on a 344-row board meant scrolling or typing your own name
+  // from memory. The row is marked instead, so it is visible the moment it is.
+  const me = getUsername()
 
-  const s = panelStatus(loading, error, '랭킹 불러오는 중...', onRefresh)
+  const s = panelStatus(loading, error, {
+    loadingMsg: '랭킹을 불러오는 중',
+    onRetry: onRefresh,
+    skeleton: <TableSkeleton rows={10} columns={5} label="랭킹을 불러오는 중" />,
+  })
   if (s) return s
   if (!data) return null
 
@@ -53,59 +67,47 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
         onSearchChange={setSearch}
         character={character}
         onCharacterChange={setCharacter}
+        tier={tier}
+        onTierChange={setTier}
+        tiers={tiers}
+        sort={sort}
+        onSortChange={setSort}
         collapsed={collapsed}
         onToggleCollapsed={() => setCollapsed((v) => !v)}
         collapsible={entries.length > COLLAPSED_VISIBLE}
-        filtering={search.trim() !== '' || character !== ''}
+        filtering={search.trim() !== '' || character !== '' || tier !== ''}
         shown={visible.length}
         total={entries.length}
       />
-      <div className="data-table-wrap">
-        <table className="ranking-table leaderboard-table">
-          <caption className="sr-only">Leaderboard rankings</caption>
-          <thead>
-            <tr>
-              <th scope="col" className="tbl-th w-1/20 sm:w-2/20">#</th>
-              <th scope="col" className="tbl-th w-7/20 sm:w-4/20">Player</th>
-              <th scope="col" className="tbl-th sm:w-7/20 text-center">Main</th>
-              <th scope="col" className="tbl-th sm:w-7/20 text-center">Sub</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((e,i) => {
-              // Keyed off the true rank, not the row index: a filtered view must
-              // not award a medal to whoever happens to land in the top rows.
-              const medal = e.rank <= 3 ? MEDAL[e.rank - 1] : null
-              const rankCls = medal ? '' : (RANK_COLORS[e.rank] ?? '')
-              const rowStyle = medal ? { borderLeft: '3px solid ' + medal.border } : undefined
-              const cellStyle = medal ? { color: medal.color } : undefined
-              return (
-                <tr key={e.np_id} className="tbl-row" style={rowStyle}>
-                  <td className={`tbl-td rank-cell ${rankCls}`} style={cellStyle}>
-                    <span className={`rank-position ${medal ? `is-podium podium-${i + 1}` : ''}`}>{medal ? medal.label : e.rank}</span>
-                  </td>
-                  <td className="player-name" style={cellStyle}>
-                    <button onClick={() => setSelectedNpid(e.np_id)} className="player-btn" style={cellStyle}>
-                      {e.online_name}
-                    </button>
-                  </td>
-                  <td className="char-td">
-                    <CharCell name={e.player_info?.main_char_info?.name} rankInfo={e.player_info?.main_char_info?.rank_info} wins={e.player_info?.main_char_info?.wins} losses={e.player_info?.main_char_info?.losses} />
-                  </td>
-                  <td className="char-td">
-                    <CharCell name={e.player_info?.sub_char_info?.name} rankInfo={e.player_info?.sub_char_info?.rank_info} wins={e.player_info?.sub_char_info?.wins} losses={e.player_info?.sub_char_info?.losses} />
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        {visible.length === 0 && entries.length > 0 && (
-          <p className="state-msg">검색 결과가 없습니다</p>
-        )}
-      </div>
+      {/* The home page's summary rows, at full length. This board was a
+          <table> of its own shape, 통계 had a six-column one, and the home
+          page had a grid --- three renderings of the same five facts about
+          the same players. The home row is the one they all take. */}
+      <RankList
+        rows={visible.map((e) => {
+          const total = totals(e)
+          return {
+            key: e.np_id,
+            npid: e.np_id,
+            name: e.online_name,
+            // The true rank, not the row: a filtered view must not award a
+            // medal to whoever happens to land in the top rows.
+            rank: e.rank,
+            detail: total.winRate === null ? undefined : `${Math.round(total.winRate * 100)}%`,
+            detailSub: total.winRate === null ? undefined : `${total.matches}판`,
+            detailEmpty: total.winRate === null ? '기록 없음' : undefined,
+            mainChar: e.player_info?.main_char_info,
+            subChar: e.player_info?.sub_char_info,
+            isMe: me != null && e.online_name === me,
+          }
+        })}
+        label="전체 랭킹"
+        detailLabel="전적"
+        emptyMsg="검색 결과가 없습니다"
+        onSelect={setSelectedNpid}
+      />
       {selectedNpid && (
-        <PlayerHistoryPanel npid={selectedNpid} leaderboardEntry={data?.entries.find(e => e.np_id === selectedNpid)} onClose={() => setSelectedNpid(null)} />
+        <PlayerHistoryPanel npid={selectedNpid} leaderboardEntry={data?.entries.find(e => e.np_id === selectedNpid)} leaderboardEntries={data?.entries} onClose={() => setSelectedNpid(null)} />
       )}
     </div>
   )

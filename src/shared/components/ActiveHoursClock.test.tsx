@@ -26,11 +26,13 @@ const stripHours = (hours: number[]) =>
     render(<ActiveHoursClock hours={hours} />).container.querySelectorAll('.activity-timeline-cells span'),
   ).map((cell) => cell.getAttribute('title'))
 
-it('runs the timeline strip from the start of the statistics day', () => {
+// 08:00 to 08:00 --- the hour a person's day starts, which is the cut this
+// strip is about. The aggregate charts use their own boundary.
+it("runs the timeline strip from the start of a player's day", () => {
   const titles = stripHours([])
   expect(titles).toHaveLength(24)
-  expect(titles[0]).toBe('06:00')
-  expect(titles[23]).toBe('05:00')
+  expect(titles[0]).toBe('08:00')
+  expect(titles[23]).toBe('07:00')
 })
 
 it('keeps a late-night session contiguous at the end of the strip', () => {
@@ -40,5 +42,6 @@ it('keeps a late-night session contiguous at the end of the strip', () => {
     .map(({ index }) => index)
 
   // Five adjacent cells, not two groups split across the strip's two ends.
-  expect(active).toEqual([16, 17, 18, 19, 20])
+  // 22:00 is 14 hours after the 08:00 the strip opens on.
+  expect(active).toEqual([14, 15, 16, 17, 18])
 })

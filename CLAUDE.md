@@ -130,11 +130,41 @@ the cards' h3) without spending a toolbar's height above the figures.
   the groups back in `GROUP_ORDER`. Without that the KPI reorders itself on
   every 5s poll.
 
-`MiniCharCell` is the row-sized counterpart to `shared/components/CharCell`:
-same portrait and rank badge, no win/loss column. Below 760px the row wraps to
-two lines and positions the two characters by **source order**
-(`:nth-of-type`), so main must render before sub — `Overview.test.tsx` pins
-that.
+The two ranking cards are `shared/components/RankList`, the same component the
+leaderboard tab and 통계 draw — see **Rankings** below.
+
+### Rankings
+
+**One list, three tabs.** The leaderboard, 이번 주 활동왕 on 통계, and the two
+summary cards on the home page show the same five things about the same
+players — position, name, the figure the list is ranked by, main, sub. They
+used to be two `<table>`s of differing column counts and a grid of `<li>`s, so
+the same player looked like different data depending on which tab you reached
+them from. `shared/components/RankList` is the only thing that renders a
+ranking now; a caller supplies rows and the heading over the figure.
+
+It is a **grid carrying the table roles** (`role="table"/"row"/"columnheader"/
+"cell"`) rather than a real `<table>`: below 760px the figure moves *under* the
+name, which table layout cannot express. Five tracks do not fit on a phone —
+the characters and the figure took 262 of the home row's 298px and left the
+name 36 — so the phone layout runs four columns and two lines. The cells are
+placed by **`:nth-child`, never `:nth-of-type`**: every child of a row is a
+`<span>`, so by type they all count as one and a `:nth-of-type` rule silently
+selects the position cell instead.
+
+`rank` is the position shown and the one the podium colours key off, and it
+defaults to the row's place in the list. Pass it explicitly wherever the list
+can be filtered — the leaderboard does — or a filtered view awards a medal to
+whoever happens to land in the top three rows.
+
+`MiniCharCell` is the character cell every ranking uses: the portrait, rank
+badge, win rate and record at row size. `shared/components/CharCell` is the
+larger one, left to the history panel and the profile card.
+
+The rules live in `styles/ranking.css`, imported directly after `overview.css`
+because that is where they were written — moving them would reorder them
+against the unlayered rules in `boards.css`, `leaderboard.css` and
+`responsive.css`.
 
 ### Routing
 

@@ -47,7 +47,8 @@ test.describe('Reservation', () => {
 
     await modal.getByRole('button', { name: '계급 선택' }).click()
     const rankPicker = page.locator('#reservation-rank-picker')
-    await expect(rankPicker.locator('button[aria-pressed]')).toHaveCount(36)
+    // All 43 TTT2 ranks, Beginner through True Tekken God.
+    await expect(rankPicker.locator('button[aria-pressed]')).toHaveCount(43)
     await rankPicker.getByRole('button', { name: /Yaksa/ }).click()
     await rankPicker.getByRole('button', { name: /Vanquisher/ }).click()
     await rankPicker.getByRole('button', { name: '선택 완료' }).click()
@@ -111,7 +112,7 @@ test.describe('Reservation', () => {
     await expect(detail.getByText('+2')).toHaveCount(0)
   })
 
-  test('surfaces a list-refresh failure inside the modal while it is open', async ({ page }) => {
+  test('reports a failed list load in the list, with the panel chrome intact', async ({ page }) => {
     await page.route('**/api/reservations?**', async (route) => {
       if (route.request().method() !== 'GET') return route.fallback()
       return route.fulfill({
@@ -123,14 +124,18 @@ test.describe('Reservation', () => {
     await page.reload()
     await page.getByRole('tab', { name: '예약' }).click()
 
+    // A failed list load is a state of the list, not of the whole tab: the
+    // reason and a retry sit where the reservations would have been, and it
+    // offers a way out rather than only reporting the failure.
     const alert = page.getByRole('alert')
-    await expect(alert).toHaveText('예약을 불러오지 못했습니다.')
+    await expect(alert).toContainText('예약을 불러오지 못했습니다.')
+    await expect(alert.getByRole('button', { name: '다시 시도' })).toBeVisible()
     expect(await isTopmost(alert)).toBe(true)
 
-    await page.getByRole('button', { name: '+ 예약 추가' }).click()
-    const modal = page.getByRole('dialog', { name: '예약 추가' })
-    await expect(modal.getByRole('alert')).toBeVisible()
-    expect(await isTopmost(modal.getByRole('alert'))).toBe(true)
+    // The chrome around the data never waited on the response, so posting a
+    // reservation is still reachable while the list is broken.
+    await expect(page.getByRole('button', { name: '+ 예약 추가' })).toBeVisible()
+    await expect(page.getByRole('group', { name: '매치 종류 필터' })).toBeVisible()
   })
 
   test('shows the failure reason on top of the modal, not hidden behind it', async ({ page }) => {
@@ -225,10 +230,13 @@ test.describe('Reservation deletion', () => {
     await openReservationTab(page, [])
     const detail = await createReservation(page)
 
-    page.once('dialog', (dialog) => dialog.accept())
     const deleteRequest = page.waitForRequest((request) =>
       request.method() === 'DELETE' && /\/reservations\/\d+$/.test(new URL(request.url()).pathname))
     await detail.getByRole('button', { name: '예약 삭제' }).click()
+    // The app's own confirmation, not window.confirm — so it is a node in the
+    // page and `page.on('dialog')` would wait forever for a browser dialog.
+    await page.getByRole('alertdialog', { name: '예약을 삭제할까요?' })
+      .getByRole('button', { name: '삭제' }).click()
 
     // The owner token proves the request is authorised; without it the backend
     // rejects the delete, so a passing UI assertion alone would not mean much.
@@ -241,9 +249,11 @@ test.describe('Reservation deletion', () => {
     await openReservationTab(page, [])
     const detail = await createReservation(page)
 
-    page.once('dialog', (dialog) => dialog.dismiss())
     await detail.getByRole('button', { name: '예약 삭제' }).click()
+    await page.getByRole('alertdialog', { name: '예약을 삭제할까요?' })
+      .getByRole('button', { name: '취소' }).click()
 
+    await expect(page.getByRole('alertdialog')).toHaveCount(0)
     await showList(page, isMobile)
     await expect(page.getByRole('button', { name: /나 모집중/ })).toBeVisible()
   })

@@ -1,3 +1,4 @@
+import { DAY_START_HOUR, dayHours, hourLabel as hh } from '@/shared/dayBoundary'
 function sectorPath(hour: number, cx: number, cy: number, innerRadius: number, outerRadius: number) {
   const gap = 0.045
   const start = hour * (Math.PI * 2 / 24) - Math.PI / 2 + gap
@@ -13,11 +14,13 @@ function sectorPath(hour: number, cx: number, cy: number, innerRadius: number, o
   return `M${x1} ${y1} L${x2} ${y2} A${outerRadius} ${outerRadius} 0 0 1 ${x3} ${y3} L${x4} ${y4} A${innerRadius} ${innerRadius} 0 0 0 ${x1} ${y1}Z`
 }
 
-/** The statistics day starts at 06:00 KST, so the linear strip below the ring
- *  reads from there: a 22-02 session is one block at the right-hand end
- *  instead of two stubs pinned to opposite edges. */
-const STAT_DAY_START_HOUR = 6
-const STRIP_HOURS = Array.from({ length: 24 }, (_, offset) => (STAT_DAY_START_HOUR + offset) % 24)
+/** The strip below the ring reads from the day boundary rather than from
+ *  00:00, so a 22-02 session is one block at the right-hand end instead of two
+ *  stubs pinned to opposite edges. The boundary itself lives in
+ *  `shared/dayBoundary`, which the stats tab's hourly chart reads too. */
+const STRIP_HOURS = dayHours()
+/** Five marks, one every six hours, starting and ending at the boundary. */
+const STRIP_LABELS = Array.from({ length: 5 }, (_, step) => hh((DAY_START_HOUR + step * 6) % 24))
 
 /** The longest unbroken run of active hours, measured around the clock.
  *  A late-night player is active 22–03, one run through midnight --- reading
@@ -98,18 +101,18 @@ export default function ActiveHoursClock({ hours }: { hours: number[] }) {
           <span><i aria-hidden="true" /> ACTIVE WINDOW</span>
           <strong>{insight.count}<small> / 24시간</small></strong>
         </div>
-        <div className="activity-timeline" aria-label="시간대별 활동 분포 (06시 기준)">
+        <div className="activity-timeline" aria-label={`시간대별 활동 분포 (${hh(DAY_START_HOUR)}시 기준)`}>
           <div className="activity-timeline-cells">
             {STRIP_HOURS.map((hour) => (
               <span
                 key={hour}
                 className={`${active.has(hour) ? 'is-active' : ''}${hour === 0 ? ' starts-next-day' : ''}`}
-                title={`${String(hour).padStart(2, '0')}:00`}
+                title={`${hh(hour)}:00`}
               />
             ))}
           </div>
           <div className="activity-timeline-labels" aria-hidden="true">
-            <span>06</span><span>12</span><span>18</span><span>00</span><span>06</span>
+            {STRIP_LABELS.map((label, step) => <span key={step}>{label}</span>)}
           </div>
         </div>
       </div>

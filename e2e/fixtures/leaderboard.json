@@ -7,13 +7,19 @@
       "player_info": {
         "main_char_info": {
           "name": "Jin",
-          "rank_info": { "name": "Tekken Lord", "tier": "S" },
+          "rank_info": {
+            "name": "Yaksa",
+            "tier": "파랑단"
+          },
           "wins": 320,
           "losses": 45
         },
         "sub_char_info": {
           "name": "Devil Jin",
-          "rank_info": { "name": "Tekken Emperor", "tier": "S" },
+          "rank_info": {
+            "name": "Raijin",
+            "tier": "파랑단"
+          },
           "wins": 210,
           "losses": 30
         }
@@ -25,13 +31,19 @@
       "player_info": {
         "main_char_info": {
           "name": "Kazuya",
-          "rank_info": { "name": "Vanquisher", "tier": "A" },
+          "rank_info": {
+            "name": "Vanquisher",
+            "tier": "주황단"
+          },
           "wins": 250,
           "losses": 80
         },
         "sub_char_info": {
           "name": "Heihachi",
-          "rank_info": { "name": "Destroyer", "tier": "A" },
+          "rank_info": {
+            "name": "Destroyer",
+            "tier": "주황단"
+          },
           "wins": 180,
           "losses": 60
         }
@@ -43,13 +55,19 @@
       "player_info": {
         "main_char_info": {
           "name": "Lars",
-          "rank_info": { "name": "Warrior", "tier": "B" },
+          "rank_info": {
+            "name": "Warrior",
+            "tier": "노랑단"
+          },
           "wins": 150,
           "losses": 120
         },
         "sub_char_info": {
           "name": "Alisa",
-          "rank_info": { "name": "Brawler", "tier": "B" },
+          "rank_info": {
+            "name": "Brawler",
+            "tier": "녹단"
+          },
           "wins": 100,
           "losses": 90
         }
@@ -61,7 +79,10 @@
       "player_info": {
         "main_char_info": {
           "name": "Kuma",
-          "rank_info": { "name": "Marauder", "tier": "C" },
+          "rank_info": {
+            "name": "Marauder",
+            "tier": "녹단"
+          },
           "wins": 80,
           "losses": 140
         },
@@ -74,13 +95,19 @@
       "player_info": {
         "main_char_info": {
           "name": "Law",
-          "rank_info": { "name": "Initiate", "tier": "D" },
+          "rank_info": {
+            "name": "Disciple",
+            "tier": "액자단"
+          },
           "wins": 10,
           "losses": 25
         },
         "sub_char_info": {
           "name": "Paul",
-          "rank_info": { "name": "Initiate", "tier": "D" },
+          "rank_info": {
+            "name": "Disciple",
+            "tier": "액자단"
+          },
           "wins": 5,
           "losses": 15
         }

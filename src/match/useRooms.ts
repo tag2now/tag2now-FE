@@ -1,11 +1,11 @@
 import usePolledData, {PolledState} from "@/shared/hooks/usePolledData";
 import type {RoomsData, Room} from "@/match/types";
 import {GET} from "@/shared/util/api";
-
-const ROOMS_REFRESH_INTERVAL = 5_000
+import { API } from "@/config/endpoints";
+import { POLL } from "@/config/polling";
 
 export const fetchRoomsAll =  async () => {
-  const data: Record<string, any> = await GET('rooms/all');
+  const data: Record<string, any> = await GET(API.rooms().path);
   // @ts-ignore
 
   Object.values(data).forEach(rooms =>
@@ -33,5 +33,5 @@ export const fetchRoomsAll =  async () => {
 }
 
 export default function useRooms(): PolledState<RoomsData> {
-  return usePolledData(fetchRoomsAll, ROOMS_REFRESH_INTERVAL)
+  return usePolledData(fetchRoomsAll, POLL.rooms)
 }

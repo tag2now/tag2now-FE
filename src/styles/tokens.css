@@ -1,0 +1,201 @@
+/* Design tokens. The one file in here that is genuinely central: every
+   other file resolves its colours, spacing, radii and type steps from these.
+   Tailwind reads @theme and generates utilities from it, so a name added here
+   becomes `bg-*`/`text-*`/`border-*` with no config file to update. */
+
+/* ─── Design tokens ───────────────────────────────────────── */
+@theme {
+  /* Header content and .app-layout share this width so their edges align. */
+  --content-max: 1050px;
+  /* The surface ladder. These four used to span 0x0c-0x1f, so a panel sat
+     6/255 above the page behind it and its border did the entire job of
+     separating them — at which point the whole site read as one flat plane.
+     The ground drops and the panel rises, which roughly triples the step
+     without lightening the theme: the deep ground is darker than it was. */
+  --color-bg-deep: #08080a;
+  --color-bg-panel: #17171b;
+  --color-bg-row: #212127;
+  --color-bg-row-alt: #101012;
+  --color-primary: #e63946;
+  /* The neutral every translucent overlay, hairline and raised surface is mixed
+     from. It is white today; naming it is what makes "warm the greys slightly"
+     a one-line change rather than 48 hand-edited rgba() values. Rules below
+     reach for it through color-mix rather than writing rgba(255,255,255,…). */
+  --color-surface-tint: #ffffff;
+  /* The surface ladder, darkest to lightest. These were loose hex values spread
+     through the rules — seven greys within 0x12 of each other, with nothing
+     saying which belonged where. Naming them is what makes the depth order a
+     rule rather than a coincidence. */
+  --color-bg-sunken: #121214;   /* under a panel: modal body, writing form */
+  --color-bg-head: #1a1a1e;     /* sticky table header */
+  --color-bg-field: #1b1b1f;    /* input and select fill */
+  --color-bg-float: #1c1c21;    /* floating menu above everything */
+  --color-bg-field-focus: #232329;
+  --color-bg-embed: #090909;    /* letterbox behind a video embed */
+  /* Pure black, for recesses. Named for the same reason as the surface tint:
+     so "lift the shadows" is one edit. */
+  --color-shade: #000000;
+  /* The veil behind a modal. Two points darker than --color-bg-deep rather
+     than the ground itself, which is deliberate: the dialog sits on the deep
+     ground too, so a scrim mixed from the same value would not separate them. */
+  --color-scrim: #060608;
+  --color-primary-dim: #7c2028;
+  /* The brand red lifted for a hover on a filled mark. */
+  --color-primary-bright: #ff5a63;
+  /* One step dimmer than --color-txt-dim, for a control's own chrome (a select
+     chevron) rather than its text. */
+  --color-txt-muted: #93939c;
+  /* Disabled control text. Below the 4.5:1 floor --color-txt-faint holds, and
+     deliberately so: WCAG 1.4.3 exempts inactive controls, and matching the
+     floor here made a disabled field look enabled. */
+  --color-txt-disabled: #7a7a82;
+  --color-primary-glow: rgba(230, 57, 70, 0.14);
+  --color-secondary: #ff9aa0;
+  --color-secondary-light: #ffd2d5;
+  --color-accent: #34d399;
+  --color-error: #f97316;
+  /* Podium. The only medal palette — there used to be a second one (#c0c0c0 /
+     #cd7f32, reached through a RANK_COLORS table whose every branch had become
+     unreachable) so the app carried two answers to "what colour is second
+     place". `medalColors.ts` mirrors these for the inline `--medal` variable
+     the rows set; `tokens.test.ts` is what keeps the two in step. */
+  --color-medal-gold: #f2c85c;
+  --color-medal-silver: #b0c4de;
+  --color-medal-bronze: #e0935c;
+  --color-txt: #f2f2f3;
+  --color-txt-dim: #a3a3ad;
+  /* Tertiary text: eyebrows, field hints, chart labels. Clears 4.5:1 on
+     every surface it lands on, the #1b1b1f input fill included (5.29). */
+  --color-txt-faint: #8e8e98;
+  /* The brand red as *text*. --color-primary is tuned to be a fill and only
+     reaches 4.38 on bg-panel and 4.22 under the dialog veil, so the 9px
+     eyebrows set in it were failing. Same hue (355°) and saturation (76%),
+     lightness raised 56%→66%, which clears 4.5:1 on every surface (5.19 on
+     bg-row, the tightest). Keep --color-primary for fills, borders and icons. */
+  --color-primary-text: #ea6671;
+  --color-primary-hover: rgba(230, 57, 70, 0.10);
+  /* 액자단 (Disciple…Grand Master). tierColors mapped this band to
+     --color-primary while its hex table said #00c8d4 — the two disagreed, so
+     the band was red in one place and teal in the other. Teal wins: red is the
+     brand accent and must not double as a rank. */
+  --color-tier-teal: #2dd4bf;
+  --color-tier-green: #4ade80;
+  --color-tier-yellow: #facc15;
+  --color-tier-orange: #fb923c;
+  --color-tier-red: #f87171;
+  --color-tier-blue: #60a5fa;
+  --color-tier-purple: #c084fc;
+  /* 황금단 — Tekken God and above. The same gold as the first-place medal. */
+  --color-tier-gold: #e4bd67;
+
+  /* Chart series. Recharts writes SVG attributes, which cannot read a custom
+     property, so `chartTheme.ts` holds these as JS strings as well. They are
+     declared here anyway because this file is meant to answer "what colours
+     does this app use" on its own, and because the peak colour used to live
+     in JS alone under the name COLOR_SECONDARY — which is a real token, with
+     a completely different value (#ff9aa0). */
+  --color-chart-peak: #c9a84c;
+  --color-chart-avg: #7f8da0;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-light: rgba(255, 255, 255, 0.10);
+  /* Spacing scale. Every gap/padding/margin in this file resolves to one of
+     these six steps. Before these existed the file used every integer from
+     1-14px (250+ declarations), so each new component re-invented its own
+     rhythm. Pick the nearest step rather than adding a value.
+     These are documentation, not utilities: Tailwind's spacing namespace is
+     `--spacing` (a single multiplier), so named steps cannot generate
+     `p-*`/`gap-*` classes. The rules below use the literal px. */
+  --space-3xs: 2px;
+  --space-2xs: 4px;
+  --space-xs: 6px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  /* Radius was split near-evenly between 6px and 7px across 43 declarations
+     with no rule separating them. Three steps now, one per nesting depth, so
+     a corner inside another corner is always the smaller of the two: the tab
+     panel, the cards laid out inside it, and the rows inside those. Below
+     760px the panel drops to 6px, where it is the viewport and not a card
+     that frames it.
+     Documentation, like the spacing steps above: the rules below use the
+     literal px, so these name the system rather than generate anything. */
+  /* Every character portrait is exactly 204x329 — all 59 of them — so that is
+     the shape they are given wherever they appear. Squaring them meant either
+     cropping the render or fitting it by height and leaving air down both
+     sides, and the two happened in different places, which is why the same
+     face looked like a different asset in the table and in the header. Sites
+     set a height; the width follows from here. */
+  --char-art-ratio: 204 / 329;
+
+  /* The box every rank banner is drawn into. One value, because the match table
+     and the leaderboard show the same art and a difference between them reads
+     as a mistake rather than a distinction. */
+  /* 62x28 is 2.214:1, which sits between the files' own 2.19 (230x105) and
+     2.29 (240x105). Paired with `object-fit: cover` below that means every
+     banner fills the frame exactly and loses at most ~2% off one edge — which
+     is invisible, and is the price of the column having one width instead of
+     the three that `contain` produced from those three source ratios. */
+  --rank-art-w: 62px;
+  --rank-art-h: 28px;
+
+  --radius-panel: 8px;
+  --radius-control: 6px;
+  --radius-row: 4px;
+
+  /* Type scale.
+     Fourteen steps, not six. The six-step scale described an intent the
+     stylesheet never followed: it declared a floor of 11px while 36 rules set
+     8, 9 or 10px, and named nothing for the 13/15/17/19/26px sizes the design
+     genuinely uses. A scale that half the rules must ignore cannot be enforced,
+     so the numeric steps are named rather than the rules resized — no pixel
+     moves, and `font-size` can now be linted to this list.
+     The named steps (2xs..xl) remain the ones to reach for; the numeric ones
+     (--text-13 and friends) exist because those sizes are already in use, and
+     a new rule should prefer a neighbour with a name.
+     Tailwind 4 reads font sizes from the `--text-*` namespace;
+     these were declared as `--font-size-*`, which registers nothing - so
+     `text-sm`/`text-base`/`text-lg` silently fell back to Tailwind's stock
+     sizes and `text-md` matched no rule at all, inheriting the 13px body.
+     Six steps on a ~1.15 ratio. The previous values were not monotonic -
+     `md` (13px) landed below `sm` (14px) and `2xs` tied with `xs` - so the
+     names could not predict the size and two of the six steps were dead. */
+  --text-5xs: 0.5rem;    /* 8px  - the activity ring's hour ticks, nothing else */
+  --text-4xs: 0.5625rem; /* 9px  - uppercase eyebrows and sidebar headings */
+  --text-3xs: 0.625rem;  /* 10px - field hints, dense badge text */
+  --text-2xs: 0.6875rem; /* 11px - dense chart and timeline labels */
+  --text-xs: 0.75rem;    /* 12px - UI labels, badges */
+  --text-13: 0.8125rem;  /* 13px - compact table data on mobile */
+  --text-sm: 0.875rem;   /* 14px - body, table data */
+  --text-15: 0.9375rem;  /* 15px - profile name, panel subheadings */
+  --text-base: 1rem;     /* 16px - emphasised data, inputs */
+  --text-17: 1.0625rem;  /* 17px - roster position figure */
+  --text-md: 1.125rem;   /* 18px - section headings */
+  --text-19: 1.1875rem;  /* 19px - roster avatar initial */
+  --text-lg: 1.375rem;   /* 22px - page headings */
+  --text-xl: 1.625rem;   /* 26px - the KPI card figure */
+  /* One family. --font-display is the *same* stack on purpose: Pretendard
+     Variable covers the whole weight range, so the display voice is carried by
+     weight and letter-spacing rather than by a second face. The token is kept
+     as the seam a display face would arrive through --- it is not doing
+     anything today, and `font-display` in the markup currently means "set this
+     in the display voice", not "set this in a different font". */
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --font-display: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+
+  /* The weight scale. Six steps, and nothing between them.
+     It had eleven, four of which (450, 730, 760, 780) appeared exactly once
+     each and were invisibly different from the step beside them --- 730 against
+     750 is not a decision a reader can perceive, it is just a number somebody
+     typed. Reach for one of these; if none of them fits, the problem is
+     usually size or colour, not weight.
+       500  quiet supporting text        700  emphasis, most headings
+       600  labels, table headers        750  display figures and panel titles
+       650  row titles, nav              800  the wordmark and the page h1 */
+  --weight-quiet: 500;
+  --weight-label: 600;
+  --weight-row: 650;
+  --weight-strong: 700;
+  --weight-display: 750;
+  --weight-max: 800;
+  --text-display: clamp(1.05rem, 4vw, 1.8rem);
+}

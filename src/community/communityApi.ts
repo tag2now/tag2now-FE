@@ -1,31 +1,50 @@
 import { GET, POST, PATCH, DELETE } from '@/shared/util/api'
+import { API } from '@/config/endpoints'
 import {PostDetail, PostListResponse} from "@/community/types";
 
 export const setIdentity = (name: string) =>
-  POST('community/identity', { name })
+  POST(API.communityIdentity().path, { name })
 
 export const fetchPosts = (page: number, pageSize: number, postType?: string, characters: string[] = []): Promise<PostListResponse> => {
-  // Pairs rather than a Record: characters repeats as ?characters=A&characters=B.
-  const params: [string, string][] = [['page', String(page)], ['page_size', String(pageSize)]]
-  if (postType) params.push(['post_type', postType])
-  characters.forEach((name) => params.push(['characters', name]))
-  return GET('community/posts', params)
+  // URLSearchParams repeats a key for each array entry, which is the shape
+  // FastAPI reads a `list[str]` query parameter from.
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) })
+  if (postType) params.set('post_type', postType)
+  characters.forEach((name) => params.append('characters', name))
+  return GET(API.posts().path, params)
 }
 
 export const fetchPostDetail = (postId: number): Promise<PostDetail> =>
-  GET(`community/posts/${postId}`)
+  GET(API.post(postId).path)
 
-export const createPost = (title: string, body: string, postType: string, characters: string[], youtubeVideoId?: string) =>
-  POST('community/posts', { title, body, post_type: postType, characters, ...(youtubeVideoId && { youtube_video_id: youtubeVideoId }) })
+export interface PostInput {
+  title: string
+  body: string
+  postType: string
+  /** Up to two; the backend rejects a third. */
+  characters: string[]
+  youtubeVideoId?: string
+}
 
-export const updatePost = (postId: number, title: string, body: string, postType: string, characters: string[], youtubeVideoId?: string) =>
-  PATCH(`community/posts/${postId}`, { title, body, post_type: postType, characters, youtube_video_id: youtubeVideoId ?? null })
+export const createPost = ({ title, body, postType, characters, youtubeVideoId }: PostInput) =>
+  POST(API.posts().path, {
+    title, body, post_type: postType, characters,
+    ...(youtubeVideoId && { youtube_video_id: youtubeVideoId }),
+  })
+
+/** PATCH requires every field, so an omitted one is not "leave it alone" — it
+ * is a 422. Both nullable fields are therefore always sent. */
+export const updatePost = (postId: number, { title, body, postType, characters, youtubeVideoId }: PostInput) =>
+  PATCH(API.post(postId).path, {
+    title, body, post_type: postType, characters,
+    youtube_video_id: youtubeVideoId ?? null,
+  })
 
 export const deletePost = (postId: number) =>
-  DELETE(`community/posts/${postId}`)
+  DELETE(API.post(postId).path)
 
 export const createComment = (postId: number, body: string, parentId?: number) =>
-  POST(`community/posts/${postId}/comments`, { body, ...(parentId != null && { parent_id: parentId }) })
+  POST(API.postComments(postId).path, { body, ...(parentId != null && { parent_id: parentId }) })
 
 export const thumbPost = (postId: number, direction: 'up' | 'down') =>
-  POST(`community/posts/${postId}/thumb`, { direction })
+  POST(API.postThumb(postId).path, { direction })

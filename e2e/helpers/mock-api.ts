@@ -37,6 +37,8 @@ interface MockOverrides {
   daily?: unknown
   weeklyTop?: unknown
   hourly?: unknown
+  /** Keyed by npid. A player the map does not name still gets a response. */
+  playerHistory?: Record<string, unknown>
   failEndpoints?: string[]
 }
 
@@ -264,6 +266,29 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     if (url.includes('/weekly-top')) return asJson(route, overrides?.weeklyTop ?? weeklyTopData)
     if (url.includes('/daily')) return asJson(route, overrides?.daily ?? dailyStatsData)
     return asJson(route, overrides?.hourly ?? [])
+  })
+
+  // One player's history. `**/api/history/stats**` above does NOT match this —
+  // the path is /history/players/{npid} — so until this route existed, every
+  // spec that opened the history panel sent its request to whatever the dev
+  // server proxies to, which is production.
+  await page.route('**/api/history/players/**', async (route) => {
+    const npid = decodeURIComponent(new URL(route.request().url()).pathname.split('/').pop() ?? '')
+    return asJson(route, overrides?.playerHistory?.[npid] ?? {
+      npid,
+      times_seen: 120,
+      days_active: 12,
+      first_seen: '2026-08-01',
+      last_seen: '2026-09-15',
+      room_type_counts: { rank_match: 80, player_match: 40 },
+      // Everyone played with the next two people on the board, so a spec can
+      // open a partner and land on a player the leaderboard fixture knows.
+      top_played_with: [
+        { npid: 'np_002', online_name: 'KingOfIronFist', times_together: 30 },
+        { npid: 'np_003', online_name: 'TagComboKing', times_together: 21 },
+      ].filter((partner) => partner.npid !== npid),
+      active_hours: [20, 21, 22, 23],
+    })
   })
 
   // Single handler for all community API calls

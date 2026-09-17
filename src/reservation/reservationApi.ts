@@ -1,65 +1,70 @@
 import { DELETE, GET, PATCH, POST } from '@/shared/util/api'
 import { AppError } from '@/shared/util/AppError'
+import { API } from '@/config/endpoints'
+import {
+  readToken, removeToken, writeToken,
+  reservationCommentKey, reservationOwnerKey, reservationParticipantKey,
+} from '@/shared/util/storage'
 
 export type ApiParticipant = { id: number; display_name: string }
 export type ApiReservation = { id: number; start_at: string; host_display_name: string; host_ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string; status: 'open' | 'matched' | 'cancelled' | 'ended'; participant_count: number; participants?: ApiParticipant[]; created_at: string }
 export type CreateReservationInput = { start_time: string; display_name: string; ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string }
 export type ApiComment = { id: number; reservation_id: number; author: string; body: string; created_at: string }
-const participantKey = (id: number) => `reservation-participant-${id}`
-const commentKey = (id: number) => `reservation-comment-${id}`
-const ownerKey = (id: number) => `reservation-owner-${id}`
+const participantKey = reservationParticipantKey
+const commentKey = reservationCommentKey
+const ownerKey = reservationOwnerKey
 
 // The window is the server's to decide — now until the next 06:00 KST — so the
 // client no longer names a date. A session that runs past midnight stays on one list.
-export const fetchReservations = (): Promise<ApiReservation[]> => GET('reservations')
+export const fetchReservations = (): Promise<ApiReservation[]> => GET(API.reservations().path)
 export async function createReservation(data: CreateReservationInput) {
-  const result = await POST('reservations', data)
-  localStorage.setItem(ownerKey(result.reservation.id), result.owner_token)
+  const result = await POST(API.reservations().path, data)
+  writeToken(ownerKey(result.reservation.id), result.owner_token)
   return result.reservation as ApiReservation
 }
 export async function joinReservation(id: number, displayName: string) {
-  const result = await POST(`reservations/${id}/participants`, { display_name: displayName, ranks: [] })
-  localStorage.setItem(participantKey(id), result.participant_token)
+  const result = await POST(API.reservationParticipants(id).path, { display_name: displayName, ranks: [] })
+  writeToken(participantKey(id), result.participant_token)
   return result.reservation as ApiReservation
 }
 export async function cancelParticipation(id: number) {
-  const token = localStorage.getItem(participantKey(id))
+  const token = readToken(participantKey(id))
   if (!token) throw new AppError('참가 취소 권한이 없습니다.')
-  const result = await DELETE(`reservations/${id}/participants/me`, { 'X-Reservation-Token': token })
-  localStorage.removeItem(participantKey(id))
+  const result = await DELETE(API.ownParticipation(id).path, { 'X-Reservation-Token': token })
+  removeToken(participantKey(id))
   return result as ApiReservation
 }
 export type UpdateReservationInput = Partial<Pick<CreateReservationInput, 'start_time' | 'ranks' | 'match_type' | 'capacity' | 'memo'>>
 
 export async function updateReservation(id: number, patch: UpdateReservationInput) {
-  const token = localStorage.getItem(ownerKey(id))
+  const token = readToken(ownerKey(id))
   if (!token) throw new AppError('예약을 수정할 권한이 없습니다.')
-  return await PATCH(`reservations/${id}`, patch, { 'X-Reservation-Token': token }) as ApiReservation
+  return await PATCH(API.reservation(id).path, patch, { 'X-Reservation-Token': token }) as ApiReservation
 }
 
 export async function cancelReservation(id: number) {
-  const token = localStorage.getItem(ownerKey(id))
+  const token = readToken(ownerKey(id))
   if (!token) throw new AppError('예약을 삭제할 권한이 없습니다.')
-  await DELETE(`reservations/${id}`, { 'X-Reservation-Token': token })
-  localStorage.removeItem(ownerKey(id))
+  await DELETE(API.reservation(id).path, { 'X-Reservation-Token': token })
+  removeToken(ownerKey(id))
 }
-export const hasParticipation = (id: number) => localStorage.getItem(participantKey(id)) !== null
-export const isOwner = (id: number) => localStorage.getItem(ownerKey(id)) !== null
+export const hasParticipation = (id: number) => readToken(participantKey(id)) !== null
+export const isOwner = (id: number) => readToken(ownerKey(id)) !== null
 
-export const fetchComments = (id: number): Promise<ApiComment[]> => GET(`reservations/${id}/comments`)
+export const fetchComments = (id: number): Promise<ApiComment[]> => GET(API.reservationComments(id).path)
 
 export async function createComment(id: number, displayName: string, body: string) {
-  const result = await POST(`reservations/${id}/comments`, { display_name: displayName, body })
-  localStorage.setItem(commentKey(result.comment.id), result.author_token)
+  const result = await POST(API.reservationComments(id).path, { display_name: displayName, body })
+  writeToken(commentKey(result.comment.id), result.author_token)
   return result.comment as ApiComment
 }
 
 export async function deleteComment(reservationId: number, commentId: number) {
-  const token = localStorage.getItem(commentKey(commentId))
+  const token = readToken(commentKey(commentId))
   if (!token) throw new AppError('댓글을 삭제할 권한이 없습니다.')
-  await DELETE(`reservations/${reservationId}/comments/${commentId}`, { 'X-Reservation-Token': token })
-  localStorage.removeItem(commentKey(commentId))
+  await DELETE(API.reservationComment(reservationId, commentId).path, { 'X-Reservation-Token': token })
+  removeToken(commentKey(commentId))
 }
 
 /** Authorship is possession of the token this browser was handed when it posted. */
-export const isCommentAuthor = (commentId: number) => localStorage.getItem(commentKey(commentId)) !== null
+export const isCommentAuthor = (commentId: number) => readToken(commentKey(commentId)) !== null

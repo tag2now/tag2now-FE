@@ -1,0 +1,61 @@
+/* Element defaults and keyframes. */
+
+/* ─── Base ────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { font-family: var(--font-sans); }
+
+  body {
+    margin: 0;
+    background: var(--color-bg-deep);
+    color: var(--color-txt);
+    font-family: var(--font-sans);
+    font-size: var(--text-13);
+    line-height: 1.5;
+    /* 375px, the iPhone SE 2/3 width, is the narrowest viewport this project
+       supports; below it the page scrolls horizontally rather than reflowing.
+       Was 320px, which nothing tested --- Playwright's mobile project is a
+       Pixel 5 at 393px --- and which no longer matches any current handset. */
+    min-width: 375px;
+    min-height: 100vh;
+    background-image: linear-gradient(color-mix(in srgb, var(--color-surface-tint) 1.8%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--color-surface-tint) 1.8%, transparent) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* One scrollbar everywhere.
+     There were nine scrollable regions and only three of them were styled, so
+     a select menu scrolled with a thin red bar while the page it sat on used
+     the operating system's grey one and the patch-notes dialog used a third.
+     This is `*` rather than a class because the page's own viewport scrollbar
+     — the one most visible of all — belongs to the document, which no class
+     could reach. The two strips that deliberately hide theirs override it
+     below on specificity. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-primary) 45%, transparent) transparent;
+  }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-corner { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--color-primary) 42%, transparent);
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-primary) 65%, transparent);
+    background-clip: padding-box;
+  }
+
+  button, input, textarea, select { font: inherit; }
+  button { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+}
+
+/* ─── Animations ──────────────────────────────────────────── */
+@keyframes loading-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}

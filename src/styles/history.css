@@ -1,0 +1,99 @@
+/* The player history dialog: its header, metrics, partner list and the
+   activity ring/timeline. Opened from any table that shows a player name. */
+
+.history-backdrop { padding: 16px; }
+/* Capped to the screen at every width, with the header and the period picker
+   pinned and only the body scrolling. It used to grow past the viewport and
+   let the backdrop scroll instead, which put the chrome and the content on
+   separate scroll surfaces --- and a translucent toolbar over content moving
+   beneath it is what made rows look half-painted. */
+.history-dialog { position: relative; display: flex; width: min(860px, 100%); max-height: calc(100dvh - 48px); min-width: 0; flex-direction: column; margin: auto; overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-panel); box-shadow: 0 22px 54px rgba(0,0,0,.4); }
+.history-header { display: flex; flex: 0 0 auto; min-height: 84px; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 16px; border-bottom: 1px solid var(--color-border-light); background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
+.history-title-group { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.history-title-icon { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary); }
+.history-title-group > div { min-width: 0; }
+.history-eyebrow { margin-bottom: 2px; color: var(--color-primary-text); font-size: var(--text-4xs); font-weight: var(--weight-max); letter-spacing: .14em; }
+.history-title-group h2 { overflow: hidden; color: var(--color-txt); font-size: var(--text-md); font-weight: var(--weight-display); line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.history-title-group div > p:last-child { margin-top: 2px; color: var(--color-txt-dim); font-size: var(--text-2xs); }
+.modal-close { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px solid var(--color-border-light); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 2%, transparent); color: var(--color-txt-dim); cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease; }
+.modal-close:hover { border-color: color-mix(in srgb, var(--color-primary) 38%, transparent); background: color-mix(in srgb, var(--color-primary) 9%, transparent); color: var(--color-txt); }
+.modal-close:focus-visible, .history-period button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.history-toolbar { display: flex; flex: 0 0 auto; min-height: 64px; background: var(--color-bg-panel); align-items: center; justify-content: space-between; gap: 16px; padding: 8px 16px; border-bottom: 1px solid var(--color-border); }
+.history-rank-summary { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.history-rank-icon { display: grid; width: 28px; height: 28px; flex: 0 0 auto; place-items: center; border-radius: 6px; background: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary); }
+.history-rank-copy { display: flex; flex-direction: column; padding-right: 4px; }
+.history-rank-copy small { color: var(--color-txt-dim); font-size: var(--text-4xs); font-weight: var(--weight-row); }
+.history-rank-copy strong { color: var(--color-primary); font-size: var(--text-15); font-variant-numeric: tabular-nums; }
+.history-character-pair { display: flex; min-width: 0; align-items: center; gap: 4px; padding-left: 8px; border-left: 1px solid var(--color-border-light); }
+.history-character-pair > * { min-width: 0; }
+.history-toolbar-label { display: flex; align-items: center; gap: 6px; color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-strong); }
+.history-period { display: flex; flex: 0 0 auto; padding: 2px; border: 1px solid var(--color-border-light); border-radius: 6px; background: color-mix(in srgb, var(--color-shade) 12%, transparent); }
+.history-period button { min-width: 52px; height: 30px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-strong); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
+.history-period button:hover { color: var(--color-txt); }
+.history-period button[aria-pressed="true"] { background: var(--color-primary); color: var(--color-bg-deep); }
+.history-body { min-height: 0; flex: 1 1 auto; overflow-y: auto; padding: 16px 16px 16px; }
+.history-metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin-bottom: 12px; }
+.history-stat { display: flex; min-width: 0; min-height: 68px; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.8%, transparent); }
+.history-stat > span { display: grid; width: 28px; height: 28px; flex: 0 0 auto; place-items: center; border-radius: 6px; background: color-mix(in srgb, var(--color-primary) 9%, transparent); color: var(--color-primary-text); }
+.history-stat div { min-width: 0; }
+.history-stat small { display: block; margin-bottom: 2px; color: var(--color-txt-dim); font-size: var(--text-4xs); font-weight: var(--weight-row); white-space: nowrap; }
+.history-stat strong { display: block; overflow: hidden; color: var(--color-txt); font-size: var(--text-13); font-weight: var(--weight-display); font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+.history-content-grid { display: grid; grid-template-columns: minmax(0,.95fr) minmax(280px,1.05fr); gap: 12px; }
+.history-section { min-width: 0; min-height: 236px; padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
+.history-section-heading { display: flex; min-height: 28px; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--color-border); }
+.history-section-heading > div { display: flex; align-items: center; gap: 6px; color: var(--color-primary); }
+.history-section-heading h3 { color: var(--color-txt); font-size: var(--text-xs); font-weight: var(--weight-strong); }
+.history-section-heading > span { color: var(--color-txt-dim); font-size: var(--text-4xs); font-weight: var(--weight-display); letter-spacing: .08em; }
+/* The way back, beside the close button. It names the player it returns to, so
+   the two controls in this corner cannot be confused: one steps back a player,
+   the other leaves. */
+.history-header-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+.history-back { display: inline-flex; max-width: 160px; min-height: 32px; align-items: center; gap: 5px; padding: 0 10px; border: 1px solid var(--color-border-light); border-radius: 6px; background: transparent; color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-label); cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease; }
+.history-back:hover { border-color: color-mix(in srgb, var(--color-primary) 40%, transparent); background: color-mix(in srgb, var(--color-primary) 8%, transparent); color: var(--color-primary-text); }
+.history-back:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.history-back span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.history-partner-list { display: grid; gap: 4px; list-style: none; }
+.history-partner-list li { display: block; }
+/* The row is the control now. It carried this hover treatment while being inert
+   — a row that lights up under the pointer and then does nothing is a promise
+   the panel was not keeping. */
+.history-partner-row { display: grid; width: 100%; min-height: 38px; grid-template-columns: 24px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 0 8px; border: 1px solid transparent; border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 2%, transparent); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease; }
+.history-partner-row:hover { border-color: color-mix(in srgb, var(--color-primary) 22%, transparent); background: color-mix(in srgb, var(--color-primary) 5.5%, transparent); }
+.history-partner-row:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.history-partner-rank { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 4.5%, transparent); color: var(--color-txt-dim); font-size: var(--text-4xs); font-weight: var(--weight-max); }
+.history-partner-name { overflow: hidden; color: var(--color-txt); font-size: var(--text-2xs); font-weight: var(--weight-row); text-overflow: ellipsis; white-space: nowrap; }
+.history-partner-list strong { color: var(--color-primary); font-size: var(--text-13); font-variant-numeric: tabular-nums; }
+.history-partner-list strong small { margin-left: 2px; color: var(--color-txt-dim); font-size: var(--text-4xs); }
+.history-activity { display: flex; flex-direction: column; }
+.history-clock { min-height: 0; flex: 1; }
+.activity-insight { display: grid; height: 100%; grid-template-columns: minmax(150px,.82fr) minmax(140px,1fr); align-items: center; gap: 8px; }
+.activity-ring-wrap { position: relative; width: min(100%,178px); aspect-ratio: 1; margin-inline: auto; }
+.activity-ring-wrap svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.activity-ring-inner { fill: color-mix(in srgb, var(--color-shade) 10%, transparent); stroke: color-mix(in srgb, var(--color-surface-tint) 5.5%, transparent); stroke-width: 1; }
+.activity-segment { fill: color-mix(in srgb, var(--color-surface-tint) 4.5%, transparent); stroke: transparent; transition: fill 150ms ease; }
+.activity-segment.is-active { fill: var(--color-primary); }
+.activity-segment.is-active:hover { fill: var(--color-primary-bright); }
+.activity-hour-label { fill: var(--color-txt-faint); font-family: var(--font-sans); font-size: var(--text-4xs); font-weight: var(--weight-strong); }
+.activity-ring-center { position: absolute; inset: 50% auto auto 50%; display: flex; width: 82px; transform: translate(-50%,-50%); align-items: center; flex-direction: column; text-align: center; pointer-events: none; }
+.activity-ring-center small { color: var(--color-txt-dim); font-size: var(--text-5xs); font-weight: var(--weight-row); letter-spacing: .04em; }
+.activity-ring-center strong { margin-top: 2px; color: var(--color-txt); font-size: var(--text-2xs); font-weight: var(--weight-display); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.activity-ring-center span { margin-top: 2px; color: var(--color-txt-faint); font-size: var(--text-4xs); }
+.activity-summary { display: flex; min-width: 0; flex-direction: column; gap: 12px; padding: 12px 8px 8px 12px; border-left: 1px solid var(--color-border); }
+.activity-summary-copy { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+.activity-summary-copy > span { display: flex; align-items: center; gap: 4px; color: var(--color-txt-dim); font-size: var(--text-5xs); font-weight: var(--weight-display); letter-spacing: .08em; }
+.activity-summary-copy i { width: 6px; height: 6px; border-radius: 6px; background: var(--color-primary); }
+.activity-summary-copy strong { color: var(--color-txt); font-size: var(--text-md); font-weight: var(--weight-display); line-height: 1; font-variant-numeric: tabular-nums; }
+.activity-summary-copy strong small { color: var(--color-txt-dim); font-size: var(--text-5xs); font-weight: var(--weight-label); }
+.activity-timeline { min-width: 0; }
+.activity-timeline-cells { display: grid; grid-template-columns: repeat(24,minmax(2px,1fr)); gap: 2px; height: 42px; align-items: end; padding: 6px 6px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-shade) 10%, transparent); }
+.activity-timeline-cells span { height: 8px; border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 6%, transparent); }
+.activity-timeline-cells span.is-active { height: 26px; background: var(--color-primary); }
+/* The strip runs from the day boundary, not from 00:00, so midnight falls
+   inside it rather than at an edge --- without a mark the cells after it
+   read as the same day. */
+.activity-timeline-cells span.starts-next-day { position: relative; }
+.activity-timeline-cells span.starts-next-day::before { content: ''; position: absolute; left: -2px; top: -6px; bottom: -6px; width: 1px; background: var(--color-border); }
+.activity-timeline-labels { display: flex; justify-content: space-between; margin-top: 4px; color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-row); font-variant-numeric: tabular-nums; }
+.history-empty { display: grid; min-height: 172px; place-items: center; color: var(--color-txt-dim); font-size: var(--text-2xs); text-align: center; }
+.history-state { margin: 16px; }

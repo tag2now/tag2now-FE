@@ -1,23 +1,63 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { RefreshCw } from 'lucide-react'
 
-/** Shared loading/error panel.
+/** Passed as the error message when the failure has no reader-facing reason, so
+ * the detail line is dropped rather than printing a status code at the user.
  *
- * The error state names a way out rather than only reporting the failure: every
- * caller polls, so "try again" is genuinely the fix, and `onRetry` puts the
- * control in the panel the user is already looking at instead of making them
- * hunt for the toolbar behind the error.
+ * A sentinel, not a message: it is only ever compared by identity, and the
+ * detail line is dropped when it matches. It carried a leading NUL, which is
+ * invisible in an editor, makes git treat this file as binary, and would have
+ * survived into anything that serialised an error. A token nobody can type by
+ * accident does the same job in plain text. */
+export const UNEXPLAINED = '__unexplained__'
+
+export interface StatusOptions {
+  /** Announced while loading, and shown if no skeleton is given. */
+  loadingMsg?: string
+  /** Offered on failure. Every caller polls, so retrying is genuinely the fix. */
+  onRetry?: () => void
+  /** A placeholder shaped like the content that is coming. Preferred over the
+   * text: it holds the height the real content will take, so the panel does not
+   * jump when the response lands. */
+  skeleton?: ReactNode
+}
+
+/** Shared loading/error state, without a panel wrapper.
+ *
+ * Use this for a region *inside* a panel — nesting `.panel` in `.panel` doubles
+ * the border and the padding.
  */
-export function panelStatus(loading: boolean, error: string | null, loadingMsg?: string, onRetry?: () => void): ReactElement | null {
-  if (loading) return <div className="panel"><p className="state-msg px-4" role="status">{loadingMsg}</p></div>
+export function statusBody(loading: boolean, error: string | null, options: StatusOptions = {}): ReactElement | null {
+  const { loadingMsg, onRetry, skeleton } = options
+
+  if (loading) {
+    if (skeleton) return <>{skeleton}</>
+    return <p className="state-msg px-4" role="status">{loadingMsg ?? '불러오는 중'}</p>
+  }
+
   if (error) return (
-    <div className="panel">
-      <div className="state-msg error px-4" role="alert">
-        <p>불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
-        <p className="state-msg-detail">{error}</p>
-        {onRetry && <button type="button" className="btn-ghost mt-3" onClick={onRetry}><RefreshCw size={14} aria-hidden="true" /> 다시 시도</button>}
-      </div>
+    <div className="state-msg error px-4" role="alert">
+      <p>불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+      {/* The server's own words only when the server chose them for a reader.
+          An unexplained failure is a status code wearing a message — showing
+          "request failed: 500" under a Korean sentence tells nobody anything
+          and reads as a leak. AppError carries that distinction; a caller with
+          nothing to add passes UNEXPLAINED. */}
+      {error !== UNEXPLAINED && <p className="state-msg-detail">{error}</p>}
+      {onRetry && (
+        <button type="button" className="btn-ghost mt-3" onClick={onRetry}>
+          <RefreshCw size={14} aria-hidden="true" /> 다시 시도
+        </button>
+      )}
     </div>
   )
+
   return null
+}
+
+/** The same state wrapped in its own panel, for a tab whose whole surface is
+ * the thing that failed to load. */
+export function panelStatus(loading: boolean, error: string | null, options: StatusOptions = {}): ReactElement | null {
+  const body = statusBody(loading, error, options)
+  return body && <div className="panel">{body}</div>
 }

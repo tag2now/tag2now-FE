@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
-import { Check, Pencil, Radio, Trophy, UserRound, X } from 'lucide-react'
+import { Check, Radio, Trophy, UserRound, X } from 'lucide-react'
 import { setIdentity } from '@/community/communityApi'
 import type { RoomUser } from '@/match/types'
 import type { CharInfo, LeaderboardEntry } from '@/shared/types'
@@ -14,6 +14,8 @@ import {
   UNTRANSPORTABLE_USERNAME_MSG,
 } from '@/shared/util/cookie'
 import PlayerHistoryPanel from './PlayerHistoryPanel'
+import RankImage from './RankImage'
+import { indexOfRank } from '@/reservation/reservationLabels'
 import CharCell from './CharCell'
 
 interface PlayerProfileCardProps {
@@ -47,6 +49,14 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
     : undefined
   const characters = [entry?.player_info?.main_char_info, entry?.player_info?.sub_char_info]
     .filter((character): character is CharInfo => !!character?.name)
+  /** The higher of the two, because a header has room for one banner and the
+   * one worth showing is the one they have climbed to. `indexOfRank` answers
+   * -1 for a rank this build has not heard of, which loses to any known one
+   * rather than winning by accident. */
+  const bestRank = characters
+    .map((character) => character.rank_info)
+    .filter((rank): rank is NonNullable<typeof rank> => !!rank?.name)
+    .sort((a, b) => indexOfRank(b.name) - indexOfRank(a.name))[0]
   const online = !!username && roomUsers.some(user =>
     (entry?.np_id && user.np_id === entry.np_id) || user.online_name === username,
   )
@@ -119,22 +129,22 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
       >
         <Trophy size={14} aria-hidden="true" /> <span className="profile-history-label">내 정보</span>
       </button>
+      {/* The name renames; the trophy beside it opens the record. They used to
+          do the same thing, with a pencil alongside doing the only other
+          thing --- three controls for two actions, and the one you would
+          reach for first was the duplicate. */}
+      {/* The same byline a post row carries: rank banner, place, name. Signed
+          in, the header said only the name --- so the one place you are always
+          looking told you less about yourself than a comment you left. */}
+      <RankImage rankInfo={bestRank} className="author-badge-rank" />
+      {entry && <span className="author-badge-place">#{entry.rank}</span>}
       <button
         type="button"
         className="profile-name"
-        onClick={() => setProfileOpen(true)}
-        disabled={!entry}
-        aria-label={`${username} 헤더에서 내 전적 보기`}
-      >
-        <span>{username}</span>
-      </button>
-      <button
-        type="button"
-        className="profile-edit"
         onClick={() => startEditing('header')}
         aria-label={`${username} 헤더에서 유저명 수정`}
       >
-        <Pencil size={14} aria-hidden="true" />
+        <span>{username}</span>
       </button>
     </div>
   ) : (
@@ -153,14 +163,6 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
                 <Radio size={12} aria-hidden="true" />
                 {online ? '온라인' : '오프라인'}
               </small>
-              <button
-                type="button"
-                className="sidebar-profile-edit"
-                onClick={() => startEditing('sidebar')}
-                aria-label={`${username} 유저명 수정`}
-              >
-                <Pencil size={14} aria-hidden="true" />
-              </button>
             </div>
           )}
         </div>
@@ -173,9 +175,8 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
               <button
                 type="button"
                 className="sidebar-profile-name"
-                onClick={() => setProfileOpen(true)}
-                disabled={!entry}
-                aria-label={`${username} 내 정보 보기`}
+                onClick={() => startEditing('sidebar')}
+                aria-label={`${username} 유저명 수정`}
               >
                 <span className="sidebar-profile-rank-position">#{entry?.rank ?? 'UNRANKED'}</span>
                 <strong>{username}</strong>

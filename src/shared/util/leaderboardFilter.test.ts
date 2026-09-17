@@ -1,21 +1,34 @@
 import { describe, it, expect } from 'vitest'
-import { filterEntries, COLLAPSED_VISIBLE } from '@/shared/util/leaderboardFilter'
+import { filterEntries, tiersPresent, totals, COLLAPSED_VISIBLE } from '@/shared/util/leaderboardFilter'
 import type { LeaderboardEntry } from '@/shared/types'
 
-const entry = (rank: number, online_name: string, main?: string, sub?: string): LeaderboardEntry => ({
+type CharSpec = { name: string, tier?: string, wins?: number, losses?: number }
+
+const charOf = (spec?: string | CharSpec) => {
+  if (!spec) return null
+  const c = typeof spec === 'string' ? { name: spec } : spec
+  return {
+    name: c.name,
+    wins: c.wins,
+    losses: c.losses,
+    ...(c.tier ? { rank_info: { name: c.name, tier: c.tier } } : {}),
+  }
+}
+
+const entry = (rank: number, online_name: string, main?: string | CharSpec, sub?: string | CharSpec): LeaderboardEntry => ({
   np_id: `p${rank}`,
   rank,
   online_name,
   player_info: {
-    main_char_info: main ? { name: main } : null,
-    sub_char_info: sub ? { name: sub } : null,
+    main_char_info: charOf(main),
+    sub_char_info: charOf(sub),
   },
 })
 
 const board = (count: number): LeaderboardEntry[] =>
   Array.from({ length: count }, (_, i) => entry(i + 1, `player${i + 1}`, 'Kazuya'))
 
-const noFilter = { search: '', character: '', collapsed: false }
+const noFilter = { search: '', character: '', tier: '', sort: 'rank' as const, collapsed: false }
 
 describe('filterEntries', () => {
   it('returns the whole board by default', () => {
@@ -64,5 +77,88 @@ describe('filterEntries', () => {
 
   it('returns an empty list when nothing matches', () => {
     expect(filterEntries(board(10), { ...noFilter, search: 'nobody' })).toEqual([])
+  })
+})
+
+describe('sorting', () => {
+  const rows = [
+    entry(1, 'topRank', { name: 'Jin', wins: 50, losses: 50 }),
+    entry(2, 'bestRate', { name: 'Jin', wins: 9, losses: 1 }),
+    entry(3, 'mostGames', { name: 'Jin', wins: 100, losses: 100 }),
+    entry(4, 'unplayed', { name: 'Jin' }),
+  ]
+
+  it('leaves board order alone by default', () => {
+    expect(filterEntries(rows, noFilter).map((e) => e.online_name))
+      .toEqual(['topRank', 'bestRate', 'mostGames', 'unplayed'])
+  })
+
+  it('orders by win rate across both characters', () => {
+    expect(filterEntries(rows, { ...noFilter, sort: 'winRate' })[0].online_name).toBe('bestRate')
+  })
+
+  // 0% and "never played" are different answers. Treating an empty record as
+  // zero would rank a player who has never played below everyone who has lost.
+  it('sorts a player with no record last rather than at 0%', () => {
+    const order = filterEntries(rows, { ...noFilter, sort: 'winRate' }).map((e) => e.online_name)
+    expect(order[order.length - 1]).toBe('unplayed')
+  })
+
+  it('orders by total matches', () => {
+    expect(filterEntries(rows, { ...noFilter, sort: 'matches' })[0].online_name).toBe('mostGames')
+  })
+
+  it('falls back to board rank so equal rows keep a stable order', () => {
+    const tied = [
+      entry(2, 'second', { name: 'Jin', wins: 5, losses: 5 }),
+      entry(1, 'first', { name: 'Jin', wins: 5, losses: 5 }),
+    ]
+    expect(filterEntries(tied, { ...noFilter, sort: 'winRate' }).map((e) => e.online_name))
+      .toEqual(['first', 'second'])
+  })
+
+  // Collapsing after the sort is what makes "top 100 by win rate" mean the
+  // hundred best rates rather than the top hundred ranks reshuffled.
+  it('collapses after sorting, not before', () => {
+    const many = Array.from({ length: 150 }, (_, i) =>
+      entry(i + 1, `p${i + 1}`, { name: 'Jin', wins: i, losses: 150 - i }))
+    const top = filterEntries(many, { ...noFilter, sort: 'winRate', collapsed: true })
+    expect(top).toHaveLength(COLLAPSED_VISIBLE)
+    expect(top[0].online_name).toBe('p150')
+  })
+})
+
+describe('tier filtering', () => {
+  const rows = [
+    entry(1, 'blue', { name: 'Jin', tier: '파랑단' }),
+    entry(2, 'red', { name: 'Jin', tier: '빨강단' }),
+    entry(3, 'mixed', { name: 'Jin', tier: '녹단' }, { name: 'Lili', tier: '파랑단' }),
+  ]
+
+  it('keeps a player whose either character is in the band', () => {
+    expect(filterEntries(rows, { ...noFilter, tier: '파랑단' }).map((e) => e.online_name))
+      .toEqual(['blue', 'mixed'])
+  })
+
+  it('reports only the bands actually on the board, in promotion order', () => {
+    expect(tiersPresent(rows)).toEqual(['녹단', '빨강단', '파랑단'])
+  })
+
+  // A filtered view is a complete answer about the whole board, so collapsing
+  // must not silently cut it short.
+  it('ignores the collapse when a band is chosen', () => {
+    const many = Array.from({ length: 150 }, (_, i) => entry(i + 1, `p${i + 1}`, { name: 'Jin', tier: '파랑단' }))
+    expect(filterEntries(many, { ...noFilter, tier: '파랑단', collapsed: true })).toHaveLength(150)
+  })
+})
+
+describe('totals', () => {
+  it('adds both characters together', () => {
+    const e = entry(1, 'x', { name: 'Jin', wins: 3, losses: 1 }, { name: 'Lili', wins: 1, losses: 5 })
+    expect(totals(e)).toMatchObject({ wins: 4, losses: 6, matches: 10, winRate: 0.4 })
+  })
+
+  it('reports no win rate rather than 0% when nothing has been played', () => {
+    expect(totals(entry(1, 'x', 'Jin')).winRate).toBeNull()
   })
 })

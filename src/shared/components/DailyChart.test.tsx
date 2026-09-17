@@ -16,6 +16,9 @@ vi.mock('recharts', () => ({
 it('renders both concurrent-peak and daily unique-player series', () => {
   render(<DailyChart data={[{ date: '2026-09-03', peak_players: 2, avg_players: 1, unique_players: 7 }]} />)
 
+  // Unique players is declared first because it is the larger series and the
+  // one drawn on top — recharts takes the legend and tooltip order from this,
+  // so the two used to list the series in the opposite order to the eye.
   expect(screen.getAllByTestId('series')).toHaveLength(2)
-  expect(screen.getAllByTestId('series').map((series) => series.textContent)).toEqual(['peak_players', 'unique_players'])
+  expect(screen.getAllByTestId('series').map((series) => series.textContent)).toEqual(['unique_players', 'peak_players'])
 })

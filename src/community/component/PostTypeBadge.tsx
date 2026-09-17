@@ -1,42 +1,59 @@
 import { charImageUrl } from '@/shared/characterImage'
+import { DEFAULT_POST_TYPE, POST_TYPES } from '@/community/types'
 
 type BadgeSize = 'sm' | 'md'
 
 interface PostTypeBadgeProps {
   postType: string
-  /** When present, the team's portraits take the badge slot instead of the type. */
+  /** The characters the post is about — up to two. */
   characters?: string[]
-  size?: BadgeSize
+  size?: 'sm' | 'md'
 }
 
-const imgClassOf = (size: BadgeSize) => size === 'md' ? 'h-6 w-6' : 'h-5 w-5'
-
-export function CharacterBadges({ characters, size = 'sm' }: { characters: string[]; size?: BadgeSize }) {
-  return (
-    <span className="inline-flex gap-0.5">
-      {characters.map((name) => {
-        const url = charImageUrl(name)
-        return url && <img key={name} src={url} alt={name} title={name} className={`${imgClassOf(size)} object-cover rounded`} />
-      })}
-    </span>
-  )
-}
-
+/** What a post is tagged with: its category, and the characters it is about.
+ *
+ * These used to be the same value. `post_type` held either a category or a
+ * character name, and this component decided which by asking whether the
+ * string happened to match a portrait file — so a post could be a 공략 or
+ * about Jin, never both, and a tag-team post could name only half of itself.
+ * The backend has carried a separate two-slot `characters` array all along.
+ *
+ * 자유 is the *absence* of a category — it is the default nobody has to choose
+ * — so it is shown only when there is nothing else to show. A post tagged with
+ * Jin and Kazuya is about Jin and Kazuya; labelling it 자유 as well states the
+ * opposite of what the tags say. 건의 and 공략 are deliberate choices and do
+ * render beside characters, because "a 공략 about these two" is a real thing to
+ * be and the subject does not replace the kind.
+ *
+ * Posts written before the split still carry their character in `post_type`
+ * and have an empty `characters`. The name moves to the portrait row where it
+ * belongs, and no category is shown: that field held a character, so the post's
+ * category was never recorded at all.
+ */
 export default function PostTypeBadge({ postType, characters = [], size = 'sm' }: PostTypeBadgeProps) {
-  if (characters.length > 0) return <CharacterBadges characters={characters} size={size} />
+  const legacyCharacter = characters.length === 0
+    && !(POST_TYPES as readonly string[]).includes(postType)
+    && charImageUrl(postType) !== null
 
-  const url = charImageUrl(postType)
-  const textClass = size === 'md'
-    ? 'text-xs px-2 py-0.5'
-    : 'text-2xs px-1.5 py-0.5'
+  const tagged = legacyCharacter ? [postType] : characters
 
-  if (url) {
-    return <img src={url} alt={postType} className={`${imgClassOf(size)} object-cover rounded`} />
-  }
+  const portraits = tagged.map((name) => [name, charImageUrl(name)] as const)
+    .filter((entry): entry is [string, string] => entry[1] !== null)
+
+  const category = legacyCharacter || (postType === DEFAULT_POST_TYPE && portraits.length > 0)
+    ? null
+    : postType
 
   return (
-    <span className={`${textClass} font-bold uppercase tracking-wider bg-primary-glow text-primary-text border border-primary-dim rounded`}>
-      {postType}
+    <span className={`post-tags post-tags-${size}`}>
+      {category && <span className="post-type-chip">{category}</span>}
+      {portraits.length > 0 && (
+        <span className="post-tag-chars">
+          {portraits.map(([name, url]) => (
+            <img key={name} src={url} alt={name} title={name} className="char-art post-tag-char" />
+          ))}
+        </span>
+      )}
     </span>
   )
 }

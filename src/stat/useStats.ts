@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { GET} from "@/shared/util/api";
+import { API } from "@/config/endpoints";
 import type { HourlyActivity, DailySummary} from "@/stat/types";
 
 export type StatsDays = 7 | 30 | 90
@@ -25,8 +26,8 @@ export default function useStats(): StatsState {
     setLoading(true)
     setError(null)
     Promise.all([
-      GET('history/stats', { days }),
-      GET('history/stats/daily', { days }),
+      GET(API.stats().path, { days }),
+      GET(API.dailyStats().path, { days }),
     ])
       .then(([h, d]) => {
         if (cancelled) return

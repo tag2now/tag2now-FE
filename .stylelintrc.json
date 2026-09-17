@@ -1,0 +1,37 @@
+{
+  "rules": {
+    "declaration-property-value-disallowed-list": {
+      "/^(color|background|background-color|border|border-color|border-top-color|border-right-color|border-bottom-color|border-left-color|fill|stroke|caret-color|outline-color|text-decoration-color)$/": [
+        "/#[0-9a-fA-F]{3,8}\\b/",
+        "/\\brgba?\\(/",
+        "/\\bhsla?\\(/"
+      ]
+    },
+    "declaration-property-value-allowed-list": {
+      "font-size": [
+        "/^var\\(--text-/",
+        "/^inherit$/",
+        "/^clamp\\(/",
+        "/^1em$/"
+      ],
+      "font-weight": [
+        "/^var\\(--weight-/",
+        "/^inherit$/"
+      ]
+    },
+    "color-no-invalid-hex": true,
+    "no-duplicate-selectors": null,
+    "no-invalid-position-at-import-rule": null
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/styles/tokens.css"
+      ],
+      "rules": {
+        "declaration-property-value-disallowed-list": null,
+        "declaration-property-value-allowed-list": null
+      }
+    }
+  ]
+}

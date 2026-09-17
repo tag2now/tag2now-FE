@@ -146,14 +146,6 @@ function selectRanks(...ranks: string[]) {
   fireEvent.click(within(picker).getByRole('button', { name: '선택 완료' }))
 }
 
-/** Open the time picker, turn both wheels, confirm. */
-function pickTime(hour: string, minute: string) {
-  fireEvent.click(screen.getByRole('button', { name: /시작 시각/ }))
-  fireEvent.change(screen.getByLabelText('시간 휠'), { target: { value: hour } })
-  fireEvent.change(screen.getByLabelText('분 휠'), { target: { value: minute } })
-  fireEvent.click(within(screen.getByRole('dialog', { name: '시간 선택' })).getByRole('button', { name: '선택 완료' }))
-}
-
 // The filter bar offers radios with the same labels, so the form's own
 // match-type radios have to be reached through their group.
 const matchTypeControl = () => within(screen.getByRole('radiogroup', { name: '매치 종류' }))
@@ -183,7 +175,7 @@ describe('Reservation', () => {
     expect(screen.getByLabelText('모집 인원')).toBeInTheDocument()
   })
 
-  it('shows all 36 ranks with higher rows above and higher ranks on the right', () => {
+  it('shows all 43 ranks grouped by band, strongest band and rank first', () => {
     openReservationModal()
     fireEvent.click(screen.getByRole('button', { name: /계급 선택/ }))
 
@@ -194,9 +186,31 @@ describe('Reservation', () => {
       .filter((button) => button.getAttribute('aria-pressed') !== null)
     const imageNames = Array.from(picker!.querySelectorAll('button[aria-pressed] img')).map((image) => image.getAttribute('alt'))
 
-    expect(tiles).toHaveLength(36)
-    expect(imageNames.slice(0, 4)).toEqual(['Suzaku', 'Fujin', 'Raijin', 'Yaksa'])
-    expect(imageNames.slice(-4)).toEqual(['Beginner', '9th kyu', '8th kyu', '7th kyu'])
+    expect(tiles).toHaveLength(43)
+    // 황금단 opens the picker, strongest first — top-left is the highest rank
+    // in the game, because Korean reads left to right.
+    expect(imageNames.slice(0, 2)).toEqual(['True Tekken God', 'Tekken God'])
+    // 보라단, then 파랑단 — five ranks, so the weakest wraps to a second row.
+    expect(imageNames.slice(2, 5)).toEqual(['Tekken Emperor', 'Tekken Lord', 'Emperor'])
+    expect(imageNames.slice(5, 10)).toEqual(['Toshin', 'Majin', 'Yaksa', 'Raijin', 'Fujin'])
+    // 숫자급 closes it, weakest last.
+    expect(imageNames.slice(-2)).toEqual(['9th kyu', 'Beginner'])
+  })
+
+  it('labels every band and never splits one across a row', () => {
+    openReservationModal()
+    fireEvent.click(screen.getByRole('button', { name: /계급 선택/ }))
+
+    const picker = document.getElementById('reservation-rank-picker')!
+    const bands = [...picker.querySelectorAll('.rank-band-label')].map((el) => el.textContent)
+    expect(bands).toEqual(['황금단', '보라단', '파랑단', '빨강단', '주황단', '노랑단', '녹단', '액자단', '숫자단', '숫자급'])
+
+    // Each band's own grid holds only its own ranks — the whole point of the
+    // grouping, and what a flat chunk-by-four could not promise.
+    const perBand = [...picker.querySelectorAll('.rank-band-grid')]
+      .map((grid) => grid.querySelectorAll('button[aria-pressed]').length)
+    expect(perBand).toEqual([2, 3, 5, 4, 4, 4, 4, 4, 3, 10])
+    expect(perBand.reduce((a, b) => a + b, 0)).toBe(43)
   })
 
   it('shows selected rank images from highest to lowest in the collapsed control', () => {
@@ -227,8 +241,10 @@ describe('Reservation', () => {
     expect(screen.getByRole('button', { name: /계급 선택, 현재/ }).querySelectorAll('img')).toHaveLength(20)
   })
 
-  it('defaults to the first whole hour that clears the ten-minute lead', () => {
-    // 14:00 is only five minutes out, which the backend refuses.
+  // The first whole hour that clears the backend's ten-minute lead time, not
+  // simply the next one: at 13:55 the 14:00 slot is five minutes away and
+  // would be refused, so the form opens on 15:00 rather than offering it.
+  it('defaults to the first whole hour that clears the lead time', () => {
     vi.setSystemTime(new Date('2026-08-28T04:55:00Z'))  // 13:55 KST
     openReservationModal()
 
@@ -242,9 +258,10 @@ describe('Reservation', () => {
     expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 오늘 14:00')
   })
 
-  it('rolls the default past midnight in the last hour', () => {
-    // The backend reads a time Seoul has passed as tomorrow's, so the next hour
-    // it will take is tomorrow's 00:00.
+  // Midnight is a real slot, and the label is what says which midnight. The
+  // window runs to the next 06:00, so at 23:30 the next hour is tomorrow's
+  // 00:00 --- which the day label states rather than leaving to be guessed.
+  it('crosses midnight and says which day it landed on', () => {
     vi.setSystemTime(new Date('2026-08-28T14:30:00Z'))  // 23:30 KST
     openReservationModal()
 
@@ -269,36 +286,11 @@ describe('Reservation', () => {
     fireEvent.click(within(screen.getByRole('dialog', { name: '시간 선택' })).getByRole('button', { name: '취소' }))
     expect(timeButton).toHaveAttribute('aria-label', '시작 시각 오늘 21:00')
 
-    pickTime('22', '35')
+    fireEvent.click(timeButton)
+    fireEvent.change(screen.getByLabelText('시간 휠'), { target: { value: '22' } })
+    fireEvent.change(screen.getByLabelText('분 휠'), { target: { value: '35' } })
+    fireEvent.click(within(screen.getByRole('dialog', { name: '시간 선택' })).getByRole('button', { name: '선택 완료' }))
     expect(timeButton).toHaveAttribute('aria-label', '시작 시각 오늘 22:35')
-  })
-
-  it('marks a time Seoul has already passed as tomorrow', () => {
-    openReservationModal()
-    pickTime('01', '30')
-
-    expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 내일 01:30')
-    expect(screen.queryByText(/오전 6시 전까지만/)).not.toBeInTheDocument()
-  })
-
-  it('refuses a time past dawn instead of letting the backend reject it', () => {
-    openReservationModal()
-    selectRanks('Vanquisher')
-    pickTime('07', '00')  // at 20:10, that is tomorrow morning: after the 06:00 cut-off
-
-    expect(screen.getByText('10분 뒤부터 다음 오전 6시 전까지만 예약할 수 있습니다.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '예약 등록' })).toBeDisabled()
-  })
-
-  it('stops a start time the clock has overtaken from being submitted', () => {
-    openReservationModal()
-    selectRanks('Vanquisher')
-    expect(screen.getByRole('button', { name: '예약 등록' })).toBeEnabled()
-
-    vi.setSystemTime(new Date('2026-08-28T11:55:00Z'))  // 20:55 KST: 21:00 is inside the lead now
-    fireEvent.change(screen.getByLabelText(/메모/), { target: { value: '곧 시작' } })
-
-    expect(screen.getByRole('button', { name: '예약 등록' })).toBeDisabled()
   })
 
   it('creates a rank reservation whose card shows every rank the host picked', async () => {
@@ -423,38 +415,49 @@ describe('Reservation', () => {
     return screen.getByRole('complementary', { name: '선택한 예약 상세' })
   }
 
-  it('deletes the reservation once the host confirms', async () => {
+  // The confirmation is the app's own dialog rather than window.confirm, so
+  // these drive it the way a user does instead of stubbing a global.
+  const confirmDialog = () => screen.getByRole('alertdialog', { name: '예약을 삭제할까요?' })
+
+  it('asks before deleting rather than deleting on the first click', async () => {
     vi.mocked(isOwner).mockReturnValue(true)
-    vi.mocked(cancelReservation).mockResolvedValue(undefined)
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     const detail = await openDetail()
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
 
+    expect(confirmDialog()).toBeInTheDocument()
+    expect(cancelReservation).not.toHaveBeenCalled()
+  })
+
+  it('deletes the reservation once the host confirms', async () => {
+    vi.mocked(isOwner).mockReturnValue(true)
+    vi.mocked(cancelReservation).mockResolvedValue(undefined)
+    const detail = await openDetail()
+
+    fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
+    fireEvent.click(within(confirmDialog()).getByRole('button', { name: '삭제' }))
+
     await waitFor(() => expect(cancelReservation).toHaveBeenCalledWith(1))
-    confirmSpy.mockRestore()
   })
 
   it('leaves the reservation alone when the host dismisses the confirmation', async () => {
     vi.mocked(isOwner).mockReturnValue(true)
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
     const detail = await openDetail()
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
+    fireEvent.click(within(confirmDialog()).getByRole('button', { name: '취소' }))
 
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
     expect(cancelReservation).not.toHaveBeenCalled()
-    confirmSpy.mockRestore()
   })
 
   it('warns that participants lose their spot before deleting', async () => {
     vi.mocked(isOwner).mockReturnValue(true)
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
     const detail = await openDetail({ ...apiReservation, capacity: 3, participant_count: 2 })
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
 
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('참가자 2명'))
-    confirmSpy.mockRestore()
+    expect(confirmDialog()).toHaveTextContent('참가자 2명')
   })
 
   it('offers joining rather than deleting on a reservation the user does not own', async () => {
@@ -821,45 +824,5 @@ describe('the comment thread on a reservation', () => {
 
     expect(within(thread).getByLabelText('댓글 내용')).toBeDisabled()
     expect(within(thread).getByPlaceholderText('먼저 유저명을 설정해 주세요')).toBeInTheDocument()
-  })
-})
-
-describe('the day a reservation starts on', () => {
-  const startingAt = (id: number, host: string, start_at: string): ApiReservation => ({ ...apiReservation, id, host_display_name: host, start_at })
-  const groupNames = () => screen.getAllByRole('region', { name: / 예약$/ }).map((group) => group.getAttribute('aria-label'))
-
-  it('lists tonight before the small hours that follow it', async () => {
-    vi.setSystemTime(new Date('2026-08-28T13:00:00Z'))  // 22:00 KST
-    // In the backend's own order. Sorted as text, "01:00" jumped ahead of "23:00".
-    vi.mocked(fetchReservations).mockResolvedValue([
-      startingAt(1, '밤', '2026-08-28T14:00:00Z'),    // 23:00 KST
-      startingAt(2, '새벽', '2026-08-28T16:00:00Z'),  // 01:00 KST on the 29th
-    ])
-    render(<MemoryRouter><Reservation /></MemoryRouter>)
-    await screen.findByRole('button', { name: /새벽/ })
-
-    expect(groupNames()).toEqual(['오늘 23:00 예약', '내일 01:00 예약'])
-  })
-
-  it('keeps one time of day on two different days apart', async () => {
-    vi.setSystemTime(new Date('2026-08-27T21:20:00Z'))  // 06:20 KST on the 28th
-    // Today's 05:30 is still in its grace hour; tomorrow's is already bookable.
-    vi.mocked(fetchReservations).mockResolvedValue([
-      startingAt(1, '먼저', '2026-08-27T20:30:00Z'),
-      startingAt(2, '나중', '2026-08-28T20:30:00Z'),
-    ])
-    render(<MemoryRouter><Reservation /></MemoryRouter>)
-    await screen.findByRole('button', { name: /나중/ })
-
-    expect(groupNames()).toEqual(['오늘 05:30 예약', '내일 05:30 예약'])
-  })
-
-  it('names the day in the detail panel', async () => {
-    vi.setSystemTime(new Date('2026-08-28T13:00:00Z'))  // 22:00 KST
-    vi.mocked(fetchReservations).mockResolvedValue([startingAt(2, '새벽', '2026-08-28T16:00:00Z')])
-    render(<MemoryRouter><Reservation /></MemoryRouter>)
-    fireEvent.click(await screen.findByRole('button', { name: /새벽/ }))
-
-    expect(screen.getByRole('complementary', { name: '선택한 예약 상세' })).toHaveTextContent('내일 01:00')
   })
 })

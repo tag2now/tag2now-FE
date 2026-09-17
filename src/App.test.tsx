@@ -124,7 +124,7 @@ describe('App', () => {
   it('default tab is the overview', async () => {
     await renderApp()
 
-    expect(screen.getByRole('tab', { name: '개요' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('heading', { name: '한눈에 보기' })).toBeInTheDocument()
   })
 
@@ -244,7 +244,7 @@ describe('App', () => {
 
     await renderApp('매칭')
 
-    expect(screen.getByText('방 목록 불러오는 중...')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('방 목록을 불러오는 중')
   })
 
   it('auto-refresh keeps content visible and shows loading bar instead of loading message', async () => {
@@ -254,7 +254,7 @@ describe('App', () => {
 
     // Data is visible after initial load
     expect(screen.getByText('RoomOwner')).toBeInTheDocument()
-    expect(screen.queryByText('방 목록 불러오는 중...')).not.toBeInTheDocument()
+    expect(document.querySelector('.skeleton-row')).not.toBeInTheDocument()
 
     // Make the next fetch hang so we can observe the refreshing state
     mockedFetchRoomsAll.mockReturnValue(new Promise(() => {}))
@@ -346,7 +346,7 @@ describe('App', () => {
     it('falls back to the overview on an unknown path', async () => {
       await renderAt('/nope')
 
-      expect(screen.getByRole('tab', { name: '개요' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-selected', 'true')
       expect(screen.getByRole('heading', { name: '한눈에 보기' })).toBeInTheDocument()
     })
 

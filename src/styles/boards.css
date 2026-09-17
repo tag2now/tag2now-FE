@@ -1,0 +1,181 @@
+/* The reservation and community boards, and the dialogs they open.
+
+   These two stay in one file because their rules interleave: the shared filter
+   bar, the post rows and the reservation cards were authored in one pass and
+   separating them would reorder the cascade. Splitting them further needs a
+   check that no rule here depends on another's position. */
+
+.filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
+.filter-label { display: inline-flex; align-items: center; gap: 4px; color: var(--color-txt-dim); font-size: var(--text-3xs); font-weight: var(--weight-row); }
+/* Both boards filter through the shared .section-toolbar now; what is left
+   here is only what the board itself adds to it. */
+.filter-toolbar .segmented-control { min-width: 250px; }
+.filter-toolbar .segmented-control button { flex: 1; padding-inline: 16px; }
+.filter-toolbar + .character-filter { margin-top: 8px; }
+.reservation-content-grid { margin-top: 16px; }
+/* The row that opens the grid, and the one control that clears it. Same
+   shape as the leaderboard's, because it is the same job. */
+.character-filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.character-filter-bar .lb-char-toggle { flex: 1 1 auto; justify-content: flex-start; }
+.character-filter { container: char-picker / inline-size; overflow: hidden; padding: 6px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg-deep); }
+.post-list { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--color-border); border-radius: 6px; }
+/* Fixed columns, not a flex row.
+ *
+ * Under flex the author, the counts and the time each started wherever the
+ * title happened to end, so nothing lined up down the list and the eye had to
+ * re-find every field on every row. Tracks make the whole column readable in
+ * one pass — which is what a feed is for.
+ *
+ * The cost is a gap after a short title, and it is the right cost: the gap is
+ * one blank region in a stable layout, where letting the columns float put a
+ * different-sized hole in a different place on every row. */
+.post-row { display: grid; width: 100%; min-height: 46px; grid-template-columns: 62px minmax(0, 1fr) 190px 96px 54px; align-items: center; gap: 10px; padding: 6px 10px; border: 0; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface-tint) 1.2%, transparent); color: var(--color-txt); text-align: left; cursor: pointer; transition: background-color 150ms ease; }
+.post-row:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.post-row-title { min-width: 0; overflow: hidden; color: var(--color-txt); font-size: var(--text-sm); font-weight: var(--weight-row); text-overflow: ellipsis; white-space: nowrap; }
+/* The three engagement figures, together. Left-aligned inside a fixed cell so
+   the icons form a column; the cell is simply empty on a post nothing has
+   happened to yet. */
+.post-row-stats { display: inline-flex; min-width: 0; align-items: center; gap: 8px; color: var(--color-txt-dim); font-size: var(--text-3xs); font-weight: var(--weight-label); font-variant-numeric: tabular-nums; }
+.post-stat { display: inline-flex; align-items: center; gap: 3px; }
+/* Upvotes are the one figure worth finding at a glance, so they carry the
+   accent and the other two stay dim. */
+.post-stat.is-up { color: var(--color-primary-text); }
+.post-row-time { overflow: hidden; color: var(--color-txt-faint); font-size: var(--text-3xs); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.post-row:first-child { border-top: 0; }
+.post-row:hover { background: color-mix(in srgb, var(--color-primary) 8%, transparent); }
+/* Wrapping, not stacking. The two groups share one line while there is room
+   for both, and the side group drops to its own line on a phone - still
+   trailing-aligned, because `margin-left: auto` survives the wrap. */
+.post-detail-header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 0; border-bottom: 1px solid var(--color-border-light); }
+.post-detail-header h2 { margin: 0; min-width: 0; color: var(--color-txt); font-size: var(--text-md); line-height: 1.35; overflow-wrap: anywhere; }
+/* What the post is, and what it says. `1 1 260px` rather than `1 1 auto`: a
+   long title should take the width and push the byline to its own line, and a
+   short one should not leave the byline stranded mid-row. */
+.post-detail-head-main { display: flex; min-width: 0; flex: 1 1 260px; align-items: center; gap: 10px; }
+.post-detail-head-side { display: flex; flex: 0 0 auto; align-items: center; gap: 12px; margin-left: auto; }
+.post-detail-owner-actions { display: flex; flex: 0 0 auto; gap: 8px; }
+/* One line: who, then when. The dot is what joins them --- without it the two
+   read as separate facts that happen to share a row. */
+.post-detail-byline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.post-detail-time { color: var(--color-txt-faint); font-size: var(--text-2xs); }
+.post-detail-time::before { content: '·'; margin-right: 8px; color: var(--color-txt-faint); }
+.post-detail-body { min-height: 150px; padding: 16px 4px; border-bottom: 1px solid var(--color-border-light); }
+.post-detail-body p { margin: 0; color: var(--color-txt); font-size: var(--text-13); line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.comment-heading { margin: 16px 0 8px; color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-strong); }
+.comment-node { padding: 8px 8px 8px 12px; border-left: 2px solid var(--color-border-light); border-bottom: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface-tint) 1.2%, transparent); }
+.comment-node > button { display: inline-flex; min-height: 28px; align-items: center; gap: 4px; }
+.comment-composer { display: flex; gap: 6px; margin-top: 16px; padding: 8px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
+.reservation-group { padding: 8px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
+.reservation-card { min-height: 72px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-panel); cursor: pointer; }
+.reservation-card:hover { border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
+.reservation-card.selected { border-color: color-mix(in srgb, var(--color-primary) 55%, transparent); background: color-mix(in srgb, var(--color-primary) 12%, transparent); box-shadow: inset 3px 0 0 var(--color-primary); }
+/* Only a phone has a back button: on the roomy layout the list is still
+   beside the detail and there is nowhere to go back to. */
+.reservation-detail-back { display: none; }
+.reservation-detail { position: sticky; top: 86px; align-self: start; padding: 16px; border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent); border-radius: 6px; background: var(--color-bg-row); }
+.reservation-detail.is-full { border-color: color-mix(in srgb, var(--color-secondary) 35%, transparent); }
+.modal-backdrop { position: fixed; inset: 0; z-index: 60; display: flex; overflow-y: auto; padding: 16px; background: color-mix(in srgb, var(--color-scrim) 82%, transparent); }
+.reservation-modal { position: relative; width: min(720px, 100%); margin: auto; gap: 12px; overflow: visible; padding: 16px; border: 1px solid color-mix(in srgb, var(--color-surface-tint) 12%, transparent); border-radius: 8px; background: var(--color-bg-sunken); box-shadow: 0 24px 70px rgba(0,0,0,.42); }
+.reservation-modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--color-border-light); }
+.reservation-modal-header h3 { margin: 2px 0 0; color: var(--color-txt); font-size: var(--text-md); line-height: 1.2; }
+.modal-description { margin: 4px 0 0; color: var(--color-txt-faint); font-size: var(--text-3xs); font-weight: var(--weight-quiet); }
+.modal-close { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px solid var(--color-border-light); border-radius: 6px; background: transparent; color: var(--color-txt-dim); cursor: pointer; }
+.modal-close:hover { border-color: color-mix(in srgb, var(--color-primary) 45%, transparent); background: color-mix(in srgb, var(--color-primary) 8%, transparent); color: var(--color-primary-text); }
+.modal-field { position: relative; min-width: 0; color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-label); }
+.control-button { display: flex; align-items: center; justify-content: space-between; padding-block: 0; text-align: left; cursor: pointer; }
+/* One column per option: the hardcoded 2 left the third choice ("상관없음")
+   wrapping onto a row of its own, reading as a separate control. */
+.match-type-selector { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; min-height: 38px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--color-surface-tint) 11%, transparent); border-radius: 6px; background: var(--color-bg-field); }
+.match-type-option { position: relative; display: grid; place-items: center; border-left: 1px solid var(--color-border); color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-row); cursor: pointer; }
+/* Transparent and full-bleed rather than sr-only: the input keeps the chip's
+   whole 111x37 hit area instead of sr-only's 1x1, and a control clipped to
+   rect(0,0,0,0) is the kind of thing browsers treat inconsistently. */
+.match-type-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.match-type-option:first-child { border-left: 0; }
+.match-type-option:hover { background: var(--color-primary-hover); color: var(--color-primary-text); }
+.match-type-option:has(:checked) { background: color-mix(in srgb, var(--color-primary) 16%, transparent); color: var(--color-primary-text); box-shadow: inset 0 -2px 0 var(--color-primary); }
+/* The input is sr-only, so the ring has to be drawn on the label it labels. */
+.match-type-option:has(:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.rank-picker-panel { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 70; margin-top: 0; padding: 8px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-field); box-shadow: 0 16px 36px rgba(0,0,0,.34); }
+.rank-option { position: relative; display: flex; min-height: 46px; flex-direction: column; align-items: center; justify-content: center; gap: 2px; overflow: hidden; padding: 6px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt-dim); cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease; }
+.rank-option:hover { border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
+.rank-option.selected { border-color: color-mix(in srgb, var(--color-primary) 65%, transparent); background: color-mix(in srgb, var(--color-primary) 13%, transparent); }
+.rank-option-check { position: absolute; top: 5px; right: 5px; display: grid; width: 17px; height: 17px; place-items: center; border-radius: 6px; background: var(--color-primary); color: white; }
+/* Confirmation dialog. Narrow on purpose: it asks one question and offers two
+   answers, so it should not present as a panel with content to read. */
+.confirm-dialog { position: relative; width: min(380px, 100%); margin: auto; padding: 16px; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-sunken); box-shadow: 0 24px 70px rgba(0,0,0,.42); }
+.confirm-dialog-head { display: flex; align-items: center; gap: 8px; }
+.confirm-dialog-head h2 { margin: 0; color: var(--color-txt); font-size: var(--text-base); font-weight: var(--weight-display); line-height: 1.3; }
+.confirm-dialog-icon { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 5%, transparent); color: var(--color-txt-dim); }
+.confirm-dialog-icon.is-danger { background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary-text); }
+.confirm-dialog-body { margin: 12px 0 0; color: var(--color-txt-dim); font-size: var(--text-sm); line-height: 1.6; }
+.confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 16px; }
+
+.reservation-modal-actions { display: flex; justify-content: flex-end; gap: 6px; margin: 2px -16px -16px; padding: 12px 16px; border-top: 1px solid var(--color-border-light); background: color-mix(in srgb, var(--color-surface-tint) 1.8%, transparent); }
+
+/* ─── Post tags ───────────────────────────────────────────── */
+/* A post carries a category and up to two characters. They were one field, so
+   this is the first place both can be shown at once. */
+.post-tags { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+/* max-width/ellipsis: a legacy post can still carry a character *name* as its
+   category, which is longer than the three real ones. It truncates rather than
+   pushing the title out of its column. */
+.post-type-chip { display: inline-flex; max-width: 100%; align-items: center; min-height: 20px; flex: 0 0 auto; overflow: hidden; padding: 0 6px; text-overflow: ellipsis; border: 1px solid var(--color-primary-dim); border-radius: 4px; background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary-text); font-size: var(--text-4xs); font-weight: var(--weight-strong); letter-spacing: .04em; white-space: nowrap; }
+.post-tags-md .post-type-chip { min-height: 24px; padding: 0 9px; font-size: var(--text-xs); }
+/* The two portraits overlap slightly, which reads as a pair rather than as two
+   unrelated tags — a tag team is one choice made twice. */
+.post-tag-chars { display: inline-flex; flex: 0 0 auto; align-items: center; }
+.post-tag-char { height: 24px; border-radius: 3px; border: 1px solid var(--color-border-light); background: var(--color-bg-row); }
+.post-tag-char + .post-tag-char { margin-left: -6px; }
+.post-tags-md .post-tag-char { height: 34px; }
+/* Centred, and only as wide as the widest thing it can hold: a category chip
+   with two portraits beside it measures 58px, so 88px left a lone portrait
+   sitting 73px from the title it belongs to. Centring is what keeps a one- and
+   a two-character row reading as the same column — flush left, they started
+   together and ended 9px apart, which made the column look ragged rather than
+   aligned.
+   A fixed track, not `auto`: every row is its own grid, so an intrinsic width
+   would be measured per row and the columns would stop lining up down the
+   feed, which is the whole reason this is a grid. */
+.post-row-tags { display: flex; min-width: 0; overflow: hidden; align-items: center; justify-content: center; }
+
+/* ─── Author byline ─────────────────────────── */
+/* The badge sets the size and its parts inherit it, so a caller that wants a
+   bigger byline gets one. They used to carry their own font-size, which meant
+   the post detail's `text-sm` reached the wrapper and stopped: the name stayed
+   at the 11px a feed row wants, under a 14px context and beside a chip twice
+   its height. */
+.author-badge { align-items: center; gap: 5px; min-width: 0; font-size: var(--text-2xs); }
+.post-row .author-badge { display: inline-flex; }
+/* Rank art is a banner: sized by height so the column keeps one shape whatever
+   the rank name is. */
+.author-badge-rank { height: 16px; width: auto; flex: 0 0 auto; }
+/* Context, not identity — so it rides behind the name rather than beside it at
+   equal strength. --color-accent (green) said "a win" everywhere else. */
+.author-badge-place { flex: 0 0 auto; color: var(--color-txt-faint); font-size: var(--text-3xs); font-weight: var(--weight-label); font-variant-numeric: tabular-nums; }
+.author-badge-name { min-width: 0; overflow: hidden; color: var(--color-txt); font-size: inherit; font-weight: var(--weight-row); text-overflow: ellipsis; white-space: nowrap; }
+
+/* The post detail's byline. It names the author of the thing you opened, not
+   one row among forty, so it is set at reading size and the banner grows with
+   it rather than staying at the height a list needs. */
+.author-badge-lg { gap: 7px; font-size: var(--text-sm); }
+.author-badge-lg .author-badge-rank { height: 20px; }
+.author-badge-lg .author-badge-place { font-size: var(--text-2xs); }
+
+/* The picker's current selection, stated in words under the grid — the tiles
+   are small and a highlight alone is easy to lose track of. */
+.selected-characters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0; color: var(--color-txt-dim); font-size: var(--text-xs); }
+.selected-characters strong { color: var(--color-primary-text); }
+
+/* ─── Rank picker bands ───────────────────────────────────── */
+/* Grouped by colour band, strongest at the top. The band's own hue marks its
+   left edge and names itself, so the grouping is not colour alone. */
+.rank-picker-bands { display: flex; flex-direction: column; gap: 10px; }
+.rank-band { padding-left: 8px; border-left: 3px solid color-mix(in srgb, var(--tier) 70%, transparent); }
+.rank-band-label { display: block; margin-bottom: 4px; color: var(--tier); font-size: var(--text-4xs); font-weight: var(--weight-strong); letter-spacing: .1em; }
+.rank-band-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+
+/* The picker tile's art: a banner image or, where none ships, a plate. Both
+   occupy the same box so the grid does not shift between them. */
+.rank-option-art { height: 36px; max-width: 100%; width: auto; object-fit: contain; }
+img.rank-option-art { display: block; }

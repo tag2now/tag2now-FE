@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import specJson from './openapi.json'
+import { openapiPaths } from './endpoints'
 
 /** What this frontend assumes about tag2now-BE, checked against what it publishes.
  *
@@ -57,7 +58,7 @@ const CONTRACT: Expectation[] = [
   { method: 'post', path: '/community/identity', body: ['name'] },
   { method: 'get', path: '/community/posts', query: ['page', 'page_size', 'post_type', 'characters'] },
   { method: 'post', path: '/community/posts', body: ['title', 'body', 'post_type', 'characters', 'youtube_video_id'] },
-  { method: 'get', path: '/community/posts/{post_id}', reads: ['characters', 'youtube_video_id'] },
+  { method: 'get', path: '/community/posts/{post_id}', reads: ['youtube_video_id', 'post_type', 'characters'] },
   { method: 'patch', path: '/community/posts/{post_id}', body: ['title', 'body', 'post_type', 'characters', 'youtube_video_id'], reads: ['characters'] },
   { method: 'delete', path: '/community/posts/{post_id}' },
   { method: 'post', path: '/community/posts/{post_id}/comments', body: ['body', 'parent_id'] },
@@ -119,6 +120,27 @@ describe('the API contract tag2now-BE publishes', () => {
 
   it.each(declaring('reads'))('returns the fields we read from $method $path', (expectation) => {
     expect(fieldsOf(jsonResponse(operation(expectation)))).toEqual(expect.arrayContaining(expectation.reads!))
+  })
+})
+
+/** The registry and this list have to describe the same frontend.
+ *
+ * Every path above is written by hand, so before `endpoints.ts` existed a new
+ * call could be added to a feature module and simply never appear here — the
+ * suite stayed green while the assumption went unchecked. Now the registry is
+ * the set of paths this frontend can reach at all, and these two tests fail
+ * the moment the two drift apart in either direction.
+ */
+describe('the endpoint registry and the contract list', () => {
+  const declared = new Set(CONTRACT.map((expectation) => expectation.path))
+  const reachable = new Set(openapiPaths())
+
+  it.each([...reachable])('has a contract expectation for %s', (path) => {
+    expect(declared).toContain(path)
+  })
+
+  it.each([...declared])('still reaches %s from the endpoint registry', (path) => {
+    expect(reachable).toContain(path)
   })
 })
 

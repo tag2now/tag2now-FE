@@ -23,7 +23,7 @@ export default function RankSummary({ ranks, imageClassName = 'h-8', max = Infin
   const shown = sortedRanks.slice(0, max)
   const hidden = sortedRanks.length - shown.length
   return <span className={`flex min-w-0 flex-wrap items-center gap-1 ${className}`} aria-label={sortedRanks.join(', ')}>
-    {shown.map((rank) => <RankImage key={rank} rankInfo={{ name: rank, tier: rank }} className={`${imageClassName} w-auto shrink-0 object-contain`} />)}
-    {hidden > 0 && <span aria-label={`추가 계급 ${hidden}개`} className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-primary-dim bg-primary/10 px-1 text-xs font-black text-primary-text">+{hidden}</span>}
+    {shown.map((rank) => <RankImage key={rank} rankInfo={{ name: rank }} className={`${imageClassName} w-auto shrink-0 object-contain`} />)}
+    {hidden > 0 && <span aria-label={`추가 계급 ${hidden}개`} className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-primary-dim bg-primary/10 px-1 text-xs font-extrabold text-primary-text">+{hidden}</span>}
   </span>
 }

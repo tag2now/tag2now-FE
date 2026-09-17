@@ -33,7 +33,7 @@ describe('match update time rendering isolation', () => {
         ? <Rooms data={{ rooms }} loading={false} error={null} groupKey="player_match" lastUpdated={lastUpdated} />
         : <MatchingOverview groups={{ player_match: rooms }} loading={false} error={null} lastUpdated={lastUpdated} />)
 
-      expect(screen.getByRole('table', { name: 'Player match rooms' })).toBeInTheDocument()
+      expect(screen.getByRole('table', { name: '플레이어 매치 방 목록' })).toBeInTheDocument()
       expect(screen.getByText('업데이트 1초 전')).toBeInTheDocument()
       const initialRenderCount = vi.mocked(PlayerMatchTable).mock.calls.length
       expect(initialRenderCount).toBeGreaterThan(0)

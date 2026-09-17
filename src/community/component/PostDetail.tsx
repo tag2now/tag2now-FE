@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import ConfirmDialog from '@/shared/components/ConfirmDialog'
+import useConfirm from '@/shared/hooks/useConfirm'
 import YouTubeVideo from './YouTubeVideo'
 import CreatePostForm from './CreatePostForm'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
-import { thumbPost, createComment, deletePost, updatePost } from '@/community/communityApi'
-import PostTypeBadge, { CharacterBadges } from './PostTypeBadge'
+import { thumbPost, createComment, deletePost, updatePost, type PostInput } from '@/community/communityApi'
+import PostTypeBadge from './PostTypeBadge'
 import CommentTree from './CommentTree'
 import type { LeaderboardEntry } from "@/shared/types";
 import type { PostDetail } from '@/community/types'
@@ -25,10 +27,11 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
   const [submitting, setSubmitting] = useState(false)
   const [thumbing, setThumbing] = useState(false)
   const [editing, setEditing] = useState(false)
+  const { confirm, ...confirmDialog } = useConfirm()
 
-  const handleUpdate = async (title: string, body: string, postType: string, characters: string[], youtubeVideoId?: string) => {
+  const handleUpdate = async (input: PostInput) => {
     await ensureIdentity()
-    await updatePost(post.id, title, body, postType, characters, youtubeVideoId)
+    await updatePost(post.id, input)
     setEditing(false)
     onRefresh()
   }
@@ -59,46 +62,62 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
   }
 
   const handleDelete = async () => {
-    if (!confirm('이 게시글을 삭제하시겠습니까?')) return
-    try {
-      await ensureIdentity()
-      await deletePost(post.id)
-      onDeleted()
-    } catch (_) {}
+    const agreed = await confirm({
+      title: '게시글을 삭제할까요?',
+      body: '삭제한 글과 댓글은 되돌릴 수 없습니다.',
+      confirmLabel: '삭제',
+    })
+    if (!agreed) return
+    // Rejections reach the global unhandledrejection handler, which toasts the
+    // reason. Swallowing them here left a failed delete looking like nothing
+    // had happened at all.
+    await ensureIdentity()
+    await deletePost(post.id)
+    onDeleted()
   }
 
   if (editing) return <CreatePostForm initialPost={post} onSubmit={handleUpdate} onCancel={() => setEditing(false)} />
 
   return (
     <article className="post-detail">
+      {confirmDialog.request && <ConfirmDialog {...confirmDialog} request={confirmDialog.request} />}
       <button
         onClick={onBack}
-        className="mb-4 inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary-text text-xs font-bold cursor-pointer hover:text-white"
+        className="mb-4 inline-flex min-h-8 items-center gap-1.5 bg-transparent border-0 text-primary-text text-xs font-bold cursor-pointer hover:text-txt"
       >
         <ArrowLeft size={14} aria-hidden="true" /> 목록
       </button>
 
+      {/* One line: what the post is and what it says on the left, who wrote it
+          and when on the right.
+          It used to stack three rows - tags+time, author, title - so the
+          heading of the page was its third line, the two images sat at the
+          same left edge in the same size with nothing saying which belonged
+          to the post and which to the person, and the timestamp was grouped
+          with the tags, where it describes nothing.
+          The title wraps rather than truncating: this is the post's own page
+          and its heading is not something to put an ellipsis on. */}
       <header className="post-detail-header">
-        <div className="flex items-center gap-2 mb-2">
-          <PostTypeBadge postType={post.post_type} size="md" />
-          {post.characters?.length ? <CharacterBadges characters={post.characters} size="md" /> : null}
-          <span className="text-sm text-txt-dim">{formatTimeAgo(post.created_at)}</span>
+        <div className="post-detail-head-main">
+          <PostTypeBadge postType={post.post_type} characters={post.characters ?? []} size="md" />
+          <h2>{post.title}</h2>
+        </div>
+        <div className="post-detail-head-side">
+          <div className="post-detail-byline">
+            <AuthorBadge name={post.author} entries={leaderboardEntries} className="author-badge-lg inline-flex" />
+            <span className="post-detail-time">{formatTimeAgo(post.created_at)}</span>
+          </div>
           {username && post.author === username && (
-            <div className="ml-auto flex gap-2">
-            <button onClick={() => setEditing(true)} className="btn-ghost inline-flex items-center gap-1">
-              <FilePenLine size={13} aria-hidden="true" /> 수정
-            </button>
-            <button
-              onClick={handleDelete}
-              className="btn-danger ml-auto uppercase tracking-[0.12em]"
-            >
-              <Trash2 size={13} aria-hidden="true" /> 삭제
-            </button>
+            <div className="post-detail-owner-actions">
+              <button onClick={() => setEditing(true)} className="btn-ghost inline-flex items-center gap-1">
+                <FilePenLine size={13} aria-hidden="true" /> 수정
+              </button>
+              <button onClick={handleDelete} className="btn-danger uppercase tracking-[0.12em]">
+                <Trash2 size={13} aria-hidden="true" /> 삭제
+              </button>
             </div>
           )}
         </div>
-        <AuthorBadge name={post.author} entries={leaderboardEntries} className="inline-flex text-sm mb-2" />
-        <h2>{post.title}</h2>
       </header>
       <div className="post-detail-body"><p>{post.body}</p></div>
       {post.youtube_video_id && <YouTubeVideo videoId={post.youtube_video_id} />}
