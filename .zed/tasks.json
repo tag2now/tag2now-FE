@@ -12,6 +12,16 @@
     "cwd": "$ZED_WORKTREE_ROOT/tag2now-FE"
   },
   {
+    // BE=local points the Vite proxy at http://127.0.0.1:8000.
+    // Without it the dev server proxies to PRODUCTION, so any write
+    // (e.g. a community post) lands in the live board.
+    "label": "FE dev server",
+    "command": "npm",
+    "args": ["run", "dev"],
+    "use_new_terminal": true,
+    "cwd": "$ZED_WORKTREE_ROOT/tag2now-FE"
+  },
+  {
     "label": "FE unit tests",
     "command": "npm",
     "args": ["run", "test"],
