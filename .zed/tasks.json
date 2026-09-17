@@ -25,12 +25,14 @@
     "label": "FE unit tests",
     "command": "npm",
     "args": ["run", "test"],
-    "use_new_terminal": false
+    "use_new_terminal": false,
+    "cwd": "$ZED_WORKTREE_ROOT/tag2now-FE"
   },
   {
     "label": "FE typecheck",
     "command": "npm",
     "args": ["run", "typecheck"],
-    "use_new_terminal": false
+    "use_new_terminal": false,
+    "cwd": "$ZED_WORKTREE_ROOT/tag2now-FE"
   }
 ]
