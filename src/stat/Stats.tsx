@@ -151,7 +151,7 @@ function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; 
           subChar: lb?.player_info?.sub_char_info,
         }
       })}
-      label="이번 주 활동왕"
+      label="주간 철악귀"
       detailLabel="판수"
       emptyMsg="데이터 없음"
       onSelect={onSelect}
@@ -213,7 +213,7 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
       })()}
 
       <div className="section-toolbar compact-toolbar stats-section-break">
-        <div className="section-title"><span className="section-icon"><Crown size={15} /></span><div><h3>이번 주 활동왕</h3><p>최근 7일 매치 참여 순위</p></div></div>
+        <div className="section-title"><span className="section-icon"><Crown size={15} /></span><div><h3>주간 철악귀</h3><p>최근 7일 매치 참여 순위</p></div></div>
         <ToggleGroup options={LIMIT_OPTIONS} value={wt.limit} onChange={wt.setLimit} />
       </div>
       {statusBody(wt.loading, wt.error, {
