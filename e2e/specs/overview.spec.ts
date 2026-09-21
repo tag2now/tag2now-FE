@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test'
 import { mockAllApis, reservationAt, skipPatchNotes } from '../helpers/mock-api'
 
 // The overview is a summary, so what is worth asserting is that each card
-// reflects its own source and that the links out actually change tabs — not the
-// layout, which the visual suite covers.
+// reflects its own source and that the links out actually change tabs. Layout
+// is not covered anywhere now that the screenshot suite is gone.
 test.describe('Overview', () => {
   test.beforeEach(async ({ page }) => {
     await mockAllApis(page, {

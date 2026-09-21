@@ -4,8 +4,8 @@ import { mockAllApis, skipPatchNotes } from '../helpers/mock-api'
 /** The colour literals scattered through the stylesheet were replaced with
  * `color-mix` off the tokens. That substitution is only safe if the browser
  * resolves the two to the same pixels, and nothing else in this repository
- * would notice if it did not — there are no committed visual baselines, and a
- * unit test cannot compute a used value.
+ * would notice if it did not — a unit test cannot compute a used value, and the
+ * screenshot suite that might have caught it is gone.
  *
  * So this asks the browser directly. Note that comparing the *strings*
  * `getComputedStyle` returns does not work: a `color-mix()` serialises as
@@ -14,9 +14,9 @@ import { mockAllApis, skipPatchNotes } from '../helpers/mock-api'
  * rasterises both through a canvas and compares the bytes that come out, which
  * is the question that actually matters.
  *
- * It lives in `e2e/visual`, which CI skips, for the same reason the screenshots
- * do — but unlike them it needs no baseline file, so it works on a clean
- * checkout and is worth running locally after touching the tokens.
+ * It needs no baseline file, so it works on a clean checkout and runs in CI
+ * alongside `e2e/specs`. It keeps the `e2e/visual` folder to itself now that
+ * the screenshot suite it used to sit beside has been removed.
  */
 
 /** The expected value is the *current* token, not the literal that was there

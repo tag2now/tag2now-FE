@@ -19,7 +19,6 @@ npm run test:coverage  # v8 coverage
 npm run typecheck    # tsc --noEmit
 npm run test:e2e     # playwright (auto-starts the dev server)
 npm run test:e2e:ui  # playwright UI mode
-npm run test:e2e:update-snapshots  # refresh visual baselines
 ```
 
 Run a single unit test file:
@@ -247,8 +246,8 @@ window crosses midnight, so "01:00" can follow "23:00".
 Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. Design tokens are declared in an `@theme` block in `src/index.css` and become utilities automatically (`--color-primary` → `bg-primary`, `text-primary`, `border-primary`).
 
 `.app-layout` caps the page at `min(var(--content-max), 100% - 32px)` — sidebar
-plus main column, so it sets the width of **every** tab. Changing it re-renders
-every visual baseline, not just the tab that prompted the change.
+plus main column, so it sets the width of **every** tab. A change here lands on
+every screen, not just the tab that prompted it.
 
 `--content-max` (1050px) is shared with `.app-header`'s horizontal padding so
 the header's content edges line up with the layout's. That padding is computed
@@ -312,7 +311,9 @@ Component tests are prop-driven and need no mocks. `App.test.tsx` mocks the feat
   history/community/reservation reads included; anything unrouted reaches
   whatever the dev server proxies to, which is **production** by default.
 - `e2e/specs/` — behavioural specs per feature.
-- `e2e/visual/screenshots.spec.ts` — visual regression, **local only**; CI does not run it.
+- `e2e/visual/tokens.spec.ts` — asserts a `color-mix` off a token rasterises to
+  the same pixels as the literal it replaced. It compares computed colours
+  through a canvas, not baseline images, so it runs anywhere.
 
 Helpers worth reaching for: `goToMatchTab` (the overview is the landing tab, so
 a rooms spec can click through or `goto('/match/rank_match')`) and
@@ -333,27 +334,18 @@ navigation and use `fastForward`, not `runFor`: `runFor` replays every timer
 callback along the way, which measured 2.7s of the rooms auto-refresh test on
 its own. `fastForward` jumps to the target instant — that test went 5.6s → 1.6s.
 
-Visual baselines are environment-sensitive: snapshots rendered on Windows will
-not match CI's Linux, which is why the filenames carry a `-win32` / `-linux`
-suffix.
+**There is no screenshot suite, deliberately.** `e2e/visual/screenshots.spec.ts`
+and the `Update Visual Baselines` workflow were removed: its baselines were
+gitignored, so nothing was tracked, CI could not run it, and every developer
+compared against whatever their own machine last rendered. It never caught a
+regression and went red on unrelated changes — a version string in the header
+changing width was enough. At the end it failed 8 of 10 on an untouched
+checkout.
 
-**No baseline is in the repository.** `.gitignore` excludes
-`e2e/visual/screenshots.spec.ts-snapshots/` entirely, so nothing is tracked and
-`git add` will not stage one. CI therefore has nothing to compare against, and
-`toHaveScreenshot` fails there with "a snapshot doesn't exist" — so **both
-workflows run `npx playwright test e2e/specs` and skip `e2e/visual` outright**.
-Do not widen that back to a bare `npx playwright test` without committing linux
-baselines in the same change; that is exactly what broke the v2.3.1 deploy.
-
-What remains is a local check: the suite compares against whatever your own
-machine last produced. A stale local baseline fails on unrelated changes — a
-version string in the header changing width is enough. Delete the offending
-`*-win32.png` and let the next run recreate it.
-
-The `Update Visual Baselines` workflow (`workflow_dispatch`) still exists and
-runs against **the pushed branch**, but it only uploads an artifact; nothing
-consumes it. Deciding how baselines should be produced and stored — committed
-linux PNGs, an external service, or dropping the visual suite — is still open.
+Reinstating pixel comparison means solving the baseline problem first, not
+re-adding `toHaveScreenshot`: commit Linux PNGs generated in a container and run
+them in CI, or use a hosted service. A suite whose baselines live only on one
+machine is worse than none, because it trains you to ignore a red run.
 
 **Parallelism.** `workers` matches the core count — 4 on CI (`ubuntu-latest`),
 unset locally — with `retries: 1` on CI only. It was 1 on CI, the Playwright
@@ -411,7 +403,6 @@ absolute URLs (`og:url`, `canonical`) must use the `match.` host.
 |----------|---------|------|
 | `test.yml` | PR to `master`, push to `master`, `workflow_call` | API contract check, unit tests + typecheck, then E2E |
 | `deploy.yml` | `v*` tag | full test suite, build and push to ECR, then deploy to production over SSH |
-| `update-snapshots.yml` | manual | regenerate visual baselines, upload as artifact |
 
 ### Versioning
 

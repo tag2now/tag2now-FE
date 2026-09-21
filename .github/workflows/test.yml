@@ -39,8 +39,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      # 비주얼 회귀(e2e/visual)는 커밋된 리눅스 baseline이 없어 CI에서 제외한다.
-      - run: npx playwright test e2e/specs
+      # 전체를 돌린다. 스냅샷 비교는 더 이상 없고, 남은 e2e/visual/tokens.spec.ts는
+      # baseline 파일 없이 브라우저가 계산한 색을 직접 비교하므로 CI에서도 동작한다.
+      - run: npx playwright test
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:

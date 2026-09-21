@@ -4,6 +4,5 @@ dist/
 test-results
 e2e/test-results/
 e2e/playwright-report/
-e2e/visual/screenshots.spec.ts-snapshots/
 # Claude Code: shared commands are tracked; per-developer permissions are not.
 .claude/settings.local.json
