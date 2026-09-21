@@ -21,6 +21,13 @@ export const POLL = {
    * it. App swaps between this and the background rate by active tab. */
   reservationsActive: 10_000,
 
+  /** A post is written, not scheduled, so the board changes a few times a day
+   * at most — slower than anything else here. */
+  communityBackground: 120_000,
+
+  /** Same arrangement as the reservation pair above. */
+  communityActive: 30_000,
+
   /** The leaderboard is recomputed on the backend far more slowly than a
    * session lasts, and a manual refresh is offered in the panel. */
   leaderboard: null,

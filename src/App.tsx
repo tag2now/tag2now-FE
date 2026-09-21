@@ -13,6 +13,7 @@ import useActiveTab from '@/shared/hooks/useActiveTab'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useRooms from "@/match/useRooms";
 import useReservations, { countOpen } from "@/reservation/useReservations";
+import useCommunityFeed, { countRecent, isRecentCountCapped } from "@/community/useCommunityFeed";
 import { POLL } from '@/config/polling'
 import Community from "@/community/Community";
 import Rooms from "@/match/Rooms";
@@ -49,6 +50,9 @@ export default function App() {
   const reservations = useReservations(
     activeTab === 'reservation' ? POLL.reservationsActive : POLL.reservationsBackground,
   )
+  const communityFeed = useCommunityFeed(
+    activeTab === 'community' ? POLL.communityActive : POLL.communityBackground,
+  )
 
   const groups = rooms.data?.groups ?? {}
   // Everyone currently in a room, so the profile card can say whether you
@@ -73,6 +77,10 @@ export default function App() {
   // simply not rendered until then. Zero is a real answer and stays visible -
   // "매칭 0" tells the user the lobby is empty, which is worth knowing.
   const openReservations = reservations.data && countOpen(reservations.data)
+  // Zero is dropped here, unlike the two counts above: a badge that never goes
+  // away stops signalling that something arrived.
+  const recentPosts = countRecent(communityFeed.data) || undefined
+  const recentPostsCapped = isRecentCountCapped(communityFeed.data)
   const primaryTabs = useMemo(() => [
     // '홈', not '개요'. This tab owns "/" and is where the site opens, and what
     // it shows is what is happening right now — not a summary of a document.
@@ -87,10 +95,17 @@ export default function App() {
     // 커뮤니티 before 리더보드: the first three tabs are things happening now
     // and the last three are places to read, and of those two the board is the
     // one that changes daily.
-    { key: 'community', label: '커뮤니티' },
+    // `display` overrides the figure the eye reads without touching the one
+    // assistive tech hears — a capped count is a floor, not a total.
+    {
+      key: 'community', label: '커뮤니티',
+      badge: recentPosts,
+      display: recentPostsCapped ? `${recentPosts}+` : undefined,
+      spoken: (n: number) => recentPostsCapped ? ` 새 글 ${n}개 이상` : ` 새 글 ${n}개`,
+    },
     { key: 'leaderboard', label: '리더보드' },
     { key: 'stats', label: '통계' },
-  ], [roomsLoaded, rooms.data?.total, openReservations])
+  ], [roomsLoaded, rooms.data?.total, openReservations, recentPosts, recentPostsCapped])
   const activePrimary = isRoomTab ? 'match' : activeTab
 
   const tabIcon = (key: string) => {
@@ -177,7 +192,7 @@ export default function App() {
                     <span>{t.label}</span>
                     {t.badge != null && (
                       <span className="nav-badge">
-                        <span aria-hidden="true">{t.badge}</span>
+                        <span aria-hidden="true">{t.display ?? t.badge}</span>
                         <span className="sr-only">{t.spoken(t.badge)}</span>
                       </span>
                     )}

@@ -4,10 +4,11 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import App from "@/App";
 
 // Create stable mock functions accessible inside vi.mock factories
-const { mockedFetchLeaderboard, mockedFetchRoomsAll, mockedFetchReservations } = vi.hoisted(() => ({
+const { mockedFetchLeaderboard, mockedFetchRoomsAll, mockedFetchReservations, mockedFetchPosts } = vi.hoisted(() => ({
   mockedFetchLeaderboard: vi.fn(),
   mockedFetchRoomsAll: vi.fn(),
   mockedFetchReservations: vi.fn(),
+  mockedFetchPosts: vi.fn(),
 }))
 
 // Overview fetches four sources of its own; these tests are about tab wiring,
@@ -30,6 +31,13 @@ vi.mock("@/shared/hooks/useLeaderboard", async () => {
 vi.mock('@/reservation/reservationApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/reservation/reservationApi')>()),
   fetchReservations: mockedFetchReservations,
+}))
+
+// Same arrangement for the community badge: the request is stubbed so
+// countRecent still runs against real payloads and real timestamps.
+vi.mock('@/community/communityApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/community/communityApi')>()),
+  fetchPosts: mockedFetchPosts,
 }))
 
 vi.mock('@/match/useRooms', async () => {
@@ -102,10 +110,23 @@ const reservation = (over: Record<string, unknown> = {}) => ({
   created_at: '2026-01-01T00:00:00+09:00', ...over,
 })
 
+/** A post written `hoursAgo` before now. The badge's window is measured from
+ * the current clock, so a fixed timestamp would age out of it and the test
+ * would start failing on a date nobody changed anything on. */
+const post = (id: number, hoursAgo: number) => ({
+  id, author: 'Writer', title: `post ${id}`, body: '', post_type: '자유',
+  characters: [], thumbs_up: 0, thumbs_down: 0, comment_count: 0,
+  created_at: new Date(Date.now() - hoursAgo * 3_600_000).toISOString(),
+})
+
+const postList = (posts: ReturnType<typeof post>[]) =>
+  ({ posts, total: posts.length, page: 1, page_size: 20 })
+
 beforeEach(() => {
   mockedFetchLeaderboard.mockResolvedValue(LEADERBOARD_DATA as any)
   mockedFetchRoomsAll.mockResolvedValue(ROOMS_DATA as any)
   mockedFetchReservations.mockResolvedValue([reservation()] as any)
+  mockedFetchPosts.mockResolvedValue(postList([]) as any)
 })
 
 afterEach(() => {
@@ -221,11 +242,12 @@ describe('App', () => {
 
     unmount!()
 
-    // Two App-level polls — rooms, and reservations for the nav badge. The
-    // leaderboard passes a null interval and never registers one, and the
-    // overview fetches once without polling. The Reservation tab keeps its own
-    // faster interval, but that one lives and dies with the tab.
-    expect(clearIntervalSpy).toHaveBeenCalledTimes(2)
+    // Three App-level polls — rooms, and reservations and community posts for
+    // the nav badges. The leaderboard passes a null interval and never
+    // registers one, and the overview fetches once without polling. The
+    // Reservation and Community tabs each ask their shared source for a faster
+    // rate, but that is a retime of the same timer, not a fourth one.
+    expect(clearIntervalSpy).toHaveBeenCalledTimes(3)
     clearIntervalSpy.mockRestore()
   })
 
@@ -416,6 +438,39 @@ describe('App', () => {
 
       expect(await screen.findByRole('tab', { name: '매칭 방 0개' })).toBeInTheDocument()
       expect(await screen.findByRole('tab', { name: '예약 모집중 0건' })).toBeInTheDocument()
+    })
+
+    it('counts only posts from the last 24 hours on the community tab', async () => {
+      mockedFetchPosts.mockResolvedValue(postList([
+        post(3, 1), post(2, 23), post(1, 25),
+      ]) as any)
+
+      await renderApp()
+
+      expect(await screen.findByRole('tab', { name: '커뮤니티 새 글 2개' })).toBeInTheDocument()
+    })
+
+    it('drops the community badge when nothing is new, unlike the counts above', async () => {
+      // Zero rooms is news; zero new posts is the ordinary state of a board,
+      // and a badge that never goes away stops meaning anything.
+      mockedFetchPosts.mockResolvedValue(postList([post(1, 48)]) as any)
+
+      await renderApp()
+
+      expect(await screen.findByRole('tab', { name: '커뮤니티' })).toBeInTheDocument()
+    })
+
+    it('marks the community count as a floor when a full page is all recent', async () => {
+      // One page is all the badge can see, so 20 recent posts out of 20 fetched
+      // is a lower bound, not a total.
+      mockedFetchPosts.mockResolvedValue(postList(
+        Array.from({ length: 20 }, (_, i) => post(i + 1, 1)),
+      ) as any)
+
+      await renderApp()
+
+      expect(await screen.findByRole('tab', { name: '커뮤니티 새 글 20개 이상' })).toBeInTheDocument()
+      expect(screen.getByText('20+')).toBeInTheDocument()
     })
   })
 
