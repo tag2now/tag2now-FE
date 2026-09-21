@@ -158,7 +158,10 @@
   .field-heading { display: block; }
   .field-heading small { display: block; margin-top: 2px; }
   .data-table-wrap { border-radius: 6px; }
-  .comment-composer { position: sticky; bottom: 72px; z-index: 10; background: var(--color-bg-panel); }
+  /* The composer is deliberately *not* sticky here. It is the last child of
+     .post-detail, so there is no content behind it to scroll --- lifting it
+     off the flow could only ever paint it over the comment above, which is
+     exactly what it did, cutting the last comment in half. */
   /* One at a time. Stacked, the detail sat below every card in the list, so
      opening a reservation meant scrolling past all of them to reach it. */
   .panel:not(.has-selection) .reservation-detail { display: none; }
