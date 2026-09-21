@@ -127,10 +127,19 @@
   .compact-toolbar { margin-bottom: 12px; }
   .section-title :is(p, small) { display: none; }
   .section-icon { width: 26px; height: 26px; }
-  /* Whatever the section put beside its title --- a wrapper, or a bare toggle
-     group --- takes the width the title leaves and splits it evenly between
-     its options, so every bar's buttons are the same size on every tab. */
-  .section-toolbar > :not(.section-title) { flex: 1 1 auto; min-width: 0; }
+  /* A toggle group beside the title --- bare, or inside a wrapper --- takes
+     the width the title leaves and splits it evenly between its options, so
+     every bar's buttons are the same size on every tab.
+     Only a toggle group. This was `> :not(.section-title)`, which also
+     stretched the bars whose trailing item is a button or two: those have
+     nothing to spread into, so the growth settled as dead space to their
+     right and the buttons stopped meeting the panel edge. Matched on what
+     the subtree *holds*, not its class --- 매칭 and 통계 both wrap theirs in
+     an anonymous `flex items-center gap-*`, so the class cannot tell the two
+     cases apart. Everything unmatched keeps its natural width and is pushed
+     right by .section-toolbar's own `justify-content: space-between`. */
+  .section-toolbar > :is(.toggle-group, .segmented-control):not(.section-title),
+  .section-toolbar > :not(.section-title):has(.toggle-group, .segmented-control) { flex: 1 1 auto; min-width: 0; }
   .section-toolbar :is(.toggle-group, .segmented-control) { display: flex; width: 100%; min-width: 0; }
   .section-toolbar :is(.toggle-group-option, .segmented-control button) { min-width: 0; flex: 1 1 0; padding: 0 8px; }
   .chart-grid { grid-template-columns: 1fr; }
