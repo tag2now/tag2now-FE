@@ -222,11 +222,24 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
                   <h3 className="font-display text-2xl font-extrabold tracking-[0.08em] text-txt">{time}</h3>
                   <span className="text-xs font-bold tracking-[0.12em] text-txt-dim">예약 {reservationsAtTime.length}건</span>
                 </div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {/* Two across, not three. This list occupies the left half of
+                    the panel, so a third column cut each card to 160px — and a
+                    card has to hold a name and up to three rank banners, which
+                    need 188px between them. A time slot rarely holds more than
+                    two reservations anyway, so the third column mostly stood
+                    empty while narrowing the cards beside it. */}
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {reservationsAtTime.map((reservation) => {
                     const availability = availabilityMeta(reservation)
                     const selected = reservation.id === selectedReservation?.id
-                    return <button key={reservation.id} type="button" onClick={() => setSelectedId(reservation.id)} className={`reservation-card grid grid-cols-2 overflow-hidden text-left transition-colors ${selected ? 'selected' : ''}`}>
+                    // The name column takes what the ranks do not need, rather
+                    // than half of whatever the card has: equal halves left the
+                    // rank side 16px spare while the name was 16px short, and
+                    // nothing could move between them. 125px is seven Hangul at
+                    // this cell's 16px plus its 24px of padding — px, not em,
+                    // because a grid track reads the card's font size and the
+                    // name sets its own.
+                    return <button key={reservation.id} type="button" onClick={() => setSelectedId(reservation.id)} className={`reservation-card grid grid-cols-[minmax(125px,1fr)_auto] overflow-hidden text-left transition-colors ${selected ? 'selected' : ''}`}>
                       <span className="flex min-w-0 flex-col justify-between px-3 py-3"><strong className="truncate text-base tracking-[0.03em] text-txt">{reservation.host}</strong><span className={`w-fit border px-1.5 py-0.5 text-xs font-bold tracking-[0.08em] ${availability.className}`}>{availability.label}</span></span>
                       <span className="flex min-w-0 items-center justify-center border-l border-border bg-bg-row px-2">{reservation.type === '플레이어 매치' || (reservation.type === '상관없음' && reservation.ranks.length === 0) ? <span className="flex h-8 items-center border border-primary-dim px-2 text-center text-xs font-bold tracking-[0.04em] text-primary-text">{reservation.type === '상관없음' ? 'ANY MATCH' : 'PLAYER MATCH'}</span> : <RankSummary ranks={reservation.ranks} imageClassName="h-7" max={3} />}</span>
                     </button>
