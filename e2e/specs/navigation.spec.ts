@@ -47,6 +47,14 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('tab', { name: '랭매 (2)' })).toBeVisible()
   })
 
+  // The count is measured against the clock, so it is only testable because the
+  // fixture's posts are dated from the moment the spec runs. Two of its three
+  // are inside the 24-hour window and the third is 30 hours old, which is what
+  // makes this assert a window rather than a post count.
+  test('the community tab counts only posts from the last day', async ({ page }) => {
+    await expect(page.getByRole('tab', { name: '커뮤니티 새 글 2개' })).toBeVisible()
+  })
+
   test('clicking leaderboard tab shows leaderboard content', async ({ page }) => {
     await page.getByRole('tab', { name: '리더보드' }).click()
 

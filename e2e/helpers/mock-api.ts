@@ -55,6 +55,25 @@ export interface ApiReservation {
   created_at: string
 }
 
+/** The board's posts, dated from the moment the spec runs.
+ *
+ * Their `created_at` used to be fixed dates in the fixture, which aged: the
+ * newest post was written in March and the suite now runs in September, so
+ * anything the app measures against the clock — 방금 전 on a row, the sidebar's
+ * 24-hour new-post count — saw a board that had been silent for months and
+ * rendered the empty case. The rest of the fixture is still the fixture; only
+ * the timestamps are rewritten, keeping its existing oldest-first order and
+ * straddling that 24-hour window on purpose — two posts inside it, one out.
+ */
+export function communityPosts(): typeof communityPostsData {
+  const hoursAgo = [30, 5, 1]
+  const posts = communityPostsData.posts.map((post, index) => ({
+    ...post,
+    created_at: new Date(Date.now() - hoursAgo[index % hoursAgo.length] * 3_600_000).toISOString(),
+  }))
+  return { ...communityPostsData, posts }
+}
+
 /** A start_at two hours out, so the backend's 10-minute lead time is moot. */
 export function reservationAt(hour: number, overrides: Partial<ApiReservation> = {}): ApiReservation {
   const start = new Date()
@@ -342,7 +361,7 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(overrides?.posts ?? communityPostsData),
+      body: JSON.stringify(overrides?.posts ?? communityPosts()),
     })
   })
 }
