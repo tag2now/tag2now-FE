@@ -138,7 +138,11 @@
    the panel. It cannot simply move inside: it is a `role="tablist"` whose tabs
    own the `tabpanel` below, and a tab nested in its own panel is invalid. So it
    stays a sibling and joins visually — one border, no seam. */
-.room-tabs { display: flex; align-items: center; gap: 8px; min-height: 42px; margin-bottom: -1px; padding: 4px 12px; border: 1px solid var(--color-border-light); border-bottom-color: transparent; border-radius: 8px 8px 0 0; background: var(--color-bg-panel); position: relative; z-index: 1; }
+/* Padded at the top, not around: the chips are 32px in a 42px strip, so the
+   4px this used to carry left them 5px clear of the border and wedged against
+   it. The space belongs above them --- below, the strip joins the panel and a
+   gap there would show as a seam. */
+.room-tabs { display: flex; align-items: center; gap: 8px; min-height: 42px; margin-bottom: -1px; padding: 14px 0px 0px 12px; border: 1px solid var(--color-border-light); border-bottom-color: transparent; border-radius: 8px 8px 0 0; background: var(--color-bg-panel); position: relative; z-index: 1; }
 .room-tabs-label { flex: 0 0 auto; padding-left: 2px; color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-strong); letter-spacing: .1em; text-transform: uppercase; }
 .room-tabs > div { display: flex; min-width: 0; gap: 4px; overflow-x: auto; scrollbar-width: none; }
 .room-tabs > div::-webkit-scrollbar { display: none; }

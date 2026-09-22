@@ -295,14 +295,3 @@
 .youtube-video-footer a { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--color-primary-text); }
 .youtube-video-footer a:hover { color: white; }
 .youtube-video-footer a:focus-visible { outline: 2px solid var(--color-primary-text); outline-offset: 3px; }
-
-/* The match tab is the only one whose first element is not the panel: the
-   tablist sits above it as a sibling (see the .room-tabs comment in shell.css
-   for why it cannot move inside). Every tab starts at the same y, but the
-   others open with a bordered panel whose 16px padding reads as breathing
-   room, while this one opens with a 42px strip padded 4px --- so the chips sit
-   against the top of the page. The phone layout already clears 12px here from
-   the stacked grid's gap; this gives the desktop the same. */
-@media (min-width: 761px) {
-  .room-tabs { margin-top: 12px; }
-}
