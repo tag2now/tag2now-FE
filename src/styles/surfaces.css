@@ -16,6 +16,15 @@
    where nothing has width to spare, the differences turned into breakage. */
 .section-toolbar { display: flex; min-height: 48px; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border-light); }
 .community-section-toolbar { margin-bottom: 0; }
+/* The bar owns the space below it, not above --- so it lands flush against
+   anything that already ends in a rule of its own, and the two borders read
+   as one thick line 12px apart. That is the reservation heading and, on the
+   community board, the bar above this one. Both get the gap here rather than
+   from a margin on .section-toolbar itself, which every tab shares and whose
+   spacing is already correct wherever the preceding element carries its own
+   margin. */
+.panel-heading + .section-toolbar,
+.section-toolbar + .section-toolbar { margin-top: 12px; }
 .compact-toolbar { margin-bottom: 16px; }
 .section-title { display: flex; min-width: 0; flex: 1 1 auto; align-items: center; gap: 8px; }
 /* The text column, so a long title ellipses inside the space left over

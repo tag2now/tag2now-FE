@@ -167,7 +167,7 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
       <div className="absolute inset-0 pointer-events-none opacity-25 [background-image:linear-gradient(rgba(230,57,70,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(230,57,70,0.04)_1px,transparent_1px)] [background-size:24px_24px]" />
       {confirmDialog.request && <ConfirmDialog {...confirmDialog} request={confirmDialog.request} />}
       <div className="relative">
-        <div className="flex flex-col gap-4 border-b border-border-light pb-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="panel-heading flex flex-col gap-4 border-b border-border-light pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="panel-meta mb-1 text-primary-text">MATCH APPOINTMENT / KST</p>
             <h3 className="font-display text-[15px] font-bold tracking-[0.08em] text-txt">오늘의 예약</h3>
