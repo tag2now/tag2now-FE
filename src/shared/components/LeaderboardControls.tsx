@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import useCharacterPickerDefault from '@/shared/hooks/useCharacterPickerDefault'
 import { ChevronDown, Users, X } from 'lucide-react'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import { charImageUrl } from '@/shared/characterImage'
@@ -42,8 +42,9 @@ export default function LeaderboardControls({
   // The grid is 60 portraits with no heading, and it used to open the page:
   // before you reached the ranking you scrolled past three dense rows of faces
   // that never said what they were for. It is a filter, so it behaves like one
-  // — folded away, with its state on the button that opens it.
-  const [pickerOpen, setPickerOpen] = useState(false)
+  // — with its state on the button that opens it, and folded away wherever the
+  // ranking would not survive it. See useCharacterPickerDefault.
+  const [pickerOpen, setPickerOpen] = useCharacterPickerDefault()
   const portrait = character ? charImageUrl(character) : null
 
   return (

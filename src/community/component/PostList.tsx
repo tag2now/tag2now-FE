@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import useCharacterPickerDefault from '@/shared/hooks/useCharacterPickerDefault'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import PostTypeBadge from './PostTypeBadge'
@@ -32,7 +32,7 @@ export default function PostList({
   postType, onPostTypeChange, characters, onCharactersChange,
   onPageChange, onSelectPost, onRefresh, onWrite, leaderboardEntries,
 }: PostListProps) {
-  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerOpen, setPickerOpen] = useCharacterPickerDefault()
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   return (
