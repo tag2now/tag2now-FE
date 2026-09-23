@@ -129,7 +129,14 @@
 .app-nav { display: flex; flex-direction: column; gap: 2px; }
 .app-nav .tab-btn { width: 100%; }
 .app-nav .tab-btn::before { display: none; }
-.app-main { min-width: 0; }
+/* The grid already gives this column the sidebar's height; these three lines
+   pass it down to the panel so a short tab ends level with the nav instead of
+   19px above it. 매칭 with no rooms and 예약 with nothing booked were the two
+   that fell short --- every other tab overruns the sidebar by hundreds of
+   pixels, and `flex: 1` is a floor, not a cap, so those are untouched. */
+.app-main { display: flex; flex-direction: column; min-width: 0; }
+.app-main > [role="tabpanel"] { display: flex; flex: 1; flex-direction: column; }
+.app-main > [role="tabpanel"] > .panel { flex: 1; }
 .app-main [role="tabpanel"]:focus { outline: none; }
 /* Attached to the panel, not floating above it.
    This strip used to be its own bordered box with an 8px gap under it, which
