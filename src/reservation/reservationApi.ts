@@ -1,70 +1,42 @@
 import { DELETE, GET, PATCH, POST } from '@/shared/util/api'
-import { AppError } from '@/shared/util/AppError'
 import { API } from '@/config/endpoints'
-import {
-  readToken, removeToken, writeToken,
-  reservationCommentKey, reservationOwnerKey, reservationParticipantKey,
-} from '@/shared/util/storage'
 
-export type ApiParticipant = { id: number; display_name: string }
-export type ApiReservation = { id: number; start_at: string; host_display_name: string; host_ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string; status: 'open' | 'matched' | 'cancelled' | 'ended'; participant_count: number; participants?: ApiParticipant[]; created_at: string }
-export type CreateReservationInput = { start_time: string; display_name: string; ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string }
-export type ApiComment = { id: number; reservation_id: number; author: string; body: string; created_at: string }
-const participantKey = reservationParticipantKey
-const commentKey = reservationCommentKey
-const ownerKey = reservationOwnerKey
+/** Every write here needs a signed-in user; `api.ts` attaches the token. The
+ * host, participants and comment authors are that user --- the requests name
+ * nobody. `*_username` fields are the RPCN id, compared against the signed-in
+ * user's to answer "is this mine?"; they are null on rows from before login. */
+export type ApiParticipant = { id: number; display_name: string; username: string | null }
+export type ApiReservation = { id: number; start_at: string; host_display_name: string; host_username: string | null; host_ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string; status: 'open' | 'matched' | 'cancelled' | 'ended'; participant_count: number; participants?: ApiParticipant[]; created_at: string }
+export type CreateReservationInput = { start_time: string; ranks: string[]; match_type: 'rank_match' | 'player_match' | 'any'; capacity: number; memo: string }
+export type ApiComment = { id: number; reservation_id: number; author: string; author_username: string | null; body: string; created_at: string }
 
 // The window is the server's to decide — now until the next 06:00 KST — so the
 // client no longer names a date. A session that runs past midnight stays on one list.
 export const fetchReservations = (): Promise<ApiReservation[]> => GET(API.reservations().path)
-export async function createReservation(data: CreateReservationInput) {
-  const result = await POST(API.reservations().path, data)
-  writeToken(ownerKey(result.reservation.id), result.owner_token)
-  return result.reservation as ApiReservation
-}
-export async function joinReservation(id: number, displayName: string) {
-  const result = await POST(API.reservationParticipants(id).path, { display_name: displayName, ranks: [] })
-  writeToken(participantKey(id), result.participant_token)
-  return result.reservation as ApiReservation
-}
-export async function cancelParticipation(id: number) {
-  const token = readToken(participantKey(id))
-  if (!token) throw new AppError('참가 취소 권한이 없습니다.')
-  const result = await DELETE(API.ownParticipation(id).path, { 'X-Reservation-Token': token })
-  removeToken(participantKey(id))
-  return result as ApiReservation
-}
-export type UpdateReservationInput = Partial<Pick<CreateReservationInput, 'start_time' | 'ranks' | 'match_type' | 'capacity' | 'memo'>>
 
-export async function updateReservation(id: number, patch: UpdateReservationInput) {
-  const token = readToken(ownerKey(id))
-  if (!token) throw new AppError('예약을 수정할 권한이 없습니다.')
-  return await PATCH(API.reservation(id).path, patch, { 'X-Reservation-Token': token }) as ApiReservation
-}
+export const createReservation = (data: CreateReservationInput): Promise<ApiReservation> =>
+  POST(API.reservations().path, data)
 
-export async function cancelReservation(id: number) {
-  const token = readToken(ownerKey(id))
-  if (!token) throw new AppError('예약을 삭제할 권한이 없습니다.')
-  await DELETE(API.reservation(id).path, { 'X-Reservation-Token': token })
-  removeToken(ownerKey(id))
+export const joinReservation = (id: number): Promise<ApiReservation> =>
+  POST(API.reservationParticipants(id).path, { ranks: [] })
+
+export const cancelParticipation = (id: number): Promise<ApiReservation> =>
+  DELETE(API.ownParticipation(id).path)
+
+export type UpdateReservationInput = Partial<CreateReservationInput>
+
+export const updateReservation = (id: number, patch: UpdateReservationInput): Promise<ApiReservation> =>
+  PATCH(API.reservation(id).path, patch)
+
+export async function cancelReservation(id: number): Promise<void> {
+  await DELETE(API.reservation(id).path)
 }
-export const hasParticipation = (id: number) => readToken(participantKey(id)) !== null
-export const isOwner = (id: number) => readToken(ownerKey(id)) !== null
 
 export const fetchComments = (id: number): Promise<ApiComment[]> => GET(API.reservationComments(id).path)
 
-export async function createComment(id: number, displayName: string, body: string) {
-  const result = await POST(API.reservationComments(id).path, { display_name: displayName, body })
-  writeToken(commentKey(result.comment.id), result.author_token)
-  return result.comment as ApiComment
-}
+export const createComment = (id: number, body: string): Promise<ApiComment> =>
+  POST(API.reservationComments(id).path, { body })
 
-export async function deleteComment(reservationId: number, commentId: number) {
-  const token = readToken(commentKey(commentId))
-  if (!token) throw new AppError('댓글을 삭제할 권한이 없습니다.')
-  await DELETE(API.reservationComment(reservationId, commentId).path, { 'X-Reservation-Token': token })
-  removeToken(commentKey(commentId))
+export async function deleteComment(reservationId: number, commentId: number): Promise<void> {
+  await DELETE(API.reservationComment(reservationId, commentId).path)
 }
-
-/** Authorship is possession of the token this browser was handed when it posted. */
-export const isCommentAuthor = (commentId: number) => readToken(commentKey(commentId)) !== null

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { MessageSquare, Send, Trash2 } from 'lucide-react'
+import { LogIn, MessageSquare, Send, Trash2 } from 'lucide-react'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
-import { createComment, deleteComment, fetchComments, isCommentAuthor, type ApiComment } from '@/reservation/reservationApi'
+import { createComment, deleteComment, fetchComments, type ApiComment } from '@/reservation/reservationApi'
+import useAuth from '@/auth/useAuth'
 
 const MAX_BODY = 500
 
 type Props = {
   reservationId: number
-  username: string | null
   onError: (error: unknown, fallback: string) => void
 }
 
@@ -17,7 +17,8 @@ type Props = {
  * written in bursts while the listing changes slowly, and reloading the whole
  * reservation list to pick up one new line would be the wrong trade.
  */
-export default function CommentList({ reservationId, username, onError }: Props) {
+export default function CommentList({ reservationId, onError }: Props) {
+  const { user, requireUser } = useAuth()
   const [comments, setComments] = useState<ApiComment[]>([])
   const [draft, setDraft] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -38,10 +39,11 @@ export default function CommentList({ reservationId, username, onError }: Props)
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
     const body = draft.trim()
-    if (!body || !username || submitting) return
+    if (!body || submitting) return
+    if (!requireUser('로그인하면 댓글을 남길 수 있습니다.')) return
     setSubmitting(true)
     try {
-      await createComment(reservationId, username, body)
+      await createComment(reservationId, body)
       setDraft('')
       await refresh()
     } catch (error) {
@@ -77,7 +79,7 @@ export default function CommentList({ reservationId, username, onError }: Props)
               <strong className="truncate text-txt">{comment.author}</strong>
               <span className="flex shrink-0 items-baseline gap-2 text-[11px]">
                 <span className="text-txt-faint">{formatTimeAgo(comment.created_at)}</span>
-                {isCommentAuthor(comment.id) && (
+                {user && comment.author_username === user.username && (
                   <button
                     type="button"
                     aria-label={`${comment.author}님의 댓글 삭제`}
@@ -100,7 +102,15 @@ export default function CommentList({ reservationId, username, onError }: Props)
 
       {comments.length === 0 && <p className="mt-3 text-xs text-txt-faint">아직 댓글이 없습니다.</p>}
 
-      <form className="mt-3 flex items-start gap-2" onSubmit={submit}>
+      {/* Signed out, the composer would be a disabled box with nothing to
+          press; the button that fixes that stands in its place instead. */}
+      {!user && (
+        <button type="button" className="btn-ghost mt-3 w-full" onClick={() => requireUser('로그인하면 댓글을 남길 수 있습니다.')}>
+          <LogIn size={14} aria-hidden="true" /> 로그인하고 댓글 남기기
+        </button>
+      )}
+
+      {user && <form className="mt-3 flex items-start gap-2" onSubmit={submit}>
         <label className="sr-only" htmlFor="reservation-comment-body">댓글 내용</label>
         <textarea
           id="reservation-comment-body"
@@ -111,9 +121,9 @@ export default function CommentList({ reservationId, username, onError }: Props)
           // class, so the override has to be inline. These are one-liners.
           style={{ minHeight: '2.25rem' }}
           maxLength={MAX_BODY}
-          placeholder={username ? '예: 21시에 갈게요' : '먼저 유저명을 설정해 주세요'}
+          placeholder="예: 21시에 갈게요"
           value={draft}
-          disabled={!username || submitting}
+          disabled={submitting}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
             if (event.key !== 'Enter' || event.shiftKey) return
@@ -126,12 +136,12 @@ export default function CommentList({ reservationId, username, onError }: Props)
         <button
           type="submit"
           className="btn-primary shrink-0 self-stretch px-3"
-          disabled={!username || submitting || draft.trim().length === 0}
+          disabled={submitting || draft.trim().length === 0}
         >
           <Send size={14} aria-hidden="true" />
           <span className="sr-only">댓글 등록</span>
         </button>
-      </form>
+      </form>}
     </section>
   )
 }

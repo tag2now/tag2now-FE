@@ -4,7 +4,7 @@ import { mockAllApis, reservationAt, skipPatchNotes } from '../helpers/mock-api'
 test('shows the completed reservation roster in the detail panel', async ({ page }) => {
   const reservation = {
     ...reservationAt(21, { capacity: 2, participant_count: 2, status: 'matched' }),
-    participants: [{ id: 1, display_name: 'TTT2_Master' }, { id: 2, display_name: 'KingOfIronFist' }],
+    participants: [{ id: 1, display_name: 'TTT2_Master', username: 'np_001' }, { id: 2, display_name: 'KingOfIronFist', username: 'np_002' }],
   }
   await mockAllApis(page, { reservations: [reservation] })
   await skipPatchNotes(page)

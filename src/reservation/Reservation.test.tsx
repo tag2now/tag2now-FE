@@ -2,8 +2,8 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import Reservation from './Reservation'
-import { cancelParticipation, cancelReservation, createComment, createReservation, deleteComment, fetchComments, fetchReservations, hasParticipation, isCommentAuthor, isOwner, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
-import { clearUsername, saveUsername } from '@/shared/util/cookie'
+import { cancelParticipation, cancelReservation, createComment, createReservation, deleteComment, fetchComments, fetchReservations, joinReservation, updateReservation, type ApiReservation } from './reservationApi'
+import { dismissLoginRequest, endSession, getLoginRequest, startSession } from '@/auth/session'
 
 vi.mock('./reservationApi', () => ({
   fetchReservations: vi.fn(),
@@ -12,23 +12,26 @@ vi.mock('./reservationApi', () => ({
   cancelParticipation: vi.fn(),
   cancelReservation: vi.fn(),
   updateReservation: vi.fn(),
-  hasParticipation: vi.fn(),
-  isOwner: vi.fn(),
   fetchComments: vi.fn(),
   createComment: vi.fn(),
   deleteComment: vi.fn(),
-  isCommentAuthor: vi.fn(),
 }))
 
-const apiReservation = {
+/** The signed-in account in every test unless one signs out. */
+const ME = 'me'
+const signIn = () => startSession('token', 3600, { username: ME, online_name: '나', avatar_url: '', admin: false })
+
+const apiReservation: ApiReservation = {
   id: 1,
   start_at: '2026-08-25T12:00:00+00:00',
   host_display_name: '나',
+  // Not the signed-in account: a test that needs the user to own it says so.
+  host_username: 'host',
   host_ranks: ['Yaksa', 'Vanquisher'],
-  match_type: 'rank_match' as const,
+  match_type: 'rank_match',
   capacity: 1,
   memo: '',
-  status: 'open' as const,
+  status: 'open',
   participant_count: 0,
   created_at: '2026-08-25T10:00:00+00:00',
 }
@@ -60,25 +63,24 @@ beforeEach(() => {
   // earlier test, and a "called with" one can match the wrong test's call.
   vi.clearAllMocks()
   vi.mocked(fetchReservations).mockResolvedValue([])
-  vi.mocked(hasParticipation).mockReturnValue(false)
-  vi.mocked(isOwner).mockReturnValue(false)
   vi.mocked(createReservation).mockResolvedValue(apiReservation)
   vi.mocked(fetchComments).mockResolvedValue([])
-  vi.mocked(isCommentAuthor).mockReturnValue(false)
-  saveUsername('나')
+  signIn()
 })
 
 afterEach(() => {
   // setSystemTime pins Date globally; leaving it pinned would follow the suite
   // into the next file.
   vi.useRealTimers()
+  endSession()
+  dismissLoginRequest()
 })
 
 describe('participant roster', () => {
   it('shows the names even after recruitment completes', async () => {
     vi.mocked(fetchReservations).mockResolvedValue([{
       ...apiReservation, capacity: 2, participant_count: 2, status: 'matched',
-      participants: [{ id: 21, display_name: '철권친구' }, { id: 22, display_name: '대전상대' }],
+      participants: [{ id: 21, display_name: '철권친구', username: 'friend' }, { id: 22, display_name: '대전상대', username: 'rival' }],
     }])
     render(<MemoryRouter><Reservation /></MemoryRouter>)
     const roster = await screen.findByRole('region', { name: '참가자 명단' })
@@ -100,16 +102,12 @@ describe('participant roster', () => {
 
   it('refreshes names and counts after joining and cancelling', async () => {
     let current: ApiReservation = { ...apiReservation, host_display_name: '방장', participants: [] }
-    let joined = false
     vi.mocked(fetchReservations).mockImplementation(async () => [current])
-    vi.mocked(hasParticipation).mockImplementation(() => joined)
     vi.mocked(joinReservation).mockImplementation(async () => {
-      joined = true
-      current = { ...current, status: 'matched', participant_count: 1, participants: [{ id: 23, display_name: '나' }] }
+      current = { ...current, status: 'matched', participant_count: 1, participants: [{ id: 23, display_name: '나', username: ME }] }
       return current
     })
     vi.mocked(cancelParticipation).mockImplementation(async () => {
-      joined = false
       current = { ...current, status: 'open', participant_count: 0, participants: [] }
       return current
     })
@@ -157,6 +155,15 @@ describe('Reservation', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
     expect(screen.queryByRole('dialog', { name: '예약 추가' })).not.toBeInTheDocument()
+  })
+
+  it('asks a signed-out user to log in rather than opening the form', () => {
+    endSession()
+    render(<MemoryRouter><Reservation /></MemoryRouter>)
+    fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
+
+    expect(screen.queryByRole('dialog', { name: '예약 추가' })).not.toBeInTheDocument()
+    expect(getLoginRequest()).toEqual({ reason: '로그인하면 예약을 만들 수 있습니다.' })
   })
 
   it('uses a mutually exclusive match type control and hides ranks for player matches', () => {
@@ -329,7 +336,6 @@ describe('Reservation', () => {
 
     await waitFor(() => expect(createReservation).toHaveBeenCalledWith({
       start_time: '21:00:00',
-      display_name: '나',
       ranks: ['Vanquisher'],
       match_type: 'rank_match',
       capacity: 1,
@@ -408,6 +414,8 @@ describe('Reservation', () => {
     expect(within(group).getByRole('radio', { name: '전체' })).toBeChecked()
   })
 
+  const mine: ApiReservation = { ...apiReservation, host_username: ME }
+
   async function openDetail(reservation: ApiReservation = apiReservation) {
     vi.mocked(fetchReservations).mockResolvedValue([reservation])
     render(<MemoryRouter><Reservation /></MemoryRouter>)
@@ -420,8 +428,7 @@ describe('Reservation', () => {
   const confirmDialog = () => screen.getByRole('alertdialog', { name: '예약을 삭제할까요?' })
 
   it('asks before deleting rather than deleting on the first click', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
-    const detail = await openDetail()
+    const detail = await openDetail(mine)
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
 
@@ -430,9 +437,8 @@ describe('Reservation', () => {
   })
 
   it('deletes the reservation once the host confirms', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
     vi.mocked(cancelReservation).mockResolvedValue(undefined)
-    const detail = await openDetail()
+    const detail = await openDetail(mine)
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
     fireEvent.click(within(confirmDialog()).getByRole('button', { name: '삭제' }))
@@ -441,8 +447,7 @@ describe('Reservation', () => {
   })
 
   it('leaves the reservation alone when the host dismisses the confirmation', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
-    const detail = await openDetail()
+    const detail = await openDetail(mine)
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
     fireEvent.click(within(confirmDialog()).getByRole('button', { name: '취소' }))
@@ -452,8 +457,7 @@ describe('Reservation', () => {
   })
 
   it('warns that participants lose their spot before deleting', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
-    const detail = await openDetail({ ...apiReservation, capacity: 3, participant_count: 2 })
+    const detail = await openDetail({ ...mine, capacity: 3, participant_count: 2 })
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 삭제' }))
 
@@ -468,8 +472,7 @@ describe('Reservation', () => {
   })
 
   it('opens the form already filled in with what the host posted', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
-    const detail = await openDetail({ ...apiReservation, memo: '초보 환영' })
+    const detail = await openDetail({ ...mine, memo: '초보 환영' })
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
 
@@ -478,8 +481,7 @@ describe('Reservation', () => {
   })
 
   it('refuses to open the editor once somebody has joined', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
-    const detail = await openDetail({ ...apiReservation, capacity: 3, participant_count: 1 })
+    const detail = await openDetail({ ...mine, capacity: 3, participant_count: 1 })
 
     const edit = within(detail).getByRole('button', { name: '예약 수정' })
 
@@ -492,16 +494,14 @@ describe('Reservation', () => {
   })
 
   it('still allows deleting a reservation somebody joined', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
-    const detail = await openDetail({ ...apiReservation, capacity: 3, participant_count: 1 })
+    const detail = await openDetail({ ...mine, capacity: 3, participant_count: 1 })
 
     expect(within(detail).getByRole('button', { name: '예약 삭제' })).toBeEnabled()
   })
 
   it('sends only the reservation id and the edited conditions', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
     vi.mocked(updateReservation).mockResolvedValue(apiReservation)
-    const detail = await openDetail()
+    const detail = await openDetail(mine)
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
     const modal = screen.getByRole('dialog', { name: '예약 수정' })
@@ -513,8 +513,7 @@ describe('Reservation', () => {
   })
 
   it('creates rather than edits after the edit form is dismissed', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
-    const detail = await openDetail()
+    const detail = await openDetail(mine)
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
@@ -527,9 +526,8 @@ describe('Reservation', () => {
   })
 
   it('surfaces the backend reason when an edit is refused', async () => {
-    vi.mocked(isOwner).mockReturnValue(true)
     vi.mocked(updateReservation).mockRejectedValue(new Error('참가자가 있는 예약은 수정할 수 없습니다.'))
-    const detail = await openDetail()
+    const detail = await openDetail(mine)
 
     fireEvent.click(within(detail).getByRole('button', { name: '예약 수정' }))
     const modal = screen.getByRole('dialog', { name: '예약 수정' })
@@ -551,26 +549,22 @@ describe('Reservation', () => {
 // user can reach: joining someone else's, and taking that back.
 
 describe('Reservation participation', () => {
-  const openReservation = { ...apiReservation, id: 7, host_display_name: '상대', participant_count: 0, status: 'open' as const }
+  const openReservation: ApiReservation = { ...apiReservation, id: 7, host_display_name: '상대', host_username: 'rival', participant_count: 0, status: 'open', participants: [] }
 
   /** Mirror the backend: joining fills the single slot, cancelling frees it. */
   function backendHolding(initial: ApiReservation) {
     let current = initial
-    const joinedIds = new Set<number>()
+    const seat = { id: 30, display_name: '나', username: ME }
 
     vi.mocked(fetchReservations).mockImplementation(async () => [current])
-    vi.mocked(hasParticipation).mockImplementation((id: number) => joinedIds.has(id))
-    vi.mocked(joinReservation).mockImplementation(async (id: number) => {
-      joinedIds.add(id)
-      current = { ...current, participant_count: current.capacity, status: 'matched' }
+    vi.mocked(joinReservation).mockImplementation(async () => {
+      current = { ...current, participant_count: current.capacity, status: 'matched', participants: [seat] }
       return current
     })
-    vi.mocked(cancelParticipation).mockImplementation(async (id: number) => {
-      joinedIds.delete(id)
-      current = { ...current, participant_count: 0, status: 'open' }
+    vi.mocked(cancelParticipation).mockImplementation(async () => {
+      current = { ...current, participant_count: 0, status: 'open', participants: [] }
       return current
     })
-    return { joinedIds }
   }
 
   async function selectTheReservation() {
@@ -580,13 +574,13 @@ describe('Reservation participation', () => {
   }
 
 
-  it('joins with the saved username and turns the button into a cancel', async () => {
+  it('joins as the signed-in account and turns the button into a cancel', async () => {
     backendHolding(openReservation)
 
     const detail = await selectTheReservation()
     fireEvent.click(within(detail).getByRole('button', { name: '참가하기' }))
 
-    await waitFor(() => expect(joinReservation).toHaveBeenCalledWith(7, '나'))
+    await waitFor(() => expect(joinReservation).toHaveBeenCalledWith(7))
     expect(await within(detail).findByRole('button', { name: '참가 취소' })).toBeInTheDocument()
   })
 
@@ -609,14 +603,14 @@ describe('Reservation participation', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('다른 참가자를 기다리고 있어요.')
   })
 
-  it('refuses to join without a username instead of calling the backend', async () => {
+  it('asks a signed-out user to log in instead of calling the backend', async () => {
     backendHolding(openReservation)
-    clearUsername()
+    endSession()
 
     const detail = await selectTheReservation()
     fireEvent.click(within(detail).getByRole('button', { name: '참가하기' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('상단바에서 유저명을 설정한 뒤 참가할 수 있습니다.')
+    expect(getLoginRequest()).toEqual({ reason: '로그인하면 예약에 참가할 수 있습니다.' })
     expect(joinReservation).not.toHaveBeenCalled()
   })
 
@@ -706,7 +700,7 @@ describe('Reservation participation', () => {
   })
 
   it('remembers an existing participation on first load', async () => {
-    backendHolding({ ...openReservation, status: 'matched', participant_count: 1 }).joinedIds.add(7)
+    backendHolding({ ...openReservation, status: 'matched', participant_count: 1, participants: [{ id: 30, display_name: '나', username: ME }] })
 
     const detail = await selectTheReservation()
 
@@ -715,8 +709,8 @@ describe('Reservation participation', () => {
 })
 
 describe('the comment thread on a reservation', () => {
-  const comment = (overrides: Partial<{ id: number, author: string, body: string }> = {}) => ({
-    id: 1, reservation_id: 1, author: '상대', body: '21시에 갈게요',
+  const comment = (overrides: Partial<{ id: number, author: string, author_username: string | null, body: string }> = {}) => ({
+    id: 1, reservation_id: 1, author: '상대', author_username: 'rival' as string | null, body: '21시에 갈게요',
     created_at: '2026-08-28T11:00:00Z', ...overrides,
   })
 
@@ -741,14 +735,14 @@ describe('the comment thread on a reservation', () => {
     expect(await within(thread).findByText('아직 댓글이 없습니다.')).toBeInTheDocument()
   })
 
-  it('posts the draft under the saved username and reloads the thread', async () => {
+  it('posts the draft as the signed-in account and reloads the thread', async () => {
     vi.mocked(createComment).mockResolvedValue(comment({ id: 2, body: '저도 갈게요' }))
     const thread = await openThread([])
 
     fireEvent.change(within(thread).getByLabelText('댓글 내용'), { target: { value: '저도 갈게요' } })
     fireEvent.click(within(thread).getByRole('button', { name: '댓글 등록' }))
 
-    await waitFor(() => expect(createComment).toHaveBeenCalledWith(1, '나', '저도 갈게요'))
+    await waitFor(() => expect(createComment).toHaveBeenCalledWith(1, '저도 갈게요'))
     expect(fetchComments).toHaveBeenCalledTimes(2)
   })
 
@@ -761,7 +755,7 @@ describe('the comment thread on a reservation', () => {
     expect(fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })).toBe(false)
 
     await waitFor(() => expect(input).toHaveValue(''))
-    expect(createComment).toHaveBeenCalledExactlyOnceWith(1, '나', '저도 갈게요')
+    expect(createComment).toHaveBeenCalledExactlyOnceWith(1, '저도 갈게요')
     expect(fetchComments).toHaveBeenCalledTimes(2)
   })
 
@@ -799,18 +793,16 @@ describe('the comment thread on a reservation', () => {
     expect(createComment).not.toHaveBeenCalled()
   })
 
-  it('offers a delete button only on comments this browser wrote', async () => {
-    vi.mocked(isCommentAuthor).mockImplementation((id: number) => id === 1)
-    const thread = await openThread([comment(), comment({ id: 2, author: '남', body: '저는 못 가요' })])
+  it('offers a delete button only on comments the signed-in account wrote', async () => {
+    const thread = await openThread([comment({ author_username: ME }), comment({ id: 2, author: '남', body: '저는 못 가요' })])
 
     expect(await within(thread).findByRole('button', { name: '상대님의 댓글 삭제' })).toBeInTheDocument()
     expect(within(thread).queryByRole('button', { name: '남님의 댓글 삭제' })).toBeNull()
   })
 
   it('deletes a comment and reloads the thread', async () => {
-    vi.mocked(isCommentAuthor).mockReturnValue(true)
     vi.mocked(deleteComment).mockResolvedValue(undefined)
-    const thread = await openThread()
+    const thread = await openThread([comment({ author_username: ME })])
 
     fireEvent.click(await within(thread).findByRole('button', { name: '상대님의 댓글 삭제' }))
 
@@ -818,11 +810,20 @@ describe('the comment thread on a reservation', () => {
     expect(fetchComments).toHaveBeenCalledTimes(2)
   })
 
-  it('cannot be written to before a username is set', async () => {
-    clearUsername()
+  it('offers a login instead of a composer to a signed-out reader', async () => {
+    endSession()
     const thread = await openThread([])
 
-    expect(within(thread).getByLabelText('댓글 내용')).toBeDisabled()
-    expect(within(thread).getByPlaceholderText('먼저 유저명을 설정해 주세요')).toBeInTheDocument()
+    expect(within(thread).queryByLabelText('댓글 내용')).not.toBeInTheDocument()
+    fireEvent.click(within(thread).getByRole('button', { name: '로그인하고 댓글 남기기' }))
+    expect(getLoginRequest()).toEqual({ reason: '로그인하면 댓글을 남길 수 있습니다.' })
+  })
+
+  it('offers no delete button to a signed-out reader, even on their own comment', async () => {
+    endSession()
+    const thread = await openThread([comment({ author_username: ME })])
+
+    await within(thread).findByText('21시에 갈게요')
+    expect(within(thread).queryByRole('button', { name: /댓글 삭제/ })).toBeNull()
   })
 })

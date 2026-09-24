@@ -21,6 +21,7 @@ type Operation = {
   parameters?: { name: string, in: string }[]
   requestBody?: { content: Record<string, { schema: SchemaLike }> }
   responses: Record<string, { content?: Record<string, { schema: SchemaLike }> }>
+  security?: Record<string, unknown>[]
 }
 
 type Spec = {
@@ -39,12 +40,14 @@ type Expectation = {
   body?: string[]
   /** Headers this frontend sends. */
   headers?: string[]
+  /** Sent with the signed-in user's bearer token, which the route requires. */
+  auth?: boolean
   /** Response fields this frontend reads or types. */
   reads?: string[]
 }
 
-const RESERVATION = ['id', 'start_at', 'host_display_name', 'host_ranks', 'match_type', 'capacity', 'memo', 'status', 'participant_count', 'created_at']
-const COMMENT = ['id', 'reservation_id', 'author', 'body', 'created_at']
+const RESERVATION = ['id', 'start_at', 'host_display_name', 'host_username', 'host_ranks', 'match_type', 'capacity', 'memo', 'status', 'participant_count', 'participants', 'created_at']
+const COMMENT = ['id', 'reservation_id', 'author', 'author_username', 'body', 'created_at']
 
 /** Every endpoint the API modules and hooks actually call. */
 const CONTRACT: Expectation[] = [
@@ -55,24 +58,25 @@ const CONTRACT: Expectation[] = [
   { method: 'get', path: '/history/stats/weekly-top', query: ['limit'] },
   { method: 'get', path: '/history/players/{npid}' },
 
-  { method: 'post', path: '/community/identity', body: ['name'] },
+  { method: 'post', path: '/auth/login', body: ['username', 'password'], reads: ['access_token', 'expires_in', 'user'] },
+
   { method: 'get', path: '/community/posts', query: ['page', 'page_size', 'post_type', 'characters'] },
-  { method: 'post', path: '/community/posts', body: ['title', 'body', 'post_type', 'characters', 'youtube_video_id'] },
+  { method: 'post', path: '/community/posts', body: ['title', 'body', 'post_type', 'characters', 'youtube_video_id'], auth: true },
   { method: 'get', path: '/community/posts/{post_id}', reads: ['youtube_video_id', 'post_type', 'characters'] },
-  { method: 'patch', path: '/community/posts/{post_id}', body: ['title', 'body', 'post_type', 'characters', 'youtube_video_id'], reads: ['characters'] },
-  { method: 'delete', path: '/community/posts/{post_id}' },
-  { method: 'post', path: '/community/posts/{post_id}/comments', body: ['body', 'parent_id'] },
-  { method: 'post', path: '/community/posts/{post_id}/thumb', body: ['direction'] },
+  { method: 'patch', path: '/community/posts/{post_id}', body: ['title', 'body', 'post_type', 'characters', 'youtube_video_id'], reads: ['characters'], auth: true },
+  { method: 'delete', path: '/community/posts/{post_id}', auth: true },
+  { method: 'post', path: '/community/posts/{post_id}/comments', body: ['body', 'parent_id'], auth: true },
+  { method: 'post', path: '/community/posts/{post_id}/thumb', body: ['direction'], auth: true },
 
   { method: 'get', path: '/reservations', reads: RESERVATION },
-  { method: 'post', path: '/reservations', body: ['start_time', 'display_name', 'ranks', 'match_type', 'capacity', 'memo'], reads: ['reservation', 'owner_token'] },
-  { method: 'patch', path: '/reservations/{reservation_id}', body: ['start_time', 'ranks', 'match_type', 'capacity', 'memo'], headers: ['x-reservation-token'], reads: RESERVATION },
-  { method: 'delete', path: '/reservations/{reservation_id}', headers: ['x-reservation-token'] },
-  { method: 'post', path: '/reservations/{reservation_id}/participants', body: ['display_name', 'ranks'], reads: ['reservation', 'participant_token'] },
-  { method: 'delete', path: '/reservations/{reservation_id}/participants/me', headers: ['x-reservation-token'], reads: RESERVATION },
+  { method: 'post', path: '/reservations', body: ['start_time', 'ranks', 'match_type', 'capacity', 'memo'], reads: RESERVATION, auth: true },
+  { method: 'patch', path: '/reservations/{reservation_id}', body: ['start_time', 'ranks', 'match_type', 'capacity', 'memo'], reads: RESERVATION, auth: true },
+  { method: 'delete', path: '/reservations/{reservation_id}', auth: true },
+  { method: 'post', path: '/reservations/{reservation_id}/participants', body: ['ranks'], reads: RESERVATION, auth: true },
+  { method: 'delete', path: '/reservations/{reservation_id}/participants/me', reads: RESERVATION, auth: true },
   { method: 'get', path: '/reservations/{reservation_id}/comments', reads: COMMENT },
-  { method: 'post', path: '/reservations/{reservation_id}/comments', body: ['display_name', 'body'], reads: ['comment', 'author_token'] },
-  { method: 'delete', path: '/reservations/{reservation_id}/comments/{comment_id}', headers: ['x-reservation-token'] },
+  { method: 'post', path: '/reservations/{reservation_id}/comments', body: ['body'], reads: COMMENT, auth: true },
+  { method: 'delete', path: '/reservations/{reservation_id}/comments/{comment_id}', auth: true },
 ]
 
 const name = ({ method, path }: Expectation) => `${method.toUpperCase()} ${path}`
@@ -104,6 +108,13 @@ const declaring = (key: keyof Expectation) => CONTRACT.filter((expectation) => e
 describe('the API contract tag2now-BE publishes', () => {
   it.each(CONTRACT)('declares $method $path', (expectation) => {
     expect(() => operation(expectation)).not.toThrow()
+  })
+
+  // A bearer token is not a header parameter in OpenAPI but a security
+  // requirement, so it is checked there. The scheme name is FastAPI's default
+  // for HTTPBearer.
+  it.each(declaring('auth'))('takes the bearer token we send on $method $path', (expectation) => {
+    expect((operation(expectation).security ?? []).flatMap(Object.keys)).toContain('HTTPBearer')
   })
 
   it.each(declaring('headers'))('accepts the headers we send on $method $path', (expectation) => {
@@ -154,7 +165,6 @@ const NO_RESPONSE_MODEL = [
   'GET /history/stats/daily',
   'GET /history/stats/weekly-top',
   'GET /history/players/{npid}',
-  'POST /community/identity',
   'POST /community/posts',
   'POST /community/posts/{post_id}/comments',
   'POST /community/posts/{post_id}/thumb',

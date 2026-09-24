@@ -7,6 +7,7 @@ import LiveBadge from "@/shared/components/LiveBadge";
 import PlayerProfileCard from '@/shared/components/PlayerProfileCard'
 import Footer from "@/shared/components/Footer";
 import PatchNotes from "@/shared/components/PatchNotes";
+import { LoginDialog } from "@/auth/component";
 import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import { firstRoomPath, isRoomTab as isRoomTabKey, pathOf } from '@/config/routes'
 import useActiveTab from '@/shared/hooks/useActiveTab'
@@ -146,6 +147,8 @@ export default function App() {
     <div className="app-shell">
       <a className="skip-link" href="#mainContent">본문으로 건너뛰기</a>
       <PatchNotes />
+      {/* Any feature opens it through requestLogin; one instance serves all. */}
+      <LoginDialog />
       <Header />
       <div className="app-layout">
         <aside className="app-sidebar" aria-label="서비스 메뉴">
@@ -155,7 +158,7 @@ export default function App() {
           <LiveBadge totalUsers={rooms.data?.totalUsers} />
           {/* One PlayerProfileCard renders both surfaces — this card and, through
               a portal, the header slot that replaces it on a phone — so the
-              username being edited is one piece of state rather than two. */}
+              signed-in account is shown from one piece of state, not two. */}
           <div className="sidebar-nav-card">
           <div className="sidebar-heading">
             <span>Navigation</span>

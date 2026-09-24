@@ -24,7 +24,6 @@ test.describe('Reservation', () => {
     await page.clock.runFor(0)
     await signInAs(page, '나')
     await mockAllApis(page)
-    await page.addInitScript(() => localStorage.setItem('ttt2-username', '나'))
     await skipPatchNotes(page)
     await page.goto('/')
     await page.getByRole('tab', { name: '예약' }).click()
@@ -215,8 +214,8 @@ test.describe('Reservation deletion', () => {
     await page.getByRole('tab', { name: '예약' }).click()
   }
 
-  // The owner token only exists for a reservation this browser created, so the
-  // delete affordance has to be earned by going through the create flow.
+  // Going through the create flow makes the signed-in account the host, which
+  // is what earns the delete affordance.
   async function createReservation(page: import('@playwright/test').Page) {
     await page.getByRole('button', { name: '+ 예약 추가' }).click()
     const modal = page.getByRole('dialog', { name: '예약 추가' })
@@ -238,9 +237,9 @@ test.describe('Reservation deletion', () => {
     await page.getByRole('alertdialog', { name: '예약을 삭제할까요?' })
       .getByRole('button', { name: '삭제' }).click()
 
-    // The owner token proves the request is authorised; without it the backend
+    // The bearer token proves the request is authorised; without it the backend
     // rejects the delete, so a passing UI assertion alone would not mean much.
-    expect((await deleteRequest).headers()['x-reservation-token']).toBeTruthy()
+    expect((await deleteRequest).headers()['authorization']).toMatch(/^Bearer /)
     await expect(page.getByRole('button', { name: /나 모집중/ })).toHaveCount(0)
     await expect(page.getByRole('status')).toHaveText('예약을 삭제했습니다.')
   })
@@ -305,8 +304,8 @@ test.describe('Reservation editing', () => {
     const editRequest = page.waitForRequest((request) => request.method() === 'PATCH')
     await modal.getByRole('button', { name: '예약 수정' }).click()
 
-    // The owner token authorises the edit; without it the backend refuses.
-    expect((await editRequest).headers()['x-reservation-token']).toBeTruthy()
+    // The bearer token authorises the edit; without it the backend refuses.
+    expect((await editRequest).headers()['authorization']).toMatch(/^Bearer /)
     await expect(page.getByRole('status')).toHaveText('예약을 수정했습니다.')
     await expect(page.getByText('자리 하나 남음')).toBeVisible()
   })
@@ -328,11 +327,8 @@ test.describe('Reservation editing', () => {
   })
 
   test('the edit button is disabled once somebody has joined', async ({ page }) => {
-    const taken = reservationAt(21, { id: 11, host_display_name: '나', capacity: 3, participant_count: 1 })
+    const taken = reservationAt(21, { id: 11, host_display_name: '나', host_username: '나', capacity: 3, participant_count: 1 })
     await openReservationTab(page, [taken])
-    await page.evaluate(() => localStorage.setItem('reservation-owner-11', 'owner-11'))
-    await page.reload()
-    await page.getByRole('tab', { name: '예약' }).click()
     await page.getByRole('button', { name: /나 모집중/ }).click()
     const detail = page.getByRole('complementary', { name: '선택한 예약 상세' })
 
@@ -346,15 +342,41 @@ test.describe('Reservation editing', () => {
     await openReservationTab(page, [])
     const { modal } = await createThenOpenEditor(page)
 
-    // Somebody joins between opening the editor and submitting it.
+    // Somebody else joins between opening the editor and submitting it.
     await page.evaluate(() => fetch('/api/reservations/1/participants', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ display_name: '난입', ranks: [] }),
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer e2e:intruder' },
+      body: JSON.stringify({ ranks: [] }),
     }))
     await modal.getByRole('button', { name: '예약 수정' }).click()
 
     await expect(page.getByRole('alert')).toContainText('참가자가 있는 예약')
+  })
+})
+
+test.describe('Reservation while signed out', () => {
+  test('booking asks for a login, and the header shows the account after it', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-08-28T11:10:00Z') })
+    await page.clock.runFor(0)
+    await mockAllApis(page)
+    await skipPatchNotes(page)
+    await page.goto('/reservation')
+
+    await page.getByRole('button', { name: '+ 예약 추가' }).click()
+    const dialog = page.getByRole('dialog', { name: 'RPCN 로그인' })
+    await expect(dialog).toContainText('로그인하면 예약을 만들 수 있습니다.')
+    await expect(page.getByRole('dialog', { name: '예약 추가' })).toHaveCount(0)
+
+    await dialog.getByLabel('아이디').fill('나')
+    await dialog.getByLabel('비밀번호').fill('secret')
+    await dialog.getByRole('button', { name: '로그인' }).click()
+    await expect(dialog).toHaveCount(0)
+
+    await page.getByRole('button', { name: '+ 예약 추가' }).click()
+    const modal = page.getByRole('dialog', { name: '예약 추가' })
+    await pickRank(modal)
+    await modal.getByRole('button', { name: '예약 등록' }).click()
+    await expect(page.getByRole('button', { name: /나 모집중/ })).toBeVisible()
   })
 })
 

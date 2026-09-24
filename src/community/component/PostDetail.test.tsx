@@ -7,7 +7,7 @@ vi.mock('@/community/communityApi', () => ({ updatePost: vi.fn(), createComment:
 const post = { id: 1, author: 'owner', title: '원래 제목', body: '원래 본문', post_type: '자유', characters: [], youtube_video_id: 'M7lc1UVf-VE', thumbs_up: 0, thumbs_down: 0, created_at: '2026-09-11T00:00:00Z', comments: [] }
 function setup(username = 'owner') {
   const refresh = vi.fn()
-  render(<PostDetail post={post} username={username} onBack={vi.fn()} onRefresh={refresh} ensureIdentity={vi.fn().mockResolvedValue(username)} onDeleted={vi.fn()} />)
+  render(<PostDetail post={post} username={username} onBack={vi.fn()} onRefresh={refresh} requireUser={() => ({ username })} onDeleted={vi.fn()} />)
   return refresh
 }
 
@@ -47,5 +47,30 @@ describe('edit post', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('수정 권한이 없습니다.'))
     expect(screen.getByLabelText('게시글 제목')).toHaveValue('보존할 제목')
     expect(screen.getByRole('button', { name: '저장' })).toBeEnabled()
+  })
+})
+
+describe('signed out', () => {
+  it('asks for a login instead of sending a thumb or a comment', async () => {
+    const { thumbPost, createComment } = await import('@/community/communityApi')
+    const requireUser = vi.fn().mockReturnValue(null)
+    render(<PostDetail post={post} username={null} onBack={vi.fn()} onRefresh={vi.fn()} requireUser={requireUser} onDeleted={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: '추천 0' }))
+    fireEvent.change(screen.getByLabelText('댓글 입력'), { target: { value: '좋은 글' } })
+    fireEvent.click(screen.getByRole('button', { name: '작성' }))
+
+    expect(requireUser).toHaveBeenCalledWith('로그인하면 추천할 수 있습니다.')
+    expect(requireUser).toHaveBeenCalledWith('로그인하면 댓글을 남길 수 있습니다.')
+    expect(thumbPost).not.toHaveBeenCalled()
+    expect(createComment).not.toHaveBeenCalled()
+    // Nothing was sent, so nothing is left looking busy.
+    expect(screen.getByRole('button', { name: '추천 0' })).toBeEnabled()
+  })
+
+  it('offers no edit or delete, whoever wrote the post', () => {
+    render(<PostDetail post={post} username={null} onBack={vi.fn()} onRefresh={vi.fn()} requireUser={() => null} onDeleted={vi.fn()} />)
+
+    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
   })
 })

@@ -5,7 +5,7 @@ import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import LeaderboardControls from "@/shared/components/LeaderboardControls";
 import {panelStatus} from "@/shared/util/panelStatus";
 import {filterEntries, tiersPresent, totals, COLLAPSED_VISIBLE, type SortKey} from "@/shared/util/leaderboardFilter";
-import { getUsername } from '@/shared/util/cookie'
+import useAuth from '@/auth/useAuth'
 import {LeaderboardData} from "@/shared/types";
 import { RefreshCw, Trophy } from 'lucide-react'
 import { TableSkeleton } from '@/shared/components/Skeleton'
@@ -38,7 +38,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
   const tiers = useMemo(() => tiersPresent(entries), [entries])
   // Finding yourself on a 344-row board meant scrolling or typing your own name
   // from memory. The row is marked instead, so it is visible the moment it is.
-  const me = getUsername()
+  const me = useAuth().user?.username ?? null
 
   const s = panelStatus(loading, error, {
     loadingMsg: '랭킹을 불러오는 중',
@@ -98,7 +98,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
             detailEmpty: total.winRate === null ? '기록 없음' : undefined,
             mainChar: e.player_info?.main_char_info,
             subChar: e.player_info?.sub_char_info,
-            isMe: me != null && e.online_name === me,
+            isMe: me != null && e.np_id === me,
           }
         })}
         label="전체 랭킹"

@@ -70,7 +70,7 @@ export default function useReservationForm() {
   /** A rank match is always one-on-one, and a player match carries no ranks —
    * so the payload drops whichever field the chosen type does not use rather
    * than sending a value the form never showed. */
-  const conditions = (): Omit<CreateReservationInput, 'display_name'> => ({
+  const conditions = (): CreateReservationInput => ({
     start_time: `${form.time}:00`,
     ranks: form.type === '플레이어 매치' ? [] : form.ranks,
     match_type: matchTypeValues[form.type],

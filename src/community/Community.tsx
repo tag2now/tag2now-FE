@@ -5,7 +5,7 @@ import { pathOf, postPath } from "@/config/routes";
 import {createPost, type PostInput} from "@/community/communityApi";
 import type { LeaderboardEntry} from "@/shared/types";
 import { PostList, PostDetail, CreatePostForm } from "@/community/component";
-import useIdentity from "@/shared/hooks/useIdentity";
+import useAuth from "@/auth/useAuth";
 import { statusBody } from "@/shared/util/panelStatus";
 import { ListSkeleton } from "@/shared/components/Skeleton";
 
@@ -22,7 +22,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
   const community = useCommunity()
   const navigate = useNavigate()
   const { postId } = useParams()
-  const { getUsername, ensureIdentity } = useIdentity()
+  const { user, requireUser } = useAuth()
   const [view, setView] = useState<View>('list')
   const [postType, setPostType] = useState('')
   const [characters, setCharacters] = useState<string[]>([])
@@ -71,7 +71,6 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
   }
 
   const handleCreatePost = async (input: PostInput) => {
-    await ensureIdentity()
     await createPost(input)
     setView('list')
     reload(1)
@@ -99,7 +98,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
           onPageChange={handlePageChange}
           onSelectPost={handleSelectPost}
           onRefresh={() => reload()}
-          onWrite={() => setView('create')}
+          onWrite={() => { if (requireUser('로그인하면 글을 쓸 수 있습니다.')) setView('create') }}
           leaderboardEntries={leaderboardEntries}
         />
       )}
@@ -117,13 +116,13 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
         <PostDetail
           key={community.selectedPost.id}
           post={community.selectedPost}
-          username={getUsername()}
+          username={user?.username ?? null}
           onBack={handleBack}
           onRefresh={() => {
             community.refreshDetail()
             reload()
           }}
-          ensureIdentity={ensureIdentity}
+          requireUser={requireUser}
           onDeleted={handleDeleted}
           leaderboardEntries={leaderboardEntries}
         />

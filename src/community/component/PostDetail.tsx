@@ -17,12 +17,14 @@ interface PostDetailProps {
   username: string | null
   onBack: () => void
   onRefresh: () => void
-  ensureIdentity: () => Promise<string>
+  /** The login guard: truthy when signed in, otherwise it opens the login
+   *  dialog and the handler stops there. */
+  requireUser: (reason?: string) => unknown
   onDeleted: () => void
   leaderboardEntries?: LeaderboardEntry[]
 }
 
-export default function PostDetail({ post, username, onBack, onRefresh, ensureIdentity, onDeleted, leaderboardEntries }: PostDetailProps) {
+export default function PostDetail({ post, username, onBack, onRefresh, requireUser, onDeleted, leaderboardEntries }: PostDetailProps) {
   const [commentText, setCommentText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [thumbing, setThumbing] = useState(false)
@@ -30,33 +32,36 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
   const { confirm, ...confirmDialog } = useConfirm()
 
   const handleUpdate = async (input: PostInput) => {
-    await ensureIdentity()
     await updatePost(post.id, input)
     setEditing(false)
     onRefresh()
   }
 
   const handleThumb = async (direction: 'up' | 'down') => {
-    if (thumbing) return
+    if (thumbing || !requireUser('로그인하면 추천할 수 있습니다.')) return
     setThumbing(true)
-    await ensureIdentity()
-    await thumbPost(post.id, direction)
-    onRefresh()
-    setThumbing(false)
+    try {
+      await thumbPost(post.id, direction)
+      onRefresh()
+    } finally {
+      setThumbing(false)
+    }
   }
 
   const handleComment = async () => {
-    if (!commentText.trim()) return
+    if (!commentText.trim() || !requireUser('로그인하면 댓글을 남길 수 있습니다.')) return
     setSubmitting(true)
-    await ensureIdentity()
-    await createComment(post.id, commentText.trim())
-    setCommentText('')
-    onRefresh()
-    setSubmitting(false)
+    try {
+      await createComment(post.id, commentText.trim())
+      setCommentText('')
+      onRefresh()
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleReply = async (parentId: number, body: string) => {
-    await ensureIdentity()
+    if (!requireUser('로그인하면 답글을 남길 수 있습니다.')) return
     await createComment(post.id, body, parentId)
     onRefresh()
   }
@@ -71,7 +76,6 @@ export default function PostDetail({ post, username, onBack, onRefresh, ensureId
     // Rejections reach the global unhandledrejection handler, which toasts the
     // reason. Swallowing them here left a failed delete looking like nothing
     // had happened at all.
-    await ensureIdentity()
     await deletePost(post.id)
     onDeleted()
   }

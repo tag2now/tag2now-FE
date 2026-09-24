@@ -27,6 +27,8 @@ const fixed = (path: string): Endpoint => ({ path, openapiPath: `/${path}` })
 const templated = (path: string, openapiPath: string): Endpoint => ({ path, openapiPath })
 
 export const API = {
+  login: () => fixed('auth/login'),
+
   rooms: () => fixed('rooms/all'),
   leaderboard: () => fixed('leaderboard'),
 
@@ -36,7 +38,6 @@ export const API = {
   playerHistory: (npid: string) =>
     templated(`history/players/${npid}`, '/history/players/{npid}'),
 
-  communityIdentity: () => fixed('community/identity'),
   posts: () => fixed('community/posts'),
   post: (postId: number) =>
     templated(`community/posts/${postId}`, '/community/posts/{post_id}'),
@@ -67,7 +68,7 @@ export const API = {
 export const openapiPaths = (): string[] => {
   const samples: Record<keyof typeof API, unknown[]> = {
     rooms: [], leaderboard: [], stats: [], dailyStats: [], weeklyTop: [],
-    playerHistory: ['npid'], communityIdentity: [], posts: [], post: [1],
+    playerHistory: ['npid'], login: [], posts: [], post: [1],
     postComments: [1], postThumb: [1], reservations: [], reservation: [1],
     reservationParticipants: [1], ownParticipation: [1],
     reservationComments: [1], reservationComment: [1, 2],

@@ -1,18 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import toast from 'react-hot-toast'
-import { Check, Radio, Trophy, UserRound, X } from 'lucide-react'
-import { setIdentity } from '@/community/communityApi'
+import { LogIn, LogOut, Radio, Trophy } from 'lucide-react'
+import useAuth from '@/auth/useAuth'
+import { requestLogin } from '@/auth/session'
 import type { RoomUser } from '@/match/types'
 import type { CharInfo, LeaderboardEntry } from '@/shared/types'
-import { AppError } from '@/shared/util/AppError'
-import {
-  clearUsername,
-  getUsername as getSavedUsername,
-  isTransportableUsername,
-  saveUsername,
-  UNTRANSPORTABLE_USERNAME_MSG,
-} from '@/shared/util/cookie'
 import PlayerHistoryPanel from './PlayerHistoryPanel'
 import RankImage from './RankImage'
 import { indexOfRank } from '@/reservation/reservationLabels'
@@ -23,29 +15,29 @@ interface PlayerProfileCardProps {
   roomUsers?: RoomUser[]
 }
 
-function errorText(error: unknown): string {
-  if (error instanceof AppError && error.explained) return error.message
-  return '유저명을 저장하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.'
-}
-
+/** Who you are signed in as, in the sidebar and --- through a portal --- in
+ * the header slot that replaces the sidebar on a phone.
+ *
+ * It used to hold a typed-in display name. The account now comes from the
+ * RPCN login, whose username is the leaderboard's np_id, so the record is
+ * found by id rather than by guessing from a name two players could share.
+ */
 export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }: PlayerProfileCardProps) {
-  const [username, setUsername] = useState(() => getSavedUsername() ?? '')
-  const [editingSurface, setEditingSurface] = useState<'sidebar' | 'header' | null>(null)
-  const [draft, setDraft] = useState('')
+  const { user, logout } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
   const [headerTarget, setHeaderTarget] = useState<HTMLElement | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (editingSurface) inputRef.current?.focus()
-  }, [editingSurface])
 
   useEffect(() => {
     setHeaderTarget(document.getElementById('headerProfileSlot'))
   }, [])
 
-  const entry = username
-    ? leaderboardEntries?.find(item => item.online_name === username)
+  // A record open for the last account must not stay open for no account.
+  useEffect(() => {
+    if (!user) setProfileOpen(false)
+  }, [user])
+
+  const entry = user
+    ? leaderboardEntries?.find(item => item.np_id === user.username)
     : undefined
   const characters = [entry?.player_info?.main_char_info, entry?.player_info?.sub_char_info]
     .filter((character): character is CharInfo => !!character?.name)
@@ -57,65 +49,12 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
     .map((character) => character.rank_info)
     .filter((rank): rank is NonNullable<typeof rank> => !!rank?.name)
     .sort((a, b) => indexOfRank(b.name) - indexOfRank(a.name))[0]
-  const online = !!username && roomUsers.some(user =>
-    (entry?.np_id && user.np_id === entry.np_id) || user.online_name === username,
-  )
+  const online = !!user && roomUsers.some(roomUser => roomUser.np_id === user.username)
+  const name = user?.online_name || user?.username
 
-  function startEditing(surface: 'sidebar' | 'header') {
-    setDraft(username)
-    setEditingSurface(surface)
-  }
+  const signIn = () => requestLogin()
 
-  async function commitUsername() {
-    const trimmed = draft.trim()
-    if (!isTransportableUsername(trimmed)) {
-      toast.error(UNTRANSPORTABLE_USERNAME_MSG)
-      return
-    }
-
-    const previous = username
-    const previousSurface = editingSurface
-    setUsername(trimmed)
-    setEditingSurface(null)
-    if (!trimmed) {
-      clearUsername()
-      return
-    }
-
-    try {
-      await setIdentity(trimmed)
-      saveUsername(trimmed)
-    } catch (error) {
-      setUsername(previous)
-      setEditingSurface(previousSurface ?? 'sidebar')
-      toast.error(errorText(error))
-    }
-  }
-
-  function editor(className = 'profile-editor') {
-    return (
-      <div className={className}>
-        <input
-          ref={inputRef}
-          type="text"
-          value={draft}
-          onChange={event => setDraft(event.target.value)}
-          onKeyDown={event => {
-            if (event.key === 'Enter') void commitUsername()
-            if (event.key === 'Escape') setEditingSurface(null)
-          }}
-          maxLength={50}
-          placeholder="유저명 입력"
-          aria-label="유저명 입력"
-          className="input-base"
-        />
-        <button type="button" onClick={() => void commitUsername()} aria-label="저장"><Check size={15} /></button>
-        <button type="button" onClick={() => setEditingSurface(null)} aria-label="취소"><X size={15} /></button>
-      </div>
-    )
-  }
-
-  const headerControl = editingSurface === 'header' ? editor() : username ? (
+  const headerControl = user ? (
     <div className="profile-copy">
       {/* Shown only below 760px, where the sidebar card is hidden. The label
           is its own span because the narrowest screens drop it for the icon;
@@ -129,35 +68,31 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
       >
         <Trophy size={14} aria-hidden="true" /> <span className="profile-history-label">내 정보</span>
       </button>
-      {/* The name renames; the trophy beside it opens the record. They used to
-          do the same thing, with a pencil alongside doing the only other
-          thing --- three controls for two actions, and the one you would
-          reach for first was the duplicate. */}
-      {/* The same byline a post row carries: rank banner, place, name. Signed
-          in, the header said only the name --- so the one place you are always
-          looking told you less about yourself than a comment you left. */}
+      {/* The same byline a post row carries: rank banner, place, name. */}
       <RankImage rankInfo={bestRank} className="author-badge-rank" />
       {entry && <span className="author-badge-place">#{entry.rank}</span>}
       <button
         type="button"
         className="profile-name"
-        onClick={() => startEditing('header')}
-        aria-label={`${username} 헤더에서 유저명 수정`}
+        onClick={logout}
+        aria-label={`${name} 로그아웃`}
+        title="로그아웃"
       >
-        <span>{username}</span>
+        <span>{name}</span>
+        <LogOut size={13} aria-hidden="true" className="ml-1.5 shrink-0" />
       </button>
     </div>
   ) : (
-    <button type="button" onClick={() => startEditing('header')} className="profile-empty">
-      <UserRound size={15} aria-hidden="true" /> 유저명 설정
+    <button type="button" onClick={signIn} className="profile-empty">
+      <LogIn size={15} aria-hidden="true" /> 로그인
     </button>
   )
 
   const card = (
-      <section className={`sidebar-profile-card${editingSurface === 'sidebar' ? ' is-editing' : ''}`} aria-label="내 파이터 정보">
+      <section className="sidebar-profile-card" aria-label="내 파이터 정보">
         <div className="sidebar-profile-heading">
           <span>Profile</span>
-          {editingSurface !== 'sidebar' && username && (
+          {user && (
             <div className="sidebar-profile-actions">
               <small className={`sidebar-profile-presence${online ? ' is-online' : ''}`}>
                 <Radio size={12} aria-hidden="true" />
@@ -167,20 +102,13 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
           )}
         </div>
 
-        {editingSurface === 'sidebar' ? (
-          editor('profile-editor sidebar-profile-editor')
-        ) : username ? (
+        {user ? (
           <>
             <div className="sidebar-profile-identity">
-              <button
-                type="button"
-                className="sidebar-profile-name"
-                onClick={() => startEditing('sidebar')}
-                aria-label={`${username} 유저명 수정`}
-              >
+              <div className="sidebar-profile-name">
                 <span className="sidebar-profile-rank-position">#{entry?.rank ?? 'UNRANKED'}</span>
-                <strong>{username}</strong>
-              </button>
+                <strong>{name}</strong>
+              </div>
             </div>
 
             {characters.length > 0 && (
@@ -211,10 +139,13 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
               <Trophy size={14} aria-hidden="true" />
               내 정보 보기
             </button>
+            <button type="button" className="profile-empty sidebar-profile-empty" onClick={logout}>
+              <LogOut size={14} aria-hidden="true" /> 로그아웃
+            </button>
           </>
         ) : (
-          <button type="button" onClick={() => startEditing('sidebar')} className="profile-empty sidebar-profile-empty">
-            <UserRound size={15} aria-hidden="true" /> 유저명 설정
+          <button type="button" onClick={signIn} className="profile-empty sidebar-profile-empty">
+            <LogIn size={15} aria-hidden="true" /> RPCN 로그인
           </button>
         )}
       </section>

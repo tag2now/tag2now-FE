@@ -1,10 +1,10 @@
 import RankImage from '@/shared/components/RankImage'
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getUsername } from '@/shared/util/cookie'
+import useAuth from '@/auth/useAuth'
 import {
   cancelParticipation, cancelReservation, createReservation,
-  hasParticipation, isOwner, joinReservation, updateReservation,
+  joinReservation, updateReservation,
 } from './reservationApi'
 import useReservations from '@/reservation/useReservations'
 import { POLL } from '@/config/polling'
@@ -21,7 +21,7 @@ import RankSummary from '@/reservation/component/RankSummary'
 import ReservationForm from '@/reservation/component/ReservationForm'
 import useReservationForm, { blankForm } from '@/reservation/useReservationForm'
 import {
-  availabilityMeta, fromApi, matchesFilter, TYPE_FILTERS,
+  availabilityMeta, fromApi, hasJoined, isHost, matchesFilter, TYPE_FILTERS,
   type Reservation, type TypeFilter,
 } from '@/reservation/reservationModel'
 import type { LeaderboardEntry } from '@/shared/types'
@@ -33,9 +33,11 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
   // is open rather than starting a second one alongside it.
   const source = useReservations(POLL.reservationsActive)
   const reservations = useMemo(() => (source.data ?? []).map(fromApi), [source.data])
+  const { user, requireUser } = useAuth()
+  const me = user?.username ?? null
   const joinedIds = useMemo(
-    () => reservations.filter((item) => hasParticipation(item.id)).map((item) => item.id),
-    [reservations],
+    () => reservations.filter((item) => hasJoined(item, me)).map((item) => item.id),
+    [reservations, me],
   )
   // Which reservation the detail pane shows is the path's answer, so a shared
   // link opens on it and the back button steps between the ones you looked at.
@@ -65,7 +67,10 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
 
   // A failed list refresh stays on screen when the form opens: the host posting
   // a reservation does not make the reason the list could not load less true.
-  const openCreateForm = () => formApi.openCreate()
+  const openCreateForm = () => {
+    if (!requireUser('로그인하면 예약을 만들 수 있습니다.')) return
+    formApi.openCreate()
+  }
 
   const openEditForm = (reservation: Reservation) => { formApi.openEdit(reservation); clearNotice() }
 
@@ -104,9 +109,8 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
     }
 
     if (current.status === 'full') return
-    const username = getUsername()
-    if (!username) { showError(null, '상단바에서 유저명을 설정한 뒤 참가할 수 있습니다.'); return }
-    try { const updated = await joinReservation(id, username); await refresh(); showNotice(updated.status === 'matched' ? '매칭이 성사되었습니다.' : '참가했습니다. 다른 참가자를 기다리고 있어요.') } catch (error) { showError(error, '참가에 실패했습니다.') }
+    if (!requireUser('로그인하면 예약에 참가할 수 있습니다.')) return
+    try { const updated = await joinReservation(id); await refresh(); showNotice(updated.status === 'matched' ? '매칭이 성사되었습니다.' : '참가했습니다. 다른 참가자를 기다리고 있어요.') } catch (error) { showError(error, '참가에 실패했습니다.') }
   }
 
   const handleDelete = async (id: number) => {
@@ -131,12 +135,11 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
     event.preventDefault()
     const { editingId, conditions } = formApi
     const creating = editingId === null
-    const username = getUsername()
-    if (!username) { showError(null, `상단바에서 유저명을 설정한 뒤 예약을 ${creating ? '만들' : '수정할'} 수 있습니다.`); return }
+    if (!requireUser(`로그인하면 예약을 ${creating ? '만들' : '수정할'} 수 있습니다.`)) return
 
     clearNotice()
     try {
-      if (creating) await createReservation({ ...conditions(), display_name: username })
+      if (creating) await createReservation(conditions())
       else await updateReservation(editingId, conditions())
       await refresh()
       closeForm()
@@ -251,7 +254,7 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
           {selectedReservation && (() => {
             const availability = availabilityMeta(selectedReservation)
             const joined = joinedIds.includes(selectedReservation.id)
-            const owned = isOwner(selectedReservation.id)
+            const owned = isHost(selectedReservation, me)
             // The backend refuses an edit once anyone has joined; say so here
             // rather than letting the host find out by being rejected.
             const frozen = selectedReservation.joined > 0
@@ -272,7 +275,9 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
                     {selectedReservation.participants.length === 0 && <p className="reservation-roster-message">아직 참가자가 없습니다.</p>}
                     <ul className="reservation-roster-slots">
                       {selectedReservation.participants.map((participant) => {
-                        const entry = leaderboardEntries.find(item => item.online_name === participant.display_name)
+                        // By RPCN id, which is the leaderboard's np_id; a seat
+                        // taken before login has only the name to go on.
+                        const entry = leaderboardEntries.find(item => participant.username ? item.np_id === participant.username : item.online_name === participant.display_name)
                         const ranks = [entry?.player_info?.main_char_info?.rank_info, entry?.player_info?.sub_char_info?.rank_info]
                         const highestName = sortRanksDescending(ranks.flatMap(rank => rank?.name ? [rank.name] : []))[0]
                         const highestRank = ranks.find(rank => rank?.name === highestName)
@@ -317,7 +322,7 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
                     {frozen && <p id="reservation-edit-frozen" className="mt-2 text-xs text-txt-faint">참가자가 있는 예약은 수정할 수 없습니다. 삭제 후 다시 등록해 주세요.</p>}
                   </div>
                 : <button type="button" className={`mt-4 flex min-h-9 w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold transition-colors ${joined ? 'border border-primary text-primary-text hover:bg-primary/10' : selectedReservation.status === 'full' ? 'cursor-not-allowed border border-border bg-bg-panel text-txt-dim' : 'bg-primary text-bg-deep hover:bg-primary/85'}`} disabled={selectedReservation.status === 'full' && !joined} onClick={() => handleJoin(selectedReservation.id)}>{joined ? <UserMinus size={15} /> : selectedReservation.status === 'full' ? <X size={15} /> : <LogIn size={15} />}{joined ? '참가 취소' : selectedReservation.status === 'full' ? '모집 완료' : '참가하기'}</button>}
-              <CommentList reservationId={selectedReservation.id} username={getUsername()} onError={showError} />
+              <CommentList reservationId={selectedReservation.id} onError={showError} />
             </aside>
           })()}
         </div>}

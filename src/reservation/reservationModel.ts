@@ -18,6 +18,8 @@ export type Reservation = {
   id: number
   time: string
   host: string
+  /** The host's RPCN id; null on a reservation from before login. */
+  hostUsername: string | null
   ranks: string[]
   type: MatchType
   capacity: number
@@ -45,6 +47,7 @@ export function fromApi(item: ApiReservation): Reservation {
     id: item.id,
     time: kstTimeFormat.format(new Date(item.start_at)),
     host: item.host_display_name,
+    hostUsername: item.host_username,
     ranks: item.host_ranks,
     type: matchTypeLabels[item.match_type],
     capacity: item.capacity,
@@ -67,3 +70,11 @@ export const matchesFilter = (reservation: Reservation, filter: TypeFilter): boo
 
 /** The backend rejects a 21st rank with a 422, so the picker stops at 20. */
 export const MAX_RANKS = 20
+
+/** Whether the signed-in user holds a seat. Compared by RPCN id, never by the
+ * displayed name, which two accounts can share. */
+export const hasJoined = (reservation: Reservation, username: string | null | undefined): boolean =>
+  !!username && (reservation.participants ?? []).some((participant) => participant.username === username)
+
+export const isHost = (reservation: Reservation, username: string | null | undefined): boolean =>
+  !!username && reservation.hostUsername === username

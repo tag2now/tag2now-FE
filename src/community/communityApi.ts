@@ -2,9 +2,6 @@ import { GET, POST, PATCH, DELETE } from '@/shared/util/api'
 import { API } from '@/config/endpoints'
 import {PostDetail, PostListResponse} from "@/community/types";
 
-export const setIdentity = (name: string) =>
-  POST(API.communityIdentity().path, { name })
-
 export const fetchPosts = (page: number, pageSize: number, postType?: string, characters: string[] = []): Promise<PostListResponse> => {
   // URLSearchParams repeats a key for each array entry, which is the shape
   // FastAPI reads a `list[str]` query parameter from.

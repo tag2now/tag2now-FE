@@ -72,6 +72,7 @@ src/
   main.tsx             root render, Toaster, global unhandledrejection handler
   index.css            Tailwind 4 @theme design tokens
   config/              tabConfig, patchNotes, test-setup
+  auth/                RPCN login — session store, useAuth, LoginDialog
   overview/            landing summary — useOverview, Overview, KPI and top-five cards
   match/               rooms — useRooms, Rooms, RankMatchTable, PlayerMatchTable
   reservation/         appointments — Reservation, reservationApi, reservationLabels
@@ -84,7 +85,7 @@ A feature folder holds `<Feature>.tsx` (container), `use<Feature>.ts` (state), `
 
 ### Data flow
 
-`shared/util/api.ts` is the only place `fetch` is called. `GET`/`POST`/`DELETE` prepend the base URL, send `credentials: 'include'` (required for the community identity cookie), and throw on non-2xx.
+`shared/util/api.ts` is the only place `fetch` is called. `GET`/`POST`/`PATCH`/`DELETE` prepend the base URL, attach `Authorization: Bearer <token>` whenever someone is signed in, and throw on non-2xx. A 401 on a request that carried a token ends the session and reopens the login dialog with the server's reason.
 
 The base URL is `window.__ENV__?.API_BASE ?? '/api'`, letting a deployed build override the endpoint at runtime without a rebuild.
 
@@ -206,15 +207,33 @@ Do not gate room tabs on the rooms response. Doing so made the tab strip shift d
 
 The tab bar implements the ARIA tabs pattern — `role="tablist"`/`tab`/`tabpanel`, roving `tabIndex`, and Arrow Left/Right navigation. Preserve this when touching the nav. The nav buttons stay `<button>`s that `navigate()` rather than becoming `<a>`s, because the ARIA tabs contract is what the specs assert; the overview's section and row links **are** real `<Link>`s, since those are content, not a tabs widget.
 
-### Community identity
+### Login
 
-Not authentication. The username is stored in a cookie (`shared/util/cookie.ts`) and registered with the backend via `useIdentity().ensureIdentity()`, which POSTs to `/community/identity` once per session (guarded by a `useRef`) before any write. Callers must `await ensureIdentity()` before posting; it throws a Korean error message if no username is set.
+Every write — reservations, their comments, and the whole board — needs a
+signed-in **RPCN account**; reads need nothing. `POST /auth/login` checks the
+password with RPCN and answers a stateless bearer token (a JWT, 7 days by
+default). Nothing on the server can end it early, so signing out is just
+forgetting it.
+
+`auth/session.ts` holds the session outside React, so `api.ts` can read the
+token: stored under `ttt2-session`, forgotten on a timer when it expires, and
+kept in step across tabs through `storage` events. Components read it with
+`useAuth()` (`useSyncExternalStore`).
+
+**Guard writes with `requireUser(reason)`**, never by checking `user` and
+showing an error: it returns the user, or opens the one `LoginDialog` App
+mounts — with `reason` as its lead line — and returns null so the handler just
+returns. It does not throw; the dialog is the message.
+
+**"Is this mine?" compares `user.username`** — the RPCN id, which is also the
+leaderboard's `np_id` — never a displayed name. Reservations carry
+`host_username`, participants `username`, comments `author_username`; the
+board's `author` *is* the username. `online_name` is for display only. The
+profile card and the leaderboard's own-row mark find the record by `np_id` for
+the same reason; two players can share an online name. Rows written before
+login have a null username and belong to nobody.
 
 ### Reservation ownership
-
-Reservations use **capability tokens in `localStorage`**, not the community cookie identity. Creating one stores `reservation-owner-{id}`; joining stores `reservation-participant-{id}`. Both are sent back as `X-Reservation-Token` on the matching `DELETE`, and the backend authorises by comparing token hashes — there is no account to check against.
-
-`isOwner(id)` / `hasParticipation(id)` therefore answer "does this browser hold the token", not "is this the same person". Clearing site data or switching browsers loses the ability to delete a reservation, and nothing in the UI can recover it. Treat that as a known limitation of the token model rather than a bug to patch around.
 
 Editing (`PATCH /reservations/{id}`) is refused once anyone has joined: participants agreed to the conditions as they stood, and letting the host move the time underneath them would bind people to an appointment they never accepted. The host cancels and re-posts instead. The edit button is disabled once `participant_count > 0` so the host sees the restriction before acting, but the server stays the authority — a participant arriving while the editor is already open is caught by the 400, not by the disabled state. The create modal doubles as the edit form — same fields, same validation — so a rule cannot drift between posting and editing.
 

@@ -11,12 +11,15 @@ interface ApiReservationLike {
   id: number
   start_at: string
   host_display_name: string
+  /** RPCN id of the host; null on a reservation from before login. */
+  host_username: string | null
   host_ranks: string[]
   match_type: 'rank_match' | 'player_match' | 'any'
   capacity: number
   memo: string
   status: 'open' | 'matched' | 'cancelled' | 'ended'
   participant_count: number
+  participants?: { id: number, display_name: string, username: string | null }[]
   created_at: string
 }
 
@@ -24,6 +27,7 @@ interface ApiCommentLike {
   id: number
   reservation_id: number
   author: string
+  author_username: string | null
   body: string
   created_at: string
 }
@@ -46,12 +50,15 @@ export interface ApiReservation {
   id: number
   start_at: string
   host_display_name: string
+  /** RPCN id of the host; null on a reservation from before login. */
+  host_username: string | null
   host_ranks: string[]
   match_type: 'rank_match' | 'player_match' | 'any'
   capacity: number
   memo: string
   status: 'open' | 'matched' | 'cancelled' | 'ended'
   participant_count: number
+  participants?: { id: number, display_name: string, username: string | null }[]
   created_at: string
 }
 
@@ -82,6 +89,7 @@ export function reservationAt(hour: number, overrides: Partial<ApiReservation> =
     id: 1,
     start_at: start.toISOString(),
     host_display_name: '상대',
+    host_username: 'rival',
     host_ranks: ['Vanquisher'],
     match_type: 'rank_match',
     capacity: 1,
@@ -93,16 +101,32 @@ export function reservationAt(hour: number, overrides: Partial<ApiReservation> =
   }
 }
 
+/** The token the mock hands out for an account, and reads the account back from. */
+const tokenFor = (username: string) => `e2e:${encodeURIComponent(username)}`
+
+/** The account a request was sent as, or null when it carried no token. */
+function requester(route: Route): string | null {
+  const header = route.request().headers()['authorization'] ?? ''
+  const token = header.startsWith('Bearer e2e:') ? header.slice('Bearer e2e:'.length) : null
+  return token === null ? null : decodeURIComponent(token)
+}
+
 /**
- * Set the username the reservation flows require, before the app reads it.
+ * Start the page signed in as an RPCN account, before the app reads it.
  *
- * Creating or joining a reservation is refused outright without one, so a spec
- * that skips this gets a notice instead of the request it was asserting on.
+ * Writes the session the login dialog would have stored, so a spec about
+ * something else does not have to drive the dialog. The online name defaults
+ * to the username, which keeps what a spec types and what it asserts the same;
+ * pass the leaderboard's online name to sign in as one of its np_ids.
  */
-export async function signInAs(page: Page, username: string) {
-  await page.addInitScript((name) => {
-    localStorage.setItem('ttt2-username', name)
-  }, username)
+export async function signInAs(page: Page, username: string, onlineName = username) {
+  await page.addInitScript(([key, token, id, name]) => {
+    localStorage.setItem(key, JSON.stringify({
+      token,
+      expiresAt: Date.now() + 3_600_000,
+      user: { username: id, online_name: name, avatar_url: '', admin: false },
+    }))
+  }, ['ttt2-session', tokenFor(username), username, onlineName] as const)
 }
 
 /**
@@ -149,6 +173,29 @@ export async function goToMatchTab(page: Page) {
 export async function mockAllApis(page: Page, overrides?: MockOverrides) {
   const failing = new Set(overrides?.failEndpoints ?? [])
 
+  // Any password is right, except the one a spec uses to see the refusal.
+  await page.route('**/api/auth/login', async (route) => {
+    const { username, password } = route.request().postDataJSON()
+    if (password === 'wrong') {
+      return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ detail: '아이디 또는 비밀번호가 올바르지 않습니다.' }) })
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        access_token: tokenFor(username),
+        token_type: 'bearer',
+        expires_in: 3600,
+        user: { username, online_name: username, avatar_url: '', admin: false },
+      }),
+    })
+  })
+
+  /** Every write needs an account, as on the backend. */
+  const signedOut = (route: Route) => route.fulfill({
+    status: 401, contentType: 'application/json', body: JSON.stringify({ detail: '로그인이 필요합니다.' }),
+  })
+
   await page.route('**/api/leaderboard**', async (route) => {
     if (failing.has('leaderboard')) {
       return route.fulfill({ status: 500, body: 'Internal Server Error' })
@@ -193,15 +240,20 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const method = route.request().method()
     const thread = comments.get(id) ?? []
     if (method === 'GET') return asJson(route, thread)
+    const me = requester(route)
+    if (!me) return signedOut(route)
     if (method === 'POST') {
-      const { display_name, body } = route.request().postDataJSON()
-      const comment = { id: nextCommentId, reservation_id: id, author: display_name, body, created_at: new Date().toISOString() }
+      const { body } = route.request().postDataJSON()
+      const comment = { id: nextCommentId, reservation_id: id, author: me, author_username: me, body, created_at: new Date().toISOString() }
       nextCommentId += 1
       comments.set(id, [...thread, comment])
-      return asJson(route, { comment, author_token: `comment-${comment.id}` }, 201)
+      return asJson(route, comment, 201)
     }
     if (method === 'DELETE') {
       const commentId = Number(route.request().url().match(/\/comments\/(\d+)/)?.[1])
+      if (thread.find((item) => item.id === commentId)?.author_username !== me) {
+        return asJson(route, { detail: '작성한 사람만 삭제할 수 있습니다.' }, 403)
+      }
       comments.set(id, thread.filter((item) => item.id !== commentId))
       return route.fulfill({ status: 204, body: '' })
     }
@@ -217,18 +269,22 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const method = route.request().method()
     const id = Number(url.match(/\/reservations\/(\d+)/)?.[1])
     const reservation = reservations.get(id)
+    const me = requester(route)
 
     if (method === 'POST' && !id) {
+      if (!me) return signedOut(route)
       const body = route.request().postDataJSON()
       const created = reservationAt(Number(body.start_time.slice(0, 2)), {
         ...body,
         id: nextId,
-        host_display_name: body.display_name,
+        host_display_name: me,
+        host_username: me,
         host_ranks: body.ranks,
+        participants: [],
       })
       reservations.set(nextId, created)
       nextId += 1
-      return asJson(route, { reservation: created, owner_token: `owner-${created.id}` }, 201)
+      return asJson(route, created, 201)
     }
 
     if (!reservation) {
@@ -238,7 +294,10 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
 
     if (url.includes('/comments')) return handleComments(route, id)
 
+    if (method !== 'GET' && !me) return signedOut(route)
+
     if (method === 'PATCH') {
+      if (reservation.host_username !== me) return asJson(route, { detail: '예약한 사람만 수정할 수 있습니다.' }, 403)
       // Mirror the backend: a reservation somebody joined is frozen.
       if (reservation.participant_count > 0) {
         return asJson(route, { detail: '참가자가 있는 예약은 수정할 수 없습니다. 삭제 후 다시 등록해 주세요.' }, 400)
@@ -249,21 +308,29 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     }
 
     if (method === 'POST') {
+      if (reservation.host_username === me) {
+        return asJson(route, { detail: '내가 만든 예약에는 참가할 수 없습니다.' }, 400)
+      }
       if (reservation.participant_count >= reservation.capacity) {
         return asJson(route, { detail: '이미 마감된 예약입니다.' }, 400)
       }
+      reservation.participants = [...(reservation.participants ?? []), { id: 1000 + reservation.participant_count, display_name: me!, username: me }]
       reservation.participant_count += 1
       reservation.status = reservation.participant_count >= reservation.capacity ? 'matched' : 'open'
-      return asJson(route, { reservation, participant_token: `participant-${id}` }, 201)
+      return asJson(route, reservation, 201)
     }
 
     if (url.includes('/participants/me')) {
+      const seats = reservation.participants ?? []
+      if (!seats.some((seat) => seat.username === me)) return asJson(route, { detail: '참가 중인 예약이 아닙니다.' }, 403)
+      reservation.participants = seats.filter((seat) => seat.username !== me)
       reservation.participant_count = Math.max(0, reservation.participant_count - 1)
       reservation.status = 'open'
       return asJson(route, reservation)
     }
 
     if (method === 'DELETE') {
+      if (reservation.host_username !== me) return asJson(route, { detail: '예약한 사람만 취소할 수 있습니다.' }, 403)
       reservation.status = 'cancelled'
       return route.fulfill({ status: 204, body: '' })
     }
@@ -315,17 +382,7 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const url = route.request().url()
     const method = route.request().method()
 
-    // Identity endpoint
-    if (url.includes('/community/identity')) {
-      if (method === 'GET') {
-        return route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ name: 'TestUser' }),
-        })
-      }
-      return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
-    }
+    if (method !== 'GET' && !requester(route)) return signedOut(route)
 
     // Post actions: thumb, comments
     if (url.match(/\/posts\/\d+\/(thumb|comments)/)) {

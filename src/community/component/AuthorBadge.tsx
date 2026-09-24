@@ -19,7 +19,9 @@ interface AuthorBadgeProps {
  * passes, decided only by the order Tailwind emits the rules.
  */
 export default function AuthorBadge({ name, entries, className }: AuthorBadgeProps) {
-  const entry = entries?.find(e => e.online_name === name)
+  // Authors are RPCN ids now, which the leaderboard calls np_id; posts from
+  // before login carry a typed nickname, matched the old way.
+  const entry = entries?.find(e => e.np_id === name) ?? entries?.find(e => e.online_name === name)
   const rankInfo = entry?.player_info?.main_char_info?.rank_info
 
   return (

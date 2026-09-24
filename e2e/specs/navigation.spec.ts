@@ -116,26 +116,24 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-selected', 'false')
   })
 
-  // Phones only: the sidebar card is the profile on a wider screen, and showing
-  // the header control as well put two edit pencils for one username on screen.
-  test('the header exposes the username and its editor', async ({ page, isMobile }) => {
-    test.skip(!isMobile, 'The sidebar card carries the editor on desktop.')
-    await signInAs(page, 'KingOfIronFist')
+  // Phones only: the sidebar card is the profile on a wider screen.
+  test('the header shows the signed-in account and signs it out', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'The sidebar card carries the account on desktop.')
+    await signInAs(page, 'np_002', 'KingOfIronFist')
     await skipPatchNotes(page)
     await page.reload()
 
     const headerProfile = page.locator('#headerProfileSlot')
     await expect(headerProfile.getByText('KingOfIronFist')).toBeVisible()
-    await headerProfile.getByRole('button', { name: 'KingOfIronFist 헤더에서 유저명 수정' }).click()
-    await expect(headerProfile.getByLabel('유저명 입력')).toHaveValue('KingOfIronFist')
-    await headerProfile.getByRole('button', { name: '취소' }).click()
+    await headerProfile.getByRole('button', { name: 'KingOfIronFist 로그아웃' }).click()
+    await expect(headerProfile.getByRole('button', { name: '로그인' })).toBeVisible()
   })
 
   // Below 760px the sidebar card, and its 내 정보 보기, is hidden; the header
   // carries the way into your own record instead.
   test('the mobile header opens your own record', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Desktop reaches the record from the sidebar card.')
-    await signInAs(page, 'KingOfIronFist')
+    await signInAs(page, 'np_002', 'KingOfIronFist')
     await skipPatchNotes(page)
     await page.reload()
 
@@ -146,7 +144,7 @@ test.describe('Navigation', () => {
 
   test('the desktop header leaves 내 정보 to the sidebar card', async ({ page, isMobile }) => {
     test.skip(isMobile, 'Phones have no sidebar card, so the header carries it.')
-    await signInAs(page, 'KingOfIronFist')
+    await signInAs(page, 'np_002', 'KingOfIronFist')
     await skipPatchNotes(page)
     await page.reload()
 
@@ -157,7 +155,7 @@ test.describe('Navigation', () => {
 
   test('the populated player card reuses the compact leaderboard character layout', async ({ page, isMobile }) => {
     test.skip(isMobile, 'The detailed profile card belongs to the desktop sidebar.')
-    await signInAs(page, 'KingOfIronFist')
+    await signInAs(page, 'np_002', 'KingOfIronFist')
     await skipPatchNotes(page)
     await page.reload()
 

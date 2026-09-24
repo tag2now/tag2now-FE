@@ -49,9 +49,9 @@ const OVERVIEW_DATA: OverviewData = {
   reservations: [
     // Ranks out of order and three of them, so the row has to sort and to
     // count what it cannot fit rather than simply printing the list.
-    { id: 1, start_at: '2026-09-02T12:00:00Z', host_display_name: 'HostOne', host_ranks: ['Master', 'Raijin', 'Fujin'], match_type: 'rank_match', capacity: 4, memo: '', status: 'open', participant_count: 1, created_at: '2026-09-02T09:00:00Z' },
-    { id: 2, start_at: '2026-09-02T13:00:00Z', host_display_name: 'HostFull', host_ranks: [], match_type: 'any', capacity: 2, memo: '', status: 'open', participant_count: 2, created_at: '2026-09-02T09:00:00Z' },
-    { id: 3, start_at: '2026-09-02T14:00:00Z', host_display_name: 'HostPlayer', host_ranks: [], match_type: 'player_match', capacity: 3, memo: '', status: 'open', participant_count: 0, created_at: '2026-09-02T09:00:00Z' },
+    { id: 1, start_at: '2026-09-02T12:00:00Z', host_display_name: 'HostOne', host_username: 'hostone', host_ranks: ['Master', 'Raijin', 'Fujin'], match_type: 'rank_match', capacity: 4, memo: '', status: 'open', participant_count: 1, created_at: '2026-09-02T09:00:00Z' },
+    { id: 2, start_at: '2026-09-02T13:00:00Z', host_display_name: 'HostFull', host_username: 'hostfull', host_ranks: [], match_type: 'any', capacity: 2, memo: '', status: 'open', participant_count: 2, created_at: '2026-09-02T09:00:00Z' },
+    { id: 3, start_at: '2026-09-02T14:00:00Z', host_display_name: 'HostPlayer', host_username: 'hostplayer', host_ranks: [], match_type: 'player_match', capacity: 3, memo: '', status: 'open', participant_count: 0, created_at: '2026-09-02T09:00:00Z' },
   ],
 }
 
@@ -172,7 +172,7 @@ describe('Overview', () => {
     mockedUseOverview.mockReturnValue(polled({
       ...OVERVIEW_DATA,
       reservations: [1, 2, 3, 4, 5].map((id) => ({
-        id, start_at: `2026-09-02T1${id}:00:00Z`, host_display_name: `Host${id}`, host_ranks: [],
+        id, start_at: `2026-09-02T1${id}:00:00Z`, host_display_name: `Host${id}`, host_username: `host${id}`, host_ranks: [],
         match_type: 'any' as const, capacity: 2, memo: '', status: 'open' as const,
         participant_count: 0, created_at: '2026-09-02T09:00:00Z',
       })),

@@ -53,8 +53,8 @@
    showing the header control too put two edit pencils for one username on the
    same screen. Below 760px the card is gone and this is the only one left. */
 .profile-control { display: none; min-width: 0; justify-self: end; }
-.profile-empty, .profile-editor button { display: inline-flex; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt-dim); cursor: pointer; }
-.profile-empty:hover, .profile-editor button:hover { background: var(--color-bg-row); color: var(--color-txt); }
+.profile-empty { display: inline-flex; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt-dim); cursor: pointer; }
+.profile-empty:hover { background: var(--color-bg-row); color: var(--color-txt); }
 .profile-summary { display: flex; align-items: center; gap: 8px; min-width: 0; }
 /* Rank and name sit on one line: stacked, the short "#2" left a ragged half
    row above the name and neither element lined up with the portraits. */
@@ -80,9 +80,6 @@
    green and red instead, which made a player's own characters look like a
    different kind of record to the ones on the leaderboard. */
 .profile-chars { display: flex; align-items: center; gap: 10px; padding-left: 10px; border-left: 1px solid var(--color-border-light); }
-.profile-editor { display: flex; align-items: center; gap: 4px; }
-.profile-editor input { width: 140px; min-height: 34px; padding: 0 8px; }
-.profile-editor button { width: 32px; padding: 0; }
 
 /* The sidebar tracks the viewport instead of holding 190px, which at 768px
    left it eating 26% of the width against 15% on a 1280px desktop. Measured
@@ -106,8 +103,7 @@
 .sidebar-profile-card { padding: 10px; }
 .sidebar-profile-heading { display: flex; min-height: 22px; align-items: center; justify-content: space-between; color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-strong); letter-spacing: .12em; text-transform: uppercase; }
 .sidebar-profile-identity { display: flex; min-width: 0; align-items: center; padding: 4px 0 8px; }
-.sidebar-profile-name { display: flex; min-width: 0; flex: 1 1 auto; align-items: baseline; gap: 4px; padding: 0; border: 0; background: transparent; color: var(--color-txt); cursor: pointer; }
-.sidebar-profile-name:disabled { cursor: default; }
+.sidebar-profile-name { display: flex; min-width: 0; flex: 1 1 auto; align-items: baseline; gap: 4px; padding: 0; border: 0; background: transparent; color: var(--color-txt); }
 .sidebar-profile-name strong { min-width: 0; overflow: hidden; font-size: var(--text-13); font-weight: var(--weight-display); text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-profile-rank-position { flex: 0 0 auto; color: var(--color-primary-text); font-size: var(--text-2xs); font-weight: var(--weight-display); font-variant-numeric: tabular-nums; }
 .sidebar-profile-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 3px; }
@@ -122,8 +118,6 @@
 .sidebar-profile-history:hover:not(:disabled), .profile-history:hover:not(:disabled) { border-color: color-mix(in srgb, var(--color-tier-gold) 60%, transparent); background: color-mix(in srgb, var(--color-tier-gold) 16%, transparent); }
 .sidebar-profile-history:disabled, .profile-history:disabled { opacity: .45; cursor: default; }
 .sidebar-profile-empty { width: 100%; margin-top: 6px; }
-.sidebar-profile-editor { display: grid; grid-template-columns: minmax(0,1fr) 32px 32px; margin-top: 6px; }
-.sidebar-profile-editor input { width: 100%; min-width: 0; }
 
 .sidebar-heading { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 8px; color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-strong); letter-spacing: .14em; text-transform: uppercase; }
 .app-nav { display: flex; flex-direction: column; gap: 2px; }

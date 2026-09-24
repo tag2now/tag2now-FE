@@ -87,10 +87,31 @@ test.describe('Community', () => {
     await expect(page.locator('text=Thanks! Yeah the damage scaling is really favorable.')).toBeVisible()
   })
 
-  test('write button opens create post form', async ({ page }) => {
+  // Writing needs an account, so the button asks for a login first --- and
+  // once signed in, the same press goes straight to the form.
+  test('write button asks for a login, then opens the create post form', async ({ page }) => {
     await page.locator('button', { hasText: '글쓰기' }).click()
 
-    // CreatePostForm should have title/body inputs and submit
-    await expect(page.locator('input, textarea').first()).toBeVisible()
+    const dialog = page.getByRole('dialog', { name: 'RPCN 로그인' })
+    await expect(dialog).toContainText('로그인하면 글을 쓸 수 있습니다.')
+    await dialog.getByLabel('아이디').fill('np_001')
+    await dialog.getByLabel('비밀번호').fill('secret')
+    await dialog.getByRole('button', { name: '로그인' }).click()
+    await expect(dialog).toHaveCount(0)
+
+    await page.locator('button', { hasText: '글쓰기' }).click()
+    await expect(page.getByLabel('게시글 제목')).toBeVisible()
+  })
+
+  test('a wrong password keeps the login dialog open with the reason', async ({ page }) => {
+    await page.locator('button', { hasText: '글쓰기' }).click()
+
+    const dialog = page.getByRole('dialog', { name: 'RPCN 로그인' })
+    await dialog.getByLabel('아이디').fill('np_001')
+    await dialog.getByLabel('비밀번호').fill('wrong')
+    await dialog.getByRole('button', { name: '로그인' }).click()
+
+    await expect(dialog.getByRole('alert')).toHaveText('아이디 또는 비밀번호가 올바르지 않습니다.')
+    await expect(dialog.getByLabel('비밀번호')).toHaveValue('')
   })
 })
