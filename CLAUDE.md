@@ -220,10 +220,16 @@ token: stored under `ttt2-session`, forgotten on a timer when it expires, and
 kept in step across tabs through `storage` events. Components read it with
 `useAuth()` (`useSyncExternalStore`).
 
-**Guard writes with `requireUser(reason)`**, never by checking `user` and
+**Guard writes with `requireUser(reason, retry)`**, never by checking `user` and
 showing an error: it returns the user, or opens the one `LoginDialog` App
 mounts — with `reason` as its lead line — and returns null so the handler just
-returns. It does not throw; the dialog is the message.
+returns. It does not throw; the dialog is the message. Pass the handler itself
+as `retry`: it runs again once the login succeeds, so the press that asked is
+not lost. Dismissing the dialog drops it, and closing the dialog aborts a login
+still in flight — a cancelled login must never sign anyone in.
+
+Signing out always goes through a confirmation. On a phone the header name
+opens an account menu rather than signing out.
 
 **"Is this mine?" compares `user.username`** — the RPCN id, which is also the
 leaderboard's `np_id` — never a displayed name. Reservations carry
