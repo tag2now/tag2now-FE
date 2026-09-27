@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import PlayerProfileCard from './PlayerProfileCard'
 import { dismissLoginRequest, endSession, getLoginRequest, getSession, startSession } from '@/auth/session'
@@ -88,14 +88,28 @@ describe('Player profile', () => {
     expect(screen.getByText('온라인')).toBeInTheDocument()
   })
 
-  it('signs out from the sidebar', () => {
+  it('signs out from the sidebar once confirmed', () => {
     signInAs()
     renderProfile()
 
     fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '로그아웃' }))
 
-    expect(getSession()).toBeNull()
-    expect(screen.getByRole('button', { name: 'RPCN 로그인' })).toBeInTheDocument()
+    return waitFor(() => {
+      expect(getSession()).toBeNull()
+      expect(screen.getByRole('button', { name: 'RPCN 로그인' })).toBeInTheDocument()
+    })
+  })
+
+  it('stays signed in when the sign-out is cancelled', async () => {
+    signInAs()
+    renderProfile()
+
+    fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '취소' }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(getSession()).not.toBeNull()
   })
 
   it('follows a login that happens after it rendered', () => {
@@ -106,15 +120,34 @@ describe('Player profile', () => {
     expect(screen.getByText('TestPlayer')).toBeInTheDocument()
   })
 
-  it('carries the same account into the header slot, with its own sign-out', () => {
+  // Tapping your own name used to sign you out on the spot. It opens a menu
+  // now, and signing out from it still asks first.
+  it('opens an account menu from the header name instead of signing out', async () => {
     signInAs()
     const header = mountHeaderSlot()
     renderProfile()
 
-    fireEvent.click(header.getByRole('button', { name: 'TestPlayer 로그아웃' }))
+    fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
+    expect(getSession()).not.toBeNull()
 
-    expect(getSession()).toBeNull()
+    fireEvent.click(header.getByRole('menuitem', { name: '로그아웃' }))
+    expect(header.queryByRole('menu')).not.toBeInTheDocument()
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '로그아웃' }))
+
+    await waitFor(() => expect(getSession()).toBeNull())
     expect(header.getByRole('button', { name: '로그인' })).toBeInTheDocument()
+  })
+
+  it('closes the account menu on Escape', () => {
+    signInAs()
+    const header = mountHeaderSlot()
+    renderProfile()
+
+    fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(header.queryByRole('menu')).not.toBeInTheDocument()
+    expect(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' })).toHaveFocus()
   })
 
   // Phones hide the sidebar card and its 내 정보 보기, so the header carries a

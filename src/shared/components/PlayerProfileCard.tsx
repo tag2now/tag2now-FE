@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { LogIn, LogOut, Radio, Trophy } from 'lucide-react'
+import { ChevronDown, LogIn, LogOut, Radio, Trophy } from 'lucide-react'
 import useAuth from '@/auth/useAuth'
 import { requestLogin } from '@/auth/session'
+import useConfirm from '@/shared/hooks/useConfirm'
+import ConfirmDialog from './ConfirmDialog'
 import type { RoomUser } from '@/match/types'
 import type { CharInfo, LeaderboardEntry } from '@/shared/types'
 import PlayerHistoryPanel from './PlayerHistoryPanel'
@@ -26,6 +28,10 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
   const { user, logout } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
   const [headerTarget, setHeaderTarget] = useState<HTMLElement | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuAnchorRef = useRef<HTMLDivElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const { confirm, request: confirmRequest, onConfirm, onCancel } = useConfirm()
 
   useEffect(() => {
     setHeaderTarget(document.getElementById('headerProfileSlot'))
@@ -33,8 +39,29 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
 
   // A record open for the last account must not stay open for no account.
   useEffect(() => {
-    if (!user) setProfileOpen(false)
+    if (!user) { setProfileOpen(false); setMenuOpen(false) }
   }, [user])
+
+  // The account menu closes on a click outside it or on Escape, which hands
+  // focus back to the name that opened it.
+  useEffect(() => {
+    if (!menuOpen) return
+    menuAnchorRef.current?.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)')?.focus()
+    const onPointer = (event: PointerEvent) => {
+      if (!menuAnchorRef.current?.contains(event.target as Node)) setMenuOpen(false)
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setMenuOpen(false)
+      menuButtonRef.current?.focus()
+    }
+    document.addEventListener('pointerdown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
 
   const entry = user
     ? leaderboardEntries?.find(item => item.np_id === user.username)
@@ -54,6 +81,19 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
 
   const signIn = () => requestLogin()
 
+  // Signing back in means typing the RPCN password again, so a stray tap
+  // should not be enough to sign out.
+  const confirmLogout = async () => {
+    setMenuOpen(false)
+    const agreed = await confirm({
+      title: '로그아웃할까요?',
+      body: '다시 로그인하려면 RPCN 비밀번호를 입력해야 합니다.',
+      confirmLabel: '로그아웃',
+      tone: 'default',
+    })
+    if (agreed) logout()
+  }
+
   const headerControl = user ? (
     <div className="profile-copy">
       {/* Shown only below 760px, where the sidebar card is hidden. The label
@@ -71,16 +111,36 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
       {/* The same byline a post row carries: rank banner, place, name. */}
       <RankImage rankInfo={bestRank} className="author-badge-rank" />
       {entry && <span className="author-badge-place">#{entry.rank}</span>}
-      <button
-        type="button"
-        className="profile-name"
-        onClick={logout}
-        aria-label={`${name} 로그아웃`}
-        title="로그아웃"
-      >
-        <span>{name}</span>
-        <LogOut size={13} aria-hidden="true" className="ml-1.5 shrink-0" />
-      </button>
+      <div ref={menuAnchorRef} className="profile-menu-anchor">
+        <button
+          ref={menuButtonRef}
+          type="button"
+          className="profile-name"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          aria-label={`${name} 계정 메뉴`}
+        >
+          <span>{name}</span>
+          <ChevronDown size={13} aria-hidden="true" className="ml-1 shrink-0" />
+        </button>
+        {menuOpen && (
+          <div role="menu" aria-label="계정" className="profile-menu">
+            <p className="profile-menu-id">{user.username}</p>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => { setMenuOpen(false); setProfileOpen(true) }}
+              disabled={!entry}
+            >
+              <Trophy size={14} aria-hidden="true" /> 내 정보 보기
+            </button>
+            <button type="button" role="menuitem" onClick={confirmLogout}>
+              <LogOut size={14} aria-hidden="true" /> 로그아웃
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   ) : (
     <button type="button" onClick={signIn} className="profile-empty">
@@ -139,7 +199,7 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
               <Trophy size={14} aria-hidden="true" />
               내 정보 보기
             </button>
-            <button type="button" className="profile-empty sidebar-profile-empty" onClick={logout}>
+            <button type="button" className="profile-empty sidebar-profile-empty" onClick={confirmLogout}>
               <LogOut size={14} aria-hidden="true" /> 로그아웃
             </button>
           </>
@@ -161,6 +221,10 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
           leaderboardEntry={entry}
           onClose={() => setProfileOpen(false)}
         />,
+        document.body,
+      )}
+      {confirmRequest && createPortal(
+        <ConfirmDialog request={confirmRequest} onConfirm={onConfirm} onCancel={onCancel} />,
         document.body,
       )}
     </>

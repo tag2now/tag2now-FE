@@ -68,6 +68,12 @@
 /* Unranked players have no np_id to look up, so the name is inert for them. */
 .profile-name:disabled { cursor: default; }
 .profile-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-menu-anchor { position: relative; min-width: 0; }
+.profile-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 70; display: flex; min-width: 168px; flex-direction: column; padding: 4px; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-sunken); box-shadow: 0 16px 40px rgba(0,0,0,.42); }
+.profile-menu-id { margin: 0; padding: 6px 8px 8px; border-bottom: 1px solid var(--color-border-light); color: var(--color-txt-faint); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-menu [role="menuitem"] { display: flex; min-height: 36px; align-items: center; gap: 8px; margin-top: 2px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: var(--color-txt); font-size: var(--text-sm); text-align: left; cursor: pointer; }
+.profile-menu [role="menuitem"]:hover:not(:disabled), .profile-menu [role="menuitem"]:focus-visible { background: var(--color-bg-row); outline: 0; }
+.profile-menu [role="menuitem"]:disabled { color: var(--color-txt-disabled); cursor: default; }
 /* The pencil is its own control now --- it opens the rename editor while the
    name opens the history panel, so it carries the accent instead of reading as
    an ornament inside the name chip. */

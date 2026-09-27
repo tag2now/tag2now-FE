@@ -125,7 +125,9 @@ test.describe('Navigation', () => {
 
     const headerProfile = page.locator('#headerProfileSlot')
     await expect(headerProfile.getByText('KingOfIronFist')).toBeVisible()
-    await headerProfile.getByRole('button', { name: 'KingOfIronFist 로그아웃' }).click()
+    await headerProfile.getByRole('button', { name: 'KingOfIronFist 계정 메뉴' }).click()
+    await headerProfile.getByRole('menuitem', { name: '로그아웃' }).click()
+    await page.getByRole('alertdialog', { name: '로그아웃할까요?' }).getByRole('button', { name: '로그아웃' }).click()
     await expect(headerProfile.getByRole('button', { name: '로그인' })).toBeVisible()
   })
 
