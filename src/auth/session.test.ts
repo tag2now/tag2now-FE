@@ -40,6 +40,16 @@ describe('the session store', () => {
     expect(getAccessToken()).toBe('tok')
   })
 
+  it('keeps a session only for the current tab when persistence is disabled', () => {
+    startSession('tok', 3600, user, false)
+
+    expect(getAccessToken()).toBe('tok')
+    expect(localStorage.getItem(STORAGE_KEYS.session)).toBeNull()
+
+    restoreSession()
+    expect(getSession()).toBeNull()
+  })
+
   it('does not restore an expired session, and clears it from storage', () => {
     localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ token: 'old', expiresAt: Date.now() - 1, user }))
 

@@ -41,7 +41,7 @@ describe('the login dialog', () => {
     fillIn('  p1 ', ' pw ')
     fireEvent.click(screen.getByRole('button', { name: '로그인' }))
 
-    await waitFor(() => expect(login).toHaveBeenCalledWith('p1', ' pw ', expect.any(AbortSignal)))
+    await waitFor(() => expect(login).toHaveBeenCalledWith('p1', ' pw ', expect.any(AbortSignal), true))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
@@ -139,6 +139,18 @@ describe('the login dialog', () => {
 
     expect(screen.getByLabelText('비밀번호')).toHaveAttribute('type', 'text')
     expect(screen.getByRole('button', { name: '비밀번호 숨기기' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('can make a login session tab-only', async () => {
+    vi.mocked(login).mockImplementation(async () => startSession('tok', 3600, user).user)
+    render(<LoginDialog />)
+    act(() => requestLogin())
+
+    fireEvent.click(screen.getByRole('checkbox', { name: '자동 로그인' }))
+    fillIn()
+    fireEvent.click(screen.getByRole('button', { name: '로그인' }))
+
+    await waitFor(() => expect(login).toHaveBeenCalledWith('p1', 'secret', expect.any(AbortSignal), false))
   })
 
   it('returns focus to the password after a wrong one', async () => {

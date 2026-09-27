@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { ArrowRight, Eye, EyeOff, Info, Loader2, LogIn, X } from 'lucide-react'
+import { Check, Eye, EyeOff, Loader2, X } from 'lucide-react'
 import useModalDialog from '@/shared/hooks/useModalDialog'
 import { AppError } from '@/shared/util/AppError'
 import { login } from '@/auth/authApi'
@@ -19,6 +19,7 @@ function LoginForm({ reason }: { reason: string | null }) {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [remember, setRemember] = useState(true)
   const passwordRef = useRef<HTMLInputElement>(null)
   const inFlight = useRef<AbortController | null>(null)
 
@@ -36,7 +37,7 @@ function LoginForm({ reason }: { reason: string | null }) {
     try {
       // A successful login closes the dialog from the store, which unmounts
       // this form --- so nothing is set after it.
-      const user = await login(username.trim(), password, controller.signal)
+      const user = await login(username.trim(), password, controller.signal, remember)
       toast.success(`${user.online_name || user.username}님, 로그인했습니다.`)
     } catch (caught) {
       if (controller.signal.aborted) return
@@ -69,18 +70,16 @@ function LoginForm({ reason }: { reason: string | null }) {
           <X size={18} aria-hidden="true" />
         </button>
 
-        <div className="login-dialog-head">
-          <span className="login-dialog-icon" aria-hidden="true"><LogIn size={22} /></span>
-          <div>
-            <h2 id="login-dialog-title">RPCN 로그인</h2>
-            <p>RPCS3에서 사용하는 RPCN 계정으로 로그인합니다.</p>
-          </div>
+        <div className="login-brand" aria-hidden="true">
+          <img src="/favicon.svg" alt="" width={48} height={48} />
+          <p>TAG<span>2</span>NOW</p>
         </div>
+        <h2 id="login-dialog-title" className="sr-only">RPCN 로그인</h2>
 
         {reason && <p id="login-dialog-body" className="login-reason">{reason}</p>}
 
         <div className="login-field">
-          <label className="field-label" htmlFor="login-username">아이디</label>
+          <label className="sr-only" htmlFor="login-username">아이디</label>
           <input
             id="login-username"
             className="input-base w-full"
@@ -95,7 +94,7 @@ function LoginForm({ reason }: { reason: string | null }) {
           />
         </div>
         <div className="login-field">
-          <label className="field-label" htmlFor="login-password">비밀번호</label>
+          <label className="sr-only" htmlFor="login-password">비밀번호</label>
           <div className="relative">
             <input
               ref={passwordRef}
@@ -123,19 +122,28 @@ function LoginForm({ reason }: { reason: string | null }) {
 
         {error && <p role="alert" className="login-error">{error}</p>}
 
-        <div className="login-info">
-          <Info size={17} aria-hidden="true" />
-          <p>온라인 닉네임이 아닌 RPCN 로그인 아이디를 입력하세요.</p>
+        <div className="login-options">
+          <label className="login-remember">
+            <input
+              type="checkbox"
+              checked={remember}
+              disabled={submitting}
+              onChange={(event) => setRemember(event.target.checked)}
+            />
+            <span className="login-checkbox" aria-hidden="true"><Check size={14} /></span>
+            자동 로그인
+          </label>
+          <span className="login-credential-note">온라인 닉네임이 아닌 RPCN 아이디를 입력하세요.</span>
         </div>
-        <p className="login-help">RPCN 계정이 없나요? <span>RPCS3에서 생성할 수 있어요.</span></p>
 
         <div className="login-dialog-actions">
-          <button type="button" className="btn-ghost" onClick={dismissLoginRequest}>취소</button>
           <button type="submit" className="btn-primary" disabled={submitting || !username.trim() || !password}>
             {submitting && <Loader2 size={14} aria-hidden="true" className="animate-spin" />}
-            {submitting ? '로그인 중' : <><span>로그인</span><ArrowRight size={16} aria-hidden="true" /></>}
+            {submitting ? '로그인 중' : '로그인'}
           </button>
         </div>
+        <button type="button" className="login-cancel" onClick={dismissLoginRequest}>취소</button>
+        <p className="login-help">RPCN 계정은 RPCS3의 RPCN 메뉴에서 생성할 수 있어요.</p>
       </form>
     </div>
   )

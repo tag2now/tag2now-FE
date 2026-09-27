@@ -110,35 +110,37 @@
 .confirm-dialog-icon.is-danger { background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary-text); }
 .confirm-dialog-body { margin: 12px 0 0; color: var(--color-txt-dim); font-size: var(--text-sm); line-height: 1.6; }
 .confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 16px; }
-/* Login is a task rather than a confirmation, so it earns its own hierarchy:
-   a clear brand cue, form rhythm, a small credential hint, and a dedicated
-   action rail. Other confirmation dialogs intentionally remain compact. */
-.login-dialog { position: relative; width: min(440px, 100%); margin: max(16px, 12vh) auto auto; padding: 16px; border: 1px solid color-mix(in srgb, var(--color-surface-tint) 16%, transparent); border-radius: 8px; background: var(--color-bg-sunken); box-shadow: 0 24px 80px color-mix(in srgb, var(--color-shade) 56%, transparent); }
-.login-close { position: absolute; top: 12px; right: 12px; display: grid; width: 32px; height: 32px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--color-txt-faint); cursor: pointer; transition: color 150ms ease, background-color 150ms ease; }
+/* A dedicated entry screen, intentionally distinct from confirmation dialogs.
+   The quiet surface keeps attention on credentials and the login action. */
+.login-dialog { position: relative; width: min(440px, 100%); margin: max(16px, 12vh) auto auto; overflow: hidden; padding: 48px 32px 28px; border: 1px solid color-mix(in srgb, var(--color-surface-tint) 12%, transparent); border-radius: 8px; background: var(--color-bg-sunken); box-shadow: 0 24px 80px color-mix(in srgb, var(--color-shade) 56%, transparent); }
+.login-close { position: absolute; top: 12px; right: 12px; z-index: 1; display: grid; width: 32px; height: 32px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--color-txt-faint); cursor: pointer; transition: color 150ms ease, background-color 150ms ease; }
 .login-close:hover { background: color-mix(in srgb, var(--color-surface-tint) 7%, transparent); color: var(--color-txt); }
-.login-close:focus-visible, .login-reveal:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-.login-dialog-head { display: flex; align-items: center; gap: 12px; padding-right: 32px; }
-.login-dialog-icon { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border-radius: 8px; background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dim)); color: var(--color-surface-tint); box-shadow: 0 8px 24px var(--color-primary-glow); }
-.login-dialog-head h2 { margin: 0; color: var(--color-txt); font-size: var(--text-md); font-weight: var(--weight-display); line-height: 1.25; }
-.login-dialog-head p { margin: 4px 0 0; color: var(--color-txt-dim); font-size: var(--text-xs); line-height: 1.5; word-break: keep-all; }
-.login-reason { margin: 16px 0 0; padding: 8px 12px; border-left: 2px solid var(--color-primary); background: color-mix(in srgb, var(--color-primary) 8%, transparent); color: var(--color-txt-dim); font-size: var(--text-xs); line-height: 1.5; word-break: keep-all; }
-.login-field { margin-top: 16px; }
+.login-close:focus-visible, .login-reveal:focus-visible, .login-remember input:focus-visible + .login-checkbox { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.login-brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 40px; }
+.login-brand img { width: 42px; height: 42px; border-radius: 8px; box-shadow: 0 8px 20px var(--color-primary-glow); }
+.login-brand p { margin: 0; color: var(--color-txt); font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--weight-max); letter-spacing: .06em; line-height: 1; }
+.login-brand p span { color: var(--color-primary); }
+.login-reason { margin: 0 0 16px; padding: 8px 12px; border-left: 2px solid var(--color-primary); background: color-mix(in srgb, var(--color-primary) 8%, transparent); color: var(--color-txt-dim); font-size: var(--text-xs); line-height: 1.5; word-break: keep-all; }
 .login-field + .login-field { margin-top: 12px; }
-.login-field .field-label { display: block; margin-bottom: 6px; color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-label); }
-.login-field .input-base { min-height: 44px; border-color: var(--color-border-light); background: var(--color-bg-field); color: var(--color-txt); font-size: var(--text-sm); }
+.login-field .input-base { min-height: 50px; border-color: color-mix(in srgb, var(--color-surface-tint) 12%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--color-bg-deep) 62%, var(--color-bg-field)); color: var(--color-txt); font-size: var(--text-base); }
 .login-field .input-base::placeholder { color: var(--color-txt-muted); }
 .login-field .input-base:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-glow); }
-.login-reveal { position: absolute; top: 0; right: 0; display: grid; width: 42px; height: 100%; place-items: center; border: 0; background: transparent; color: var(--color-txt-faint); cursor: pointer; }
+.login-reveal { position: absolute; top: 0; right: 0; display: grid; width: 48px; height: 100%; place-items: center; border: 0; background: transparent; color: var(--color-txt-faint); cursor: pointer; }
 .login-reveal:hover, .login-reveal[aria-pressed="true"] { color: var(--color-txt); }
 .login-error { margin: 12px 0 0; color: var(--color-error); font-size: var(--text-sm); font-weight: var(--weight-strong); line-height: 1.5; }
-.login-info { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--color-info) 54%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--color-info) 11%, transparent); color: var(--color-info-text); }
-.login-info svg { flex: 0 0 auto; margin-top: 1px; }
-.login-info p { margin: 0; font-size: var(--text-xs); line-height: 1.5; word-break: keep-all; }
-.login-help { margin: 12px 0 0; color: var(--color-txt-faint); font-size: var(--text-xs); line-height: 1.55; word-break: keep-all; }
-.login-help span { color: var(--color-primary-text); }
-.login-dialog-actions { display: grid; grid-template-columns: minmax(0, .76fr) minmax(0, 1.24fr); gap: 8px; margin: 16px -16px -16px; padding: 16px; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface-tint) 2%, transparent); }
-.login-dialog-actions > button { min-height: 42px; }
-.login-dialog-actions .btn-primary { box-shadow: 0 8px 20px var(--color-primary-glow); }
+.login-options { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.login-remember { display: inline-flex; align-items: center; gap: 6px; color: var(--color-txt-dim); font-size: var(--text-sm); cursor: pointer; }
+.login-remember input { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+.login-checkbox { display: grid; width: 20px; height: 20px; place-items: center; border: 1px solid var(--color-txt-faint); border-radius: 50%; color: transparent; transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease; }
+.login-remember input:checked + .login-checkbox { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-bg-deep); }
+.login-remember input:disabled + .login-checkbox { opacity: .55; }
+.login-credential-note { max-width: 160px; color: var(--color-txt-faint); font-size: var(--text-3xs); line-height: 1.45; text-align: right; word-break: keep-all; }
+.login-dialog-actions { margin-top: 32px; }
+.login-dialog-actions .btn-primary { width: 100%; min-height: 52px; border-radius: 8px; box-shadow: 0 8px 20px var(--color-primary-glow); font-size: var(--text-base); }
+.login-cancel { display: block; margin: 12px auto 0; padding: 2px 8px; border: 0; background: transparent; color: var(--color-txt-faint); font-size: var(--text-xs); cursor: pointer; }
+.login-cancel:hover { color: var(--color-txt); text-decoration: underline; }
+.login-cancel:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.login-help { margin: 20px 0 0; color: var(--color-txt-faint); font-size: var(--text-xs); line-height: 1.55; text-align: center; word-break: keep-all; }
 
 .reservation-modal-actions { display: flex; justify-content: flex-end; gap: 6px; margin: 2px -16px -16px; padding: 12px 16px; border-top: 1px solid var(--color-border-light); background: color-mix(in srgb, var(--color-surface-tint) 1.8%, transparent); }
 

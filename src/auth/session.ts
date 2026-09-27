@@ -60,9 +60,10 @@ function adopt(next: Session | null) {
   emit()
 }
 
-export function startSession(token: string, expiresInSeconds: number, user: AuthUser): Session {
+export function startSession(token: string, expiresInSeconds: number, user: AuthUser, persist = true): Session {
   const next = { token, expiresAt: Date.now() + expiresInSeconds * 1000, user }
-  writeItem(KEY, JSON.stringify(next))
+  if (persist) writeItem(KEY, JSON.stringify(next))
+  else removeItem(KEY)
   loginRequest = null
   const pending = resume
   resume = null
