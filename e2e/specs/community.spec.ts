@@ -96,7 +96,7 @@ test.describe('Community', () => {
     await expect(dialog).toContainText('로그인하면 글을 쓸 수 있습니다.')
     await dialog.getByLabel('아이디').fill('np_001')
     await dialog.getByLabel('비밀번호', { exact: true }).fill('secret')
-    await dialog.getByRole('button', { name: '로그인' }).click()
+    await dialog.getByRole('button', { name: '로그인', exact: true }).click()
     await expect(dialog).toHaveCount(0)
 
     await expect(page.getByLabel('게시글 제목')).toBeVisible()
@@ -108,7 +108,7 @@ test.describe('Community', () => {
     const dialog = page.getByRole('dialog', { name: 'RPCN 로그인' })
     await dialog.getByLabel('아이디').fill('np_001')
     await dialog.getByLabel('비밀번호', { exact: true }).fill('wrong')
-    await dialog.getByRole('button', { name: '로그인' }).click()
+    await dialog.getByRole('button', { name: '로그인', exact: true }).click()
 
     await expect(dialog.getByRole('alert')).toHaveText('아이디 또는 비밀번호가 올바르지 않습니다.')
     await expect(dialog.getByLabel('비밀번호', { exact: true })).toHaveValue('')

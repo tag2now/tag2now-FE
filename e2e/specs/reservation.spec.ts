@@ -369,7 +369,7 @@ test.describe('Reservation while signed out', () => {
 
     await dialog.getByLabel('아이디').fill('나')
     await dialog.getByLabel('비밀번호', { exact: true }).fill('secret')
-    await dialog.getByRole('button', { name: '로그인' }).click()
+    await dialog.getByRole('button', { name: '로그인', exact: true }).click()
     await expect(dialog).toHaveCount(0)
 
     // The press that asked for the login opens the form once it succeeds.
