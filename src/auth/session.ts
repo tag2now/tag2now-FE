@@ -28,6 +28,8 @@ const KEY = STORAGE_KEYS.session
 const MAX_TIMER_MS = 2 ** 31 - 1
 
 let session: Session | null = null
+// A tab-only session never touches storage, so it cannot sign other tabs out.
+let persisted = false
 let loginRequest: LoginRequest = null
 // What the user was doing when the dialog opened; run once they sign in.
 let resume: (() => unknown) | null = null
@@ -63,7 +65,7 @@ function adopt(next: Session | null) {
 export function startSession(token: string, expiresInSeconds: number, user: AuthUser, persist = true): Session {
   const next = { token, expiresAt: Date.now() + expiresInSeconds * 1000, user }
   if (persist) writeItem(KEY, JSON.stringify(next))
-  else removeItem(KEY)
+  persisted = persist
   loginRequest = null
   const pending = resume
   resume = null
@@ -75,7 +77,8 @@ export function startSession(token: string, expiresInSeconds: number, user: Auth
 }
 
 export function endSession(): void {
-  removeItem(KEY)
+  if (persisted) removeItem(KEY)
+  persisted = false
   if (session) adopt(null)
 }
 
@@ -109,6 +112,7 @@ export function subscribe(listener: () => void): () => void {
 export function restoreSession(): void {
   const stored = parse(readItem(KEY))
   if (!stored) removeItem(KEY)
+  persisted = !!stored
   loginRequest = null
   resume = null
   adopt(stored)
@@ -118,6 +122,10 @@ restoreSession()
 
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (event) => {
-    if (event.key === KEY || event.key === null) adopt(parse(readItem(KEY)))
+    if (event.key !== KEY && event.key !== null) return
+    if (session && !persisted) return
+    const stored = parse(readItem(KEY))
+    persisted = !!stored
+    adopt(stored)
   })
 }

@@ -50,6 +50,27 @@ describe('the session store', () => {
     expect(getSession()).toBeNull()
   })
 
+  it('leaves the saved session of another tab alone when a tab-only one signs out', () => {
+    startSession('tok', 3600, user, false)
+    localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ token: 'other', expiresAt: Date.now() + 60_000, user }))
+
+    endSession()
+
+    expect(getSession()).toBeNull()
+    expect(localStorage.getItem(STORAGE_KEYS.session)).not.toBeNull()
+  })
+
+  it('keeps a tab-only session when another tab signs in or out', () => {
+    startSession('tok', 3600, user, false)
+
+    localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ token: 'other', expiresAt: Date.now() + 60_000, user }))
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEYS.session }))
+    localStorage.removeItem(STORAGE_KEYS.session)
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEYS.session }))
+
+    expect(getAccessToken()).toBe('tok')
+  })
+
   it('does not restore an expired session, and clears it from storage', () => {
     localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ token: 'old', expiresAt: Date.now() - 1, user }))
 
