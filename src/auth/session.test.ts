@@ -96,4 +96,24 @@ describe('the session store', () => {
 
     expect(getSession()).toBeNull()
   })
+
+  it('resumes the action that asked for the login once signed in', async () => {
+    const retry = vi.fn()
+    requestLogin('로그인하세요', retry)
+
+    startSession('tok', 3600, user)
+
+    await vi.waitFor(() => expect(retry).toHaveBeenCalledTimes(1))
+  })
+
+  it('forgets the pending action when the dialog is dismissed', async () => {
+    const retry = vi.fn()
+    requestLogin('로그인하세요', retry)
+
+    dismissLoginRequest()
+    startSession('tok', 3600, user)
+    await Promise.resolve()
+
+    expect(retry).not.toHaveBeenCalled()
+  })
 })

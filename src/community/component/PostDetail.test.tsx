@@ -60,8 +60,8 @@ describe('signed out', () => {
     fireEvent.change(screen.getByLabelText('댓글 입력'), { target: { value: '좋은 글' } })
     fireEvent.click(screen.getByRole('button', { name: '작성' }))
 
-    expect(requireUser).toHaveBeenCalledWith('로그인하면 추천할 수 있습니다.')
-    expect(requireUser).toHaveBeenCalledWith('로그인하면 댓글을 남길 수 있습니다.')
+    expect(requireUser).toHaveBeenCalledWith('로그인하면 추천할 수 있습니다.', expect.any(Function))
+    expect(requireUser).toHaveBeenCalledWith('로그인하면 댓글을 남길 수 있습니다.', expect.any(Function))
     expect(thumbPost).not.toHaveBeenCalled()
     expect(createComment).not.toHaveBeenCalled()
     // Nothing was sent, so nothing is left looking busy.

@@ -19,7 +19,7 @@ interface PostDetailProps {
   onRefresh: () => void
   /** The login guard: truthy when signed in, otherwise it opens the login
    *  dialog and the handler stops there. */
-  requireUser: (reason?: string) => unknown
+  requireUser: (reason?: string, retry?: () => unknown) => unknown
   onDeleted: () => void
   leaderboardEntries?: LeaderboardEntry[]
 }
@@ -38,7 +38,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, requireU
   }
 
   const handleThumb = async (direction: 'up' | 'down') => {
-    if (thumbing || !requireUser('로그인하면 추천할 수 있습니다.')) return
+    if (thumbing || !requireUser('로그인하면 추천할 수 있습니다.', () => handleThumb(direction))) return
     setThumbing(true)
     try {
       await thumbPost(post.id, direction)
@@ -49,7 +49,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, requireU
   }
 
   const handleComment = async () => {
-    if (!commentText.trim() || !requireUser('로그인하면 댓글을 남길 수 있습니다.')) return
+    if (!commentText.trim() || !requireUser('로그인하면 댓글을 남길 수 있습니다.', handleComment)) return
     setSubmitting(true)
     try {
       await createComment(post.id, commentText.trim())
@@ -61,7 +61,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, requireU
   }
 
   const handleReply = async (parentId: number, body: string) => {
-    if (!requireUser('로그인하면 답글을 남길 수 있습니다.')) return
+    if (!requireUser('로그인하면 답글을 남길 수 있습니다.', () => handleReply(parentId, body))) return
     await createComment(post.id, body, parentId)
     onRefresh()
   }

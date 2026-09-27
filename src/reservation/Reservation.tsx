@@ -68,7 +68,7 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
   // A failed list refresh stays on screen when the form opens: the host posting
   // a reservation does not make the reason the list could not load less true.
   const openCreateForm = () => {
-    if (!requireUser('로그인하면 예약을 만들 수 있습니다.')) return
+    if (!requireUser('로그인하면 예약을 만들 수 있습니다.', openCreateForm)) return
     formApi.openCreate()
   }
 
@@ -109,7 +109,7 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
     }
 
     if (current.status === 'full') return
-    if (!requireUser('로그인하면 예약에 참가할 수 있습니다.')) return
+    if (!requireUser('로그인하면 예약에 참가할 수 있습니다.', () => handleJoin(id))) return
     try { const updated = await joinReservation(id); await refresh(); showNotice(updated.status === 'matched' ? '매칭이 성사되었습니다.' : '참가했습니다. 다른 참가자를 기다리고 있어요.') } catch (error) { showError(error, '참가에 실패했습니다.') }
   }
 
@@ -135,7 +135,7 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
     event.preventDefault()
     const { editingId, conditions } = formApi
     const creating = editingId === null
-    if (!requireUser(`로그인하면 예약을 ${creating ? '만들' : '수정할'} 수 있습니다.`)) return
+    if (!requireUser(`로그인하면 예약을 ${creating ? '만들' : '수정할'} 수 있습니다.`, () => handleSubmit(event))) return
 
     clearNotice()
     try {

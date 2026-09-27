@@ -29,6 +29,8 @@ const MAX_TIMER_MS = 2 ** 31 - 1
 
 let session: Session | null = null
 let loginRequest: LoginRequest = null
+// What the user was doing when the dialog opened; run once they sign in.
+let resume: (() => unknown) | null = null
 let expiryTimer: ReturnType<typeof setTimeout> | null = null
 const listeners = new Set<() => void>()
 
@@ -62,7 +64,12 @@ export function startSession(token: string, expiresInSeconds: number, user: Auth
   const next = { token, expiresAt: Date.now() + expiresInSeconds * 1000, user }
   writeItem(KEY, JSON.stringify(next))
   loginRequest = null
+  const pending = resume
+  resume = null
   adopt(next)
+  // After adopt, so the retried handler finds the user. A rejection reaches the
+  // global unhandledrejection toast like any other failed action.
+  if (pending) Promise.resolve().then(pending)
   return next
 }
 
@@ -75,13 +82,16 @@ export const getSession = (): Session | null => session
 
 export const getAccessToken = (): string | null => session?.token ?? null
 
-/** Ask whatever renders the login dialog to open it. */
-export function requestLogin(reason: string | null = null): void {
+/** Ask whatever renders the login dialog to open it. `onSignedIn` runs once
+ * the login succeeds, so the action that asked is not lost behind the dialog. */
+export function requestLogin(reason: string | null = null, onSignedIn?: () => unknown): void {
   loginRequest = { reason }
+  resume = onSignedIn ?? null
   emit()
 }
 
 export function dismissLoginRequest(): void {
+  resume = null
   if (!loginRequest) return
   loginRequest = null
   emit()
@@ -99,6 +109,7 @@ export function restoreSession(): void {
   const stored = parse(readItem(KEY))
   if (!stored) removeItem(KEY)
   loginRequest = null
+  resume = null
   adopt(stored)
 }
 

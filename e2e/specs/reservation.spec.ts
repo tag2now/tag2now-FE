@@ -368,11 +368,11 @@ test.describe('Reservation while signed out', () => {
     await expect(page.getByRole('dialog', { name: '예약 추가' })).toHaveCount(0)
 
     await dialog.getByLabel('아이디').fill('나')
-    await dialog.getByLabel('비밀번호').fill('secret')
+    await dialog.getByLabel('비밀번호', { exact: true }).fill('secret')
     await dialog.getByRole('button', { name: '로그인' }).click()
     await expect(dialog).toHaveCount(0)
 
-    await page.getByRole('button', { name: '+ 예약 추가' }).click()
+    // The press that asked for the login opens the form once it succeeds.
     const modal = page.getByRole('dialog', { name: '예약 추가' })
     await pickRank(modal)
     await modal.getByRole('button', { name: '예약 등록' }).click()

@@ -40,7 +40,7 @@ export default function CommentList({ reservationId, onError }: Props) {
     event.preventDefault()
     const body = draft.trim()
     if (!body || submitting) return
-    if (!requireUser('로그인하면 댓글을 남길 수 있습니다.')) return
+    if (!requireUser('로그인하면 댓글을 남길 수 있습니다.', () => submit(event))) return
     setSubmitting(true)
     try {
       await createComment(reservationId, body)

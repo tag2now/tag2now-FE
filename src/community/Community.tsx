@@ -37,6 +37,8 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
   // mode, which navigating away from the form has already left behind.
   const mode: 'detail' | View = showDetail ? 'detail' : view
 
+  const openWriteForm = () => { if (requireUser('로그인하면 글을 쓸 수 있습니다.', openWriteForm)) setView('create') }
+
   // Every reload goes through here, so the filters cannot be dropped by a
   // caller that forgot one — which is what happened when the character filter
   // was added and six of the seven call sites still passed only the category.
@@ -98,7 +100,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
           onPageChange={handlePageChange}
           onSelectPost={handleSelectPost}
           onRefresh={() => reload()}
-          onWrite={() => { if (requireUser('로그인하면 글을 쓸 수 있습니다.')) setView('create') }}
+          onWrite={openWriteForm}
           leaderboardEntries={leaderboardEntries}
         />
       )}
