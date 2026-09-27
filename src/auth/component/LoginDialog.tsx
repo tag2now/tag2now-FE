@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Info, Loader2, LogIn, X } from 'lucide-react'
 import useModalDialog from '@/shared/hooks/useModalDialog'
 import { AppError } from '@/shared/util/AppError'
 import { login } from '@/auth/authApi'
@@ -57,22 +57,34 @@ function LoginForm({ reason }: { reason: string | null }) {
         aria-labelledby="login-dialog-title"
         aria-describedby="login-dialog-body"
         aria-busy={submitting}
-        className="confirm-dialog login-dialog"
+        className="login-dialog"
       >
-        <div className="confirm-dialog-head">
-          <span className="confirm-dialog-icon" aria-hidden="true"><LogIn size={18} /></span>
-          <h2 id="login-dialog-title">RPCN 로그인</h2>
-        </div>
-        <p id="login-dialog-body" className="confirm-dialog-body">
-          {reason && <>{reason}<br /></>}
-          RPCS3에서 쓰는 RPCN 계정으로 로그인합니다.
-        </p>
+        <button
+          type="button"
+          className="login-close"
+          onClick={dismissLoginRequest}
+          aria-label="로그인 창 닫기"
+          disabled={submitting}
+        >
+          <X size={18} aria-hidden="true" />
+        </button>
 
-        <div className="mt-4">
+        <div className="login-dialog-head">
+          <span className="login-dialog-icon" aria-hidden="true"><LogIn size={22} /></span>
+          <div>
+            <h2 id="login-dialog-title">RPCN 로그인</h2>
+            <p>RPCS3에서 사용하는 RPCN 계정으로 로그인합니다.</p>
+          </div>
+        </div>
+
+        {reason && <p id="login-dialog-body" className="login-reason">{reason}</p>}
+
+        <div className="login-field">
           <label className="field-label" htmlFor="login-username">아이디</label>
           <input
             id="login-username"
             className="input-base w-full"
+            placeholder="RPCN 아이디를 입력하세요"
             autoComplete="username"
             autoCapitalize="none"
             spellCheck={false}
@@ -82,7 +94,7 @@ function LoginForm({ reason }: { reason: string | null }) {
             onChange={(event) => setUsername(event.target.value)}
           />
         </div>
-        <div className="mt-3">
+        <div className="login-field">
           <label className="field-label" htmlFor="login-password">비밀번호</label>
           <div className="relative">
             <input
@@ -90,6 +102,7 @@ function LoginForm({ reason }: { reason: string | null }) {
               id="login-password"
               type={showPassword ? 'text' : 'password'}
               className="input-base w-full pr-10"
+              placeholder="비밀번호를 입력하세요"
               autoComplete="current-password"
               maxLength={128}
               readOnly={submitting}
@@ -108,18 +121,19 @@ function LoginForm({ reason }: { reason: string | null }) {
           </div>
         </div>
 
-        {error && <p role="alert" className="mt-3 text-sm font-semibold text-error">{error}</p>}
+        {error && <p role="alert" className="login-error">{error}</p>}
 
-        <p className="login-help">
-          온라인 닉네임이 아니라 RPCN 로그인 아이디를 입력하세요.
-          RPCS3의 RPCN 메뉴에서 계정 생성이 가능합니다.
-        </p>
+        <div className="login-info">
+          <Info size={17} aria-hidden="true" />
+          <p>온라인 닉네임이 아닌 RPCN 로그인 아이디를 입력하세요.</p>
+        </div>
+        <p className="login-help">RPCN 계정이 없나요? <span>RPCS3에서 생성할 수 있어요.</span></p>
 
-        <div className="confirm-dialog-actions">
+        <div className="login-dialog-actions">
           <button type="button" className="btn-ghost" onClick={dismissLoginRequest}>취소</button>
           <button type="submit" className="btn-primary" disabled={submitting || !username.trim() || !password}>
             {submitting && <Loader2 size={14} aria-hidden="true" className="animate-spin" />}
-            {submitting ? '로그인 중' : '로그인'}
+            {submitting ? '로그인 중' : <><span>로그인</span><ArrowRight size={16} aria-hidden="true" /></>}
           </button>
         </div>
       </form>

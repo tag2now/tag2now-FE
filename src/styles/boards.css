@@ -110,12 +110,35 @@
 .confirm-dialog-icon.is-danger { background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary-text); }
 .confirm-dialog-body { margin: 12px 0 0; color: var(--color-txt-dim); font-size: var(--text-sm); line-height: 1.6; }
 .confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 16px; }
-/* Anchored near the top rather than centred: centred, an error line appearing
-   under the fields moved the whole dialog up under the pointer. */
-.login-dialog { margin-top: max(16px, 14vh); margin-bottom: auto; }
-.login-reveal { position: absolute; top: 0; right: 0; display: grid; width: 38px; height: 100%; place-items: center; border: 0; background: transparent; color: var(--color-txt-faint); cursor: pointer; }
+/* Login is a task rather than a confirmation, so it earns its own hierarchy:
+   a clear brand cue, form rhythm, a small credential hint, and a dedicated
+   action rail. Other confirmation dialogs intentionally remain compact. */
+.login-dialog { position: relative; width: min(440px, 100%); margin: max(16px, 12vh) auto auto; padding: 16px; border: 1px solid color-mix(in srgb, var(--color-surface-tint) 16%, transparent); border-radius: 8px; background: var(--color-bg-sunken); box-shadow: 0 24px 80px color-mix(in srgb, var(--color-shade) 56%, transparent); }
+.login-close { position: absolute; top: 12px; right: 12px; display: grid; width: 32px; height: 32px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--color-txt-faint); cursor: pointer; transition: color 150ms ease, background-color 150ms ease; }
+.login-close:hover { background: color-mix(in srgb, var(--color-surface-tint) 7%, transparent); color: var(--color-txt); }
+.login-close:focus-visible, .login-reveal:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.login-dialog-head { display: flex; align-items: center; gap: 12px; padding-right: 32px; }
+.login-dialog-icon { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border-radius: 8px; background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dim)); color: var(--color-surface-tint); box-shadow: 0 8px 24px var(--color-primary-glow); }
+.login-dialog-head h2 { margin: 0; color: var(--color-txt); font-size: var(--text-md); font-weight: var(--weight-display); line-height: 1.25; }
+.login-dialog-head p { margin: 4px 0 0; color: var(--color-txt-dim); font-size: var(--text-xs); line-height: 1.5; word-break: keep-all; }
+.login-reason { margin: 16px 0 0; padding: 8px 12px; border-left: 2px solid var(--color-primary); background: color-mix(in srgb, var(--color-primary) 8%, transparent); color: var(--color-txt-dim); font-size: var(--text-xs); line-height: 1.5; word-break: keep-all; }
+.login-field { margin-top: 16px; }
+.login-field + .login-field { margin-top: 12px; }
+.login-field .field-label { display: block; margin-bottom: 6px; color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-label); }
+.login-field .input-base { min-height: 44px; border-color: var(--color-border-light); background: var(--color-bg-field); color: var(--color-txt); font-size: var(--text-sm); }
+.login-field .input-base::placeholder { color: var(--color-txt-muted); }
+.login-field .input-base:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-glow); }
+.login-reveal { position: absolute; top: 0; right: 0; display: grid; width: 42px; height: 100%; place-items: center; border: 0; background: transparent; color: var(--color-txt-faint); cursor: pointer; }
 .login-reveal:hover, .login-reveal[aria-pressed="true"] { color: var(--color-txt); }
+.login-error { margin: 12px 0 0; color: var(--color-error); font-size: var(--text-sm); font-weight: var(--weight-strong); line-height: 1.5; }
+.login-info { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--color-info) 54%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--color-info) 11%, transparent); color: var(--color-info-text); }
+.login-info svg { flex: 0 0 auto; margin-top: 1px; }
+.login-info p { margin: 0; font-size: var(--text-xs); line-height: 1.5; word-break: keep-all; }
 .login-help { margin: 12px 0 0; color: var(--color-txt-faint); font-size: var(--text-xs); line-height: 1.55; word-break: keep-all; }
+.login-help span { color: var(--color-primary-text); }
+.login-dialog-actions { display: grid; grid-template-columns: minmax(0, .76fr) minmax(0, 1.24fr); gap: 8px; margin: 16px -16px -16px; padding: 16px; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface-tint) 2%, transparent); }
+.login-dialog-actions > button { min-height: 42px; }
+.login-dialog-actions .btn-primary { box-shadow: 0 8px 20px var(--color-primary-glow); }
 
 .reservation-modal-actions { display: flex; justify-content: flex-end; gap: 6px; margin: 2px -16px -16px; padding: 12px 16px; border-top: 1px solid var(--color-border-light); background: color-mix(in srgb, var(--color-surface-tint) 1.8%, transparent); }
 

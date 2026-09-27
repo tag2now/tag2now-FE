@@ -53,6 +53,10 @@
   --color-secondary: #ff9aa0;
   --color-secondary-light: #ffd2d5;
   --color-accent: #34d399;
+  /* Informational guidance such as credential hints. Kept separate from the
+     success accent so blue continues to mean "read this", not "completed". */
+  --color-info: #6f9ed9;
+  --color-info-text: #b9d3fa;
   --color-error: #f97316;
   /* Podium. The only medal palette — there used to be a second one (#c0c0c0 /
      #cd7f32, reached through a RANK_COLORS table whose every branch had become
