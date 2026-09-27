@@ -164,4 +164,38 @@ describe('the login dialog', () => {
     await screen.findByRole('alert')
     expect(screen.getByLabelText('비밀번호')).toHaveFocus()
   })
+
+  it('opens focused on the id field, not the close button', () => {
+    render(<LoginDialog />)
+    act(() => requestLogin())
+
+    expect(screen.getByLabelText('아이디')).toHaveFocus()
+  })
+
+  it('can be closed from the corner while a login is in flight, abandoning it', async () => {
+    let signal: AbortSignal | undefined
+    vi.mocked(login).mockImplementation((_u, _p, given) => {
+      signal = given
+      return new Promise(() => {})
+    })
+    render(<LoginDialog />)
+    act(() => requestLogin())
+
+    fillIn()
+    fireEvent.click(screen.getByRole('button', { name: '로그인' }))
+    await waitFor(() => expect(signal).toBeDefined())
+    fireEvent.click(screen.getByRole('button', { name: '로그인 창 닫기' }))
+
+    expect(signal!.aborted).toBe(true)
+    expect(getLoginRequest()).toBeNull()
+  })
+
+  it('points its description at the reason only when there is one', () => {
+    render(<LoginDialog />)
+    act(() => requestLogin())
+    expect(screen.getByRole('dialog')).not.toHaveAttribute('aria-describedby')
+
+    act(() => requestLogin('로그인하면 글을 쓸 수 있습니다.'))
+    expect(screen.getByRole('dialog')).toHaveAccessibleDescription('로그인하면 글을 쓸 수 있습니다.')
+  })
 })

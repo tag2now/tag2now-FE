@@ -56,20 +56,10 @@ function LoginForm({ reason }: { reason: string | null }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="login-dialog-title"
-        aria-describedby="login-dialog-body"
+        aria-describedby={reason ? 'login-dialog-body' : undefined}
         aria-busy={submitting}
         className="login-dialog"
       >
-        <button
-          type="button"
-          className="login-close"
-          onClick={dismissLoginRequest}
-          aria-label="로그인 창 닫기"
-          disabled={submitting}
-        >
-          <X size={18} aria-hidden="true" />
-        </button>
-
         <div className="login-brand" aria-hidden="true">
           <img src="/favicon.svg" alt="" width={48} height={48} />
           <p>TAG<span>2</span>NOW</p>
@@ -144,6 +134,12 @@ function LoginForm({ reason }: { reason: string | null }) {
         </div>
         <button type="button" className="login-cancel" onClick={dismissLoginRequest}>취소</button>
         <p className="login-help">RPCN 계정은 RPCS3의 RPCN 메뉴에서 생성할 수 있어요.</p>
+
+        {/* Last in the DOM so the dialog opens focused on the id field; it is
+            positioned in the corner, and stays usable to abandon a slow login. */}
+        <button type="button" className="login-close" onClick={dismissLoginRequest} aria-label="로그인 창 닫기">
+          <X size={18} aria-hidden="true" />
+        </button>
       </form>
     </div>
   )
