@@ -110,6 +110,12 @@
 .confirm-dialog-icon.is-danger { background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary-text); }
 .confirm-dialog-body { margin: 12px 0 0; color: var(--color-txt-dim); font-size: var(--text-sm); line-height: 1.6; }
 .confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 16px; }
+/* Anchored near the top rather than centred: centred, an error line appearing
+   under the fields moved the whole dialog up under the pointer. */
+.login-dialog { margin-top: max(16px, 14vh); margin-bottom: auto; }
+.login-reveal { position: absolute; top: 0; right: 0; display: grid; width: 38px; height: 100%; place-items: center; border: 0; background: transparent; color: var(--color-txt-faint); cursor: pointer; }
+.login-reveal:hover, .login-reveal[aria-pressed="true"] { color: var(--color-txt); }
+.login-help { margin: 12px 0 0; color: var(--color-txt-faint); font-size: var(--text-xs); line-height: 1.55; word-break: keep-all; }
 
 .reservation-modal-actions { display: flex; justify-content: flex-end; gap: 6px; margin: 2px -16px -16px; padding: 12px 16px; border-top: 1px solid var(--color-border-light); background: color-mix(in srgb, var(--color-surface-tint) 1.8%, transparent); }
 

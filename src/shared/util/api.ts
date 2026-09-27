@@ -45,11 +45,12 @@ export const GET = async (path: string, params?: any) => {
     return await request(`${path}?${queries}`, { method: 'GET'})
 }
 
-export const POST = async (path: string, data: any) => {
+export const POST = async (path: string, data: any, signal?: AbortSignal) => {
     return await request(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
+        signal,
     })
 }
 
