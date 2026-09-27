@@ -7,6 +7,9 @@ test.describe('Leaderboard', () => {
     await skipPatchNotes(page)
     await page.goto('/')
     await page.locator('button.tab-btn', { hasText: '리더보드' }).click()
+    // The router commits a tab switch as a transition, so the home panel can
+    // still be on screen here --- and it lists the same players and posts.
+    await expect(page.getByRole('tabpanel', { name: '리더보드' })).toBeVisible()
   })
 
   test('shows total records count', async ({ page }) => {
@@ -105,6 +108,9 @@ test.describe('Leaderboard search, filter and toggle', () => {
     await skipPatchNotes(page)
     await page.goto('/')
     await page.locator('button.tab-btn', { hasText: '리더보드' }).click()
+    // The router commits a tab switch as a transition, so the home panel can
+    // still be on screen here --- and it lists the same players and posts.
+    await expect(page.getByRole('tabpanel', { name: '리더보드' })).toBeVisible()
   })
 
   // Opens collapsed: the live board is 344 entries, which rendered in full made

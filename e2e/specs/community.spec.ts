@@ -7,6 +7,9 @@ test.describe('Community', () => {
     await skipPatchNotes(page)
     await page.goto('/')
     await page.locator('button.tab-btn', { hasText: '커뮤니티' }).click()
+    // The router commits a tab switch as a transition, so the home panel can
+    // still be on screen here --- and it lists the same players and posts.
+    await expect(page.getByRole('tabpanel', { name: '커뮤니티' })).toBeVisible()
   })
 
   test('post list renders with titles', async ({ page }) => {
