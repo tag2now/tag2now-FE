@@ -2,7 +2,6 @@
 
 /* ---- Overview (개요) ---- */
 .overview-panel { display: flex; flex-direction: column; gap: 16px; }
-.overview-panel > .section-toolbar { margin-bottom: 0; }
 
 /* The panel arrives in reading order rather than all at once. panelStatus
    returns early until the four sources land, so this mounts with the data and

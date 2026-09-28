@@ -14,7 +14,7 @@ test.describe('Navigation', () => {
 
   test('page loads on the overview', async ({ page }) => {
     await expect(page.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-selected', 'true')
-    await expect(page.getByRole('heading', { name: '한눈에 보기' })).toBeVisible()
+    await expect(page.getByRole('region', { name: '모집 중인 예약' })).toBeVisible()
 
     // The room-type strip belongs to the match tab and stays out of the way.
     await expect(page.getByRole('tablist', { name: '매칭 종류 선택' })).toHaveCount(0)
