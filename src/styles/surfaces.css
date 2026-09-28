@@ -132,6 +132,10 @@ select.input-base option { background: var(--color-bg-field); color: var(--color
    is styled here instead of through `wrapperStyle`. `--series` is the series'
    own colour, handed down inline — there are three of them and they live in
    chartTheme.ts, because SVG attributes cannot read a custom property. */
+.daily-chart { display: flex; flex-direction: column; }
+.daily-chart-plot { position: relative; }
+/* Sits in the plot's 16px top margin, right of the 30px Y-axis labels. */
+.daily-chart-label { position: absolute; top: 0; left: 36px; z-index: 1; display: inline-flex; align-items: center; gap: 5px; color: var(--color-txt-dim); font-size: var(--text-4xs); font-weight: var(--weight-label); pointer-events: none; }
 .chart-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 0; padding: 0; list-style: none; color: var(--color-txt-dim); font-size: var(--text-4xs); font-weight: var(--weight-label); }
 .chart-legend li { display: inline-flex; align-items: center; gap: 5px; }
 /* A bar series and a line series are drawn differently, so their swatches are
