@@ -147,7 +147,6 @@
   .section-toolbar > :not(.section-title):has(.toggle-group, .segmented-control) { flex: 1 1 auto; min-width: 0; }
   .section-toolbar :is(.toggle-group, .segmented-control) { display: flex; width: 100%; min-width: 0; }
   .section-toolbar :is(.toggle-group-option, .segmented-control button) { min-width: 0; flex: 1 1 0; padding: 0 8px; }
-  .chart-grid { grid-template-columns: 1fr; }
   .filter-bar { align-items: flex-start; flex-direction: column; }
   .reservation-content-grid { margin-top: 12px; }
   /* Two lines below 760px: the title needs the whole width, so the byline and

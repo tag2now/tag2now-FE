@@ -9,6 +9,10 @@ const MAX_DOTTED_DAYS = 31
 const pointDot = (data: DailySummary[], color: string) =>
   data.length <= MAX_DOTTED_DAYS && { r: 2.5, strokeWidth: 0, fill: color }
 
+/** The whole block: both plots and the dates. At the 176px the chart used to
+ * share with the hourly one, each plot got 52-60px, and a line that doubled
+ * still rose only 40-odd pixels and read as flat. This gives each about 105. */
+const HEIGHT = 280
 /** Height of the date row, which only the bottom plot draws. */
 const DATE_AXIS_HEIGHT = 20
 const PLOT_GAP = 4
@@ -46,20 +50,11 @@ type DailySeries = (typeof SERIES)[number]
 
 type Row = DailySummary & { label: string }
 
-/** `axisGutter` pulls the plot toward the Y axis to buy width for the line.
- * It defaulted to -20, which is past the point where the tick labels still fit:
- * the stats tab took the default and rendered its Y axis as a column of clipped
- * glyphs. 0 is the honest default — a caller that has measured its own panel
- * and wants the tighter gutter can still ask for it.
- *
- * `height` is the whole block, both plots and the dates: the stats tab sets
- * this chart beside the hourly one, and the row is only level if the two
- * charts are the same height. */
-export default function DailyChart({ data, height = 176, axisGutter = 0 }: { data: DailySummary[]; height?: number; axisGutter?: number }) {
+export default function DailyChart({ data }: { data: DailySummary[] }) {
   if (data.length === 0) return <p className="state-msg">데이터 없음</p>
 
   const rows: Row[] = data.map((d) => ({ ...d, label: d.date.slice(5) })) // "MM-DD"
-  const plotHeight = Math.floor((height - DATE_AXIS_HEIGHT - PLOT_GAP) / 2)
+  const plotHeight = Math.floor((HEIGHT - DATE_AXIS_HEIGHT - PLOT_GAP) / 2)
 
   return (
     <div className="daily-chart" style={{ gap: PLOT_GAP }}>
@@ -72,7 +67,6 @@ export default function DailyChart({ data, height = 176, axisGutter = 0 }: { dat
             rows={rows}
             height={plotHeight + (withDates ? DATE_AXIS_HEIGHT : 0)}
             withDates={withDates}
-            axisGutter={axisGutter}
           />
         )
       })}
@@ -80,12 +74,11 @@ export default function DailyChart({ data, height = 176, axisGutter = 0 }: { dat
   )
 }
 
-function SeriesPlot({ series, rows, height, withDates, axisGutter }: {
+function SeriesPlot({ series, rows, height, withDates }: {
   series: DailySeries
   rows: Row[]
   height: number
   withDates: boolean
-  axisGutter: number
 }) {
   const color = SERIES_COLOR[series]
   const interval = Math.max(0, Math.floor(rows.length / 7) - 1)
@@ -102,7 +95,7 @@ function SeriesPlot({ series, rows, height, withDates, axisGutter }: {
       <ResponsiveContainer width="100%" height={height}>
         {/* syncId: hovering a day in one plot marks the same day in the other,
             which is what keeps two plots readable as one chart. */}
-        <LineChart data={rows} syncId="daily-players" margin={{ top: 16, right: 8, left: axisGutter, bottom: withDates ? 0 : BASELINE_LABEL_ROOM }}>
+        <LineChart data={rows} syncId="daily-players" margin={{ top: 16, right: 8, left: 0, bottom: withDates ? 0 : BASELINE_LABEL_ROOM }}>
           <CartesianGrid vertical={false} stroke={COLOR_BORDER} strokeOpacity={0.8} />
           {/* The top plot keeps a hidden axis with the same padding, so its
               points sit exactly above the dates drawn under the bottom one. */}

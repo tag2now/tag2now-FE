@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalendarDays, Crown, MessageSquareText, TrendingUp, Trophy, Users } from 'lucide-react'
+import { Activity, CalendarDays, Crown, MessageSquareText, TrendingUp, Trophy, Users } from 'lucide-react'
 import DailyPlayersPanel from '@/shared/components/DailyPlayersPanel'
 import PlayerHistoryPanel from '@/shared/components/PlayerHistoryPanel'
 import { panelStatus } from '@/shared/util/panelStatus'
@@ -179,7 +179,11 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
       </div>
 
       {/* h3: a sibling of the four card sections, so it takes their level. */}
-      <DailyPlayersPanel data={data?.daily ?? []} height={200} headingId="overview-daily-heading" className="overview-chart" />
+      {/* The stats tab's daily panel, unchanged: one component on both pages,
+          so neither can drift from the other. */}
+      <OverviewSection icon={Activity} title="접속자 흐름" subtitle="최근 7일" linkLabel="통계" to={pathOf('stats')}>
+        <DailyPlayersPanel data={data?.daily ?? []} />
+      </OverviewSection>
 
       {/* Kept below the chart: a ranking is slow-moving reference data with a
           tab of its own one click away, and these two lists are twice the

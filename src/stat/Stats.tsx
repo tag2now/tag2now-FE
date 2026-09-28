@@ -123,15 +123,17 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
               </div>
               <ToggleGroup options={DAY_OPTIONS} value={days} onChange={setDays} label="기간" />
             </div>
-            <div className="chart-grid">
+            {/* Stacked, not side by side: the daily panel is the home screen's,
+                full width at its own height, and beside the hourly chart it
+                could only be as tall as that one. */}
+            <div className="chart-stack">
               <section aria-labelledby="hourly-heading" className="chart-panel">
                 <h4 id="hourly-heading">
                   시간대별 접속자 <span className="text-2xs font-medium opacity-60">(KST {hourLabel(DAY_START_HOUR)}시 ~ 익일 {hourLabel((DAY_START_HOUR + 23) % 24)}시)</span>
                 </h4>
                 <HourlyChart data={hourly} />
               </section>
-              {/* h4: the toolbar's h3 heads the pair of charts this sits in. */}
-              <DailyPlayersPanel data={daily} headingId="daily-heading" headingLevel={4} />
+              <DailyPlayersPanel data={daily} />
             </div>
           </>
         )

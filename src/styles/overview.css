@@ -55,9 +55,6 @@
 /* Under the label, not under the icon: the two read as one column. */
 .kpi-card-hint { grid-area: hint; padding-left: 34px; overflow: hidden; color: var(--color-txt-faint); font-size: var(--text-2xs); font-weight: var(--weight-quiet); text-overflow: ellipsis; white-space: nowrap; }
 
-
-.overview-chart { padding: 12px 8px 8px; }
-
 .overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
 /* One card per row. The ranking lists carry far more per row than the cards
    above them, and the width a name needs comes out of the same track. */

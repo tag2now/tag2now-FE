@@ -294,10 +294,16 @@ Rank/tier and medal colours live in `shared/tierColors.ts` and `shared/medalColo
 
 Recharts renders SVG attributes, which cannot read CSS custom properties, so
 `shared/components/chartTheme.ts` mirrors the relevant `@theme` tokens as JS
-constants — keep the two in step when a token moves. `shared/components/DailyChart.tsx`
-is shared by the stats tab and the overview; its `axisGutter` prop exists because
-the stats panel is narrow enough for a negative left margin while the overview's
-wider chart clips its tick labels at the same value.
+constants — keep the two in step when a token moves.
+
+**The daily chart is one panel on two pages.** The stats tab and the home
+screen both render `shared/components/DailyPlayersPanel`, full width, and it
+takes the rows and nothing else: no height, heading level or class. That is
+deliberate. When each page passed its own, the two drew the same chart at
+different sizes, and changes were checked on one page and shipped to both. The
+stats tab stacks the hourly chart above it rather than beside it, so the panel
+keeps the same size there. A change to it is still a change to **both pages**;
+check each of them, at desktop and phone width.
 
 Not every rank the API reports has artwork under `public/ranks/` — `Tekken Lord`
 and `Initiate` among them. `RankImage` removes itself on the load error rather

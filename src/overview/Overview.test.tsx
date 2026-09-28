@@ -205,7 +205,10 @@ describe('Overview', () => {
 
     expect(screen.getByRole('heading', { name: '한눈에 보기', level: 2 })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '모집 중인 예약', level: 3 })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /일별 접속자/, level: 3 })).toBeInTheDocument()
+    // The daily panel sits under a card of its own, as on the stats tab it sits
+    // under the toolbar's h3 --- the same h4 on both pages.
+    expect(screen.getByRole('heading', { name: '접속자 흐름', level: 3 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /일별 접속자/, level: 4 })).toBeInTheDocument()
   })
 
   // Every card on this page summarises a tab and opens it. The KPI row was the
