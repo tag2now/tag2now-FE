@@ -3,6 +3,13 @@ import type { DailySummary } from '@/stat/types'
 import { COLOR_BORDER, COLOR_TXT_DIM, LEGEND_STYLE, SERIES_COLOR, TOOLTIP_STYLE, seriesName, seriesRank } from '@/shared/components/chartTheme'
 import ChartLegend from '@/shared/components/ChartLegend'
 
+/** Marks each day while there are few enough to tell apart. At 90 days the
+ * dots touch and become a second, thicker line. */
+const MAX_DOTTED_DAYS = 31
+
+const pointDot = (data: DailySummary[], color: string) =>
+  data.length <= MAX_DOTTED_DAYS && { r: 2.5, strokeWidth: 0, fill: color }
+
 /** `axisGutter` pulls the plot toward the Y axis to buy width for the line.
  * It defaulted to -20, which is past the point where the tick labels still fit:
  * the stats tab took the default and rendered its Y axis as a column of clipped
@@ -51,8 +58,11 @@ export default function DailyChart({ data, height = 176, axisGutter = 0 }: { dat
           itemSorter={(item) => seriesRank(String(item.dataKey))}
         />
         <Legend wrapperStyle={LEGEND_STYLE} content={<ChartLegend />} />
-        <Line type="monotone" dataKey="unique_players" stroke={SERIES_COLOR.unique_players} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-        <Line type="monotone" dataKey="peak_players" stroke={SERIES_COLOR.peak_players} strokeWidth={2} dot={false} activeDot={{ r: 4 }} connectNulls={false} />
+        {/* Straight segments, not a smoothed curve: each point is one finished
+            day, and a curve draws values for the time between them that
+            nobody measured. */}
+        <Line type="linear" dataKey="unique_players" stroke={SERIES_COLOR.unique_players} strokeWidth={2} dot={pointDot(data, SERIES_COLOR.unique_players)} activeDot={{ r: 4 }} />
+        <Line type="linear" dataKey="peak_players" stroke={SERIES_COLOR.peak_players} strokeWidth={2} dot={pointDot(data, SERIES_COLOR.peak_players)} activeDot={{ r: 4 }} connectNulls={false} />
       </LineChart>
     </ResponsiveContainer>
   )

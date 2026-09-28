@@ -49,8 +49,10 @@ export default function HourlyChart({ data }: { data: HourlyActivity[] }) {
             this one, and one colour cannot name two different series on the
             same screen. */}
         <Bar dataKey="avg_players" fill={SERIES_COLOR.avg_players} radius={[2, 2, 0, 0]} maxBarSize={20} />
+        {/* Straight, like the daily chart: the hours are separate buckets, and a
+            curve between them invents a peak for minutes nobody sampled. */}
         <Line
-          type="monotone"
+          type="linear"
           dataKey="peak_players"
           stroke={SERIES_COLOR.peak_players}
           strokeWidth={2}

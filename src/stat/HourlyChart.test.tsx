@@ -11,7 +11,9 @@ vi.mock('recharts', () => ({
     <div data-testid="chart" data-hours={data.map((row) => row.hour).join(',')}>{children}</div>
   ),
   Legend: () => null,
-  Line: ({ dataKey }: { dataKey: string }) => <span data-testid="series" data-mark="line">{dataKey}</span>,
+  Line: ({ dataKey, type }: { dataKey: string; type: string }) => (
+    <span data-testid="series" data-mark="line" data-curve={type}>{dataKey}</span>
+  ),
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Tooltip: () => null,
   XAxis: () => null,
@@ -41,6 +43,12 @@ it('draws the average as bars and the peak as a line', () => {
     ['bar', 'avg_players'],
     ['line', 'peak_players'],
   ])
+})
+
+it('joins the hourly peaks with straight segments, not a smoothed curve', () => {
+  render(<HourlyChart data={fromSixAm} />)
+
+  expect(screen.getAllByTestId('series').find((series) => series.dataset.mark === 'line')!.dataset.curve).toBe('linear')
 })
 
 it('says there is no data instead of drawing an empty chart', () => {
