@@ -14,6 +14,7 @@ import { TableSkeleton } from '@/shared/components/Skeleton'
 
 const DAY_OPTIONS: { value: StatsDays; label: string }[] = [
   { value: 7, label: '7일' },
+  { value: 14, label: '14일' },
   { value: 30, label: '30일' },
   { value: 90, label: '90일' },
 ]

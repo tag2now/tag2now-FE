@@ -3,7 +3,11 @@ import { GET} from "@/shared/util/api";
 import { API } from "@/config/endpoints";
 import type { HourlyActivity, DailySummary} from "@/stat/types";
 
-export type StatsDays = 7 | 30 | 90
+export type StatsDays = 7 | 14 | 30 | 90
+
+/** Two weeks, so a weekday reads against the same weekday before it rather
+ * than against a single week that has nothing to compare it with. */
+export const DEFAULT_STATS_DAYS: StatsDays = 14
 
 interface StatsState {
   hourly: HourlyActivity[]
@@ -15,7 +19,7 @@ interface StatsState {
 }
 
 export default function useStats(): StatsState {
-  const [days, setDays] = useState<StatsDays>(7)
+  const [days, setDays] = useState<StatsDays>(DEFAULT_STATS_DAYS)
   const [hourly, setHourly] = useState<HourlyActivity[]>([])
   const [daily, setDaily] = useState<DailySummary[]>([])
   const [loading, setLoading] = useState(true)

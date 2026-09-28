@@ -5,8 +5,11 @@ import { POLL } from '@/config/polling'
 import { fetchPosts } from '@/community/communityApi'
 import { fetchReservations } from '@/reservation/reservationApi'
 import type { OverviewData } from '@/overview/types'
+import { DEFAULT_STATS_DAYS } from '@/stat/useStats'
 
-export const OVERVIEW_DAYS = 7
+/** The stats tab's default period: the home screen draws that tab's daily
+ * panel, and the two should open on the same days. */
+export const OVERVIEW_DAYS = DEFAULT_STATS_DAYS
 export const OVERVIEW_TOP_N = 5
 // Two, as the reservation card beside it: the pair share a grid row, so the
 // taller one sets its height and a third item in either costs the whole row.

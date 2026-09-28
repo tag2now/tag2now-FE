@@ -3,7 +3,7 @@ import { Activity, CalendarDays, Crown, MessageSquareText, TrendingUp, Trophy, U
 import DailyPlayersPanel from '@/shared/components/DailyPlayersPanel'
 import PlayerHistoryPanel from '@/shared/components/PlayerHistoryPanel'
 import { panelStatus } from '@/shared/util/panelStatus'
-import useOverview, { OVERVIEW_TOP_N } from '@/overview/useOverview'
+import useOverview, { OVERVIEW_DAYS, OVERVIEW_TOP_N } from '@/overview/useOverview'
 import { KpiCard, OpenReservations, OverviewSection, RecentPosts } from '@/overview/component'
 import RankList, { type RankRow } from '@/shared/components/RankList'
 import type { LeaderboardEntry } from '@/shared/types'
@@ -181,7 +181,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
       {/* h3: a sibling of the four card sections, so it takes their level. */}
       {/* The stats tab's daily panel, unchanged: one component on both pages,
           so neither can drift from the other. */}
-      <OverviewSection icon={Activity} title="접속자 흐름" subtitle="최근 7일" linkLabel="통계" to={pathOf('stats')}>
+      <OverviewSection icon={Activity} title="접속자 흐름" subtitle={`최근 ${OVERVIEW_DAYS}일`} linkLabel="통계" to={pathOf('stats')}>
         <DailyPlayersPanel data={data?.daily ?? []} />
       </OverviewSection>
 

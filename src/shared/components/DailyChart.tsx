@@ -81,7 +81,6 @@ function SeriesPlot({ series, rows, height, withDates }: {
   withDates: boolean
 }) {
   const color = SERIES_COLOR[series]
-  const interval = Math.max(0, Math.floor(rows.length / 7) - 1)
   const scale = fittedScale(rows.map((row) => row[series]))
 
   return (
@@ -106,7 +105,12 @@ function SeriesPlot({ series, rows, height, withDates }: {
             tickLine={false}
             axisLine={false}
             tick={{ fill: COLOR_TXT_DIM, fontSize: 11 }}
-            interval={interval}
+            // Thinned by the room there is, not by the number of days: a count-
+            // based step printed all 14 dates on a phone, where they ran into
+            // one another. `preserveStartEnd` drops the labels that would
+            // collide and always keeps the first and last day.
+            interval="preserveStartEnd"
+            minTickGap={8}
             // The last tick sits on the plot's right edge, so half of "09-15"
             // rendered past it and the label read "09-1" — a date that does not
             // exist. The padding is the room the end labels need to stay whole.
