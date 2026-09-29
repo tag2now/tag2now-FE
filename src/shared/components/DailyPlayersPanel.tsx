@@ -9,7 +9,9 @@ import type { DailySummary } from '@/stat/types'
  * but the rows on purpose. When each page passed its own height, heading level
  * and class, the two drew the same chart at different sizes, and a change
  * checked on one page said nothing about the other. Now both draw it full
- * width at one height, so what one page shows is what the other shows.
+ * width, and the chart picks its own arrangement from that width — two plots
+ * side by side on a desktop, stacked on a phone — so what one page shows is
+ * what the other shows.
  *
  * The heading is h4: each page heads the panel with an h3 of its own — the
  * stats tab's toolbar, the home screen's card.

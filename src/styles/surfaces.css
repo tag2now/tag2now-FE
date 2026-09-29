@@ -133,6 +133,11 @@ select.input-base option { background: var(--color-bg-field); color: var(--color
    own colour, handed down inline — there are three of them and they live in
    chartTheme.ts, because SVG attributes cannot read a custom property. */
 .daily-chart { display: flex; flex-direction: column; }
+/* DailyChart sets the class from its own measured width, since the heights and
+   date axes it hands Recharts change with it. The row gap stays inline, where
+   the stacked height is computed from it; the columns take a wider one so the
+   right plot's axis labels do not read as the left plot's edge. */
+.daily-chart.is-side-by-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; }
 .daily-chart-plot { position: relative; }
 /* Sits in the plot's 16px top margin, right of the 30px Y-axis labels. */
 .daily-chart-label { position: absolute; top: 0; left: 36px; z-index: 1; display: inline-flex; align-items: center; gap: 5px; color: var(--color-txt-dim); font-size: var(--text-4xs); font-weight: var(--weight-label); pointer-events: none; }

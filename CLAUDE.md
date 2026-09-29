@@ -307,6 +307,13 @@ stats tab stacks the hourly chart above it rather than beside it, so the panel
 keeps the same size there. A change to it is still a change to **both pages**;
 check each of them, at desktop and phone width.
 
+Its two plots — 접속자 수 and 최대 동시 접속 — sit side by side from 600px of
+chart width and stack below that. `DailyChart` measures itself with
+`shared/hooks/useMinWidth` rather than leaving this to a container query,
+because the arrangement changes Recharts props: side by side, each plot is
+200px and draws its own dates; stacked, the pair shares 280px and only the
+bottom one does.
+
 Not every rank the API reports has artwork under `public/ranks/` — `Tekken Lord`
 and `Initiate` among them. `RankImage` removes itself on the load error rather
 than leaving the browser's broken-image glyph, and keys that failure to the rank

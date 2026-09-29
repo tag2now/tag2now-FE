@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Locator } from '@playwright/test'
 import { mockAllApis, reservationAt, skipPatchNotes } from '../helpers/mock-api'
 
 // The overview is a summary, so what is worth asserting is that each card
@@ -105,6 +105,38 @@ test.describe('Overview', () => {
     const portraitBox = (await top.locator('.mini-char-portrait').first().boundingBox())!
     expect(portraitBox.height).toBeCloseTo(46, 1)
     expect(portraitBox.x + portraitBox.width).toBeLessThanOrEqual(charBox.x + charBox.width)
+  })
+
+  /** A plot's date labels, "MM-DD". By their text: Recharts draws the tick
+   * labels outside the axis group, which itself has no box. */
+  const datesOf = (plot: Locator) => plot.getByText(/^\d{2}-\d{2}$/)
+
+  test('sets the two daily plots side by side, each with its dates', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'A phone stacks them; see the next test.')
+    // Waits out the width the chart measures itself into.
+    await expect(page.locator('.daily-chart.is-side-by-side')).toHaveCount(1)
+    const plots = page.getByRole('region', { name: '접속자 흐름' }).locator('.daily-chart-plot')
+    // Both boxes in one read: the panel rises into place on arrival, and two
+    // separate reads catch it at two different offsets.
+    const [first, second] = await plots.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().toJSON() as DOMRect))
+
+    expect(second.y).toBeCloseTo(first.y, 0)
+    expect(second.x).toBeGreaterThanOrEqual(first.x + first.width)
+    // Neither sits under the other, so neither can borrow the other's dates.
+    await expect(datesOf(plots.nth(0)).first()).toBeVisible()
+    await expect(datesOf(plots.nth(1)).first()).toBeVisible()
+  })
+
+  test('stacks the two daily plots on a phone, dates under the bottom one only', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'A desktop sets them side by side; see the previous test.')
+    const plots = page.getByRole('region', { name: '접속자 흐름' }).locator('.daily-chart-plot')
+    await expect(datesOf(plots.nth(1)).first()).toBeVisible()
+    const [first, second] = await plots.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().toJSON() as DOMRect))
+
+    // Too narrow for fourteen days twice over.
+    expect(second.y).toBeGreaterThanOrEqual(first.y + first.height)
+    await expect(page.locator('.daily-chart.is-side-by-side')).toHaveCount(0)
+    await expect(datesOf(plots.nth(0))).toHaveCount(0)
   })
 
   test('omits a reservation nobody can still join', async ({ page }) => {

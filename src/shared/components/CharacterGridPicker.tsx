@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
 import { CHARACTER_GRID, charImageUrl } from '@/shared/characterImage'
+import useMinWidth from '@/shared/hooks/useMinWidth'
 
 interface CharacterGridPickerProps {
   /** Currently chosen characters. Single-select callers pass zero or one. */
@@ -46,20 +46,9 @@ const ROSTER = [...new Set(CHARACTER_GRID.flat().filter((name): name is string =
  */
 export default function CharacterGridPicker({ selected, onToggle, max = 1 }: CharacterGridPickerProps) {
   const full = selected.length >= max
-  const gridRef = useRef<HTMLDivElement>(null)
   // Starts narrow: a roster is readable at any width, where the game grid is
-  // only readable above one. jsdom has no ResizeObserver and stays here.
-  const [gameLayout, setGameLayout] = useState(false)
-
-  useEffect(() => {
-    const element = gridRef.current
-    if (!element || typeof ResizeObserver !== 'function') return
-    const observer = new ResizeObserver(([entry]) => {
-      setGameLayout(entry.contentRect.width >= GAME_LAYOUT_MIN_WIDTH)
-    })
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [])
+  // only readable above one.
+  const [gridRef, gameLayout] = useMinWidth<HTMLDivElement>(GAME_LAYOUT_MIN_WIDTH)
 
   const tile = (name: string) => {
     const url = charImageUrl(name)

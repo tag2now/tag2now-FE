@@ -1,6 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import type { DailySummary } from '@/stat/types'
 import { COLOR_BORDER, COLOR_TXT_DIM, SERIES_COLOR, TOOLTIP_STYLE, seriesName } from '@/shared/components/chartTheme'
+import useMinWidth from '@/shared/hooks/useMinWidth'
 
 /** Marks each day while there are few enough to tell apart. At 90 days the
  * dots touch and become a second, thicker line. */
@@ -9,10 +10,18 @@ const MAX_DOTTED_DAYS = 31
 const pointDot = (data: DailySummary[], color: string) =>
   data.length <= MAX_DOTTED_DAYS && { r: 2.5, strokeWidth: 0, fill: color }
 
-/** The whole block: both plots and the dates. At the 176px the chart used to
- * share with the hourly one, each plot got 52-60px, and a line that doubled
- * still rose only 40-odd pixels and read as flat. This gives each about 105. */
+/** The whole block when the plots are stacked: both plots and the dates. At the
+ * 176px the chart used to share with the hourly one, each plot got 52-60px, and
+ * a line that doubled still rose only 40-odd pixels and read as flat. This
+ * gives each about 105. */
 const HEIGHT = 280
+/** From here the two plots sit side by side, ~296px each: room for the dates
+ * under both. Below it — a phone — each would be too narrow to read a trend
+ * across fourteen days, so they stack. */
+const SIDE_BY_SIDE_MIN_WIDTH = 600
+/** Each plot, dates included, when side by side. The block is 80px shorter
+ * than stacked, and each plot is still taller than it gets stacked. */
+const SIDE_PLOT_HEIGHT = 200
 /** Height of the date row, which only the bottom plot draws. */
 const DATE_AXIS_HEIGHT = 20
 const PLOT_GAP = 4
@@ -42,34 +51,37 @@ export function fittedScale(values: (number | null | undefined)[]) {
   }
 }
 
-/** Top to bottom. Each series gets a plot of its own: unique players run at
- * about three times the peak, and on one shared axis the peak line sat in the
- * bottom third and read as flat while it doubled. */
+/** Top to bottom, or left to right. Each series gets a plot of its own: unique
+ * players run at about three times the peak, and on one shared axis the peak
+ * line sat in the bottom third and read as flat while it doubled. */
 const SERIES = ['unique_players', 'peak_players'] as const
 type DailySeries = (typeof SERIES)[number]
 
 type Row = DailySummary & { label: string }
 
+/** How tall one plot is, and whether it draws the dates. Stacked, only the
+ * bottom plot does and the top one takes that row back; side by side, both
+ * need their own. */
+function plotShape(index: number, sideBySide: boolean) {
+  if (sideBySide) return { height: SIDE_PLOT_HEIGHT, withDates: true }
+  const withDates = index === SERIES.length - 1
+  const plotHeight = Math.floor((HEIGHT - DATE_AXIS_HEIGHT - PLOT_GAP) / 2)
+  return { height: plotHeight + (withDates ? DATE_AXIS_HEIGHT : 0), withDates }
+}
+
 export default function DailyChart({ data }: { data: DailySummary[] }) {
+  // The arrangement decides Recharts props --- heights, which plot draws the
+  // dates --- so it is measured here rather than left to a container query.
+  const [chartRef, sideBySide] = useMinWidth<HTMLDivElement>(SIDE_BY_SIDE_MIN_WIDTH)
   if (data.length === 0) return <p className="state-msg">데이터 없음</p>
 
   const rows: Row[] = data.map((d) => ({ ...d, label: d.date.slice(5) })) // "MM-DD"
-  const plotHeight = Math.floor((HEIGHT - DATE_AXIS_HEIGHT - PLOT_GAP) / 2)
 
   return (
-    <div className="daily-chart" style={{ gap: PLOT_GAP }}>
-      {SERIES.map((series, index) => {
-        const withDates = index === SERIES.length - 1
-        return (
-          <SeriesPlot
-            key={series}
-            series={series}
-            rows={rows}
-            height={plotHeight + (withDates ? DATE_AXIS_HEIGHT : 0)}
-            withDates={withDates}
-          />
-        )
-      })}
+    <div ref={chartRef} className={`daily-chart${sideBySide ? ' is-side-by-side' : ''}`} style={{ rowGap: PLOT_GAP }}>
+      {SERIES.map((series, index) => (
+        <SeriesPlot key={series} series={series} rows={rows} {...plotShape(index, sideBySide)} />
+      ))}
     </div>
   )
 }
