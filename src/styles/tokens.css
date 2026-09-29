@@ -99,7 +99,6 @@
      in JS alone under the name COLOR_SECONDARY — which is a real token, with
      a completely different value (#ff9aa0). */
   --color-chart-peak: #c9a84c;
-  --color-chart-avg: #7f8da0;
   --color-border: rgba(255, 255, 255, 0.06);
   --color-border-light: rgba(255, 255, 255, 0.10);
   /* Spacing scale. Every gap/padding/margin in this file resolves to one of

@@ -128,10 +128,8 @@ select.input-base option { background: var(--color-bg-field); color: var(--color
 .chart-panel { min-width: 0; padding: 12px 8px 8px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
 .chart-panel :is(h3, h4) { margin: 0 0 6px 2px; color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-row); letter-spacing: .04em; }
 
-/* The chart legend is rendered by ChartLegend rather than by Recharts, so it
-   is styled here instead of through `wrapperStyle`. `--series` is the series'
-   own colour, handed down inline — there are three of them and they live in
-   chartTheme.ts, because SVG attributes cannot read a custom property. */
+/* `--series` is the series' own colour, handed down inline — the colours live
+   in chartTheme.ts, because SVG attributes cannot read a custom property. */
 .daily-chart { display: flex; flex-direction: column; }
 /* DailyChart sets the class from its own measured width, since the heights and
    date axes it hands Recharts change with it. The row gap stays inline, where
@@ -141,11 +139,6 @@ select.input-base option { background: var(--color-bg-field); color: var(--color
 .daily-chart-plot { position: relative; }
 /* Sits in the plot's 16px top margin, right of the 30px Y-axis labels. */
 .daily-chart-label { position: absolute; top: 0; left: 36px; z-index: 1; display: inline-flex; align-items: center; gap: 5px; color: var(--color-txt-dim); font-size: var(--text-4xs); font-weight: var(--weight-label); pointer-events: none; }
-.chart-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 0; padding: 0; list-style: none; color: var(--color-txt-dim); font-size: var(--text-4xs); font-weight: var(--weight-label); }
-.chart-legend li { display: inline-flex; align-items: center; gap: 5px; }
-/* A bar series and a line series are drawn differently, so their swatches are
-   too --- the composed chart carries one of each. */
-.chart-legend-rect { width: 10px; height: 10px; border-radius: 2px; background: var(--series); }
 .chart-legend-line { position: relative; width: 16px; height: 2px; border-radius: 1px; background: var(--series); }
 .chart-legend-line::after { content: ''; position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; border: 2px solid var(--series); border-radius: 50%; background: var(--color-bg-panel); transform: translate(-50%, -50%); }
 

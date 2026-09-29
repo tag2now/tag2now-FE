@@ -52,7 +52,6 @@ export const MEDAL_BRONZE = mirror('color-medal-bronze', '#e0935c')
 
 // ─── Chart series ───────────────────────────────────────────
 export const CHART_PEAK = mirror('color-chart-peak', '#c9a84c')
-export const CHART_AVG = mirror('color-chart-avg', '#7f8da0')
 
 // ─── Rank bands ─────────────────────────────────────────────
 export const TIER_TEAL = mirror('color-tier-teal', '#2dd4bf')

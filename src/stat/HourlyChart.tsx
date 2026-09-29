@@ -1,8 +1,7 @@
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import type { HourlyActivity } from '@/stat/types'
 import { orderByDayStart } from '@/shared/dayBoundary'
-import { COLOR_BORDER, COLOR_PRIMARY, COLOR_TXT_DIM, LEGEND_STYLE, SERIES_COLOR, TOOLTIP_STYLE, seriesName, seriesRank } from '@/shared/components/chartTheme'
-import ChartLegend from '@/shared/components/ChartLegend'
+import { COLOR_BORDER, COLOR_PRIMARY, COLOR_TXT_DIM, SERIES_COLOR, TOOLTIP_STYLE, seriesName } from '@/shared/components/chartTheme'
 
 export default function HourlyChart({ data }: { data: HourlyActivity[] }) {
   if (data.length === 0) return <p className="state-msg">데이터 없음</p>
@@ -18,7 +17,7 @@ export default function HourlyChart({ data }: { data: HourlyActivity[] }) {
       {/* left: 0, not -20. A negative gutter pulls the plot over its own tick
           labels — the same thing that rendered the daily chart's Y axis as a
           column of clipped glyphs. */}
-      <ComposedChart data={ordered} margin={{ top: 16, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
+      <BarChart data={ordered} margin={{ top: 16, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
         <CartesianGrid vertical={false} stroke={COLOR_BORDER} strokeOpacity={0.8} />
         <XAxis
           dataKey="hour"
@@ -35,31 +34,18 @@ export default function HourlyChart({ data }: { data: HourlyActivity[] }) {
           allowDecimals={false}
           width={30}
         />
-        {/* 최대 동시 접속 first: the line is above the bars by definition, so
-            that is the order the eye reads them in. See chartTheme. */}
         <Tooltip
           cursor={{ fill: COLOR_PRIMARY, fillOpacity: 0.06 }}
           contentStyle={TOOLTIP_STYLE}
           labelFormatter={(h) => `${h}시`}
-          formatter={(v, key) => [v, seriesName(String(key))]}
-          itemSorter={(item) => seriesRank(String(item.dataKey))}
+          formatter={(v) => [v, seriesName('peak_players')]}
         />
-        <Legend wrapperStyle={LEGEND_STYLE} content={<ChartLegend />} />
-        {/* Not the brand red any more: red is 접속자 수 in the chart beside
-            this one, and one colour cannot name two different series on the
-            same screen. */}
-        <Bar dataKey="avg_players" fill={SERIES_COLOR.avg_players} radius={[2, 2, 0, 0]} maxBarSize={20} />
-        {/* Straight, like the daily chart: the hours are separate buckets, and a
-            curve between them invents a peak for minutes nobody sampled. */}
-        <Line
-          type="linear"
-          dataKey="peak_players"
-          stroke={SERIES_COLOR.peak_players}
-          strokeWidth={2}
-          dot={false}
-          activeDot={{ r: 4 }}
-        />
-      </ComposedChart>
+        {/* The peak alone. An average over every 30-second sample counts the
+            empty ones too, so it sat well below what anyone online saw and
+            was the first thing the eye read. Bars, not a line: each hour is a
+            separate bucket, and a bar from 0 cannot overstate it. */}
+        <Bar dataKey="peak_players" fill={SERIES_COLOR.peak_players} radius={[2, 2, 0, 0]} maxBarSize={20} />
+      </BarChart>
     </ResponsiveContainer>
   )
 }
