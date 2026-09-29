@@ -10,6 +10,14 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.7',
+    items: [
+      'RPCN 계정 로그인 추가 (글쓰기·예약에 필요)',
+      '홈에서 주간 철악귀를 바로 확인',
+      '접속자 그래프를 14일로 확대',
+    ],
+  },
+  {
     version: '2.6',
     items: [
       '전체 디자인 개편',
