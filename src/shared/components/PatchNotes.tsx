@@ -40,7 +40,7 @@ function PatchNotesDialog({ onClose }: { onClose: () => void }) {
         aria-modal="true"
         aria-labelledby="patch-notes-title"
         tabIndex={-1}
-        className="relative flex flex-col max-h-[80dvh] bg-bg-panel border border-border-light rounded-lg max-w-md w-[90%] p-6 shadow-lg outline-none"
+        className="relative flex flex-col max-h-[calc(100dvh-2rem)] bg-bg-panel border border-border-light rounded-lg max-w-md md:max-w-4xl w-[90%] p-6 shadow-lg outline-none"
         onClick={e => e.stopPropagation()}
       >
         <button
@@ -68,6 +68,13 @@ function PatchNotesDialog({ onClose }: { onClose: () => void }) {
                   <li key={i} className="whitespace-pre-wrap text-txt text-sm">{item}</li>
                 ))}
               </ul>
+              {note.image && (
+                <img
+                  src={note.image.src}
+                  alt={note.image.alt}
+                  className="mt-3 w-full h-auto rounded-md border border-border-light"
+                />
+              )}
             </div>
           ))}
 

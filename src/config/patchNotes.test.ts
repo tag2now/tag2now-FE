@@ -44,4 +44,11 @@ describe('recentPatchNotes', () => {
     expect(lineCount(recent)).toBeLessThanOrEqual(PATCH_NOTE_LINE_BUDGET)
     expect(recent[0]).toEqual(PATCH_NOTES[0])
   })
+
+  it('associates the newest release with its update overview image', () => {
+    expect(PATCH_NOTES[0].image).toEqual({
+      src: '/patch-notes/v2.7-overview.png',
+      alt: 'TAG2NOW 2.7 업데이트 안내: RPCN 로그인, 홈의 주간 철악귀, 14일 접속자 그래프',
+    })
+  })
 })

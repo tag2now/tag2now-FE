@@ -1,6 +1,10 @@
 export type PatchNote = {
   version: string
   items: string[]
+  image?: {
+    src: string
+    alt: string
+  }
 }
 
 /**
@@ -16,6 +20,10 @@ export const PATCH_NOTES: PatchNote[] = [
       '홈에서 주간 철악귀를 바로 확인',
       '접속자 그래프를 14일로 확대',
     ],
+    image: {
+      src: '/patch-notes/v2.7-overview.png',
+      alt: 'TAG2NOW 2.7 업데이트 안내: RPCN 로그인, 홈의 주간 철악귀, 14일 접속자 그래프',
+    },
   },
   {
     version: '2.6',

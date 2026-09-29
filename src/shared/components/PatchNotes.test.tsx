@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import PatchNotes from '@/shared/components/PatchNotes'
 import { PATCH_NOTES, recentPatchNotes } from '@/config/patchNotes'
+import { STORAGE_KEYS } from '@/shared/util/storage'
 
 const RECENT = recentPatchNotes()
 const OLDER = PATCH_NOTES.slice(RECENT.length)
@@ -35,5 +36,16 @@ describe('PatchNotes', () => {
     render(<PatchNotes />)
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('shows the newest release image beneath its change list', () => {
+    localStorage.removeItem(STORAGE_KEYS.seenPatchVersion)
+
+    render(<PatchNotes />)
+
+    const image = screen.getByRole('img', {
+      name: 'TAG2NOW 2.7 업데이트 안내: RPCN 로그인, 홈의 주간 철악귀, 14일 접속자 그래프',
+    })
+    expect(image).toHaveAttribute('src', '/patch-notes/v2.7-overview.png')
   })
 })
