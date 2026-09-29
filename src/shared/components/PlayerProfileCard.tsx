@@ -143,7 +143,10 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
       </div>
     </div>
   ) : (
-    <button type="button" onClick={signIn} className="profile-empty">
+    // A filled button, not the quiet chip logout uses: every write needs a
+    // login now, and in the chip it read as one more piece of sidebar chrome.
+    // The colour is .profile-login's, in shell.css.
+    <button type="button" onClick={signIn} className="btn-primary profile-login">
       <LogIn size={15} aria-hidden="true" /> 로그인
     </button>
   )
@@ -204,7 +207,7 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
             </button>
           </>
         ) : (
-          <button type="button" onClick={signIn} className="profile-empty sidebar-profile-empty">
+          <button type="button" onClick={signIn} className="btn-primary profile-login sidebar-profile-empty">
             <LogIn size={15} aria-hidden="true" /> RPCN 로그인
           </button>
         )}

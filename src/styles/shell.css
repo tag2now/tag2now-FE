@@ -55,6 +55,12 @@
 .profile-control { display: none; min-width: 0; justify-self: end; }
 .profile-empty { display: inline-flex; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt-dim); cursor: pointer; }
 .profile-empty:hover { background: var(--color-bg-row); color: var(--color-txt); }
+/* The signed-out login, on .btn-primary's shape. Filled so it stands apart
+   from the outlined chrome around it, but in the dim red: the full primary
+   was the brightest block on the page and hurt to look at. White text rather
+   than red keeps it clear of the selected tab, which is red on a red tint. */
+.profile-login { border-color: var(--color-primary-dim); background: var(--color-primary-dim); color: var(--color-txt); }
+.profile-login:hover { border-color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 55%, var(--color-primary-dim)); }
 .profile-summary { display: flex; align-items: center; gap: 8px; min-width: 0; }
 /* Rank and name sit on one line: stacked, the short "#2" left a ragged half
    row above the name and neither element lined up with the portraits. */
