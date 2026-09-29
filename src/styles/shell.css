@@ -49,12 +49,11 @@
 .app-sidebar { display: flex; flex-direction: column; gap: 8px; }
 .sidebar-live { display: flex; align-items: center; gap: 6px; min-height: 30px; margin: 0; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; color: var(--color-accent); font-size: var(--text-3xs); font-weight: var(--weight-strong); letter-spacing: .1em; }
 .sidebar-live strong { min-width: 22px; margin-left: auto; padding-left: 6px; border-left: 1px solid var(--color-border-light); color: var(--color-txt); text-align: center; letter-spacing: 0; font-variant-numeric: tabular-nums; }
-/* Hidden on the roomy layout: the sidebar card is the profile there, and
-   showing the header control too put two edit pencils for one username on the
-   same screen. Below 760px the card is gone and this is the only one left. */
-.profile-control { display: none; min-width: 0; justify-self: end; }
-.profile-empty { display: inline-flex; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt-dim); cursor: pointer; }
-.profile-empty:hover { background: var(--color-bg-row); color: var(--color-txt); }
+/* The account: login, or the name that opens the account menu. At every
+   width, top right, where a login is looked for --- in the sidebar it sat
+   under the nav and went unnoticed. The sidebar card keeps the profile itself
+   (characters, ranks, the record) and no longer signs anyone in or out. */
+.profile-control { display: flex; min-width: 0; align-items: center; justify-self: end; }
 /* The signed-out login, on .btn-primary's shape. Filled so it stands apart
    from the outlined chrome around it, but in the dim red: the full primary
    was the brightest block on the page and hurt to look at. White text rather
@@ -67,8 +66,8 @@
 .profile-copy { display: flex; min-width: 0; align-items: center; gap: 6px; line-height: 1.15; }
 .profile-copy small { flex: 0 0 auto; color: var(--color-primary-text); font-size: var(--text-15); font-weight: var(--weight-max); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 /* The pencil sat bare on the name with no border or ground, which read as
-   decoration rather than a control. Giving it the same chip treatment as
-   .profile-empty makes the whole name an obvious hit target. */
+   decoration rather than a control. A chip makes the whole name an obvious
+   hit target. */
 .profile-name { display: inline-flex; align-items: center; max-width: 190px; min-height: 30px; padding: 0 8px; border: 1px solid var(--color-border-light); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt); font-size: var(--text-15); font-weight: var(--weight-row); cursor: pointer; }
 .profile-name:hover:not(:disabled) { border-color: color-mix(in srgb, var(--color-primary) 50%, transparent); background: var(--color-bg-row); color: var(--color-primary-text); }
 /* Unranked players have no np_id to look up, so the name is inert for them. */
@@ -129,7 +128,6 @@
 .sidebar-profile-history, .profile-history { border: 1px solid color-mix(in srgb, var(--color-tier-gold) 38%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--color-tier-gold) 8%, transparent); color: var(--color-tier-gold); cursor: pointer; transition: background .15s, border-color .15s; }
 .sidebar-profile-history:hover:not(:disabled), .profile-history:hover:not(:disabled) { border-color: color-mix(in srgb, var(--color-tier-gold) 60%, transparent); background: color-mix(in srgb, var(--color-tier-gold) 16%, transparent); }
 .sidebar-profile-history:disabled, .profile-history:disabled { opacity: .45; cursor: default; }
-.sidebar-profile-empty { width: 100%; margin-top: 6px; }
 
 .sidebar-heading { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 8px; color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-strong); letter-spacing: .14em; text-transform: uppercase; }
 .app-nav { display: flex; flex-direction: column; gap: 2px; }

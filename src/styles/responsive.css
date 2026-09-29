@@ -46,13 +46,12 @@
      cost ~68px even shrunk, which at 375px came straight out of the username
      and left it clipped to a few characters. Dropping them buys back enough
      for full-size portraits and a readable name. */
-  /* The header carries the profile below 760px, where the sidebar card is
-     hidden --- and the 내 정보 button appears with it, since that card is where
-     the record is reached from on a wider screen. */
+  /* The sidebar card is hidden below 760px, so the header's 내 정보 button
+     appears here: that card is where the record is reached from on a wider
+     screen. */
   .profile-history { display: inline-flex; }
   .sidebar-nav-card { padding: 0; border: 0; background: transparent; }
   .app-sidebar > .sidebar-profile-card { display: none; }
-  .profile-control { display: flex; align-items: center; justify-self: end; min-width: 0; }
   .profile-summary { min-width: 0; gap: 6px; }
   .profile-chars { min-width: 0; gap: 6px; padding-left: 6px; }
   .profile-copy { min-width: 0; }

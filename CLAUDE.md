@@ -230,8 +230,11 @@ as `retry`: it runs again once the login succeeds, so the press that asked is
 not lost. Dismissing the dialog drops it, and closing the dialog aborts a login
 still in flight — a cancelled login must never sign anyone in.
 
-Signing out always goes through a confirmation. On a phone the header name
-opens an account menu rather than signing out.
+The account lives in the header at every width: a login button while signed
+out, otherwise the name, which opens an account menu (내 정보 보기, 로그아웃)
+rather than signing out. Signing out always goes through a confirmation. The
+sidebar card is the profile — characters, ranks, the record — and renders only
+while someone is signed in; a phone hides it.
 
 **"Is this mine?" compares `user.username`** — the RPCN id, which is also the
 leaderboard's `np_id` — never a displayed name. Reservations carry

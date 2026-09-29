@@ -1,4 +1,4 @@
-/** The wordmark, and the slot the profile portals into on a phone.
+/** The wordmark, and the slot the account portals into.
  *
  * It used to carry the site's tagline, the version, the Live count and the
  * profile as well — five things in one bar, and the two live player counts
@@ -7,10 +7,9 @@
  * line read once belongs; Live went above the nav, with the rest of "what is
  * true right now" — the tab you are on, the room count, the reservation count.
  *
- * `#headerProfileSlot` stays in the markup at every width. PlayerProfileCard
- * renders into it through a portal and the stylesheet decides which of its two
- * surfaces is visible, so the username being edited is one piece of state
- * rather than one per surface.
+ * `#headerProfileSlot` is where PlayerProfileCard portals the account --- the
+ * login, or the name and its menu --- at every width, top right, where a login
+ * is looked for. The sidebar card beside it holds the profile, not the account.
  */
 export default function Header() {
   return (

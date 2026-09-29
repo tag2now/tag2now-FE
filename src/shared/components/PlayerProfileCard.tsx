@@ -17,8 +17,10 @@ interface PlayerProfileCardProps {
   roomUsers?: RoomUser[]
 }
 
-/** Who you are signed in as, in the sidebar and --- through a portal --- in
- * the header slot that replaces the sidebar on a phone.
+/** Who you are signed in as. The header slot --- reached through a portal ---
+ * carries the account at every width: the login, or the name that opens the
+ * account menu. The sidebar card carries the profile (characters, ranks, the
+ * record) and exists only while someone is signed in; a phone hides it.
  *
  * It used to hold a typed-in display name. The account now comes from the
  * RPCN login, whose username is the leaderboard's np_id, so the record is
@@ -143,75 +145,63 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
       </div>
     </div>
   ) : (
-    // A filled button, not the quiet chip logout uses: every write needs a
-    // login now, and in the chip it read as one more piece of sidebar chrome.
-    // The colour is .profile-login's, in shell.css.
+    // Filled, so it reads as the way in rather than more chrome: every write
+    // needs a login now. The colour is .profile-login's, in shell.css.
     <button type="button" onClick={signIn} className="btn-primary profile-login">
       <LogIn size={15} aria-hidden="true" /> 로그인
     </button>
   )
 
-  const card = (
-      <section className="sidebar-profile-card" aria-label="내 파이터 정보">
-        <div className="sidebar-profile-heading">
-          <span>Profile</span>
-          {user && (
-            <div className="sidebar-profile-actions">
-              <small className={`sidebar-profile-presence${online ? ' is-online' : ''}`}>
-                <Radio size={12} aria-hidden="true" />
-                {online ? '온라인' : '오프라인'}
-              </small>
-            </div>
-          )}
+  // The profile only: the header owns signing in and out at every width, so
+  // with nobody signed in there is nothing here to show.
+  const card = user && (
+    <section className="sidebar-profile-card" aria-label="내 파이터 정보">
+      <div className="sidebar-profile-heading">
+        <span>Profile</span>
+        <div className="sidebar-profile-actions">
+          <small className={`sidebar-profile-presence${online ? ' is-online' : ''}`}>
+            <Radio size={12} aria-hidden="true" />
+            {online ? '온라인' : '오프라인'}
+          </small>
         </div>
+      </div>
 
-        {user ? (
-          <>
-            <div className="sidebar-profile-identity">
-              <div className="sidebar-profile-name">
-                <span className="sidebar-profile-rank-position">#{entry?.rank ?? 'UNRANKED'}</span>
-                <strong>{name}</strong>
-              </div>
-            </div>
+      <div className="sidebar-profile-identity">
+        <div className="sidebar-profile-name">
+          <span className="sidebar-profile-rank-position">#{entry?.rank ?? 'UNRANKED'}</span>
+          <strong>{name}</strong>
+        </div>
+      </div>
 
-            {characters.length > 0 && (
-              <div className="sidebar-profile-characters" aria-label="캐릭터와 계급">
-                {characters.map((character, index) => (
-                  <div
-                    key={`${character.name}-${index}`}
-                    aria-label={`${index === 0 ? '메인' : '서브'} 캐릭터 ${character.name}`}
-                  >
-                    <CharCell
-                      name={character.name}
-                      rankInfo={character.rank_info}
-                      wins={character.wins}
-                      losses={character.losses}
-                      compact
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <button
-              type="button"
-              className="sidebar-profile-history"
-              onClick={() => setProfileOpen(true)}
-              disabled={!entry}
+      {characters.length > 0 && (
+        <div className="sidebar-profile-characters" aria-label="캐릭터와 계급">
+          {characters.map((character, index) => (
+            <div
+              key={`${character.name}-${index}`}
+              aria-label={`${index === 0 ? '메인' : '서브'} 캐릭터 ${character.name}`}
             >
-              <Trophy size={14} aria-hidden="true" />
-              내 정보 보기
-            </button>
-            <button type="button" className="profile-empty sidebar-profile-empty" onClick={confirmLogout}>
-              <LogOut size={14} aria-hidden="true" /> 로그아웃
-            </button>
-          </>
-        ) : (
-          <button type="button" onClick={signIn} className="btn-primary profile-login sidebar-profile-empty">
-            <LogIn size={15} aria-hidden="true" /> RPCN 로그인
-          </button>
-        )}
-      </section>
+              <CharCell
+                name={character.name}
+                rankInfo={character.rank_info}
+                wins={character.wins}
+                losses={character.losses}
+                compact
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        type="button"
+        className="sidebar-profile-history"
+        onClick={() => setProfileOpen(true)}
+        disabled={!entry}
+      >
+        <Trophy size={14} aria-hidden="true" />
+        내 정보 보기
+      </button>
+    </section>
   )
 
   return (

@@ -116,9 +116,10 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-selected', 'false')
   })
 
-  // Phones only: the sidebar card is the profile on a wider screen.
-  test('the header shows the signed-in account and signs it out', async ({ page, isMobile }) => {
-    test.skip(!isMobile, 'The sidebar card carries the account on desktop.')
+  // Every width: the header is where a login is looked for, so the account
+  // lives there on a desktop too. The sidebar card is the profile, and goes
+  // with it.
+  test('the header shows the signed-in account and signs it out', async ({ page }) => {
     await signInAs(page, 'np_002', 'KingOfIronFist')
     await skipPatchNotes(page)
     await page.reload()
@@ -129,6 +130,7 @@ test.describe('Navigation', () => {
     await headerProfile.getByRole('menuitem', { name: '로그아웃' }).click()
     await page.getByRole('alertdialog', { name: '로그아웃할까요?' }).getByRole('button', { name: '로그아웃' }).click()
     await expect(headerProfile.getByRole('button', { name: '로그인' })).toBeVisible()
+    await expect(page.getByRole('region', { name: '내 파이터 정보' })).toHaveCount(0)
   })
 
   // Below 760px the sidebar card, and its 내 정보 보기, is hidden; the header

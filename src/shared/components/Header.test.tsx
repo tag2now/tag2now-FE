@@ -37,12 +37,20 @@ describe('Player profile', () => {
     document.getElementById('headerProfileSlot')?.remove()
   })
 
-  it('offers a login, and opens the dialog from it, while signed out', () => {
+  it('offers a login in the header, and opens the dialog from it, while signed out', () => {
+    const header = mountHeaderSlot()
     renderProfile()
 
-    fireEvent.click(screen.getByRole('button', { name: 'RPCN 로그인' }))
+    fireEvent.click(header.getByRole('button', { name: '로그인' }))
 
     expect(getLoginRequest()).toEqual({ reason: null })
+  })
+
+  // The card is the profile, and there is no profile to show for nobody.
+  it('renders no sidebar card while signed out', () => {
+    renderProfile()
+
+    expect(screen.queryByRole('region', { name: '내 파이터 정보' })).not.toBeInTheDocument()
   })
 
   it('shows the signed-in online name', () => {
@@ -88,24 +96,22 @@ describe('Player profile', () => {
     expect(screen.getByText('온라인')).toBeInTheDocument()
   })
 
-  it('signs out from the sidebar once confirmed', () => {
+  // Signing out is the header's, at every width; the card only shows who.
+  it('leaves signing out to the header', () => {
     signInAs()
     renderProfile()
 
-    fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
-    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '로그아웃' }))
-
-    return waitFor(() => {
-      expect(getSession()).toBeNull()
-      expect(screen.getByRole('button', { name: 'RPCN 로그인' })).toBeInTheDocument()
-    })
+    const card = within(screen.getByRole('region', { name: '내 파이터 정보' }))
+    expect(card.queryByRole('button', { name: '로그아웃' })).not.toBeInTheDocument()
   })
 
   it('stays signed in when the sign-out is cancelled', async () => {
     signInAs()
+    const header = mountHeaderSlot()
     renderProfile()
 
-    fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
+    fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
+    fireEvent.click(header.getByRole('menuitem', { name: '로그아웃' }))
     fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '취소' }))
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
