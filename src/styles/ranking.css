@@ -155,9 +155,11 @@
   .rank-list.has-no-detail .rank-head > :nth-child(3) { display: block; }
   .rank-list.has-no-detail .rank-row > .mini-char:nth-child(3) { grid-row: 1; grid-column: 3; }
   .rank-list.has-no-detail .rank-row > .mini-char:nth-child(4) { grid-row: 1; grid-column: 4; }
-  /* Sized so a portrait, a banner and the record fit the 88px track together. */
+  /* Sized so a portrait, a banner and the record fit the 88px track together.
+     The portrait keeps its full 46px: the rank-and-record stack beside it
+     already sets the row's height, and at 29px wide the pair still leaves the
+     track 7px spare. */
   .mini-char { gap: 4px; }
-  .mini-char-portrait { height: 36px; }
   .mini-char-rank { width: auto; max-width: 50px; height: auto; max-height: 21px; object-fit: contain; }
   /* Always two lines, never one. Wrapping put "5W 15L" beside a short rate and
      under a long one, so the row a reader was comparing down the column moved

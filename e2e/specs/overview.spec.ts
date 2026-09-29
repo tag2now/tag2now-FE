@@ -100,6 +100,11 @@ test.describe('Overview', () => {
     // The name keeps the width it needs: nothing in the fixture is cut.
     await expect(nameLabel).toHaveText('TagComboKing')
     expect(await nameLabel.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+    // The portrait stays at the leaderboard's own 46px in the narrow row: the
+    // rank-and-record stack beside it sets the row height either way.
+    const portraitBox = (await top.locator('.mini-char-portrait').first().boundingBox())!
+    expect(portraitBox.height).toBeCloseTo(46, 1)
+    expect(portraitBox.x + portraitBox.width).toBeLessThanOrEqual(charBox.x + charBox.width)
   })
 
   test('omits a reservation nobody can still join', async ({ page }) => {
