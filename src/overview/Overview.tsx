@@ -169,11 +169,11 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
           the last thing reached on a phone, which is backwards for the only
           part of this page with a deadline. */}
       <div className="overview-grid">
-        <OverviewSection icon={CalendarDays} title="모집 중인 예약" subtitle="아직 자리가 남은 약속" linkLabel="예약" to={pathOf('reservation')}>
+        <OverviewSection icon={CalendarDays} title="모집 중인 예약" linkLabel="예약" to={pathOf('reservation')}>
           <OpenReservations reservations={data?.reservations ?? []} />
         </OverviewSection>
 
-        <OverviewSection icon={MessageSquareText} title="최신 게시글" subtitle="커뮤니티에 올라온 글" linkLabel="커뮤니티" to={pathOf('community')}>
+        <OverviewSection icon={MessageSquareText} title="최신 게시글" linkLabel="커뮤니티" to={pathOf('community')}>
           <RecentPosts posts={data?.posts ?? []} />
         </OverviewSection>
       </div>
@@ -188,7 +188,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
           <RankList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} label="주간 상위 5명" detailLabel="판수" emptyMsg="주간 기록 없음" onSelect={setSelectedNpid} />
         </OverviewSection>
 
-        <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" to={pathOf('leaderboard')}>
+        <OverviewSection icon={Trophy} title="리더보드 TOP 5" linkLabel="리더보드" to={pathOf('leaderboard')}>
           {/* Names what is missing rather than "데이터". The list is empty both
               before the leaderboard lands and when its fetch failed, so the
               copy stops at what is absent and claims no reason for it. */}

@@ -63,7 +63,16 @@
    layout containment would become that panel's containing block. */
 .overview-grid.is-rankings { grid-template-columns: repeat(auto-fit, minmax(min(100%, 377px), 1fr)); }
 .overview-section { display: flex; min-width: 0; flex-direction: column; padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
-.overview-section .section-toolbar { min-height: 40px; margin-bottom: 10px; padding-bottom: 10px; }
+/* One line: the title, the span it covers when it has one, and the link. The
+   subtitles that described each card under its title went --- the title and
+   the content already say it --- and took a second text line with them. */
+.overview-section .section-toolbar { min-height: 32px; margin-bottom: 8px; padding-bottom: 8px; }
+.overview-section .section-icon { width: 26px; height: 26px; }
+.overview-section-heading { display: flex; min-width: 0; align-items: baseline; gap: 8px; }
+.overview-section-heading h3 { flex: 0 0 auto; }
+/* Beats the phone rule that hides toolbar subtitles: here it is the one thing
+   the title leaves out, and beside the title it no longer costs any height. */
+.overview-section .overview-section-heading p { display: block; min-width: 0; margin: 0; }
 /* The body takes whatever the card has left. Two cards sit side by side in a
    grid, so the shorter one is stretched to its neighbour anyway — without this
    the stretch went to the card and its content stayed a fixed 96px box with
