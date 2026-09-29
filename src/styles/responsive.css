@@ -23,41 +23,8 @@
   /* Every pixel the card frame does not take goes to the name column, which
      is the one track on the row with nothing fixed holding it open. */
   .overview-section { padding: 8px; }
-  /* The leaderboard table's four phone columns --- #, player, main, sub --- so
-     the summary of a ranking and the ranking itself are read the same way.
-     Five tracks do not fit here: the two character cells and the ranked-by
-     figure took 262 of the row's 298px and left the name 36, which cut every
-     single name in both lists to one letter and an ellipsis. The figure moves
-     under the name, where it has that column's full width, and the heading
-     over it goes --- "88% 605판" beneath a name needs no label, and the cell
-     carries an sr-only one for anyone who cannot see that.
-     Assigned by `:nth-child`, not `:nth-of-type`: every child of the row is a
-     <span>, so by type they all count as one. */
-  .rank-row { min-height: 0; padding: 5px 6px; gap: 2px 6px; grid-template-columns: 22px minmax(0,1fr) 88px 88px; }
-  .rank-row > .rank-no { grid-row: 1 / 3; grid-column: 1; }
-  .rank-row > .rank-name { grid-row: 1; grid-column: 2; }
-  .rank-row > .rank-detail { grid-row: 2; grid-column: 2; justify-content: flex-start; padding-left: 5px; }
-  .rank-row > .mini-char:nth-child(4) { grid-row: 1 / 3; grid-column: 3; }
-  .rank-row > .mini-char:nth-child(5) { grid-row: 1 / 3; grid-column: 4; }
-  .rank-head { grid-template-columns: 22px minmax(0,1fr) 88px 88px; padding-inline: 6px; }
-  .rank-head > :nth-child(3) { display: none; }
-  /* A list with no figure keeps the same four tracks; its characters are the
-     third and fourth children rather than the fourth and fifth. */
-  .rank-list.has-no-detail .rank-row,
-  .rank-list.has-no-detail .rank-head { grid-template-columns: 22px minmax(0,1fr) 88px 88px; }
-  .rank-list.has-no-detail .rank-head > :nth-child(3) { display: block; }
-  .rank-list.has-no-detail .rank-row > .mini-char:nth-child(3) { grid-row: 1; grid-column: 3; }
-  .rank-list.has-no-detail .rank-row > .mini-char:nth-child(4) { grid-row: 1; grid-column: 4; }
-  /* Sized so a portrait, a banner and the record fit the 92px track together —
-     the same cell the leaderboard table draws at the same width. */
-  .mini-char { gap: 4px; }
-  .mini-char-portrait { height: 36px; }
-  .mini-char-rank { width: auto; max-width: 50px; height: auto; max-height: 21px; object-fit: contain; }
-  /* Always two lines, never one. Wrapping put "5W 15L" beside a short rate and
-     under a long one, so the row a reader was comparing down the column moved
-     depending on how many digits a player happened to have. The table cell
-     stacks them here for the same reason. */
-  .mini-char-record { flex-direction: column; align-items: flex-start; gap: 0; }
+  /* The ranking list's narrow rows are keyed off the list's own width, not
+     the viewport's --- see the container query at the end of ranking.css. */
   .app-shell { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
   /* 1fr for the brand, auto for the profile --- not the reverse. Under
      `minmax(0,auto)` the brand column's max is its content width, so it never

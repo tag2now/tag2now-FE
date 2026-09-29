@@ -56,9 +56,12 @@
 .kpi-card-hint { grid-area: hint; padding-left: 34px; overflow: hidden; color: var(--color-txt-faint); font-size: var(--text-2xs); font-weight: var(--weight-quiet); text-overflow: ellipsis; white-space: nowrap; }
 
 .overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
-/* One card per row. The ranking lists carry far more per row than the cards
-   above them, and the width a name needs comes out of the same track. */
-.overview-grid.is-stacked { grid-template-columns: minmax(0, 1fr); }
+/* The two rankings, side by side while each card can still give a name 120px
+   in the list's narrow rows (231px of tracks + 120 + the card's 26px frame),
+   one per row below that. `auto-fit` rather than a container query: the panel
+   holding this also holds the fixed-position history panel, and a container's
+   layout containment would become that panel's containing block. */
+.overview-grid.is-rankings { grid-template-columns: repeat(auto-fit, minmax(min(100%, 377px), 1fr)); }
 .overview-section { display: flex; min-width: 0; flex-direction: column; padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
 .overview-section .section-toolbar { min-height: 40px; margin-bottom: 10px; padding-bottom: 10px; }
 /* The body takes whatever the card has left. Two cards sit side by side in a

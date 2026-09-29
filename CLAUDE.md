@@ -144,10 +144,12 @@ them from. `shared/components/RankList` is the only thing that renders a
 ranking now; a caller supplies rows and the heading over the figure.
 
 It is a **grid carrying the table roles** (`role="table"/"row"/"columnheader"/
-"cell"`) rather than a real `<table>`: below 760px the figure moves *under* the
-name, which table layout cannot express. Five tracks do not fit on a phone —
-the characters and the figure took 262 of the home row's 298px and left the
-name 36 — so the phone layout runs four columns and two lines. The cells are
+"cell"`) rather than a real `<table>`: in a narrow list the figure moves *under*
+the name, which table layout cannot express. Five tracks hold 386px before the
+name gets any, so a list under 540px runs four columns and two lines instead.
+That is a **container query on `.rank-list`**, not a media query: a phone
+lands there, and so do the home page's two rankings, which sit side by side —
+주간 철악귀 left, above the chart — at half a desktop each. The cells are
 placed by **`:nth-child`, never `:nth-of-type`**: every child of a row is a
 `<span>`, so by type they all count as one and a `:nth-of-type` rule silently
 selects the position cell instead.

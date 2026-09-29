@@ -178,36 +178,31 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
         </OverviewSection>
       </div>
 
-      {/* h3: a sibling of the four card sections, so it takes their level. */}
-      {/* The stats tab's daily panel, unchanged: one component on both pages,
-          so neither can drift from the other. */}
-      <OverviewSection icon={Activity} title="접속자 흐름" subtitle={`최근 ${OVERVIEW_DAYS}일`} linkLabel="통계" to={pathOf('stats')}>
-        <DailyPlayersPanel data={data?.daily ?? []} />
-      </OverviewSection>
+      {/* Above the chart, side by side: 주간 철악귀 is what people come to
+          this page to check, and below the 400px chart it started past the
+          fold of a 900px screen. Half a desktop each, the lists take their
+          narrow two-line rows (ranking.css), which still leave a name ~145px.
+          Weekly first, on the left, for the same reason. */}
+      <div className="overview-grid is-rankings">
+        <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
+          <RankList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} label="주간 상위 5명" detailLabel="판수" emptyMsg="주간 기록 없음" onSelect={setSelectedNpid} />
+        </OverviewSection>
 
-      {/* Kept below the chart: a ranking is slow-moving reference data with a
-          tab of its own one click away, and these two lists are twice the
-          height of the cards above (5 x 66px rows).
-          Stacked, not side by side: each row carries a name, two portraits,
-          two rank banners and two records, and splitting the width between two
-          cards left the name 84px --- "yeheonhoofamily" rendered as "yehe...".
-          Full width gives it ~490px, and the pair are read one after the other
-          anyway. */}
-      <div className="overview-grid is-stacked">
         <OverviewSection icon={Trophy} title="리더보드 TOP 5" subtitle="현재 상위 랭커" linkLabel="리더보드" to={pathOf('leaderboard')}>
           {/* Names what is missing rather than "데이터". The list is empty both
               before the leaderboard lands and when its fetch failed, so the
               copy stops at what is absent and claims no reason for it. */}
           <RankList rows={leaderboardRows(leaderboardEntries)} label="리더보드 상위 5명" detailLabel="전적" emptyMsg="리더보드 순위 없음" onSelect={setSelectedNpid} />
         </OverviewSection>
-
-        <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
-          {/* MATCH, not 매치: the header row is otherwise #/Player/Main/Sub, and
-              this app sets Latin caps as a motif elsewhere (PLAYER INSIGHTS,
-              ANY MATCH). One Korean word mid-row read as an oversight. */}
-          <RankList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} label="주간 상위 5명" detailLabel="판수" emptyMsg="주간 기록 없음" onSelect={setSelectedNpid} />
-        </OverviewSection>
       </div>
+
+      {/* h3: a sibling of the four card sections, so it takes their level. */}
+      {/* The stats tab's daily panel, unchanged: one component on both pages,
+          so neither can drift from the other. A seven-day trend reads the same
+          tomorrow, so it gives up its place to the rankings. */}
+      <OverviewSection icon={Activity} title="접속자 흐름" subtitle={`최근 ${OVERVIEW_DAYS}일`} linkLabel="통계" to={pathOf('stats')}>
+        <DailyPlayersPanel data={data?.daily ?? []} />
+      </OverviewSection>
 
       {selectedNpid && (
         <PlayerHistoryPanel

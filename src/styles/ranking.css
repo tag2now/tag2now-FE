@@ -12,13 +12,13 @@
  * written: moving them earlier or later would reorder them against the
  * unlayered rules in boards.css, leaderboard.css and responsive.css. */
 
-.rank-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; }
-/* Four columns, matching the leaderboard's rhythm minus its record column.
-   Five did not fit: these cards are half the page wide, and 26+48+118+118 plus
-   gaps left 38px for the player name — one character and an ellipsis. The
-   ranked-by figure moved under the name, where it has room. */
-/* 128px a character, not 100: the cell carries a portrait, a rank banner and
-   the record now, and at 100 the record wrapped under the banner on every row. */
+/* A container, so the rows below can ask how wide the list is rather than how
+   wide the screen is: the home page's two cards are half a desktop wide, which
+   is phone-sized as far as a row is concerned. */
+.rank-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; container: rank-list / inline-size; }
+/* 116px a character, not 100: the cell carries a portrait, a rank banner and
+   the record now, and at 100 the record wrapped under the banner on every row.
+   The narrow list's four tracks are at the end of this file. */
 .rank-head, .rank-row { display: grid; align-items: center; gap: 6px; grid-template-columns: 22px minmax(0,1fr) 108px 116px 116px; }
 /* The leaderboard list ranks by row position, so it renders no detail cell
    and drops that track — the name column takes the freed width. */
@@ -128,3 +128,39 @@
 /* Sits after the name inside its cell, so it rides with the truncation rather
    than being pushed out by it. */
 .lb-you { display: inline-flex; align-items: center; min-height: 18px; flex: 0 0 auto; margin-left: 6px; padding: 0 6px; border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent); border-radius: 4px; background: color-mix(in srgb, var(--color-primary) 16%, transparent); color: var(--color-primary-text); font-size: var(--text-4xs); font-weight: var(--weight-strong); }
+
+/* The narrow list: four columns --- #, player, main, sub --- and two lines.
+   The five tracks above hold 386px fixed before the name gets any, so below
+   540px the name is left under ~120px and the longest ones start to cut. A phone
+   lands here (the row is ~298px there, which left the name 36) and so do the
+   home page's two cards set side by side (~375px each).
+   The figure moves under the name, where it has that column's full width, and
+   the heading over it goes --- "88% 605판" beneath a name needs no label, and
+   the cell carries an sr-only one for anyone who cannot see that.
+   Assigned by `:nth-child`, not `:nth-of-type`: every child of the row is a
+   <span>, so by type they all count as one. */
+@container rank-list (max-width: 540px) {
+  .rank-row { min-height: 0; padding: 5px 6px; gap: 2px 6px; grid-template-columns: 22px minmax(0,1fr) 88px 88px; }
+  .rank-row > .rank-no { grid-row: 1 / 3; grid-column: 1; }
+  .rank-row > .rank-name { grid-row: 1; grid-column: 2; }
+  .rank-row > .rank-detail { grid-row: 2; grid-column: 2; justify-content: flex-start; padding-left: 5px; }
+  .rank-row > .mini-char:nth-child(4) { grid-row: 1 / 3; grid-column: 3; }
+  .rank-row > .mini-char:nth-child(5) { grid-row: 1 / 3; grid-column: 4; }
+  .rank-head { grid-template-columns: 22px minmax(0,1fr) 88px 88px; padding-inline: 6px; }
+  .rank-head > :nth-child(3) { display: none; }
+  /* A list with no figure keeps the same four tracks; its characters are the
+     third and fourth children rather than the fourth and fifth. */
+  .rank-list.has-no-detail .rank-row,
+  .rank-list.has-no-detail .rank-head { grid-template-columns: 22px minmax(0,1fr) 88px 88px; }
+  .rank-list.has-no-detail .rank-head > :nth-child(3) { display: block; }
+  .rank-list.has-no-detail .rank-row > .mini-char:nth-child(3) { grid-row: 1; grid-column: 3; }
+  .rank-list.has-no-detail .rank-row > .mini-char:nth-child(4) { grid-row: 1; grid-column: 4; }
+  /* Sized so a portrait, a banner and the record fit the 88px track together. */
+  .mini-char { gap: 4px; }
+  .mini-char-portrait { height: 36px; }
+  .mini-char-rank { width: auto; max-width: 50px; height: auto; max-height: 21px; object-fit: contain; }
+  /* Always two lines, never one. Wrapping put "5W 15L" beside a short rate and
+     under a long one, so the row a reader was comparing down the column moved
+     depending on how many digits a player happened to have. */
+  .mini-char-record { flex-direction: column; align-items: flex-start; gap: 0; }
+}

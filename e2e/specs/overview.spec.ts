@@ -57,57 +57,49 @@ test.describe('Overview', () => {
     await expect(unranked.locator('.mini-char.is-empty')).toHaveCount(2)
   })
 
-  test('gives the weekly figure its own column beside the name', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'The mobile overview drops the character columns.')
+  test('sets the two rankings side by side above the chart, weekly first', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'A phone has room for one card per row.')
+    const weekly = (await page.getByRole('region', { name: '주간 철악귀' }).boundingBox())!
+    const leaderboard = (await page.getByRole('region', { name: '리더보드 TOP 5' }).boundingBox())!
+    const chart = (await page.getByRole('region', { name: '접속자 흐름' }).boundingBox())!
+
+    // One row, weekly on the left: it is the reason people open this page.
+    expect(weekly.y).toBeCloseTo(leaderboard.y, 0)
+    expect(weekly.x + weekly.width).toBeLessThanOrEqual(leaderboard.x)
+    // Above the seven-day chart, which used to push both past the fold.
+    expect(weekly.y + weekly.height).toBeLessThanOrEqual(chart.y)
+  })
+
+  test('puts the weekly figure under the name in the half-width card', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'Covered by the side-by-side case; a phone row is the same layout.')
     const top = page.getByRole('region', { name: '주간 철악귀' }).locator('.rank-row').first()
-    const nameBox = await top.locator('.rank-name').boundingBox()
     const nameLabel = top.locator('.rank-btn-label')
-    const detailBox = await top.locator('.rank-detail').boundingBox()
+    const nameBox = (await top.locator('.rank-name').boundingBox())!
+    const detailBox = (await top.locator('.rank-detail').boundingBox())!
+    const charBox = (await top.locator('.mini-char').first().boundingBox())!
     // The visible figure only. The cell also carries the count it was taken
     // over and an sr-only label naming what it counts, and measuring the whole
     // element would measure those too.
-    const figureBox = await top.locator('.rank-detail strong').evaluate(element => {
+    const figureLines = await top.locator('.rank-detail strong').evaluate(element => {
       const range = document.createRange()
       range.selectNodeContents(element)
-      const rect = range.getBoundingClientRect()
-      return { x: rect.x, width: rect.width, lines: range.getClientRects().length }
+      return range.getClientRects().length
     })
-    const rankBox = await top.locator('.mini-char-rank').first().boundingBox()
-    const portraitBox = await top.locator('.mini-char-portrait').first().boundingBox()
 
-    expect(nameBox).not.toBeNull()
-    expect(detailBox).not.toBeNull()
-    expect(rankBox).not.toBeNull()
-    expect(portraitBox).not.toBeNull()
-    // A column of its own, between the name and the characters: the cards are
-    // stacked at full width now, so the figure can be read straight down the
-    // list under its own heading rather than hiding under each name.
-    expect(detailBox!.x).toBeGreaterThanOrEqual(nameBox!.x + nameBox!.width - 1)
-    expect(detailBox!.x + detailBox!.width).toBeLessThanOrEqual(rankBox!.x + 1)
+    // Half a desktop is too narrow for a column of its own: the figure takes
+    // the line under the name, in the same track.
+    expect(detailBox.y).toBeGreaterThanOrEqual(nameBox.y + nameBox.height - 1)
+    expect(detailBox.x).toBeCloseTo(nameBox.x, -1)
     // Neither spills into the character cells beside them.
-    expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(rankBox!.x)
+    expect(nameBox.x + nameBox.width).toBeLessThanOrEqual(charBox.x)
+    expect(detailBox.x + detailBox.width).toBeLessThanOrEqual(charBox.x + 1)
     // Three-digit weekly counts are routine (the fixture's top player has 132),
-    // and a column too narrow for them broke "132판" across two lines — which
-    // a box-based check would still pass, since it measures the wrapped box.
-    expect(figureBox.lines).toBe(1)
-    // The markup keeps the whole name; CSS shortens it with an ellipsis only
-    // when the column runs out, and the label never spills into the figure.
-    const labelBox = await nameLabel.boundingBox()
-    expect(labelBox).not.toBeNull()
-    expect(labelBox!.x + labelBox!.width).toBeLessThanOrEqual(detailBox!.x + 1)
+    // and a track too narrow for them broke "132판" across two lines — which a
+    // box-based check would still pass, since it measures the wrapped box.
+    expect(figureLines).toBe(1)
+    // The name keeps the width it needs: nothing in the fixture is cut.
     await expect(nameLabel).toHaveText('TagComboKing')
-    // The same art at the same size as the leaderboard's own cell --- these two
-    // lists show the same players, and differing on size made them look like
-    // different data. The figures are --rank-art-w / --rank-art-h and the
-    // portrait height .mini-char-portrait sets; a change here should be a
-    // change to the token, not to this list alone.
-    const artSizes = await top.evaluate(() => {
-      const root = getComputedStyle(document.documentElement)
-      return { w: root.getPropertyValue('--rank-art-w').trim(), h: root.getPropertyValue('--rank-art-h').trim() }
-    })
-    expect(`${rankBox!.width}px`).toBe(artSizes.w)
-    expect(`${rankBox!.height}px`).toBe(artSizes.h)
-    expect(portraitBox!.height).toBeCloseTo(46, 1)
+    expect(await nameLabel.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
   })
 
   test('omits a reservation nobody can still join', async ({ page }) => {
