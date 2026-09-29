@@ -65,6 +65,12 @@
    row above the name and neither element lined up with the portraits. */
 .profile-copy { display: flex; min-width: 0; align-items: center; gap: 6px; line-height: 1.15; }
 .profile-copy small { flex: 0 0 auto; color: var(--color-primary-text); font-size: var(--text-15); font-weight: var(--weight-max); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+/* The header's rank and place. The byline sizes it borrows --- a 16px banner,
+   the faintest 9px place --- are made to ride behind a name in a post list;
+   heading the account they read as specks. The leaderboard's own banner size,
+   and the place in the sidebar card's red. */
+.profile-copy .author-badge-rank { width: var(--rank-art-w); height: var(--rank-art-h); object-fit: cover; }
+.profile-copy .author-badge-place { color: var(--color-primary-text); font-size: var(--text-sm); font-weight: var(--weight-display); }
 /* The pencil sat bare on the name with no border or ground, which read as
    decoration rather than a control. A chip makes the whole name an obvious
    hit target. */

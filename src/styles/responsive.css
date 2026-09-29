@@ -62,6 +62,9 @@
   .profile-chars .char-cell-portrait { height: 34px; }
   .profile-name { max-width: 140px; padding: 0 6px; }
   .profile-copy small { display: none; }
+  /* Half-way between the desktop banner and the 14px byline: at 62px the
+     banner took the wordmark down to "TA…". Still large enough to read. */
+  .profile-copy .author-badge-rank { width: auto; height: 20px; object-fit: contain; }
   .brand-mark { width: 32px; height: 32px; }
   .brand-lockup h1 { font-size: var(--text-sm); }
   .app-layout { display: block; width: 100%; margin-top: 0; }
