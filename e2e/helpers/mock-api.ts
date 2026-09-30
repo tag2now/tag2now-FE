@@ -119,14 +119,14 @@ function requester(route: Route): string | null {
  * to the username, which keeps what a spec types and what it asserts the same;
  * pass the leaderboard's online name to sign in as one of its np_ids.
  */
-export async function signInAs(page: Page, username: string, onlineName = username) {
-  await page.addInitScript(([key, token, id, name]) => {
+export async function signInAs(page: Page, username: string, onlineName = username, admin = false) {
+  await page.addInitScript(([key, token, id, name, isAdmin]) => {
     localStorage.setItem(key, JSON.stringify({
       token,
       expiresAt: Date.now() + 3_600_000,
-      user: { username: id, online_name: name, avatar_url: '', admin: false },
+      user: { username: id, online_name: name, avatar_url: '', admin: isAdmin },
     }))
-  }, ['ttt2-session', tokenFor(username), username, onlineName] as const)
+  }, ['ttt2-session', tokenFor(username), username, onlineName, admin] as const)
 }
 
 /**
@@ -194,6 +194,25 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
   /** Every write needs an account, as on the backend. */
   const signedOut = (route: Route) => route.fulfill({
     status: 401, contentType: 'application/json', body: JSON.stringify({ detail: '로그인이 필요합니다.' }),
+  })
+
+  /* rpcn-narco's answers, as the backend relays them. Password `wrong` is the
+   * refusal; account `ghost` does not exist. Any other account is found, online
+   * and not banned, under the id it was asked for. */
+  await page.route('**/api/admin/users/*', async (route) => {
+    if (requester(route) === null) return signedOut(route)
+    const { username, password } = route.request().postDataJSON()
+    const refuse = (status: number, detail: string) =>
+      route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ detail }) })
+    if (password === 'wrong') return refuse(400, '비밀번호가 올바르지 않습니다.')
+    if (username === 'ghost') return refuse(404, '해당 아이디의 계정이 없습니다. 대소문자까지 정확히 입력해 주세요.')
+    const body = route.request().url().endsWith('/ban')
+      ? { username, banned: true, kicked: true }
+      : {
+        username, online_name: `${username}-online`, avatar_url: '', admin: false, banned: false,
+        online: true, created_at: '2025-01-02T03:04:05Z', last_login_at: '2026-09-01T12:00:00Z',
+      }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
   })
 
   await page.route('**/api/leaderboard**', async (route) => {

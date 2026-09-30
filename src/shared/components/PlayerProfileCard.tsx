@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, LogIn, LogOut, Radio, Trophy } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ChevronDown, LogIn, LogOut, Radio, ShieldBan, Trophy } from 'lucide-react'
 import useAuth from '@/auth/useAuth'
 import { requestLogin } from '@/auth/session'
 import useConfirm from '@/shared/hooks/useConfirm'
+import { pathOf } from '@/config/routes'
 import ConfirmDialog from './ConfirmDialog'
 import type { RoomUser } from '@/match/types'
 import type { CharInfo, LeaderboardEntry } from '@/shared/types'
@@ -28,6 +30,7 @@ interface PlayerProfileCardProps {
  */
 export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }: PlayerProfileCardProps) {
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [profileOpen, setProfileOpen] = useState(false)
   const [headerTarget, setHeaderTarget] = useState<HTMLElement | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -137,6 +140,11 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
             >
               <Trophy size={14} aria-hidden="true" /> 내 정보 보기
             </button>
+            {user.admin && (
+              <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); navigate(pathOf('admin')) }}>
+                <ShieldBan size={14} aria-hidden="true" /> 계정 관리
+              </button>
+            )}
             <button type="button" role="menuitem" onClick={confirmLogout}>
               <LogOut size={14} aria-hidden="true" /> 로그아웃
             </button>

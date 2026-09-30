@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import PlayerProfileCard from './PlayerProfileCard'
 import { dismissLoginRequest, endSession, getLoginRequest, getSession, startSession } from '@/auth/session'
 import type { LeaderboardEntry } from '@/shared/types'
@@ -9,8 +9,12 @@ function renderProfile(leaderboardEntries: LeaderboardEntry[] = [], roomUsers: P
 }
 
 /** RPCN usernames are the leaderboard's np_id; the online name is what shows. */
-const signInAs = (username = 'p1', onlineName = 'TestPlayer') =>
-  startSession('token', 3600, { username, online_name: onlineName, avatar_url: '', admin: false })
+const signInAs = (username = 'p1', onlineName = 'TestPlayer', admin = false) =>
+  startSession('token', 3600, { username, online_name: onlineName, avatar_url: '', admin })
+
+function CurrentPath() {
+  return <p data-testid="path">{useLocation().pathname}</p>
+}
 
 function mountHeaderSlot() {
   const headerTarget = document.createElement('div')
@@ -142,6 +146,33 @@ describe('Player profile', () => {
 
     await waitFor(() => expect(getSession()).toBeNull())
     expect(header.getByRole('button', { name: '로그인' })).toBeInTheDocument()
+  })
+
+  it('takes an admin to the account-management page from the menu', () => {
+    signInAs('p1', 'TestPlayer', true)
+    const header = mountHeaderSlot()
+    render(
+      <MemoryRouter>
+        <PlayerProfileCard />
+        <Routes><Route path="*" element={<CurrentPath />} /></Routes>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
+    fireEvent.click(header.getByRole('menuitem', { name: '계정 관리' }))
+
+    expect(screen.getByTestId('path')).toHaveTextContent('/admin')
+    expect(header.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('offers account management to admins only', () => {
+    signInAs()
+    const header = mountHeaderSlot()
+    renderProfile()
+
+    fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
+
+    expect(header.queryByRole('menuitem', { name: '계정 관리' })).not.toBeInTheDocument()
   })
 
   it('closes the account menu on Escape', () => {

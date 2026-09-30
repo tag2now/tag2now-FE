@@ -48,6 +48,7 @@ type Expectation = {
 
 const RESERVATION = ['id', 'start_at', 'host_display_name', 'host_username', 'host_ranks', 'match_type', 'capacity', 'memo', 'status', 'participant_count', 'participants', 'created_at']
 const COMMENT = ['id', 'reservation_id', 'author', 'author_username', 'body', 'created_at']
+const ACCOUNT = ['username', 'online_name', 'admin', 'banned', 'online', 'created_at', 'last_login_at']
 
 /** Every endpoint the API modules and hooks actually call. */
 const CONTRACT: Expectation[] = [
@@ -59,6 +60,9 @@ const CONTRACT: Expectation[] = [
   { method: 'get', path: '/history/players/{npid}' },
 
   { method: 'post', path: '/auth/login', body: ['username', 'password'], reads: ['access_token', 'expires_in', 'user'] },
+
+  { method: 'post', path: '/admin/users/lookup', body: ['username', 'password'], reads: ACCOUNT, auth: true },
+  { method: 'post', path: '/admin/users/ban', body: ['username', 'password'], reads: ['username', 'kicked'], auth: true },
 
   { method: 'get', path: '/community/posts', query: ['page', 'page_size', 'post_type', 'characters'] },
   { method: 'post', path: '/community/posts', body: ['title', 'body', 'post_type', 'characters', 'youtube_video_id'], auth: true },

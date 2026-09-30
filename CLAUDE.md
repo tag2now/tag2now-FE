@@ -73,6 +73,7 @@ src/
   index.css            Tailwind 4 @theme design tokens
   config/              tabConfig, patchNotes, test-setup
   auth/                RPCN login — session store, useAuth, LoginDialog
+  admin/               account moderation — Admin page, adminApi (admins only)
   overview/            landing summary — useOverview, Overview, KPI and top-five cards
   match/               rooms — useRooms, Rooms, RankMatchTable, PlayerMatchTable
   reservation/         appointments — Reservation, reservationApi, reservationLabels
@@ -181,6 +182,7 @@ so a nav click, the back button, and a cold deep link all arrive the same way.
 | `/leaderboard`, `/stats` | those tabs |
 | `/reservation`, `/reservation/:id` | reservations, optionally opened on one |
 | `/community`, `/community/:postId` | the board, optionally opened on one post |
+| `/admin` | account moderation; no nav tab, reached from the account menu |
 | anything else | overview, via the catch-all route |
 
 `config/routes.ts` is the single answer to "what URL is this tab?" — `pathOf`,
@@ -231,9 +233,9 @@ not lost. Dismissing the dialog drops it, and closing the dialog aborts a login
 still in flight — a cancelled login must never sign anyone in.
 
 The account lives in the header at every width: a login button while signed
-out, otherwise the name, which opens an account menu (내 정보 보기, 로그아웃)
-rather than signing out. Signing out always goes through a confirmation. The
-sidebar card is the profile — characters, ranks, the record — and renders only
+out, otherwise the name, which opens an account menu (내 정보 보기, 계정 관리
+for admins, 로그아웃) rather than signing out. Signing out always goes through
+a confirmation. The sidebar card is the profile — characters, ranks, the record — and renders only
 while someone is signed in; a phone hides it.
 
 **"Is this mine?" compares `user.username`** — the RPCN id, which is also the
@@ -243,6 +245,23 @@ board's `author` *is* the username. `online_name` is for display only. The
 profile card and the leaderboard's own-row mark find the record by `np_id` for
 the same reason; two players can share an online name. Rows written before
 login have a null username and belong to nobody.
+
+### Account moderation
+
+`/admin` looks an RPCN account up and bans it, through `POST /admin/users/lookup`
+and `/admin/users/ban`. rpcn-narco wants the admin's password on **every**
+call and the backend keeps none, so the page asks for it once and holds it in
+component state only --- never in `session.ts` or storage --- until the page is
+left. A ban goes to the account that was looked up, not whatever the id field
+says by then.
+
+`user.admin` only decides whether the form is shown; RPCN re-checks the role
+each time. A wrong admin password comes back **400**, not 401, because a 401 on
+a signed-in request ends the session in `api.ts`.
+
+It is the one fixed panel with no nav tab. `admin` is in `FIXED_TABS` so it is
+not handed the rooms panel, and App then selects no tab, gives the roving
+tabindex to the first one, and names the tabpanel itself.
 
 ### Reservation ownership
 

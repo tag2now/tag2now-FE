@@ -1,0 +1,20 @@
+/* The account-moderation page (/admin): a lookup form, and the account it found. */
+
+.admin-notice { margin: 0 0 12px; color: var(--color-txt-dim); font-size: var(--text-sm); }
+
+/* Two fields and the button on one line on a desktop; they wrap to a column
+   on a phone, the button last. */
+.admin-lookup { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.admin-field { display: flex; min-width: 0; flex: 1 1 200px; flex-direction: column; }
+.admin-field .input-base { width: 100%; }
+
+.admin-error { margin: 12px 0 0; color: var(--color-error); font-size: var(--text-sm); font-weight: var(--weight-strong); }
+
+.admin-account { margin-top: 16px; padding: 16px; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-row); }
+.admin-account h3 { margin: 0 0 12px; color: var(--color-txt); font-size: var(--text-15); font-weight: var(--weight-strong); overflow-wrap: anywhere; }
+.admin-account h3 small { margin-left: 6px; color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-row); }
+.admin-account dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 16px; font-size: var(--text-sm); }
+.admin-account dt { color: var(--color-txt-dim); }
+.admin-account dd { margin: 0; color: var(--color-txt); }
+.admin-account dd.is-banned { color: var(--color-error); font-weight: var(--weight-strong); }
+.admin-hint { margin: 8px 0 0; color: var(--color-txt-faint); font-size: var(--text-xs); }

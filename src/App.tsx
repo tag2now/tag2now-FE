@@ -21,6 +21,7 @@ import Rooms from "@/match/Rooms";
 import type { Room } from "@/match/types";
 import Reservation from "@/reservation/Reservation";
 import Overview from "@/overview/Overview";
+import Admin from "@/admin/Admin";
 import {
   BarChart3,
   LayoutDashboard,
@@ -108,6 +109,12 @@ export default function App() {
     { key: 'stats', label: '통계' },
   ], [roomsLoaded, rooms.data?.total, openReservations, recentPosts, recentPostsCapped])
   const activePrimary = isRoomTab ? 'match' : activeTab
+  // The admin panel has no tab of its own. The strip then selects nothing, but
+  // the first tab keeps the roving tabindex so the nav stays reachable, and the
+  // panel is labelled by its own heading rather than by a tab that is not there.
+  const hasPrimaryTab = primaryTabs.some((tab) => tab.key === activePrimary)
+  const focusableTab = hasPrimaryTab ? activePrimary : primaryTabs[0].key
+  const panelLabel = isRoomTab ? `tab-${activeTab}` : hasPrimaryTab ? `primary-tab-${activeTab}` : undefined
 
   const tabIcon = (key: string) => {
     if (key === 'overview') return LayoutDashboard
@@ -175,7 +182,7 @@ export default function App() {
                     id={`primary-tab-${t.key}`}
                     aria-selected={activePrimary === t.key}
                     aria-controls={t.key === 'match' ? `tabpanel-${isRoomTab ? activeTab : groupKeys[0] ?? 'leaderboard'}` : `tabpanel-${t.key}`}
-                    tabIndex={activePrimary === t.key ? 0 : -1}
+                    tabIndex={focusableTab === t.key ? 0 : -1}
                     onClick={() => navigate(t.key === 'match' ? firstRoomPath(groupKeys) : pathOf(t.key))}
                     onKeyDown={(e) => {
                       const idx = primaryTabs.findIndex(x => x.key === t.key)
@@ -233,7 +240,7 @@ export default function App() {
               </div>
             </nav>
           )}
-          <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={isRoomTab ? `tab-${activeTab}` : `primary-tab-${activeTab}`} tabIndex={0}>
+          <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={panelLabel} aria-label={panelLabel ? undefined : '계정 관리'} tabIndex={0}>
             <Routes>
               {/* The overview owns "/" so a bare link opens the landing panel,
                   and the catch-all sends an unknown path to that same screen —
@@ -247,6 +254,7 @@ export default function App() {
               <Route path="/community" element={<Community leaderboardEntries={lb.data?.entries} />} />
               <Route path="/community/:postId" element={<Community leaderboardEntries={lb.data?.entries} />} />
               <Route path="/stats" element={<Stats leaderboardEntries={lb.data?.entries} />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="*" element={overviewPanel} />
             </Routes>
           </div>
