@@ -1,5 +1,5 @@
 import { charImageUrl } from '@/shared/characterImage'
-import { DEFAULT_POST_TYPE, POST_TYPES } from '@/community/types'
+import { DEFAULT_POST_TYPE, NOTICE_POST_TYPE, POST_TYPES } from '@/community/types'
 
 type BadgeSize = 'sm' | 'md'
 
@@ -46,7 +46,7 @@ export default function PostTypeBadge({ postType, characters = [], size = 'sm' }
 
   return (
     <span className={`post-tags post-tags-${size}`}>
-      {category && <span className="post-type-chip">{category}</span>}
+      {category && <span className={`post-type-chip${category === NOTICE_POST_TYPE ? ' is-notice' : ''}`}>{category}</span>}
       {portraits.length > 0 && (
         <span className="post-tag-chars">
           {portraits.map(([name, url]) => (

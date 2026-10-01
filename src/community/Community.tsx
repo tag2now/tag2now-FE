@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import useCommunity from "@/community/useCommunity";
+import useNotices from "@/community/useNotices";
 import { pathOf, postPath } from "@/config/routes";
 import {createPost, type PostInput} from "@/community/communityApi";
 import type { LeaderboardEntry} from "@/shared/types";
@@ -20,6 +21,7 @@ interface CommunityProps {
 
 export default function Community({ leaderboardEntries }: CommunityProps) {
   const community = useCommunity()
+  const notices = useNotices()
   const navigate = useNavigate()
   const { postId } = useParams()
   const { user, requireUser } = useAuth()
@@ -45,6 +47,14 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
   const reload = (page = community.page) =>
     community.loadPosts(page, postType || undefined, characters).then()
 
+  // After anything that can write a post, and on the refresh button: a notice
+  // written, edited or deleted changes the pinned block as well as the list.
+  // Filters and paging leave it alone, so those call reload() alone.
+  const reloadAll = (page?: number) => {
+    notices.refresh()
+    return reload(page)
+  }
+
   useEffect(() => {
     reload(1)
   }, [postType, characters])
@@ -61,7 +71,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
   const handleBack = () => {
     community.closePost()
     navigate(pathOf('community'))
-    reload()
+    reloadAll()
   }
 
   const handlePostTypeChange = (type: string) => {
@@ -75,12 +85,12 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
   const handleCreatePost = async (input: PostInput) => {
     await createPost(input)
     setView('list')
-    reload(1)
+    reloadAll(1)
   }
 
   const handleDeleted = () => {
     navigate(pathOf('community'))
-    reload()
+    reloadAll()
   }
 
   return (
@@ -88,6 +98,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
       {mode === 'list' && (
         <PostList
           posts={community.posts}
+          notices={notices.data ?? []}
           total={community.total}
           page={community.page}
           pageSize={community.pageSize}
@@ -99,7 +110,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
           onCharactersChange={setCharacters}
           onPageChange={handlePageChange}
           onSelectPost={handleSelectPost}
-          onRefresh={() => reload()}
+          onRefresh={() => reloadAll()}
           onWrite={openWriteForm}
           leaderboardEntries={leaderboardEntries}
         />
@@ -122,7 +133,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
           onBack={handleBack}
           onRefresh={() => {
             community.refreshDetail()
-            reload()
+            reloadAll()
           }}
           requireUser={requireUser}
           onDeleted={handleDeleted}

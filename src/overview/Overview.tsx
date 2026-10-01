@@ -4,7 +4,7 @@ import DailyPlayersPanel from '@/shared/components/DailyPlayersPanel'
 import PlayerHistoryPanel from '@/shared/components/PlayerHistoryPanel'
 import { panelStatus } from '@/shared/util/panelStatus'
 import useOverview, { OVERVIEW_DAYS, OVERVIEW_TOP_N } from '@/overview/useOverview'
-import { KpiCard, OpenReservations, OverviewSection, RecentPosts } from '@/overview/component'
+import { KpiCard, NoticeBanner, OpenReservations, OverviewSection, RecentPosts } from '@/overview/component'
 import RankList, { type RankRow } from '@/shared/components/RankList'
 import type { LeaderboardEntry } from '@/shared/types'
 import type { RoomsData } from '@/match/types'
@@ -153,6 +153,10 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
           button went so the summary opens on the figures — the tab already
           names the page, and coming back to it fetches afresh. */}
       <h2 className="sr-only">한눈에 보기</h2>
+
+      {/* Above the figures: a notice is the one thing here written for the
+          reader to act on, and it renders nothing when there is none. */}
+      <NoticeBanner notices={data?.notices ?? []} />
 
       {/* 지금 → 오늘 → 전체. Three figures on three spans, each named in its
           own label, so no two cards can be read as the same fact. */}

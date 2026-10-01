@@ -46,6 +46,7 @@ const OVERVIEW_DATA: OverviewData = {
   posts: [
     { id: 1, author: 'PostAuthor', title: '첫 게시글', body: '', post_type: 'free', characters: [], thumbs_up: 3, thumbs_down: 0, created_at: new Date().toISOString(), comment_count: 2 },
   ],
+  notices: [],
   reservations: [
     // Ranks out of order and three of them, so the row has to sort and to
     // count what it cannot fit rather than simply printing the list.
@@ -54,6 +55,8 @@ const OVERVIEW_DATA: OverviewData = {
     { id: 3, start_at: '2026-09-02T14:00:00Z', host_display_name: 'HostPlayer', host_username: 'hostplayer', host_ranks: [], match_type: 'player_match', capacity: 3, memo: '', status: 'open', participant_count: 0, created_at: '2026-09-02T09:00:00Z' },
   ],
 }
+
+const NOTICE = { id: 7, author: 'admin', title: '서버 점검 안내', body: '', post_type: '공지', characters: [], thumbs_up: 0, thumbs_down: 0, created_at: new Date().toISOString(), comment_count: 0 }
 
 const ROOMS: RoomsData = {
   total: 3,
@@ -400,6 +403,22 @@ describe('Overview', () => {
     expect(screen.getByRole('link', { name: /첫 게시글/ })).toHaveAttribute('href', '/community/1')
   })
 
+  it('pins the notices above the figures, each linking to its post', () => {
+    mockedUseOverview.mockReturnValue(polled({ ...OVERVIEW_DATA, notices: [NOTICE] }))
+    renderOverview()
+
+    const banner = screen.getByRole('region', { name: '공지' })
+    expect(within(banner).getByRole('link', { name: /서버 점검 안내/ })).toHaveAttribute('href', '/community/7')
+    // Before the KPI cards in reading order, not merely somewhere on the page.
+    expect(banner.compareDocumentPosition(document.querySelector('.kpi-grid')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('shows no notice banner when there are no notices', () => {
+    renderOverview()
+
+    expect(screen.queryByRole('region', { name: '공지' })).not.toBeInTheDocument()
+  })
+
   it('links a reservation row to that reservation', () => {
     renderOverview()
 
@@ -422,7 +441,7 @@ describe('Overview', () => {
   })
 
   it('renders each card empty rather than failing when a source returned nothing', () => {
-    mockedUseOverview.mockReturnValue(polled({ daily: [], weeklyTop: [], posts: [], reservations: [] }))
+    mockedUseOverview.mockReturnValue(polled({ daily: [], weeklyTop: [], posts: [], notices: [], reservations: [] }))
     // The leaderboard card reads props, not useOverview, so emptying the four
     // fetched sources alone leaves it populated and "each card" untested.
     renderOverview({ leaderboardEntries: [] })

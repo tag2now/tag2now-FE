@@ -36,6 +36,8 @@ interface MockOverrides {
   leaderboard?: unknown
   rooms?: unknown
   posts?: unknown
+  /** Answers `?post_type=공지`; none unless a spec sets them. */
+  notices?: unknown[]
   postDetail?: unknown
   reservations?: ApiReservationLike[]
   daily?: unknown
@@ -427,6 +429,18 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ id: 999, title: 'New Post' }),
+      })
+    }
+
+    // GET — the pinned notices. The backend keeps them out of the plain list
+    // and serves them only here, so answering this with the posts fixture
+    // would pin every fixture post twice over.
+    if (new URL(url).searchParams.get('post_type') === '공지') {
+      const notices = overrides?.notices ?? []
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ posts: notices, total: notices.length, page: 1, page_size: 100 }),
       })
     }
 

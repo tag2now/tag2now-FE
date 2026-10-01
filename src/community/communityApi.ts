@@ -1,6 +1,6 @@
 import { GET, POST, PATCH, DELETE } from '@/shared/util/api'
 import { API } from '@/config/endpoints'
-import {PostDetail, PostListResponse} from "@/community/types";
+import { NOTICE_POST_TYPE, type PostDetail, type PostListResponse, type PostSummary } from "@/community/types";
 
 export const fetchPosts = (page: number, pageSize: number, postType?: string, characters: string[] = []): Promise<PostListResponse> => {
   // URLSearchParams repeats a key for each array entry, which is the shape
@@ -11,7 +11,15 @@ export const fetchPosts = (page: number, pageSize: number, postType?: string, ch
   return GET(API.posts().path, params)
 }
 
-export const fetchPostDetail = (postId: number): Promise<PostDetail> =>
+/** The backend's page_size cap. Every notice is pinned, and there are a handful
+ * at most, so one page is all of them. */
+const NOTICE_LIMIT = 100
+
+/** Newest first. The board's own list leaves notices out, so they come from here. */
+export const fetchNotices = (limit = NOTICE_LIMIT): Promise<PostSummary[]> =>
+  fetchPosts(1, limit, NOTICE_POST_TYPE).then((res) => res.posts)
+
+export const fetchPostDetail =(postId: number): Promise<PostDetail> =>
   GET(API.post(postId).path)
 
 export interface PostInput {

@@ -12,5 +12,6 @@ export interface OverviewData {
   daily: DailySummary[]
   weeklyTop: WeeklyTopPlayer[]
   posts: PostSummary[]
+  notices: PostSummary[]
   reservations: ApiReservation[]
 }

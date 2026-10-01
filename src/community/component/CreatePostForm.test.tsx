@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { endSession, startSession } from '@/auth/session'
 import CreatePostForm from './CreatePostForm'
 
 function setup() {
@@ -92,5 +93,26 @@ describe('character tags', () => {
     />)
     expect(screen.getByRole('button', { name: 'Jin' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Kazuya' })).toHaveAttribute('aria-pressed', 'true')
+  })
+})
+
+describe('notices', () => {
+  afterEach(() => endSession())
+
+  it('offers 공지 to an admin and submits it', async () => {
+    startSession('token', 3600, { username: 'root', online_name: '운영자', avatar_url: '', admin: true }, false)
+    const submit = setup()
+
+    fireEvent.click(screen.getByRole('button', { name: '공지' }))
+    fireEvent.click(screen.getByRole('button', { name: '작성' }))
+
+    await waitFor(() => expect(submit).toHaveBeenCalledWith(expect.objectContaining({ postType: '공지' })))
+  })
+
+  it('does not offer 공지 to anyone else', () => {
+    startSession('token', 3600, { username: 'alice', online_name: 'Alice', avatar_url: '', admin: false }, false)
+    setup()
+
+    expect(screen.queryByRole('button', { name: '공지' })).not.toBeInTheDocument()
   })
 })

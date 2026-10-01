@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { parseYouTubeVideoId } from '@/community/youtube'
 import YouTubeVideo from './YouTubeVideo'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
-import { MAX_POST_CHARACTERS, POST_TYPES } from '@/community/types'
+import { MAX_POST_CHARACTERS, postTypesFor } from '@/community/types'
+import useAuth from '@/auth/useAuth'
 import type { PostInput } from '@/community/communityApi'
 import { AlignLeft, ArrowLeft, FilePenLine, Send, Type, X } from 'lucide-react'
 
@@ -14,6 +15,8 @@ interface CreatePostFormProps {
 
 export default function CreatePostForm({ onSubmit, onCancel, initialPost }: CreatePostFormProps) {
   const editing = !!initialPost
+  // Only decides whether 공지 is offered; the backend refuses a non-admin's notice.
+  const { user } = useAuth()
   const [title, setTitle] = useState(initialPost?.title ?? '')
   const [body, setBody] = useState(initialPost?.body ?? '')
   const [postType, setPostType] = useState(initialPost?.post_type ?? '자유')
@@ -59,7 +62,7 @@ export default function CreatePostForm({ onSubmit, onCancel, initialPost }: Crea
       <div className="form-section writing-form">
       <div className="field-heading"><span className="field-label">게시글 유형</span><small>게시글 성격에 맞는 분류를 선택하세요.</small></div>
       <div className="segmented-control mb-3">
-        {POST_TYPES.map((t) => (
+        {postTypesFor(user?.admin ?? false).map((t) => (
           <button
             key={t}
             onClick={() => setPostType(t)}

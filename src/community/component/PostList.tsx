@@ -10,6 +10,8 @@ import { ChevronDown, ChevronLeft, ChevronRight, MessageSquare, MessagesSquare, 
 
 interface PostListProps {
   posts: PostSummary[]
+  /** Pinned above the filters; the list itself never includes them. */
+  notices: PostSummary[]
   total: number
   page: number
   pageSize: number
@@ -27,8 +29,50 @@ interface PostListProps {
   leaderboardEntries?: LeaderboardEntry[]
 }
 
+interface PostRowProps {
+  post: PostSummary
+  onSelect: (id: number) => void
+  leaderboardEntries?: LeaderboardEntry[]
+}
+
+/** One row of the feed. A notice is the same row: its 공지 chip is what sets
+ * it apart, so the columns line up with the posts beneath it. */
+function PostRow({ post, onSelect, leaderboardEntries }: PostRowProps) {
+  return (
+    <button
+      onClick={() => onSelect(post.id)}
+      aria-label={[post.title, post.post_type, ...(post.characters ?? [])].join(' — ')}
+      className="post-row"
+    >
+      <span className="post-row-tags">
+        <PostTypeBadge postType={post.post_type} characters={post.characters ?? []} />
+      </span>
+      <span className="post-row-title">{post.title}</span>
+      <AuthorBadge name={post.author} entries={leaderboardEntries} className="post-row-author" />
+      {/* One cluster for how the post is doing. The comment count used
+          to be welded to the title and the two votes sat at the far
+          end, so three figures of the same kind were read in two
+          places. A figure only appears once it is not zero: every row
+          printed "☝ 0 ☟ 0", which is the same as saying nothing while
+          taking the space and the eye of something that says a lot. */}
+      <span className="post-row-stats">
+        {post.comment_count > 0 && (
+          <span className="post-stat"><MessageSquare size={11} aria-hidden="true" />{post.comment_count}<span className="sr-only"> 댓글</span></span>
+        )}
+        {post.thumbs_up > 0 && (
+          <span className="post-stat is-up"><ThumbsUp size={11} aria-hidden="true" />{post.thumbs_up}<span className="sr-only"> 추천</span></span>
+        )}
+        {post.thumbs_down > 0 && (
+          <span className="post-stat"><ThumbsDown size={11} aria-hidden="true" />{post.thumbs_down}<span className="sr-only"> 비추천</span></span>
+        )}
+      </span>
+      <span className="post-row-time">{formatTimeAgo(post.created_at)}</span>
+    </button>
+  )
+}
+
 export default function PostList({
-  posts, total, page, pageSize, loading, error,
+  posts, notices, total, page, pageSize, loading, error,
   postType, onPostTypeChange, characters, onCharactersChange,
   onPageChange, onSelectPost, onRefresh, onWrite, leaderboardEntries,
 }: PostListProps) {
@@ -47,6 +91,17 @@ export default function PostList({
           <button onClick={onWrite} className="btn-primary"><PenLine size={14} aria-hidden="true" /> 글쓰기</button>
         </div>
       </div>
+
+      {/* Above the filters, on every page and under every filter: a notice
+          is pinned to the board, not one of the posts the filters narrow.
+          The list below never holds them — the backend leaves them out. */}
+      {notices.length > 0 && (
+        <section className="post-list notice-list" aria-label="공지">
+          {notices.map((notice) => (
+            <PostRow key={notice.id} post={notice} onSelect={onSelectPost} leaderboardEntries={leaderboardEntries} />
+          ))}
+        </section>
+      )}
 
       <div className="section-toolbar filter-toolbar">
         <div className="section-title">
@@ -132,36 +187,7 @@ export default function PostList({
       {!loading && posts.length > 0 && (
         <div className="post-list" aria-live="polite">
           {posts.map((post) => (
-            <button
-              key={post.id}
-              onClick={() => onSelectPost(post.id)}
-              aria-label={[post.title, post.post_type, ...(post.characters ?? [])].join(' — ')}
-              className="post-row"
-            >
-              <span className="post-row-tags">
-                <PostTypeBadge postType={post.post_type} characters={post.characters ?? []} />
-              </span>
-              <span className="post-row-title">{post.title}</span>
-              <AuthorBadge name={post.author} entries={leaderboardEntries} className="post-row-author" />
-              {/* One cluster for how the post is doing. The comment count used
-                  to be welded to the title and the two votes sat at the far
-                  end, so three figures of the same kind were read in two
-                  places. A figure only appears once it is not zero: every row
-                  printed "☝ 0 ☟ 0", which is the same as saying nothing while
-                  taking the space and the eye of something that says a lot. */}
-              <span className="post-row-stats">
-                {post.comment_count > 0 && (
-                  <span className="post-stat"><MessageSquare size={11} aria-hidden="true" />{post.comment_count}<span className="sr-only"> 댓글</span></span>
-                )}
-                {post.thumbs_up > 0 && (
-                  <span className="post-stat is-up"><ThumbsUp size={11} aria-hidden="true" />{post.thumbs_up}<span className="sr-only"> 추천</span></span>
-                )}
-                {post.thumbs_down > 0 && (
-                  <span className="post-stat"><ThumbsDown size={11} aria-hidden="true" />{post.thumbs_down}<span className="sr-only"> 비추천</span></span>
-                )}
-              </span>
-              <span className="post-row-time">{formatTimeAgo(post.created_at)}</span>
-            </button>
+            <PostRow key={post.id} post={post} onSelect={onSelectPost} leaderboardEntries={leaderboardEntries} />
           ))}
         </div>
       )}
