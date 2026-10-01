@@ -18,3 +18,40 @@
 .admin-account dd { margin: 0; color: var(--color-txt); }
 .admin-account dd.is-banned { color: var(--color-error); font-weight: var(--weight-strong); }
 .admin-hint { margin: 8px 0 0; color: var(--color-txt-faint); font-size: var(--text-xs); }
+
+/* The admin page stacks three panels: the shared password, account
+   moderation, and the save section. */
+.admin-page { display: grid; gap: 16px; }
+/* .panel's minimum height is for a tab filling the screen; stacked here it
+   only left the short panels mostly empty. */
+.admin-page > .panel { min-height: 0; }
+.admin-auth .admin-field { max-width: 360px; }
+
+/* Save admin: a summary card, then sections that each carry a small heading. */
+.save-section { margin-top: 20px; }
+.save-section h3 { margin: 0 0 10px; color: var(--color-txt); font-size: var(--text-15); font-weight: var(--weight-strong); }
+.save-section h3 small { margin-left: 6px; color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-row); }
+.save-section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+
+.save-check { display: inline-flex; align-items: center; gap: 6px; color: var(--color-txt-dim); font-size: var(--text-sm); cursor: pointer; }
+.save-check input { accent-color: var(--color-primary); }
+
+/* Long tables (59 characters, a floor's worth of changes) scroll inside the
+   panel rather than stretching the page, and sideways on a phone. */
+.save-table-wrap { max-height: 420px; overflow: auto; border: 1px solid var(--color-border-light); border-radius: 8px; }
+.save-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.save-table th { position: sticky; top: 0; padding: 8px 10px; background: var(--color-bg-head); color: var(--color-txt-dim); font-weight: var(--weight-label); text-align: left; white-space: nowrap; }
+.save-table td { padding: 7px 10px; border-top: 1px solid var(--color-border-light); color: var(--color-txt); white-space: nowrap; }
+.save-table tbody tr:nth-child(even) td { background: var(--color-bg-row-alt); }
+.save-table td.save-detail { color: var(--color-txt-dim); font-size: var(--text-xs); white-space: normal; overflow-wrap: anywhere; }
+
+.save-edit-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 12px; }
+.save-edit-fields .custom-select { min-width: 200px; }
+
+.save-warning { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--color-error); border-radius: 8px; color: var(--color-error); font-size: var(--text-sm); font-weight: var(--weight-strong); }
+.save-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+.save-backups { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.save-backups li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 12px; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-row); font-size: var(--text-sm); }
+.save-backup-label { color: var(--color-txt); font-weight: var(--weight-strong); overflow-wrap: anywhere; }
+.save-backup-meta { flex: 1 1 auto; color: var(--color-txt-dim); }

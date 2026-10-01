@@ -6,18 +6,10 @@ import useAuth from '@/auth/useAuth'
 import { requestLogin } from '@/auth/session'
 import ConfirmDialog from '@/shared/components/ConfirmDialog'
 import useConfirm from '@/shared/hooks/useConfirm'
-import { AppError } from '@/shared/util/AppError'
 import { banAccount, lookupAccount } from '@/admin/adminApi'
+import { errorText, formatInstant } from '@/admin/adminText'
+import SaveAdmin from '@/admin/SaveAdmin'
 import type { AccountStatus } from '@/admin/types'
-
-const kstDateTime = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'short' })
-
-const formatInstant = (iso: string | null) => (iso ? kstDateTime.format(new Date(iso)) : '기록 없음')
-
-function errorText(error: unknown): string {
-  if (error instanceof AppError && error.explained) return error.message
-  return '요청하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.'
-}
 
 /** RPCN usernames are unique regardless of case, as the backend compares them. */
 const isSameAccount = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
@@ -55,17 +47,42 @@ export default function Admin() {
   if (!user.admin) {
     return <AdminPanel><p className="admin-notice">관리자 권한이 없습니다.</p></AdminPanel>
   }
-  return <AdminPanel><AccountModeration self={user.username} /></AdminPanel>
+  return <AdminConsole self={user.username} />
 }
 
-/** Look an account up, then ban it.
+/** One password for the whole page: both sections send it with every request.
  *
- * The admin's password is held in this component's state only --- never in
- * storage --- and goes when the page does. Every request carries it because
- * RPCN re-checks it on every action. */
-function AccountModeration({ self }: { self: string }) {
-  const [username, setUsername] = useState('')
+ * It is held in this component's state only --- never in storage --- and goes
+ * when the page does. Every request carries it because RPCN re-checks it on
+ * every action. */
+function AdminConsole({ self }: { self: string }) {
   const [password, setPassword] = useState('')
+
+  return (
+    <div className="admin-page">
+      <div className="panel admin-auth">
+        <label className="admin-field">
+          <span className="field-label">내 비밀번호 (확인용)</span>
+          <input
+            type="password"
+            className="input-base"
+            autoComplete="current-password"
+            maxLength={128}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </label>
+        <p className="admin-hint">조회와 수정마다 RPCN이 다시 확인합니다. 이 페이지를 떠나면 지워집니다.</p>
+      </div>
+      <AdminPanel><AccountModeration self={self} password={password} /></AdminPanel>
+      <SaveAdmin password={password} />
+    </div>
+  )
+}
+
+/** Look an account up, then ban it. */
+function AccountModeration({ self, password }: { self: string, password: string }) {
+  const [username, setUsername] = useState('')
   const [account, setAccount] = useState<AccountStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -120,17 +137,6 @@ function AccountModeration({ self }: { self: string }) {
             maxLength={64}
             value={username}
             onChange={(event) => setUsername(event.target.value)}
-          />
-        </label>
-        <label className="admin-field">
-          <span className="field-label">내 비밀번호 (확인용)</span>
-          <input
-            type="password"
-            className="input-base"
-            autoComplete="current-password"
-            maxLength={128}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
           />
         </label>
         <button type="submit" className="btn-primary" disabled={busy || !username.trim() || !password}>

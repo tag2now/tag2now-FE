@@ -113,6 +113,35 @@ function requester(route: Route): string | null {
   return token === null ? null : decodeURIComponent(token)
 }
 
+/** tag2now-save-admin's answers, as the backend relays them, over one save
+ * that every account shares. Only Paul's rank moves: set-rank on character 0
+ * changes it and every other edit previews and writes nothing. A write that
+ * does not carry the previewed sha256 is refused, as the server would. */
+// Only the ranks the spec moves Paul between; the e2e build cannot import the app's own table.
+const RANK_NAMES: Record<number, string> = { 0: 'Beginner', 20: 'Berserker', 29: 'Genbu' }
+
+function saveAdminAnswer(action: string, body: Record<string, unknown>, paul: { rank: number }): [number, unknown] {
+  const sha256 = `${'0'.repeat(62)}${String(paul.rank).padStart(2, '0')}`
+  const slot = (rank: number) => ({ rank, rank_name: RANK_NAMES[rank], points: 1500, streak: 0 })
+  const paulRow = { id: 0, character: 'Paul', tier: '', points: 1500, streak: 0, wins: 10, losses: 5, rank: paul.rank, rank_name: RANK_NAMES[paul.rank] }
+  if (action === 'show') {
+    return [200, {
+      username: body.username, data_id: 1001, saved_at: '2026-09-30T12:00:00Z', sha256, checksum_ok: true,
+      account_rank: 20, progress: 4, total: 15, wins: 10, losses: 5, online: false,
+      chars: [paulRow, { ...paulRow, id: 1, character: 'Law', rank: 0, rank_name: RANK_NAMES[0], wins: 0, losses: 0 }],
+    }]
+  }
+  if (action === 'backups') return [200, { backups: [{ label: 'base', total: 15, account_rank: 20 }] }]
+  if (action === 'log') return [200, { records: [] }]
+  const target = action === 'set-rank' && body.char === 0 ? Number(body.rank) : paul.rank
+  const changes = { account_rank: null, chars: target === paul.rank ? [] : [{ id: 0, character: 'Paul', before: slot(paul.rank), after: slot(target) }] }
+  const preview = { username: body.username, sha256, online: false, changes, applied: false, result: null }
+  if (body.dry_run) return [200, preview]
+  if (body.expect_sha256 !== sha256) return [409, { detail: '미리보기 뒤에 세이브가 바뀌었습니다. 다시 미리보기 해 주세요.' }]
+  paul.rank = target
+  return [200, { ...preview, applied: true, result: { backup: '20261001-120000-000001', checksum: '0x1', data_id: 1001, landed: true } }]
+}
+
 /**
  * Start the page signed in as an RPCN account, before the app reads it.
  *
@@ -215,6 +244,14 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
         online: true, created_at: '2025-01-02T03:04:05Z', last_login_at: '2026-09-01T12:00:00Z',
       }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+  })
+
+  const paul = { rank: 20 }
+  await page.route('**/api/admin/saves/*', async (route) => {
+    if (requester(route) === null) return signedOut(route)
+    const action = route.request().url().split('/').pop() ?? ''
+    const [status, payload] = saveAdminAnswer(action, route.request().postDataJSON(), paul)
+    await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(payload) })
   })
 
   await page.route('**/api/leaderboard**', async (route) => {

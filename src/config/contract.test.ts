@@ -49,6 +49,8 @@ type Expectation = {
 const RESERVATION = ['id', 'start_at', 'host_display_name', 'host_username', 'host_ranks', 'match_type', 'capacity', 'memo', 'status', 'participant_count', 'participants', 'created_at']
 const COMMENT = ['id', 'reservation_id', 'author', 'author_username', 'body', 'created_at']
 const ACCOUNT = ['username', 'online_name', 'admin', 'banned', 'online', 'created_at', 'last_login_at']
+const SAVE_WRITE = ['username', 'password', 'dry_run', 'expect_sha256']
+const SAVE_WRITTEN = ['username', 'sha256', 'online', 'changes', 'applied', 'result']
 
 /** Every endpoint the API modules and hooks actually call. */
 const CONTRACT: Expectation[] = [
@@ -63,6 +65,13 @@ const CONTRACT: Expectation[] = [
 
   { method: 'post', path: '/admin/users/lookup', body: ['username', 'password'], reads: ACCOUNT, auth: true },
   { method: 'post', path: '/admin/users/ban', body: ['username', 'password'], reads: ['username', 'kicked'], auth: true },
+  { method: 'post', path: '/admin/saves/show', body: ['username', 'password', 'all_chars'], reads: ['username', 'saved_at', 'sha256', 'checksum_ok', 'account_rank', 'progress', 'total', 'wins', 'losses', 'online', 'chars'], auth: true },
+  { method: 'post', path: '/admin/saves/backups', body: ['username', 'password'], reads: ['backups'], auth: true },
+  { method: 'post', path: '/admin/saves/log', body: ['username', 'password', 'n'], reads: ['records'], auth: true },
+  { method: 'post', path: '/admin/saves/set-rank', body: [...SAVE_WRITE, 'char', 'rank', 'points'], reads: SAVE_WRITTEN, auth: true },
+  { method: 'post', path: '/admin/saves/set-account-rank', body: [...SAVE_WRITE, 'rank'], reads: SAVE_WRITTEN, auth: true },
+  { method: 'post', path: '/admin/saves/floor', body: [...SAVE_WRITE, 'rank', 'fix_points', 'refloor'], reads: [...SAVE_WRITTEN, 'floor'], auth: true },
+  { method: 'post', path: '/admin/saves/restore', body: [...SAVE_WRITE, 'label'], reads: SAVE_WRITTEN, auth: true },
 
   { method: 'get', path: '/community/posts', query: ['page', 'page_size', 'post_type', 'characters'] },
   { method: 'post', path: '/community/posts', body: ['title', 'body', 'post_type', 'characters', 'youtube_video_id'], auth: true },

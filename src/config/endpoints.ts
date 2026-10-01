@@ -31,6 +31,13 @@ export const API = {
 
   adminLookup: () => fixed('admin/users/lookup'),
   adminBan: () => fixed('admin/users/ban'),
+  adminSaveShow: () => fixed('admin/saves/show'),
+  adminSaveBackups: () => fixed('admin/saves/backups'),
+  adminSaveLog: () => fixed('admin/saves/log'),
+  adminSaveSetRank: () => fixed('admin/saves/set-rank'),
+  adminSaveSetAccountRank: () => fixed('admin/saves/set-account-rank'),
+  adminSaveFloor: () => fixed('admin/saves/floor'),
+  adminSaveRestore: () => fixed('admin/saves/restore'),
 
   rooms: () => fixed('rooms/all'),
   leaderboard: () => fixed('leaderboard'),
@@ -71,7 +78,9 @@ export const API = {
 export const openapiPaths = (): string[] => {
   const samples: Record<keyof typeof API, unknown[]> = {
     rooms: [], leaderboard: [], stats: [], dailyStats: [], weeklyTop: [],
-    playerHistory: ['npid'], login: [], adminLookup: [], adminBan: [], posts: [], post: [1],
+    playerHistory: ['npid'], login: [], adminLookup: [], adminBan: [],
+    adminSaveShow: [], adminSaveBackups: [], adminSaveLog: [], adminSaveSetRank: [],
+    adminSaveSetAccountRank: [], adminSaveFloor: [], adminSaveRestore: [], posts: [], post: [1],
     postComments: [1], postThumb: [1], reservations: [], reservation: [1],
     reservationParticipants: [1], ownParticipation: [1],
     reservationComments: [1], reservationComment: [1, 2],

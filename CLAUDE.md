@@ -73,7 +73,7 @@ src/
   index.css            Tailwind 4 @theme design tokens
   config/              tabConfig, patchNotes, test-setup
   auth/                RPCN login — session store, useAuth, LoginDialog
-  admin/               account moderation — Admin page, adminApi (admins only)
+  admin/               account moderation and TTT2 saves — Admin page, SaveAdmin, adminApi, saveApi (admins only)
   overview/            landing summary — useOverview, Overview, KPI and top-five cards
   match/               rooms — useRooms, Rooms, RankMatchTable, PlayerMatchTable
   reservation/         appointments — Reservation, reservationApi, reservationLabels
@@ -182,7 +182,7 @@ so a nav click, the back button, and a cold deep link all arrive the same way.
 | `/leaderboard`, `/stats` | those tabs |
 | `/reservation`, `/reservation/:id` | reservations, optionally opened on one |
 | `/community`, `/community/:postId` | the board, optionally opened on one post |
-| `/admin` | account moderation; no nav tab, reached from the account menu |
+| `/admin` | account moderation and TTT2 saves; no nav tab, reached from the account menu |
 | anything else | overview, via the catch-all route |
 
 `config/routes.ts` is the single answer to "what URL is this tab?" — `pathOf`,
@@ -250,10 +250,20 @@ login have a null username and belong to nobody.
 
 `/admin` looks an RPCN account up and bans it, through `POST /admin/users/lookup`
 and `/admin/users/ban`. rpcn-narco wants the admin's password on **every**
-call and the backend keeps none, so the page asks for it once and holds it in
-component state only --- never in `session.ts` or storage --- until the page is
-left. A ban goes to the account that was looked up, not whatever the id field
-says by then.
+call and the backend keeps none, so the page asks for it once --- one field at
+the top, shared by both sections --- and holds it in component state only ---
+never in `session.ts` or storage --- until the page is left. A ban goes to the
+account that was looked up, not whatever the id field says by then.
+
+The second section, `SaveAdmin`, edits a player's TTT2 save through
+`/admin/saves/*` (tag2now-BE spec `09-save-admin.md`). **An edit is two
+requests**: the preview (`dry_run`) answers the changes and the save's
+`sha256`, and 적용 sends the *previewed* edit back with that sha256 as
+`expect_sha256`, so a save the game rewrote in between is refused (409) rather
+than overwritten. Changing any form field drops the preview, and 적용 is not
+offered for what the server would refuse: an online player, a floor that reads
+as demotions, or a preview that changes nothing. The server stays the
+authority; those are 409s too.
 
 `user.admin` only decides whether the form is shown; RPCN re-checks the role
 each time. A wrong admin password comes back **400**, not 401, because a 401 on
