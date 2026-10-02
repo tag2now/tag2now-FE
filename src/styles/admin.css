@@ -53,6 +53,10 @@
 .save-rank { width: var(--rank-art-w); height: var(--rank-art-h); flex: 0 0 auto; object-fit: cover; }
 .save-inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .save-table td { vertical-align: middle; }
+/* Picture columns are centred, heading included. The portrait is a block
+   (.char-art), so text-align alone would leave it on the left. */
+.save-table .save-art { text-align: center; }
+.save-table .save-art > * { margin-inline: auto; }
 
 .save-modes { margin-bottom: 12px; }
 .save-edit-fields { container-type: inline-size; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 12px; }

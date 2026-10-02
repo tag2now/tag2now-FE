@@ -235,12 +235,12 @@ function SaveCharacters({ chars }: { chars: SaveChar[] }) {
         : (
           <div className="save-table-wrap">
             <table className="save-table">
-              <thead><tr><th scope="col">캐릭터</th><th scope="col">계급</th><th scope="col">점수</th><th scope="col">연승</th><th scope="col">전적</th></tr></thead>
+              <thead><tr><th scope="col" className="save-art">캐릭터</th><th scope="col" className="save-art">계급</th><th scope="col">점수</th><th scope="col">연승</th><th scope="col">전적</th></tr></thead>
               <tbody>
                 {shown.map((char) => (
                   <tr key={char.id}>
-                    <td><Portrait name={faceOf(char)} /></td>
-                    <td><Rank name={char.rank_name} /></td>
+                    <td className="save-art"><Portrait name={faceOf(char)} /></td>
+                    <td className="save-art"><Rank name={char.rank_name} /></td>
                     <td>{char.points}</td>
                     <td>{signed(char.streak)}</td>
                     <td>{char.wins}승 {char.losses}패</td>
