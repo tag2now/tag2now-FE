@@ -220,6 +220,19 @@ describe('Save admin', () => {
     await waitFor(() => expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'set-rank', char: 1, rank: 10 }, null))
   })
 
+  it('closes a picker on a press outside it, and on Escape back to its toggle', async () => {
+    await loaded()
+    fireEvent.click(screen.getByRole('button', { name: /^캐릭터:/ }))
+    fireEvent.pointerDown(screen.getByRole('heading', { name: '수정' }))
+    expect(screen.queryByRole('group', { name: '수정할 캐릭터' })).not.toBeInTheDocument()
+
+    const toggle = screen.getByRole('button', { name: /^계급:/ })
+    fireEvent.click(toggle)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('button', { name: '9th kyu' })).not.toBeInTheDocument()
+    expect(toggle).toHaveFocus()
+  })
+
   it("gives the second Michelle slot the grid's Angel", async () => {
     vi.mocked(fetchSave).mockResolvedValue({ ...save, chars: [...save.chars, char(0x2E, 'Michelle'), char(0x33, 'Michelle')] })
     await loaded()

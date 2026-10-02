@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import { ChevronDown, Eye, Gamepad2, Loader2, RotateCcw, Search, Users } from 'lucide-react'
@@ -370,7 +370,7 @@ function CharacterField({ value, chars, onChange }: {
   chars: SaveChar[]
   onChange: (value: number | typeof ALL) => void
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen, rootRef] = usePopover()
   const face = value === ALL ? null : faceOfSlot(value, chars)
   const portrait = face ? charImageUrl(face) : null
 
@@ -387,7 +387,7 @@ function CharacterField({ value, chars, onChange }: {
   }
 
   return (
-    <div className={`save-picker-field${open ? ' is-open' : ''}`}>
+    <div ref={rootRef} className="save-picker-field">
       <span className="field-label">캐릭터</span>
       <div className="save-picker-row">
         <button
@@ -422,6 +422,51 @@ function CharacterField({ value, chars, onChange }: {
   )
 }
 
+/** A picker that drops over the form rather than pushing it down. It closes on
+ * a press outside it or on Escape, which hands focus back to its toggle --- the
+ * first button in it. */
+function usePopover() {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onPointer = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setOpen(false)
+      rootRef.current?.querySelector('button')?.focus()
+    }
+    document.addEventListener('pointerdown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return [open, setOpen, rootRef] as const
+}
+
+/** Slides an open panel left until it ends inside the edit form, for a field
+ * far enough right that the panel would hang off it. The panel is never wider
+ * than the form, so it always fits. */
+function useInsideForm(open: boolean) {
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const panel = panelRef.current
+    if (!open || !panel) return
+    const form = panel.closest('form')!.getBoundingClientRect()
+    const overhang = panel.getBoundingClientRect().right - form.right
+    if (overhang > 0) panel.style.left = `${-overhang}px`
+  }, [open])
+
+  return panelRef
+}
+
 /** The reservation form's rank picker, as a single choice: bands strongest
  * first, each rank drawn. Ranks below `from` are shown but not offered. */
 function RankField({ label, value, from, onChange, autoLabel }: {
@@ -432,14 +477,15 @@ function RankField({ label, value, from, onChange, autoLabel }: {
   /** Offers "no rank" under this name, answered as null. */
   autoLabel?: string
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen, rootRef] = usePopover()
+  const panelRef = useInsideForm(open)
   const choose = (code: number | null) => {
     onChange(code)
     setOpen(false)
   }
 
   return (
-    <div className={`save-picker-field save-rank-field${open ? ' is-open' : ''}`}>
+    <div ref={rootRef} className="save-picker-field save-rank-field">
       <span className="field-label">{label}</span>
       <button
         type="button"
@@ -452,7 +498,7 @@ function RankField({ label, value, from, onChange, autoLabel }: {
         <ChevronDown size={15} aria-hidden="true" className={`text-primary transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="rank-picker-panel save-rank-panel">
+        <div ref={panelRef} className="rank-picker-panel save-rank-panel">
           {autoLabel && (
             <button
               type="button"
