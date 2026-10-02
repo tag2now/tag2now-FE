@@ -47,6 +47,8 @@ export const API = {
   weeklyTop: () => fixed('history/stats/weekly-top'),
   playerHistory: (npid: string) =>
     templated(`history/players/${npid}`, '/history/players/{npid}'),
+  playerSave: (npid: string) =>
+    templated(`saves/players/${npid}`, '/saves/players/{npid}'),
 
   posts: () => fixed('community/posts'),
   post: (postId: number) =>
@@ -78,7 +80,7 @@ export const API = {
 export const openapiPaths = (): string[] => {
   const samples: Record<keyof typeof API, unknown[]> = {
     rooms: [], leaderboard: [], stats: [], dailyStats: [], weeklyTop: [],
-    playerHistory: ['npid'], login: [], adminLookup: [], adminBan: [],
+    playerHistory: ['npid'], playerSave: ['npid'], login: [], adminLookup: [], adminBan: [],
     adminSaveShow: [], adminSaveBackups: [], adminSaveLog: [], adminSaveSetRank: [],
     adminSaveSetAccountRank: [], adminSaveFloor: [], adminSaveRestore: [], posts: [], post: [1],
     postComments: [1], postThumb: [1], reservations: [], reservation: [1],

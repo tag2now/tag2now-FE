@@ -19,19 +19,9 @@ export type BanResult = {
   kicked: boolean
 }
 
-/** One character slot of a TTT2 save. `rank_name` and `tier` are the backend's. */
-export type SaveChar = {
-  id: number
-  character: string
-  rank: number
-  rank_name: string
-  tier: string
-  points: number
-  /** Negative for a losing streak. */
-  streak: number
-  wins: number
-  losses: number
-}
+import type { SaveChar } from '@/shared/saveChars'
+
+export type { SaveChar }
 
 /** A player's TTT2 save, as `POST /admin/saves/show` returns it. */
 export type SaveInfo = {

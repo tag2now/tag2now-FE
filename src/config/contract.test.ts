@@ -60,6 +60,7 @@ const CONTRACT: Expectation[] = [
   { method: 'get', path: '/history/stats/daily', query: ['days'] },
   { method: 'get', path: '/history/stats/weekly-top', query: ['limit'] },
   { method: 'get', path: '/history/players/{npid}' },
+  { method: 'get', path: '/saves/players/{npid}', reads: ['username', 'saved_at', 'account_rank', 'total', 'wins', 'losses', 'chars'] },
 
   { method: 'post', path: '/auth/login', body: ['username', 'password'], reads: ['access_token', 'expires_in', 'user'] },
 

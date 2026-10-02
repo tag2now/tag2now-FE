@@ -277,6 +277,17 @@ It is the one fixed panel with no nav tab. `admin` is in `FIXED_TABS` so it is
 not handed the rooms panel, and App then selects no tab, gives the roving
 tabindex to the first one, and names the tabpanel itself.
 
+### Save ranks on a profile
+
+`PlayerHistoryPanel` --- the profile every player name opens, 내 정보 보기
+included --- has two ARIA tabs: 플레이 기록 (the default) and 캐릭터별 계급,
+anyone's TTT2 save from the public `GET /saves/players/{npid}`. The save is
+read only when its tab is opened, and fails on its own: a 404 is "no save", any
+other error stays inside the tab. The backend caches it for ten minutes.
+
+The character table is `shared/components/SaveCharTable`, the same one the
+admin page draws; its rules live in `styles/saves.css`, not `admin.css`.
+
 ### Reservation ownership
 
 Editing (`PATCH /reservations/{id}`) is refused once anyone has joined: participants agreed to the conditions as they stood, and letting the host move the time underneath them would bind people to an appointment they never accepted. The host cancels and re-posts instead. The edit button is disabled once `participant_count > 0` so the host sees the restriction before acting, but the server stays the authority — a participant arriving while the editor is already open is caught by the 400, not by the disabled state. The create modal doubles as the edit form — same fields, same validation — so a rule cannot drift between posting and editing.

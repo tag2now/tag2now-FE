@@ -97,3 +97,21 @@
 .activity-timeline-labels { display: flex; justify-content: space-between; margin-top: 4px; color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-row); font-variant-numeric: tabular-nums; }
 .history-empty { display: grid; min-height: 172px; place-items: center; color: var(--color-txt-dim); font-size: var(--text-2xs); text-align: center; }
 .history-state { margin: 16px; }
+
+/* 플레이 기록 | 캐릭터별 계급. The panel under them takes the dialog's
+   remaining height, so the body inside it is still what scrolls. */
+.history-tabs { display: flex; flex: 0 0 auto; gap: 4px; padding: 0 16px; border-bottom: 1px solid var(--color-border); background: var(--color-bg-panel); }
+.history-tab { height: 40px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-strong); cursor: pointer; transition: color 150ms ease, border-color 150ms ease; }
+.history-tab:hover { color: var(--color-txt); }
+.history-tab[aria-selected="true"] { border-bottom-color: var(--color-primary); color: var(--color-primary-text); }
+.history-tab:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.history-tabpanel { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; }
+
+/* The save has its own tab, so its table runs the body's height and the body
+   is the one thing that scrolls. */
+.history-save { min-height: 0; }
+.history-save .history-empty { min-height: 120px; }
+.history-save .save-table-wrap { max-height: none; }
+.history-save-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 10px; }
+.history-save-label { color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-label); }
+.history-save-record { color: var(--color-txt); font-size: var(--text-xs); font-weight: var(--weight-strong); }

@@ -37,26 +37,9 @@
 .save-check { display: inline-flex; align-items: center; gap: 6px; color: var(--color-txt-dim); font-size: var(--text-sm); cursor: pointer; }
 .save-check input { accent-color: var(--color-primary); }
 
-/* Long tables (59 characters, a floor's worth of changes) scroll inside the
-   panel rather than stretching the page, and sideways on a phone. */
-.save-table-wrap { max-height: min(70vh, 640px); overflow: auto; border: 1px solid var(--color-border-light); border-radius: 8px; }
-.save-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
-.save-table th { position: sticky; top: 0; padding: 8px 10px; background: var(--color-bg-head); color: var(--color-txt-dim); font-weight: var(--weight-label); text-align: left; white-space: nowrap; }
-.save-table td { padding: 2px 10px; border-top: 1px solid var(--color-border-light); color: var(--color-txt); white-space: nowrap; }
-.save-table tbody tr:nth-child(even) td { background: var(--color-bg-row-alt); }
+/* The tables themselves are in saves.css, shared with the profile panel. */
 .save-table td.save-detail { color: var(--color-txt-dim); font-size: var(--text-xs); white-space: normal; overflow-wrap: anywhere; }
-
-/* Characters and ranks are drawn, not named: a 36px square of the portrait's
-   face, which also sets a table row's height, and the rank banner at the size
-   every ranking uses. Rows stay that short so the 59 slots read at a glance. */
-.save-portrait { width: 36px; height: 36px; aspect-ratio: 1; border-radius: 4px; object-fit: cover; object-position: 50% 12%; }
-.save-rank { width: var(--rank-art-w); height: var(--rank-art-h); flex: 0 0 auto; object-fit: cover; }
 .save-inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.save-table td { vertical-align: middle; }
-/* Picture columns are centred, heading included. The portrait is a block
-   (.char-art), so text-align alone would leave it on the left. */
-.save-table .save-art { text-align: center; }
-.save-table .save-art > * { margin-inline: auto; }
 
 .save-modes { margin-bottom: 12px; }
 .save-edit-fields { container-type: inline-size; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 12px; }

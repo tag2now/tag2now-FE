@@ -1,0 +1,26 @@
+/* TTT2 save tables: the admin page's and every profile's (SaveCharTable). */
+
+/* Long tables (59 characters, a floor's worth of changes) scroll inside the
+   panel rather than stretching the page, and sideways on a phone. */
+.save-table-wrap { max-height: min(70vh, 640px); overflow: auto; border: 1px solid var(--color-border-light); border-radius: 8px; }
+.save-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.save-table th { position: sticky; top: 0; padding: 8px 10px; background: var(--color-bg-head); color: var(--color-txt-dim); font-weight: var(--weight-label); text-align: left; white-space: nowrap; }
+.save-table td { padding: 2px 10px; border-top: 1px solid var(--color-border-light); color: var(--color-txt); vertical-align: middle; white-space: nowrap; }
+.save-table tbody tr:nth-child(even) td { background: var(--color-bg-row-alt); }
+
+/* Characters and ranks are drawn, not named: a 36px square of the portrait's
+   face, which also sets a table row's height, and the rank banner at the size
+   every ranking uses. Rows stay that short so the 59 slots read at a glance. */
+.save-portrait { width: 36px; height: 36px; aspect-ratio: 1; border-radius: 4px; object-fit: cover; object-position: 50% 12%; }
+/* max-width: none, or a squeezed cell shrinks the banner and cover crops it
+   to a few letters; the table scrolls sideways instead. */
+.save-rank { width: var(--rank-art-w); max-width: none; height: var(--rank-art-h); flex: 0 0 auto; object-fit: cover; }
+/* Picture columns are centred, heading included. The portrait is a block
+   (.char-art), so text-align alone would leave it on the left. */
+.save-table .save-art { text-align: center; }
+.save-table .save-art > * { margin-inline: auto; }
+
+/* A phone: cells tight enough that the five columns fit the profile panel. */
+@media (max-width: 480px) {
+  .save-table th, .save-table td { padding-inline: 4px; }
+}

@@ -45,6 +45,8 @@ interface MockOverrides {
   hourly?: unknown
   /** Keyed by npid. A player the map does not name still gets a response. */
   playerHistory?: Record<string, unknown>
+  /** Keyed by npid; null answers "no save" (404). Anyone else gets PLAYER_SAVE. */
+  playerSave?: Record<string, unknown | null>
   failEndpoints?: string[]
 }
 
@@ -199,6 +201,21 @@ export async function skipPatchNotes(page: Page) {
 export async function goToMatchTab(page: Page) {
   await page.getByRole('tab', { name: '매칭' }).click()
   await expect(page.getByRole('tablist', { name: '매칭 종류 선택' })).toBeVisible()
+}
+
+/** A save with two characters played and one slot never used. */
+export const PLAYER_SAVE = {
+  username: 'np_001',
+  saved_at: '2026-09-15T12:00:00Z',
+  account_rank: 20,
+  total: 15,
+  wins: 10,
+  losses: 5,
+  chars: [
+    { id: 0, character: 'Paul', rank: 12, rank_name: '3rd dan', tier: '숫자단', points: 5000, streak: 1, wins: 4, losses: 1 },
+    { id: 2, character: 'Lei', rank: 20, rank_name: 'Berserker', tier: '초록단', points: 1500, streak: -2, wins: 6, losses: 4 },
+    { id: 3, character: 'King', rank: 0, rank_name: 'Beginner', tier: '숫자단', points: 0, streak: 0, wins: 0, losses: 0 },
+  ],
 }
 
 export async function mockAllApis(page: Page, overrides?: MockOverrides) {
@@ -433,6 +450,14 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       ].filter((partner) => partner.npid !== npid),
       active_hours: [20, 21, 22, 23],
     })
+  })
+
+  // One player's TTT2 save, which the history panel reads on its own.
+  await page.route('**/api/saves/players/**', async (route) => {
+    const npid = decodeURIComponent(new URL(route.request().url()).pathname.split('/').pop() ?? '')
+    const save = overrides?.playerSave?.[npid]
+    if (save === null) return asJson(route, { detail: '이 플레이어의 TTT2 세이브가 없습니다.' }, 404)
+    return asJson(route, save ?? { ...PLAYER_SAVE, username: npid })
   })
 
   // Single handler for all community API calls

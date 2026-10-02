@@ -5,9 +5,11 @@ import { ChevronDown, Eye, Gamepad2, Loader2, RotateCcw, Search, Users } from 'l
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import ConfirmDialog from '@/shared/components/ConfirmDialog'
 import RankImage from '@/shared/components/RankImage'
+import SaveCharTable, { SavePortrait as Portrait, SaveRank as Rank } from '@/shared/components/SaveCharTable'
 import type { SelectOption } from '@/shared/components/Select'
 import ToggleGroup from '@/shared/components/ToggleGroup'
 import { charImageUrl } from '@/shared/characterImage'
+import { faceOf, isUsed, signed } from '@/shared/saveChars'
 import { rankBands, type RankBand as RankBandRows } from '@/shared/rankTiers'
 import { tierHex } from '@/shared/tierColors'
 import useConfirm from '@/shared/hooks/useConfirm'
@@ -19,15 +21,6 @@ import type { SaveAuditRecord, SaveBackup, SaveChar, SaveEdit, SaveInfo, SaveWri
 /** RANK_ORDER is indexed by the game's rank code. */
 const rankName = (code: number) => RANK_ORDER[code] ?? `계급 ${code}`
 
-/** A character's portrait; the name stays as its alt text and tooltip. */
-function Portrait({ name }: { name: string }) {
-  const url = charImageUrl(name)
-  if (!url) return <span>{name}</span>
-  return <img src={url} alt={name} title={name} className="char-art save-portrait" loading="lazy" />
-}
-
-/** A rank's banner by name. RankImage draws a plate for ranks with no art. */
-const Rank = ({ name }: { name: string }) => <RankImage rankInfo={{ name }} className="save-rank" />
 
 const RankCode = ({ code }: { code: number }) => <Rank name={rankName(code)} />
 
@@ -209,17 +202,9 @@ function SaveSummary({ save }: { save: SaveInfo }) {
   )
 }
 
-const isUsed = (char: SaveChar) => char.rank > 0 || char.wins + char.losses > 0
-
-/** Highest rank first; within a rank, more points, then more matches played. */
-const byRank = (a: SaveChar, b: SaveChar) =>
-  b.rank - a.rank || b.points - a.points || (b.wins + b.losses) - (a.wins + a.losses) || a.id - b.id
-
-const signed = (n: number) => (n > 0 ? `+${n}` : String(n))
-
 function SaveCharacters({ chars }: { chars: SaveChar[] }) {
   const [showAll, setShowAll] = useState(false)
-  const shown = (showAll ? [...chars] : chars.filter(isUsed)).sort(byRank)
+  const shown = showAll ? chars : chars.filter(isUsed)
 
   return (
     <section className="save-section" aria-label="캐릭터 목록">
@@ -233,22 +218,7 @@ function SaveCharacters({ chars }: { chars: SaveChar[] }) {
       {shown.length === 0
         ? <p className="admin-notice">계급이 있거나 대전한 캐릭터가 없습니다.</p>
         : (
-          <div className="save-table-wrap">
-            <table className="save-table">
-              <thead><tr><th scope="col" className="save-art">캐릭터</th><th scope="col" className="save-art">계급</th><th scope="col">점수</th><th scope="col">연승</th><th scope="col">전적</th></tr></thead>
-              <tbody>
-                {shown.map((char) => (
-                  <tr key={char.id}>
-                    <td className="save-art"><Portrait name={faceOf(char)} /></td>
-                    <td className="save-art"><Rank name={char.rank_name} /></td>
-                    <td>{char.points}</td>
-                    <td>{signed(char.streak)}</td>
-                    <td>{char.wins}승 {char.losses}패</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SaveCharTable chars={shown} />
         )}
     </section>
   )
@@ -559,14 +529,6 @@ function RankOption({ rank, value, from, onChoose }: {
     </button>
   )
 }
-
-/* The backend and the save tool both name slot 0x33 "Michelle" a second time
- * (0x2E is the first). The grid has one Michelle and one face no slot is named
- * after, Angel, so that is the face slot 0x33 gets. Not yet confirmed in game. */
-const ANGEL_SLOT = 0x33
-
-/** The face the grid and the tables draw for a slot. */
-const faceOf = (char: { id: number, character: string }) => (char.id === ANGEL_SLOT ? 'Angel' : char.character)
 
 const faceOfSlot = (slot: number, chars: SaveChar[]) => {
   const char = chars.find((c) => c.id === slot)

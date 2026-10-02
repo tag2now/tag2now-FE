@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { API } from '@/config/endpoints'
 import {
   Activity,
@@ -15,10 +15,22 @@ import { GET } from '@/shared/util/api'
 import useModalDialog from '@/shared/hooks/useModalDialog'
 import CharCell from '@/shared/components/CharCell'
 import ActiveHoursClock from '@/shared/components/ActiveHoursClock'
+import PlayerSaveSection from '@/shared/components/PlayerSaveSection'
 import type { LeaderboardEntry } from '@/shared/types'
 import type { PlayerHistory } from '@/stat/types'
 
 type Days = 7 | 30 | 90
+
+/** The panel's two views. The play history is the default; the save is read
+ * only once its tab is opened. */
+type Tab = 'history' | 'save'
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: 'history', label: '플레이 기록' },
+  { value: 'save', label: '캐릭터별 계급' },
+]
+
+const ARROW_STEP: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 }
 
 const DAY_OPTIONS: { value: Days; label: string }[] = [
   { value: 7, label: '7일' },
@@ -62,7 +74,10 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
    * reused across rows, and a trail from the previous player is not this
    * player's history. */
   const [trail, setTrail] = useState<string[]>([npid])
-  useEffect(() => { setTrail([npid]) }, [npid])
+  const [tab, setTab] = useState<Tab>('history')
+  // A partner is only reachable from the history tab, so the tab needs no
+  // trail of its own; a different player from the caller starts on the default.
+  useEffect(() => { setTrail([npid]); setTab('history') }, [npid])
   const viewing = trail[trail.length - 1]
   const cameFrom = trail.length > 1 ? trail[trail.length - 2] : null
 
@@ -89,13 +104,6 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
       })
     return () => { cancelled = true }
   }, [viewing, days])
-
-  const metrics = data ? [
-    { label: '확인된 플레이', value: `${data.times_seen}회`, icon: Eye },
-    { label: '활동 일수', value: `${data.days_active}일`, icon: CalendarDays },
-    { label: '첫 플레이', value: formatDate(data.first_seen), icon: Clock3 },
-    { label: '최근 플레이', value: formatDate(data.last_seen), icon: Activity },
-  ] : []
 
   return (
     <div className="modal-backdrop history-backdrop" onClick={onClose}>
@@ -136,100 +144,168 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
           </div>
         </header>
 
-        <div className="history-toolbar">
-          {entry ? (
-            <div className="history-rank-summary">
-              <span className="history-rank-icon" aria-hidden="true"><Trophy size={16} /></span>
-              <div className="history-rank-copy">
-                <small>현재 순위</small>
-                <strong>#{entry.rank}</strong>
-              </div>
-              <div className="history-character-pair" aria-label="주 캐릭터와 부 캐릭터">
-                <CharCell
-                  name={entry.player_info?.main_char_info?.name}
-                  rankInfo={entry.player_info?.main_char_info?.rank_info}
-                  wins={entry.player_info?.main_char_info?.wins}
-                  losses={entry.player_info?.main_char_info?.losses}
-                />
-                <CharCell
-                  name={entry.player_info?.sub_char_info?.name}
-                  rankInfo={entry.player_info?.sub_char_info?.rank_info}
-                  wins={entry.player_info?.sub_char_info?.wins}
-                  losses={entry.player_info?.sub_char_info?.losses}
-                />
-              </div>
-            </div>
-          ) : <div className="history-toolbar-label"><Activity size={15} /> 활동 분석</div>}
+        <PanelTabs value={tab} onChange={setTab} />
 
-          <div className="history-period" role="group" aria-label="조회 기간">
-            {DAY_OPTIONS.map((option) => (
-              <button
-                type="button"
-                key={option.value}
-                onClick={() => setDays(option.value)}
-                aria-pressed={days === option.value}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {loading && <p className="state-msg history-state" role="status">플레이 기록을 불러오는 중입니다.</p>}
-        {error && <p className="state-msg history-state error" role="alert">기록을 불러오지 못했습니다: {error}</p>}
-
-        {!loading && !error && data && (
-          <div className="history-body">
-            <section className="history-metrics" aria-label="플레이 요약">
-              {metrics.map(({ label, value, icon: Icon }) => (
-                <div key={label} className="history-stat">
-                  <span aria-hidden="true"><Icon size={15} /></span>
-                  <div><small>{label}</small><strong>{value}</strong></div>
+        <div className="history-tabpanel" role="tabpanel" id="history-tabpanel" aria-labelledby={`history-tab-${tab}`}>
+          <div className="history-toolbar">
+            {entry ? (
+              <div className="history-rank-summary">
+                <span className="history-rank-icon" aria-hidden="true"><Trophy size={16} /></span>
+                <div className="history-rank-copy">
+                  <small>현재 순위</small>
+                  <strong>#{entry.rank}</strong>
                 </div>
-              ))}
+                <div className="history-character-pair" aria-label="주 캐릭터와 부 캐릭터">
+                  <CharCell
+                    name={entry.player_info?.main_char_info?.name}
+                    rankInfo={entry.player_info?.main_char_info?.rank_info}
+                    wins={entry.player_info?.main_char_info?.wins}
+                    losses={entry.player_info?.main_char_info?.losses}
+                  />
+                  <CharCell
+                    name={entry.player_info?.sub_char_info?.name}
+                    rankInfo={entry.player_info?.sub_char_info?.rank_info}
+                    wins={entry.player_info?.sub_char_info?.wins}
+                    losses={entry.player_info?.sub_char_info?.losses}
+                  />
+                </div>
+              </div>
+            ) : <div className="history-toolbar-label"><Activity size={15} /> 활동 분석</div>}
+
+            {/* The period is the play history's; the save has none. */}
+            {tab === 'history' && (
+              <div className="history-period" role="group" aria-label="조회 기간">
+                {DAY_OPTIONS.map((option) => (
+                  <button
+                    type="button"
+                    key={option.value}
+                    onClick={() => setDays(option.value)}
+                    aria-pressed={days === option.value}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {tab === 'history'
+            ? <HistoryView loading={loading} error={error} data={data} onOpen={(partner) => setTrail((t) => [...t, partner])} />
+            : <div className="history-body"><PlayerSaveSection npid={viewing} /></div>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** The play history tab: the summary, frequent partners and active hours.
+ * A partner's row opens that player in the same panel. */
+function HistoryView({ loading, error, data, onOpen }: {
+  loading: boolean
+  error: string | null
+  data: PlayerHistory | null
+  onOpen: (npid: string) => void
+}) {
+  const metrics = data ? [
+    { label: '확인된 플레이', value: `${data.times_seen}회`, icon: Eye },
+    { label: '활동 일수', value: `${data.days_active}일`, icon: CalendarDays },
+    { label: '첫 플레이', value: formatDate(data.first_seen), icon: Clock3 },
+    { label: '최근 플레이', value: formatDate(data.last_seen), icon: Activity },
+  ] : []
+
+  return (
+    <>
+      {loading && <p className="state-msg history-state" role="status">플레이 기록을 불러오는 중입니다.</p>}
+      {error && <p className="state-msg history-state error" role="alert">기록을 불러오지 못했습니다: {error}</p>}
+
+      {!loading && !error && data && (
+        <div className="history-body">
+          <section className="history-metrics" aria-label="플레이 요약">
+            {metrics.map(({ label, value, icon: Icon }) => (
+              <div key={label} className="history-stat">
+                <span aria-hidden="true"><Icon size={15} /></span>
+                <div><small>{label}</small><strong>{value}</strong></div>
+              </div>
+            ))}
+          </section>
+
+          <div className="history-content-grid">
+            <section className="history-section">
+              <div className="history-section-heading">
+                <div><UsersRound size={17} aria-hidden="true" /><h3>자주 함께한 플레이어</h3></div>
+                <span>TOP 4</span>
+              </div>
+              {data.top_played_with.length > 0 ? (
+                <ol className="history-partner-list">
+                  {data.top_played_with.slice(0, 4).map((player, index) => (
+                    <li key={player.npid}>
+                      {/* The whole row opens that player — the position and
+                          the count describe the same person the name does. */}
+                      <button
+                        type="button"
+                        className="history-partner-row"
+                        onClick={() => onOpen(player.npid)}
+                        aria-label={`${player.online_name} 기록 보기`}
+                      >
+                        <span className="history-partner-rank">{index + 1}</span>
+                        <span className="history-partner-name">{player.online_name}</span>
+                        <strong>{player.times_together}<small>회</small></strong>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              ) : <p className="history-empty">함께 플레이한 기록이 아직 없습니다.</p>}
             </section>
 
-            <div className="history-content-grid">
-              <section className="history-section">
-                <div className="history-section-heading">
-                  <div><UsersRound size={17} aria-hidden="true" /><h3>자주 함께한 플레이어</h3></div>
-                  <span>TOP 4</span>
-                </div>
-                {data.top_played_with.length > 0 ? (
-                  <ol className="history-partner-list">
-                    {data.top_played_with.slice(0, 4).map((player, index) => (
-                      <li key={player.npid}>
-                        {/* The whole row opens that player — the position and
-                            the count describe the same person the name does. */}
-                        <button
-                          type="button"
-                          className="history-partner-row"
-                          onClick={() => setTrail((t) => [...t, player.npid])}
-                          aria-label={`${player.online_name} 기록 보기`}
-                        >
-                          <span className="history-partner-rank">{index + 1}</span>
-                          <span className="history-partner-name">{player.online_name}</span>
-                          <strong>{player.times_together}<small>회</small></strong>
-                        </button>
-                      </li>
-                    ))}
-                  </ol>
-                ) : <p className="history-empty">함께 플레이한 기록이 아직 없습니다.</p>}
-              </section>
-
-              <section className="history-section history-activity">
-                <div className="history-section-heading">
-                  <div><Clock3 size={17} aria-hidden="true" /><h3>주요 활동 시간</h3></div>
-                  <span>KST · 24H</span>
-                </div>
-                {data.active_hours.length > 0 ? (
-                  <div className="history-clock"><ActiveHoursClock hours={data.active_hours} /></div>
-                ) : <p className="history-empty">활동 시간 데이터가 아직 없습니다.</p>}
-              </section>
-            </div>
+            <section className="history-section history-activity">
+              <div className="history-section-heading">
+                <div><Clock3 size={17} aria-hidden="true" /><h3>주요 활동 시간</h3></div>
+                <span>KST · 24H</span>
+              </div>
+              {data.active_hours.length > 0 ? (
+                <div className="history-clock"><ActiveHoursClock hours={data.active_hours} /></div>
+              ) : <p className="history-empty">활동 시간 데이터가 아직 없습니다.</p>}
+            </section>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+/** The two views as ARIA tabs, the pattern the main navigation uses: one tab
+ * in the tab order, and the arrow keys move between them. */
+function PanelTabs({ value, onChange }: { value: Tab; onChange: (tab: Tab) => void }) {
+  const buttons = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({})
+
+  const step = (event: React.KeyboardEvent, index: number) => {
+    const delta = ARROW_STEP[event.key]
+    if (!delta) return
+    event.preventDefault()
+    const next = TABS[(index + delta + TABS.length) % TABS.length].value
+    onChange(next)
+    buttons.current[next]?.focus()
+  }
+
+  return (
+    <div className="history-tabs" role="tablist" aria-label="플레이어 정보">
+      {TABS.map((option, index) => (
+        <button
+          key={option.value}
+          ref={(button) => { buttons.current[option.value] = button }}
+          type="button"
+          role="tab"
+          id={`history-tab-${option.value}`}
+          aria-controls="history-tabpanel"
+          aria-selected={value === option.value}
+          tabIndex={value === option.value ? 0 : -1}
+          className="history-tab"
+          onClick={() => onChange(option.value)}
+          onKeyDown={(event) => step(event, index)}
+        >
+          {option.label}
+        </button>
+      ))}
     </div>
   )
 }
