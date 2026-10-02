@@ -14,6 +14,17 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.8',
+    items: [
+      '플레이어 정보에서 캐릭터별 계급 확인',
+      '공지가 커뮤니티 상단과 홈에 고정',
+    ],
+    image: {
+      src: '/patch-notes/v2.8-overview-simple.png',
+      alt: 'TAG2NOW 2.8 업데이트 안내: 캐릭터별 계급 확인, 홈·커뮤니티 공지 고정',
+    },
+  },
+  {
     version: '2.7',
     items: [
       'RPCN 계정 로그인 추가 (글쓰기·예약에 필요)',

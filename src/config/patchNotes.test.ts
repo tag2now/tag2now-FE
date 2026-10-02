@@ -47,8 +47,8 @@ describe('recentPatchNotes', () => {
 
   it('associates the newest release with its update overview image', () => {
     expect(PATCH_NOTES[0].image).toEqual({
-      src: '/patch-notes/v2.7-overview.png',
-      alt: 'TAG2NOW 2.7 업데이트 안내: RPCN 로그인, 홈의 주간 철악귀, 14일 접속자 그래프',
+      src: '/patch-notes/v2.8-overview-simple.png',
+      alt: 'TAG2NOW 2.8 업데이트 안내: 캐릭터별 계급 확인, 홈·커뮤니티 공지 고정',
     })
   })
 })
