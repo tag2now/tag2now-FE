@@ -48,8 +48,10 @@ const section = (name: string) => within(screen.getByRole('region', { name }))
 /** The names of the pictures inside an element, in order. */
 const imagesIn = (element: HTMLElement) => within(element).getAllByRole('img').map((img) => img.getAttribute('alt') ?? img.getAttribute('aria-label'))
 
+const missingPassword = vi.fn()
+
 async function loaded(password = 'pw') {
-  render(<SaveAdmin password={password} />)
+  render(<SaveAdmin password={password} onMissingPassword={missingPassword} />)
   lookUp()
   await waitFor(() => expect(screen.getByRole('region', { name: '조회한 세이브' })).toBeInTheDocument())
 }
@@ -77,11 +79,22 @@ describe('Save admin', () => {
     vi.mocked(editSave).mockResolvedValue(preview)
   })
 
-  it('needs the admin password before it looks anything up', () => {
-    render(<SaveAdmin password="" />)
-    fireEvent.change(screen.getByLabelText('플레이어 아이디'), { target: { value: 'alice' } })
+  it('asks for the admin password instead of looking anything up without it', () => {
+    render(<SaveAdmin password="" onMissingPassword={missingPassword} />)
+    lookUp()
 
-    expect(screen.getByRole('button', { name: '세이브 조회' })).toBeDisabled()
+    expect(missingPassword).toHaveBeenCalledTimes(1)
+    expect(fetchSave).not.toHaveBeenCalled()
+  })
+
+  it('asks for the player id, by Enter too, and puts the cursor in it', () => {
+    render(<SaveAdmin password="pw" onMissingPassword={missingPassword} />)
+    const field = screen.getByLabelText('플레이어 아이디')
+    fireEvent.submit(field.closest('form')!)
+
+    expect(document.activeElement).toBe(field)
+    expect(fetchSave).not.toHaveBeenCalled()
+    expect(missingPassword).not.toHaveBeenCalled()
   })
 
   it('shows the save, its used characters, backups and log', async () => {
@@ -214,7 +227,7 @@ describe('Save admin', () => {
 
   it('shows the server reason inline', async () => {
     vi.mocked(fetchSave).mockRejectedValue(new AppError('이 계정에는 TTT2 세이브가 없습니다.', 404))
-    render(<SaveAdmin password="pw" />)
+    render(<SaveAdmin password="pw" onMissingPassword={missingPassword} />)
     lookUp()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('이 계정에는 TTT2 세이브가 없습니다.')

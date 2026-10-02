@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import { ChevronDown, Eye, Gamepad2, Loader2, RotateCcw, Search, Users } from 'lucide-react'
@@ -12,7 +12,7 @@ import { rankBands, type RankBand as RankBandRows } from '@/shared/rankTiers'
 import { tierHex } from '@/shared/tierColors'
 import useConfirm from '@/shared/hooks/useConfirm'
 import { RANK_ORDER } from '@/reservation/reservationLabels'
-import { errorText, formatInstant } from '@/admin/adminText'
+import { errorText, formatInstant, warnEmpty } from '@/admin/adminText'
 import { editSave, fetchSave, fetchSaveBackups, fetchSaveLog } from '@/admin/saveApi'
 import type { SaveAuditRecord, SaveBackup, SaveChar, SaveEdit, SaveInfo, SaveWriteResult, SlotState } from '@/admin/types'
 
@@ -45,8 +45,13 @@ type Preview = { edit: SaveEdit, answer: SaveWriteResult }
  * Every write is two requests. The preview answers what would change and the
  * save's sha256; the write sends that sha256 back, and the server refuses it if
  * the game saved in between. */
-export default function SaveAdmin({ password }: { password: string }) {
+export default function SaveAdmin({ password, onMissingPassword }: {
+  password: string
+  /** Every request carries the password; without it, the page says so instead. */
+  onMissingPassword: () => void
+}) {
   const [target, setTarget] = useState('')
+  const targetField = useRef<HTMLInputElement>(null)
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [preview, setPreview] = useState<Preview | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -75,7 +80,9 @@ export default function SaveAdmin({ password }: { password: string }) {
   const lookup = (event: React.FormEvent) => {
     event.preventDefault()
     const name = target.trim()
-    if (busy || !name || !password) return
+    if (busy) return
+    if (!name) return warnEmpty(targetField.current, '플레이어 아이디를 입력하세요.')
+    if (!password) return onMissingPassword()
     setLoaded(null)
     setPreview(null)
     run(() => load(name))
@@ -83,11 +90,13 @@ export default function SaveAdmin({ password }: { password: string }) {
 
   // Always against the save that was looked up, by the name the server gave it.
   const previewEdit = (save: SaveInfo, edit: SaveEdit) => {
+    if (!password) return onMissingPassword()
     setPreview(null)
     run(async () => setPreview({ edit, answer: await editSave(save.username, password, edit, null) }))
   }
 
   const apply = async ({ edit, answer }: Preview) => {
+    if (!password) return onMissingPassword()
     const agreed = await confirm({
       title: `${answer.username} 세이브에 적용할까요?`,
       body: '쓰기 직전의 세이브를 백업합니다. 아래 백업 목록에서 되돌릴 수 있습니다.',
@@ -116,6 +125,7 @@ export default function SaveAdmin({ password }: { password: string }) {
         <label className="admin-field">
           <span className="field-label">플레이어 아이디</span>
           <input
+            ref={targetField}
             className="input-base"
             placeholder="대소문자 무관"
             autoComplete="off"
@@ -126,7 +136,7 @@ export default function SaveAdmin({ password }: { password: string }) {
             onChange={(event) => setTarget(event.target.value)}
           />
         </label>
-        <button type="submit" className="btn-primary" disabled={busy || !target.trim() || !password}>
+        <button type="submit" className="btn-primary" disabled={busy}>
           {busy ? <Loader2 size={14} aria-hidden="true" className="animate-spin" /> : <Search size={14} aria-hidden="true" />}
           세이브 조회
         </button>

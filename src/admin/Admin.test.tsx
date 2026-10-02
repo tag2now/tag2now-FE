@@ -54,6 +54,19 @@ describe('Admin page', () => {
     expect(screen.queryByLabelText('대상 RPCN 아이디')).not.toBeInTheDocument()
   })
 
+  it('asks for the admin password, and puts the cursor in it, instead of looking up without it', () => {
+    signIn(true)
+    render(<Admin />)
+    fireEvent.change(screen.getByLabelText('대상 RPCN 아이디'), { target: { value: 'Alice' } })
+
+    // pressing the button and pressing Enter in the field both submit the form
+    fireEvent.click(screen.getByRole('button', { name: '조회' }))
+    fireEvent.submit(screen.getByLabelText('대상 RPCN 아이디').closest('form')!)
+
+    expect(lookupAccount).not.toHaveBeenCalled()
+    expect(document.activeElement).toBe(screen.getByLabelText('내 비밀번호 (확인용)'))
+  })
+
   it('shows a signed-in non-admin no form', () => {
     signIn(false)
     render(<Admin />)

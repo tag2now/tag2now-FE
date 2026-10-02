@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import { Loader2, Search, ShieldBan } from 'lucide-react'
@@ -7,7 +7,7 @@ import { requestLogin } from '@/auth/session'
 import ConfirmDialog from '@/shared/components/ConfirmDialog'
 import useConfirm from '@/shared/hooks/useConfirm'
 import { banAccount, lookupAccount } from '@/admin/adminApi'
-import { errorText, formatInstant } from '@/admin/adminText'
+import { errorText, formatInstant, warnEmpty } from '@/admin/adminText'
 import SaveAdmin from '@/admin/SaveAdmin'
 import type { AccountStatus } from '@/admin/types'
 
@@ -57,6 +57,8 @@ export default function Admin() {
  * every action. */
 function AdminConsole({ self }: { self: string }) {
   const [password, setPassword] = useState('')
+  const passwordField = useRef<HTMLInputElement>(null)
+  const missingPassword = () => warnEmpty(passwordField.current, '내 비밀번호 (확인용)를 먼저 입력하세요.')
 
   return (
     <div className="admin-page">
@@ -64,6 +66,7 @@ function AdminConsole({ self }: { self: string }) {
         <label className="admin-field">
           <span className="field-label">내 비밀번호 (확인용)</span>
           <input
+            ref={passwordField}
             type="password"
             className="input-base"
             autoComplete="current-password"
@@ -74,15 +77,22 @@ function AdminConsole({ self }: { self: string }) {
         </label>
         <p className="admin-hint">조회와 수정마다 RPCN이 다시 확인합니다. 이 페이지를 떠나면 지워집니다.</p>
       </div>
-      <AdminPanel><AccountModeration self={self} password={password} /></AdminPanel>
-      <SaveAdmin password={password} />
+      <AdminPanel>
+        <AccountModeration self={self} password={password} onMissingPassword={missingPassword} />
+      </AdminPanel>
+      <SaveAdmin password={password} onMissingPassword={missingPassword} />
     </div>
   )
 }
 
 /** Look an account up, then ban it. */
-function AccountModeration({ self, password }: { self: string, password: string }) {
+function AccountModeration({ self, password, onMissingPassword }: {
+  self: string
+  password: string
+  onMissingPassword: () => void
+}) {
   const [username, setUsername] = useState('')
+  const usernameField = useRef<HTMLInputElement>(null)
   const [account, setAccount] = useState<AccountStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -103,13 +113,16 @@ function AccountModeration({ self, password }: { self: string, password: string 
   const lookup = (event: React.FormEvent) => {
     event.preventDefault()
     const target = username.trim()
-    if (busy || !target || !password) return
+    if (busy) return
+    if (!target) return warnEmpty(usernameField.current, '대상 RPCN 아이디를 입력하세요.')
+    if (!password) return onMissingPassword()
     setAccount(null)
     run(async () => setAccount(await lookupAccount(target, password)))
   }
 
   // Bans the account that was looked up, not whatever the field says now.
   const ban = async (target: AccountStatus) => {
+    if (!password) return onMissingPassword()
     const agreed = await confirm({
       title: `${target.online_name}(${target.username}) 계정을 밴할까요?`,
       body: 'RPCS3 접속이 바로 끊기고 다시 로그인할 수 없습니다. 이 사이트에는 로그인이 만료될 때까지 남아 있을 수 있습니다. 밴 해제 기능은 없습니다.',
@@ -129,6 +142,7 @@ function AccountModeration({ self, password }: { self: string, password: string 
         <label className="admin-field">
           <span className="field-label">대상 RPCN 아이디</span>
           <input
+            ref={usernameField}
             className="input-base"
             placeholder="대소문자까지 정확히"
             autoComplete="off"
@@ -139,7 +153,7 @@ function AccountModeration({ self, password }: { self: string, password: string 
             onChange={(event) => setUsername(event.target.value)}
           />
         </label>
-        <button type="submit" className="btn-primary" disabled={busy || !username.trim() || !password}>
+        <button type="submit" className="btn-primary" disabled={busy}>
           {busy ? <Loader2 size={14} aria-hidden="true" className="animate-spin" /> : <Search size={14} aria-hidden="true" />}
           조회
         </button>

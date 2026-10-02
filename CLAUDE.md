@@ -255,6 +255,10 @@ the top, shared by both sections --- and holds it in component state only ---
 never in `session.ts` or storage --- until the page is left. A ban goes to the
 account that was looked up, not whatever the id field says by then.
 
+The lookup buttons are **not** disabled for an empty password or id: pressing
+one, or Enter, warns in a toast and puts the cursor in the empty field
+(`warnEmpty`). A dimmed button that does nothing explains nothing.
+
 The second section, `SaveAdmin`, edits a player's TTT2 save through
 `/admin/saves/*` (tag2now-BE spec `09-save-admin.md`). **An edit is two
 requests**: the preview (`dry_run`) answers the changes and the save's
