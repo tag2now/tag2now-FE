@@ -116,6 +116,18 @@ describe('Save admin', () => {
     expect(section('캐릭터 목록').getAllByRole('row')).toHaveLength(4)
   })
 
+  it('lists characters highest rank first', async () => {
+    vi.mocked(fetchSave).mockResolvedValue({
+      ...save, chars: [char(0, 'Paul', 20, 10), char(1, 'Law'), char(2, 'Lei', 29, 1), char(3, 'King', 20, 3)],
+    })
+    await loaded()
+    fireEvent.click(section('캐릭터 목록').getByRole('checkbox'))
+
+    const faces = section('캐릭터 목록').getAllByRole('row').slice(1).map((row) => imagesIn(row)[0])
+    // Paul and King share a rank and points; Paul has played more
+    expect(faces).toEqual(['Lei', 'Paul', 'King', 'Law'])
+  })
+
   it('previews an edit, then applies exactly that edit with the previewed sha256', async () => {
     await loaded()
     pickRank('계급', 'Genbu')

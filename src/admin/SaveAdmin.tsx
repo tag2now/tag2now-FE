@@ -211,11 +211,15 @@ function SaveSummary({ save }: { save: SaveInfo }) {
 
 const isUsed = (char: SaveChar) => char.rank > 0 || char.wins + char.losses > 0
 
+/** Highest rank first; within a rank, more points, then more matches played. */
+const byRank = (a: SaveChar, b: SaveChar) =>
+  b.rank - a.rank || b.points - a.points || (b.wins + b.losses) - (a.wins + a.losses) || a.id - b.id
+
 const signed = (n: number) => (n > 0 ? `+${n}` : String(n))
 
 function SaveCharacters({ chars }: { chars: SaveChar[] }) {
   const [showAll, setShowAll] = useState(false)
-  const shown = showAll ? chars : chars.filter(isUsed)
+  const shown = (showAll ? [...chars] : chars.filter(isUsed)).sort(byRank)
 
   return (
     <section className="save-section" aria-label="캐릭터 목록">
