@@ -195,7 +195,7 @@
   /* A margin of page stays visible around the dialog, so it reads as a popup
      rather than a screen of its own. */
   .history-backdrop { align-items: center; padding: 24px 16px; }
-  .history-dialog { margin-block: auto; }
+  .history-dialog { height: calc(100dvh - 48px); margin-block: auto; }
   .history-header { min-height: 72px; padding: 12px; }
   .history-title-group div > p:last-child { display: none; }
   .history-toolbar { align-items: stretch; flex-direction: column; padding: 8px 12px; }
