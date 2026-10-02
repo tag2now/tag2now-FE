@@ -9,6 +9,8 @@ interface CharacterGridPickerProps {
   /** How many may be held at once. At the cap, unselected tiles go inert
    * rather than silently dropping someone's earlier pick. */
   max?: number
+  /** The group's accessible name; the filters' wording unless a caller picks for another reason. */
+  label?: string
 }
 
 const COLUMNS = Math.max(...CHARACTER_GRID.map((row) => row.length))
@@ -44,7 +46,7 @@ const ROSTER = [...new Set(CHARACTER_GRID.flat().filter((name): name is string =
  * and the visual order stay the same list. Either way the tiles hold the art's
  * real 204:329 ratio and nothing scrolls sideways.
  */
-export default function CharacterGridPicker({ selected, onToggle, max = 1 }: CharacterGridPickerProps) {
+export default function CharacterGridPicker({ selected, onToggle, max = 1, label = '캐릭터로 거르기' }: CharacterGridPickerProps) {
   const full = selected.length >= max
   // Starts narrow: a roster is readable at any width, where the game grid is
   // only readable above one.
@@ -80,7 +82,7 @@ export default function CharacterGridPicker({ selected, onToggle, max = 1 }: Cha
       ref={gridRef}
       className={`char-grid${gameLayout ? ' is-game-layout' : ''}`}
       role="group"
-      aria-label="캐릭터로 거르기"
+      aria-label={label}
       style={{ '--char-grid-columns': COLUMNS } as React.CSSProperties}
     >
       {gameLayout

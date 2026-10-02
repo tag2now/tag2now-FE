@@ -45,13 +45,26 @@ function lookUp(name = 'alice') {
 
 const section = (name: string) => within(screen.getByRole('region', { name }))
 
+/** The names of the pictures inside an element, in order. */
+const imagesIn = (element: HTMLElement) => within(element).getAllByRole('img').map((img) => img.getAttribute('alt') ?? img.getAttribute('aria-label'))
+
 async function loaded(password = 'pw') {
   render(<SaveAdmin password={password} />)
   lookUp()
   await waitFor(() => expect(screen.getByRole('region', { name: '조회한 세이브' })).toBeInTheDocument())
 }
 
-const choose = (label: string, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } })
+/** Open a rank field and press one of its ranks. */
+function pickRank(field: string, rank: string) {
+  fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${field}:`) }))
+  fireEvent.click(screen.getByRole('button', { name: rank }))
+}
+
+/** Open the character field and press a face in the grid. */
+function pickCharacter(face: string) {
+  fireEvent.click(screen.getByRole('button', { name: /^캐릭터:/ }))
+  fireEvent.click(within(screen.getByRole('group', { name: '수정할 캐릭터' })).getByRole('button', { name: face }))
+}
 
 describe('Save admin', () => {
   beforeEach(() => {
@@ -75,9 +88,12 @@ describe('Save admin', () => {
     await loaded('secret')
 
     expect(fetchSave).toHaveBeenCalledWith('alice', 'secret')
-    expect(section('조회한 세이브').getByText('Berserker (4/11)')).toBeInTheDocument()
+    // characters and ranks are drawn; their names live on as alt text
+    expect(section('조회한 세이브').getByRole('img', { name: 'Berserker' })).toBeInTheDocument()
+    expect(section('조회한 세이브').getByText('4/11')).toBeInTheDocument()
     expect(section('조회한 세이브').getByText('15판 10승 5패')).toBeInTheDocument()
     expect(section('캐릭터 목록').getAllByRole('row')).toHaveLength(2)   // header + Paul
+    expect(imagesIn(section('캐릭터 목록').getAllByRole('row')[1])).toEqual(['Paul', 'Berserker'])
     expect(section('캐릭터 목록').getByText('-2')).toBeInTheDocument()
     expect(section('백업').getByText('base')).toBeInTheDocument()
     // the integrity fields of a write are left out of the log
@@ -89,10 +105,11 @@ describe('Save admin', () => {
 
   it('previews an edit, then applies exactly that edit with the previewed sha256', async () => {
     await loaded()
-    choose('계급', '29')
+    pickRank('계급', 'Genbu')
     fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
 
-    await waitFor(() => expect(section('미리보기').getByText('Genbu · 1500점 · 0')).toBeInTheDocument())
+    await waitFor(() => expect(section('미리보기').getAllByRole('row')).toHaveLength(2))
+    expect(imagesIn(section('미리보기').getAllByRole('row')[1])).toEqual(['Paul', 'Berserker', 'Genbu'])
     expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'set-rank', char: 0, rank: 29 }, null)
 
     vi.mocked(editSave).mockResolvedValue(written)
@@ -110,7 +127,7 @@ describe('Save admin', () => {
     fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
     await waitFor(() => expect(screen.getByRole('region', { name: '미리보기' })).toBeInTheDocument())
 
-    choose('계급', '30')
+    pickRank('계급', 'Byakko')
 
     expect(screen.queryByRole('region', { name: '미리보기' })).not.toBeInTheDocument()
   })
@@ -128,8 +145,10 @@ describe('Save admin', () => {
 
   it('sets every character with a rank that has floor points and no points field', async () => {
     await loaded()
-    choose('캐릭터', 'all')
-    choose('계급', '0')   // not offered for "all"; the lowest offered is used
+    fireEvent.click(screen.getByRole('button', { name: '전체 캐릭터' }))
+    fireEvent.click(screen.getByRole('button', { name: /^계급:/ }))
+    expect(screen.getByRole('button', { name: 'Beginner' })).toBeDisabled()   // has no floor points
+    fireEvent.click(screen.getByRole('button', { name: '9th kyu' }))
 
     expect(screen.queryByLabelText('점수 (비우면 그대로)')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
@@ -140,11 +159,12 @@ describe('Save admin', () => {
   it('previews a floor with its options', async () => {
     vi.mocked(editSave).mockResolvedValue({ ...preview, floor: { reached: 30, floor: 19, raised: 58, points_fixed: 0, likely_demoted: false } })
     await loaded()
-    choose('수정 종류', 'floor')
+    fireEvent.click(screen.getByRole('radio', { name: 'floor (최저 계급 올리기)' }))
     fireEvent.click(screen.getByRole('checkbox', { name: '강등으로 보이는 캐릭터도 올리기' }))
     fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
 
-    await waitFor(() => expect(section('미리보기').getByText(/도달 Byakko → floor Fighter, 58칸 올림/)).toBeInTheDocument())
+    await waitFor(() => expect(section('미리보기').getByText(/58칸 올림/)).toBeInTheDocument())
+    expect(imagesIn(section('미리보기').getByText(/58칸 올림/))).toEqual(['Byakko', 'Fighter'])
     expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'floor', fix_points: false, refloor: true }, null)
   })
 
@@ -164,6 +184,24 @@ describe('Save admin', () => {
 
     await waitFor(() => expect(section('미리보기').getByText('바뀌는 것이 없습니다.')).toBeInTheDocument())
     expect(section('미리보기').getByRole('button', { name: '적용' })).toBeDisabled()
+  })
+
+  it('picks the character from the grid', async () => {
+    await loaded()
+    pickCharacter('Law')
+
+    expect(screen.getByRole('button', { name: '캐릭터: Law' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    await waitFor(() => expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'set-rank', char: 1, rank: 10 }, null))
+  })
+
+  it("gives the second Michelle slot the grid's Angel", async () => {
+    vi.mocked(fetchSave).mockResolvedValue({ ...save, chars: [...save.chars, char(0x2E, 'Michelle'), char(0x33, 'Michelle')] })
+    await loaded()
+    pickCharacter('Angel')
+    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+
+    await waitFor(() => expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'set-rank', char: 0x33, rank: 10 }, null))
   })
 
   it('previews a restore from the backup list', async () => {

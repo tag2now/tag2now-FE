@@ -56,18 +56,21 @@ test.describe('Account management', () => {
     await page.getByRole('button', { name: '세이브 조회' }).click()
 
     const characters = page.getByRole('region', { name: '캐릭터 목록' })
-    await expect(characters.getByText('20 Berserker')).toBeVisible()
+    await expect(characters.getByRole('img', { name: 'Berserker' })).toBeVisible()
 
-    await page.getByRole('combobox', { name: '계급' }).selectOption('29')
+    await page.getByRole('button', { name: /^계급:/ }).click()
+    await page.getByRole('button', { name: 'Genbu', exact: true }).click()
     await page.getByRole('button', { name: '미리보기', exact: true }).click()
 
     const preview = page.getByRole('region', { name: '미리보기', exact: true })
-    await expect(preview.getByText('Genbu · 1500점 · 0')).toBeVisible()
+    const change = preview.getByRole('row').nth(1)
+    await expect(change.getByRole('img', { name: 'Berserker' })).toBeVisible()
+    await expect(change.getByRole('img', { name: 'Genbu' })).toBeVisible()
     await preview.getByRole('button', { name: '적용', exact: true }).click()
     await page.getByRole('alertdialog').getByRole('button', { name: '적용' }).click()
 
     await expect(page.getByText('적용했습니다. 이전 세이브는 20261001-120000-000001 백업에 있습니다.')).toBeVisible()
-    await expect(characters.getByText('29 Genbu')).toBeVisible()
+    await expect(characters.getByRole('img', { name: 'Genbu' })).toBeVisible()
     await expect(preview).toHaveCount(0)
   })
 

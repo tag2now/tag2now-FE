@@ -1,9 +1,15 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
-import { Eye, Gamepad2, Loader2, RotateCcw, Search } from 'lucide-react'
+import { ChevronDown, Eye, Gamepad2, Loader2, RotateCcw, Search, Users } from 'lucide-react'
+import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import ConfirmDialog from '@/shared/components/ConfirmDialog'
-import Select, { type SelectOption } from '@/shared/components/Select'
+import RankImage from '@/shared/components/RankImage'
+import type { SelectOption } from '@/shared/components/Select'
+import ToggleGroup from '@/shared/components/ToggleGroup'
+import { charImageUrl } from '@/shared/characterImage'
+import { rankBands, type RankBand as RankBandRows } from '@/shared/rankTiers'
+import { tierHex } from '@/shared/tierColors'
 import useConfirm from '@/shared/hooks/useConfirm'
 import { RANK_ORDER } from '@/reservation/reservationLabels'
 import { errorText, formatInstant } from '@/admin/adminText'
@@ -13,8 +19,17 @@ import type { SaveAuditRecord, SaveBackup, SaveChar, SaveEdit, SaveInfo, SaveWri
 /** RANK_ORDER is indexed by the game's rank code. */
 const rankName = (code: number) => RANK_ORDER[code] ?? `계급 ${code}`
 
-const rankOptions = (from: number): SelectOption[] =>
-  RANK_ORDER.slice(from).map((name, index) => ({ value: String(from + index), label: `${from + index} ${name}` }))
+/** A character's portrait; the name stays as its alt text and tooltip. */
+function Portrait({ name }: { name: string }) {
+  const url = charImageUrl(name)
+  if (!url) return <span>{name}</span>
+  return <img src={url} alt={name} title={name} className="char-art save-portrait" loading="lazy" />
+}
+
+/** A rank's banner by name. RankImage draws a plate for ranks with no art. */
+const Rank = ({ name }: { name: string }) => <RankImage rankInfo={{ name }} className="save-rank" />
+
+const RankCode = ({ code }: { code: number }) => <Rank name={rankName(code)} />
 
 /** Floor ranks need floor points, which start at 9th kyu. */
 const FLOOR_RANK_FROM = 1
@@ -174,7 +189,7 @@ function SaveSummary({ save }: { save: SaveInfo }) {
     <section className="admin-account" aria-label="조회한 세이브">
       <h3>{save.username} <small>data_id {save.data_id}</small></h3>
       <dl>
-        <dt>계정 계급</dt><dd>{rankName(save.account_rank)} ({save.progress}/11)</dd>
+        <dt>계정 계급</dt><dd className="save-inline"><RankCode code={save.account_rank} /> {save.progress}/11</dd>
         <dt>전적</dt><dd>{save.total}판 {save.wins}승 {save.losses}패</dd>
         <dt>마지막 저장</dt><dd>{formatInstant(save.saved_at)}</dd>
         <dt>RPCS3 접속</dt><dd className={save.online ? 'is-banned' : undefined}>{onlineText(save.online)}</dd>
@@ -210,8 +225,8 @@ function SaveCharacters({ chars }: { chars: SaveChar[] }) {
               <tbody>
                 {shown.map((char) => (
                   <tr key={char.id}>
-                    <td>{char.id} {char.character}</td>
-                    <td>{char.rank} {char.rank_name}</td>
+                    <td><Portrait name={faceOf(char)} /></td>
+                    <td><Rank name={char.rank_name} /></td>
                     <td>{char.points}</td>
                     <td>{signed(char.streak)}</td>
                     <td>{char.wins}승 {char.losses}패</td>
@@ -225,16 +240,15 @@ function SaveCharacters({ chars }: { chars: SaveChar[] }) {
   )
 }
 
-type Mode = SaveEdit['action']
+type Mode = Exclude<SaveEdit['action'], 'restore'>
 
-const MODES: SelectOption<Exclude<Mode, 'restore'>>[] = [
+const MODES: SelectOption<Mode>[] = [
   { value: 'set-rank', label: '캐릭터 계급' },
   { value: 'set-account-rank', label: '계정 계급' },
   { value: 'floor', label: 'floor (최저 계급 올리기)' },
 ]
 
 const ALL = 'all'
-const AUTO = 'auto'
 
 /** Points field: blank keeps them, otherwise a whole number the save can hold. */
 const parsePoints = (text: string): number | null | undefined => {
@@ -249,11 +263,12 @@ function EditForm({ chars, busy, onChange, onPreview }: {
   onChange: () => void
   onPreview: (edit: SaveEdit) => void
 }) {
-  const [mode, setMode] = useState<Exclude<Mode, 'restore'>>('set-rank')
-  const [char, setChar] = useState(String(chars.find(isUsed)?.id ?? 0))
-  const [rank, setRank] = useState('10')
+  const [mode, setMode] = useState<Mode>('set-rank')
+  const [char, setChar] = useState<number | typeof ALL>(chars.find(isUsed)?.id ?? 0)
+  const [rank, setRank] = useState(10)
   const [points, setPoints] = useState('')
-  const [floorRank, setFloorRank] = useState(AUTO)
+  // null: the floor rule picks it
+  const [floorRank, setFloorRank] = useState<number | null>(null)
   const [fixPoints, setFixPoints] = useState(false)
   const [refloor, setRefloor] = useState(false)
 
@@ -267,21 +282,14 @@ function EditForm({ chars, busy, onChange, onPreview }: {
   const parsed = parsePoints(points)
   // "all" sets floor points itself and needs a rank that has them.
   const rankFrom = everyone ? FLOOR_RANK_FROM : 0
-  const chosenRank = Math.max(Number(rank), rankFrom)
+  const chosenRank = Math.max(rank, rankFrom)
 
   const edit = (): SaveEdit => {
     if (mode === 'set-account-rank') return { action: mode, rank: chosenRank }
-    if (mode === 'floor') {
-      return { action: mode, fix_points: fixPoints, refloor, ...(floorRank === AUTO ? {} : { rank: Number(floorRank) }) }
-    }
-    if (everyone) return { action: mode, char: ALL, rank: chosenRank }
-    return { action: mode, char: Number(char), rank: chosenRank, ...(parsed === undefined ? {} : { points: parsed as number }) }
+    if (mode === 'floor') return { action: mode, fix_points: fixPoints, refloor, ...(floorRank === null ? {} : { rank: floorRank }) }
+    if (char === ALL) return { action: mode, char, rank: chosenRank }
+    return { action: mode, char, rank: chosenRank, ...(parsed === undefined ? {} : { points: parsed as number }) }
   }
-
-  const charOptions: SelectOption[] = [
-    { value: ALL, label: '전체 캐릭터 (계정 계급 포함)' },
-    ...chars.map((c) => ({ value: String(c.id), label: `${c.id} ${c.character}` })),
-  ]
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -292,14 +300,14 @@ function EditForm({ chars, busy, onChange, onPreview }: {
   return (
     <form className="save-section save-edit" onSubmit={submit} aria-label="세이브 수정">
       <h3>수정</h3>
+      <ToggleGroup label="수정 종류" value={mode} options={MODES} onChange={changed(setMode)} className="save-modes" />
       <div className="save-edit-fields">
-        <Select label="수정 종류" value={mode} options={MODES} onChange={changed(setMode)} />
-        {mode === 'set-rank' && <Select label="캐릭터" value={char} options={charOptions} onChange={changed(setChar)} />}
+        {mode === 'set-rank' && <CharacterField value={char} chars={chars} onChange={changed(setChar)} />}
         {mode !== 'floor' && (
-          <Select label="계급" value={String(chosenRank)} options={rankOptions(rankFrom)} onChange={changed(setRank)} />
+          <RankField label="계급" value={chosenRank} from={rankFrom} onChange={changed((code: number | null) => setRank(code ?? 0))} />
         )}
         {mode === 'set-rank' && !everyone && (
-          <label className="admin-field">
+          <label className="admin-field save-points">
             <span className="field-label">점수 (비우면 그대로)</span>
             <input
               className="input-base"
@@ -311,24 +319,27 @@ function EditForm({ chars, busy, onChange, onPreview }: {
           </label>
         )}
         {mode === 'floor' && (
-          <>
-            <Select
-              label="floor 계급"
-              value={floorRank}
-              options={[{ value: AUTO, label: '자동 (도달 계급의 두 단계 아래)' }, ...rankOptions(FLOOR_RANK_FROM)]}
-              onChange={changed(setFloorRank)}
-            />
-            <label className="save-check">
-              <input type="checkbox" checked={fixPoints} onChange={(event) => changed(setFixPoints)(event.target.checked)} />
-              floor 계급에 있는 캐릭터의 점수도 채우기
-            </label>
-            <label className="save-check">
-              <input type="checkbox" checked={refloor} onChange={(event) => changed(setRefloor)(event.target.checked)} />
-              강등으로 보이는 캐릭터도 올리기
-            </label>
-          </>
+          <RankField
+            label="floor 계급"
+            value={floorRank}
+            from={FLOOR_RANK_FROM}
+            onChange={changed(setFloorRank)}
+            autoLabel="자동 (도달 계급의 두 단계 아래)"
+          />
         )}
       </div>
+      {mode === 'floor' && (
+        <div className="save-checks">
+          <label className="save-check">
+            <input type="checkbox" checked={fixPoints} onChange={(event) => changed(setFixPoints)(event.target.checked)} />
+            floor 계급에 있는 캐릭터의 점수도 채우기
+          </label>
+          <label className="save-check">
+            <input type="checkbox" checked={refloor} onChange={(event) => changed(setRefloor)(event.target.checked)} />
+            강등으로 보이는 캐릭터도 올리기
+          </label>
+        </div>
+      )}
       {everyone && <p className="admin-hint">모든 캐릭터와 계정 계급을 이 계급의 floor 점수, 연승 0으로 맞춥니다.</p>}
       {parsed === null && <p className="admin-error">점수는 0에서 65535 사이의 정수여야 합니다.</p>}
       <button type="submit" className="btn-ghost" disabled={busy || parsed === null}>
@@ -338,23 +349,191 @@ function EditForm({ chars, busy, onChange, onPreview }: {
   )
 }
 
-const charLabel = (char: number | 'all', chars: SaveChar[]) =>
-  char === ALL ? '전체 캐릭터' : chars.find((c) => c.id === char)?.character ?? `캐릭터 ${char}`
+/** The leaderboard's character filter, as a single choice: a button showing
+ * the pick that opens the game-layout grid, with 전체 캐릭터 beside it. */
+function CharacterField({ value, chars, onChange }: {
+  value: number | typeof ALL
+  chars: SaveChar[]
+  onChange: (value: number | typeof ALL) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const face = value === ALL ? null : faceOfSlot(value, chars)
+  const portrait = face ? charImageUrl(face) : null
 
-function describeEdit(edit: SaveEdit, chars: SaveChar[]): string {
+  const pick = (name: string) => {
+    const slot = slotOfFace(name, chars)
+    if (slot === undefined) return
+    onChange(slot)
+    setOpen(false)
+  }
+
+  const pickEveryone = () => {
+    onChange(ALL)
+    setOpen(false)
+  }
+
+  return (
+    <div className={`save-picker-field${open ? ' is-open' : ''}`}>
+      <span className="field-label">캐릭터</span>
+      <div className="save-picker-row">
+        <button
+          type="button"
+          className={`lb-char-toggle${face ? ' is-active' : ''}`}
+          aria-expanded={open}
+          aria-controls="save-character-picker"
+          aria-label={`캐릭터: ${face ?? '전체 캐릭터'}`}
+          onClick={() => setOpen((current) => !current)}
+        >
+          {portrait ? <img src={portrait} alt="" className="char-art lb-char-toggle-portrait" /> : <Users size={14} aria-hidden="true" />}
+          <span>{face ?? '캐릭터 고르기'}</span>
+          <ChevronDown size={14} aria-hidden="true" className={open ? 'is-open' : undefined} />
+        </button>
+        <button
+          type="button"
+          className={`lb-char-toggle${value === ALL ? ' is-active' : ''}`}
+          aria-pressed={value === ALL}
+          onClick={pickEveryone}
+        >
+          전체 캐릭터
+        </button>
+      </div>
+      {open && (
+        <div id="save-character-picker" className="lb-picker save-character-picker">
+          {/* A pick replaces the current one, so no tile is ever capped:
+              the leaderboard's max of 1 would leave every other face dead. */}
+          <CharacterGridPicker selected={face ? [face] : []} onToggle={pick} max={Infinity} label="수정할 캐릭터" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** The reservation form's rank picker, as a single choice: bands strongest
+ * first, each rank drawn. Ranks below `from` are shown but not offered. */
+function RankField({ label, value, from, onChange, autoLabel }: {
+  label: string
+  value: number | null
+  from: number
+  onChange: (value: number | null) => void
+  /** Offers "no rank" under this name, answered as null. */
+  autoLabel?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const choose = (code: number | null) => {
+    onChange(code)
+    setOpen(false)
+  }
+
+  return (
+    <div className={`save-picker-field save-rank-field${open ? ' is-open' : ''}`}>
+      <span className="field-label">{label}</span>
+      <button
+        type="button"
+        className="input-base save-rank-toggle"
+        aria-expanded={open}
+        aria-label={`${label}: ${value === null ? autoLabel : rankName(value)}`}
+        onClick={() => setOpen((current) => !current)}
+      >
+        {value === null ? <span>{autoLabel}</span> : <RankCode code={value} />}
+        <ChevronDown size={15} aria-hidden="true" className={`text-primary transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="rank-picker-panel save-rank-panel">
+          {autoLabel && (
+            <button
+              type="button"
+              className={`save-rank-auto${value === null ? ' is-active' : ''}`}
+              aria-pressed={value === null}
+              onClick={() => choose(null)}
+            >
+              {autoLabel}
+            </button>
+          )}
+          <div className="rank-picker-bands max-h-72 overflow-y-auto pr-1">
+            {rankBands().map((band) => <RankBand key={band.tier} band={band} value={value} from={from} onChoose={choose} />)}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RankBand({ band, value, from, onChoose }: {
+  band: RankBandRows
+  value: number | null
+  from: number
+  onChoose: (code: number) => void
+}) {
+  return (
+    <div className="rank-band" style={{ '--tier': tierHex(band.tier) } as React.CSSProperties}>
+      <span className="rank-band-label">{band.tier}</span>
+      <div className="rank-band-grid">
+        {band.rows.flat().map((rank, cell) => (rank === null
+          ? <span key={`gap-${cell}`} aria-hidden="true" />
+          : <RankOption key={rank} rank={rank} value={value} from={from} onChoose={onChoose} />))}
+      </div>
+    </div>
+  )
+}
+
+function RankOption({ rank, value, from, onChoose }: {
+  rank: string
+  value: number | null
+  from: number
+  onChoose: (code: number) => void
+}) {
+  const code = RANK_ORDER.indexOf(rank)
+  const selected = code === value
+  const offered = code >= from
+  return (
+    <button
+      type="button"
+      aria-label={rank}
+      aria-pressed={selected}
+      disabled={!offered}
+      onClick={() => onChoose(code)}
+      className={`rank-option${selected ? ' selected' : ''}${offered ? '' : ' opacity-40'}`}
+    >
+      <RankImage rankInfo={{ name: rank }} className="rank-option-art" />
+      <span className={`truncate text-[11px] tracking-[0.03em] ${selected ? 'text-primary-text' : 'text-txt-dim'}`}>{rank}</span>
+    </button>
+  )
+}
+
+/* The backend and the save tool both name slot 0x33 "Michelle" a second time
+ * (0x2E is the first). The grid has one Michelle and one face no slot is named
+ * after, Angel, so that is the face slot 0x33 gets. Not yet confirmed in game. */
+const ANGEL_SLOT = 0x33
+
+/** The face the grid and the tables draw for a slot. */
+const faceOf = (char: { id: number, character: string }) => (char.id === ANGEL_SLOT ? 'Angel' : char.character)
+
+const faceOfSlot = (slot: number, chars: SaveChar[]) => {
+  const char = chars.find((c) => c.id === slot)
+  return char ? faceOf(char) : `캐릭터 ${slot}`
+}
+
+const slotOfFace = (face: string, chars: SaveChar[]) => chars.find((c) => faceOf(c) === face)?.id
+
+/** What is being changed: who, then the rank they go to. */
+function EditTarget({ edit, chars }: { edit: SaveEdit, chars: SaveChar[] }) {
   switch (edit.action) {
     case 'set-rank':
-      return `${charLabel(edit.char, chars)} → ${rankName(edit.rank)}`
+      return edit.char === ALL
+        ? <>전체 캐릭터 → <RankCode code={edit.rank} /></>
+        : <><Portrait name={faceOfSlot(edit.char, chars)} /> → <RankCode code={edit.rank} /></>
     case 'set-account-rank':
-      return `계정 계급 → ${rankName(edit.rank)}`
+      return <>계정 계급 → <RankCode code={edit.rank} /></>
     case 'floor':
-      return edit.rank === undefined ? 'floor (자동)' : `floor → ${rankName(edit.rank)}`
+      return edit.rank === undefined ? <>floor (자동)</> : <>floor → <RankCode code={edit.rank} /></>
     case 'restore':
-      return `${edit.label} 백업으로 복원`
+      return <>{edit.label} 백업으로 복원</>
   }
 }
 
-const slotText = (slot: SlotState) => `${slot.rank_name} · ${slot.points}점 · ${signed(slot.streak)}`
+function Slot({ slot }: { slot: SlotState }) {
+  return <span className="save-inline"><Rank name={slot.rank_name} /> {slot.points}점 · {signed(slot.streak)}</span>
+}
 
 /** Why the server would refuse this write, so the button is not offered for it. */
 function blocker(answer: SaveWriteResult): string | null {
@@ -376,10 +555,10 @@ function PreviewCard({ preview: { edit, answer }, chars, busy, onApply, onDiscar
 
   return (
     <section className="save-section save-preview" aria-label="미리보기">
-      <h3>미리보기 <small>{describeEdit(edit, chars)}</small></h3>
+      <h3>미리보기 <small className="save-inline"><EditTarget edit={edit} chars={chars} /></small></h3>
       {answer.floor && (
-        <p className="admin-notice">
-          도달 {rankName(answer.floor.reached)} → floor {rankName(answer.floor.floor)}, {answer.floor.raised}칸 올림
+        <p className="admin-notice save-inline">
+          도달 <RankCode code={answer.floor.reached} /> → floor <RankCode code={answer.floor.floor} />, {answer.floor.raised}칸 올림
           {answer.floor.points_fixed > 0 && `, ${answer.floor.points_fixed}칸 점수 보정`}
         </p>
       )}
@@ -395,15 +574,15 @@ function PreviewCard({ preview: { edit, answer }, chars, busy, onApply, onDiscar
                 {changes.account_rank && (
                   <tr>
                     <td>계정 계급</td>
-                    <td>{rankName(changes.account_rank.before)}</td>
-                    <td>{rankName(changes.account_rank.after)}</td>
+                    <td><RankCode code={changes.account_rank.before} /></td>
+                    <td><RankCode code={changes.account_rank.after} /></td>
                   </tr>
                 )}
                 {changes.chars.map((change) => (
                   <tr key={change.id}>
-                    <td>{change.id} {change.character}</td>
-                    <td>{slotText(change.before)}</td>
-                    <td>{slotText(change.after)}</td>
+                    <td><Portrait name={faceOf(change)} /></td>
+                    <td><Slot slot={change.before} /></td>
+                    <td><Slot slot={change.after} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -437,8 +616,10 @@ function BackupList({ backups, busy, onRestore }: {
             {newestFirst.map((backup) => (
               <li key={backup.label}>
                 <span className="save-backup-label">{backup.label}</span>
-                <span className="save-backup-meta">
-                  {backup.total === null ? '크기가 맞지 않는 파일' : `${backup.total}판 · 계정 ${rankName(backup.account_rank ?? 0)}`}
+                <span className="save-backup-meta save-inline">
+                  {backup.total === null
+                    ? '크기가 맞지 않는 파일'
+                    : <>{backup.total}판 · 계정 <RankCode code={backup.account_rank ?? 0} /></>}
                 </span>
                 <button
                   type="button"
