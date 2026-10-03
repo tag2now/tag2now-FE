@@ -47,25 +47,21 @@ function PostRow({ post, onSelect, leaderboardEntries }: PostRowProps) {
       <span className="post-row-tags">
         <PostTypeBadge postType={post.post_type} characters={post.characters ?? []} />
       </span>
-      <span className="post-row-title">{post.title}</span>
+      <p className="post-row-title gap-2 flex">
+        <span>{post.title}</span>
+        <span className="post-row-stats flex gap-2">
+          {post.comment_count > 0 && (
+            <span className="post-stat"><MessageSquare size={11} aria-hidden="true" />{post.comment_count}<span className="sr-only"> 댓글</span></span>
+          )}
+          {post.thumbs_up > 0 && (
+            <span className="post-stat is-up"><ThumbsUp size={11} aria-hidden="true" />{post.thumbs_up}<span className="sr-only"> 추천</span></span>
+          )}
+          {post.thumbs_down > 0 && (
+            <span className="post-stat"><ThumbsDown size={11} aria-hidden="true" />{post.thumbs_down}<span className="sr-only"> 비추천</span></span>
+          )}
+        </span>
+      </p>
       <AuthorBadge name={post.author} entries={leaderboardEntries} className="post-row-author" />
-      {/* One cluster for how the post is doing. The comment count used
-          to be welded to the title and the two votes sat at the far
-          end, so three figures of the same kind were read in two
-          places. A figure only appears once it is not zero: every row
-          printed "☝ 0 ☟ 0", which is the same as saying nothing while
-          taking the space and the eye of something that says a lot. */}
-      <span className="post-row-stats">
-        {post.comment_count > 0 && (
-          <span className="post-stat"><MessageSquare size={11} aria-hidden="true" />{post.comment_count}<span className="sr-only"> 댓글</span></span>
-        )}
-        {post.thumbs_up > 0 && (
-          <span className="post-stat is-up"><ThumbsUp size={11} aria-hidden="true" />{post.thumbs_up}<span className="sr-only"> 추천</span></span>
-        )}
-        {post.thumbs_down > 0 && (
-          <span className="post-stat"><ThumbsDown size={11} aria-hidden="true" />{post.thumbs_down}<span className="sr-only"> 비추천</span></span>
-        )}
-      </span>
       <span className="post-row-time">{formatTimeAgo(post.created_at)}</span>
     </button>
   )

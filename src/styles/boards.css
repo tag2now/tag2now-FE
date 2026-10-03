@@ -29,7 +29,7 @@
  * The cost is a gap after a short title, and it is the right cost: the gap is
  * one blank region in a stable layout, where letting the columns float put a
  * different-sized hole in a different place on every row. */
-.post-row { display: grid; width: 100%; min-height: 46px; grid-template-columns: 62px minmax(0, 1fr) 190px 96px 54px; align-items: center; gap: 10px; padding: 6px 10px; border: 0; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface-tint) 1.2%, transparent); color: var(--color-txt); text-align: left; cursor: pointer; transition: background-color 150ms ease; }
+.post-row { display: grid; width: 100%; min-height: 46px; grid-template-columns: 62px minmax(0, 1fr) 150px 40px; align-items: center; gap: 10px; padding: 6px 10px; border: 0; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface-tint) 1.2%, transparent); color: var(--color-txt); text-align: left; cursor: pointer; transition: background-color 150ms ease; }
 .post-row:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
 .post-row-title { min-width: 0; overflow: hidden; color: var(--color-txt); font-size: var(--text-sm); font-weight: var(--weight-row); text-overflow: ellipsis; white-space: nowrap; }
 /* The three engagement figures, together. Left-aligned inside a fixed cell so
