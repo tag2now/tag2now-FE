@@ -233,15 +233,6 @@ describe('Save admin', () => {
     expect(toggle).toHaveFocus()
   })
 
-  it("gives the second Michelle slot the grid's Angel", async () => {
-    vi.mocked(fetchSave).mockResolvedValue({ ...save, chars: [...save.chars, char(0x2E, 'Michelle'), char(0x33, 'Michelle')] })
-    await loaded()
-    pickCharacter('Angel')
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
-
-    await waitFor(() => expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'set-rank', char: 0x33, rank: 10 }, null))
-  })
-
   it('previews a restore from the backup list', async () => {
     await loaded()
     fireEvent.click(section('백업').getByRole('button', { name: 'base 복원 미리보기' }))

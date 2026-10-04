@@ -9,7 +9,7 @@ import SaveCharTable, { SavePortrait as Portrait, SaveRank as Rank } from '@/sha
 import type { SelectOption } from '@/shared/components/Select'
 import ToggleGroup from '@/shared/components/ToggleGroup'
 import { charImageUrl } from '@/shared/characterImage'
-import { faceOf, isUsed, signed } from '@/shared/saveChars'
+import { isUsed, signed } from '@/shared/saveChars'
 import { rankBands, type RankBand as RankBandRows } from '@/shared/rankTiers'
 import { tierHex } from '@/shared/tierColors'
 import useConfirm from '@/shared/hooks/useConfirm'
@@ -532,10 +532,10 @@ function RankOption({ rank, value, from, onChoose }: {
 
 const faceOfSlot = (slot: number, chars: SaveChar[]) => {
   const char = chars.find((c) => c.id === slot)
-  return char ? faceOf(char) : `캐릭터 ${slot}`
+  return char ? char.character : `캐릭터 ${slot}`
 }
 
-const slotOfFace = (face: string, chars: SaveChar[]) => chars.find((c) => faceOf(c) === face)?.id
+const slotOfFace = (face: string, chars: SaveChar[]) => chars.find((c) => c.character === face)?.id
 
 /** What is being changed: who, then the rank they go to. */
 function EditTarget({ edit, chars }: { edit: SaveEdit, chars: SaveChar[] }) {
@@ -602,7 +602,7 @@ function PreviewCard({ preview: { edit, answer }, chars, busy, onApply, onDiscar
                 )}
                 {changes.chars.map((change) => (
                   <tr key={change.id}>
-                    <td><Portrait name={faceOf(change)} /></td>
+                    <td><Portrait name={change.character} /></td>
                     <td><Slot slot={change.before} /></td>
                     <td><Slot slot={change.after} /></td>
                   </tr>

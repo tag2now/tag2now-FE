@@ -1,6 +1,6 @@
 import RankImage from '@/shared/components/RankImage'
 import { charImageUrl } from '@/shared/characterImage'
-import { byRank, faceOf, signed, type SaveChar } from '@/shared/saveChars'
+import { byRank, signed, type SaveChar } from '@/shared/saveChars'
 
 /** A character's portrait; the name stays as its alt text and tooltip. */
 export function SavePortrait({ name }: { name: string }) {
@@ -30,7 +30,7 @@ export default function SaveCharTable({ chars }: { chars: SaveChar[] }) {
         <tbody>
           {[...chars].sort(byRank).map((char) => (
             <tr key={char.id}>
-              <td className="save-art"><SavePortrait name={faceOf(char)} /></td>
+              <td className="save-art"><SavePortrait name={char.character} /></td>
               <td className="save-art"><SaveRank name={char.rank_name} /></td>
               <td>{char.points}</td>
               <td>{signed(char.streak)}</td>

@@ -36,11 +36,3 @@ export const byRank = (a: SaveChar, b: SaveChar) =>
   b.rank - a.rank || b.points - a.points || (b.wins + b.losses) - (a.wins + a.losses) || a.id - b.id
 
 export const signed = (n: number) => (n > 0 ? `+${n}` : String(n))
-
-/* The backend and the save tool both name slot 0x33 "Michelle" a second time
- * (0x2E is the first). The grid has one Michelle and one face no slot is named
- * after, Angel, so that is the face slot 0x33 gets. Not yet confirmed in game. */
-export const ANGEL_SLOT = 0x33
-
-/** The face the grid and the tables draw for a slot. */
-export const faceOf = (char: { id: number, character: string }) => (char.id === ANGEL_SLOT ? 'Angel' : char.character)
