@@ -51,6 +51,7 @@ const COMMENT = ['id', 'reservation_id', 'author', 'author_username', 'body', 'c
 const ACCOUNT = ['username', 'online_name', 'admin', 'banned', 'online', 'created_at', 'last_login_at']
 const SAVE_WRITE = ['username', 'password', 'dry_run', 'expect_sha256']
 const SAVE_WRITTEN = ['username', 'sha256', 'online', 'changes', 'applied', 'result']
+const CHAT_MESSAGE = ['id', 'author_username', 'author_online_name', 'body', 'created_at']
 
 /** Every endpoint the API modules and hooks actually call. */
 const CONTRACT: Expectation[] = [
@@ -91,6 +92,11 @@ const CONTRACT: Expectation[] = [
   { method: 'get', path: '/reservations/{reservation_id}/comments', reads: COMMENT },
   { method: 'post', path: '/reservations/{reservation_id}/comments', body: ['body'], reads: COMMENT, auth: true },
   { method: 'delete', path: '/reservations/{reservation_id}/comments/{comment_id}', auth: true },
+  // The stream's events carry the same message as this POST answers, but an
+  // event stream's payload has no schema, so the fields are checked here.
+  { method: 'get', path: '/chat/stream' },
+  { method: 'post', path: '/chat/messages', body: ['body'], reads: CHAT_MESSAGE, auth: true },
+  { method: 'delete', path: '/chat/messages/{message_id}', auth: true },
 ]
 
 const name = ({ method, path }: Expectation) => `${method.toUpperCase()} ${path}`
@@ -145,6 +151,21 @@ describe('the API contract tag2now-BE publishes', () => {
 
   it.each(declaring('reads'))('returns the fields we read from $method $path', (expectation) => {
     expect(fieldsOf(jsonResponse(operation(expectation)))).toEqual(expect.arrayContaining(expectation.reads!))
+  })
+})
+
+/** The chat is read through an EventSource, which can neither send a token
+ * nor read anything but an event stream. A stream that started asking for a
+ * login would leave every reader with an empty chat and no error to show. */
+describe('the chat stream', () => {
+  const stream = () => operation({ method: 'get', path: '/chat/stream' })
+
+  it('needs no token', () => {
+    expect(stream().security ?? []).toEqual([])
+  })
+
+  it('answers an event stream', () => {
+    expect(Object.keys(stream().responses['200'].content ?? {})).toEqual(['text/event-stream'])
   })
 })
 

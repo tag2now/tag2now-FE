@@ -32,7 +32,17 @@ interface ApiCommentLike {
   created_at: string
 }
 
+export interface ApiChatMessage {
+  id: number
+  author_username: string
+  author_online_name: string
+  body: string
+  created_at: string
+}
+
 interface MockOverrides {
+  /** Today's chat, as the stream's opening snapshot carries it; none by default. */
+  chat?: ApiChatMessage[]
   leaderboard?: unknown
   rooms?: unknown
   posts?: unknown
@@ -515,5 +525,40 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       contentType: 'application/json',
       body: JSON.stringify(overrides?.posts ?? communityPosts()),
     })
+  })
+
+  // The lobby chat. App mounts it on every page, so without this route every
+  // spec would hold an event stream open against production.
+  //
+  // The stream is answered with its snapshot and then ends, which an
+  // EventSource treats as a drop and reconnects after `retry` ms. A day's
+  // worth keeps it from reconnecting during a spec; the store's own retry is
+  // for streams the browser refused, which this is not.
+  const chat = [...(overrides?.chat ?? [])]
+  let nextChatId = Math.max(0, ...chat.map((message) => message.id)) + 1
+  await page.route('**/api/chat/**', async (route) => {
+    const method = route.request().method()
+    if (method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: `retry: 86400000\nevent: snapshot\ndata: ${JSON.stringify(chat)}\n\n`,
+      })
+    }
+    const me = requester(route)
+    if (!me) return signedOut(route)
+    if (method === 'POST') {
+      const { body } = route.request().postDataJSON()
+      const message = { id: nextChatId, author_username: me, author_online_name: me, body, created_at: new Date().toISOString() }
+      nextChatId += 1
+      chat.push(message)
+      return asJson(route, message, 201)
+    }
+    const id = Number(route.request().url().match(/\/messages\/(\d+)/)?.[1])
+    const index = chat.findIndex((message) => message.id === id)
+    if (index < 0) return asJson(route, { detail: '메시지를 찾을 수 없습니다.' }, 404)
+    if (chat[index].author_username !== me) return asJson(route, { detail: '본인 메시지만 삭제할 수 있습니다.' }, 403)
+    chat.splice(index, 1)
+    return route.fulfill({ status: 204, body: '' })
   })
 }

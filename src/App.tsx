@@ -8,6 +8,7 @@ import PlayerProfileCard from '@/shared/components/PlayerProfileCard'
 import Footer from "@/shared/components/Footer";
 import PatchNotes from "@/shared/components/PatchNotes";
 import { LoginDialog } from "@/auth/component";
+import Chat from "@/chat/Chat";
 import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import { firstRoomPath, isRoomTab as isRoomTabKey, pathOf } from '@/config/routes'
 import useActiveTab from '@/shared/hooks/useActiveTab'
@@ -259,6 +260,10 @@ export default function App() {
             </Routes>
           </div>
         </main>
+        {/* The third column on a wide screen; narrower, a launcher fixed to
+            the viewport. Here rather than per tab, so the stream lasts the
+            whole visit. */}
+        <Chat />
       </div>
       <Footer />
     </div>

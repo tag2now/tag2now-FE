@@ -9,6 +9,10 @@ declare global {
 
 const BASE = window.__ENV__?.API_BASE ?? '/api'
 
+/** Where a backend path lives. Exported for the one caller that cannot go
+ * through `fetch`: an EventSource opens its own request. */
+export const apiUrl = (path: string): string => `${BASE}/${path}`
+
 /** The API reports failures as { detail: string }; fall back if that is missing. */
 const throwIfFailed = async (res: Response, sentToken: boolean) => {
     if (res.ok) return
@@ -30,7 +34,7 @@ const send = async (path: string, option: RequestInit) => {
     const token = getAccessToken()
     const headers = new Headers(option.headers)
     if (token) headers.set('Authorization', `Bearer ${token}`)
-    const res = await fetch(`${BASE}/${path}`, { ...option, headers })
+    const res = await fetch(apiUrl(path), { ...option, headers })
     await throwIfFailed(res, token !== null)
     return res
 }

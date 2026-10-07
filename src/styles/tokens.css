@@ -5,8 +5,10 @@
 
 /* ─── Design tokens ───────────────────────────────────────── */
 @theme {
-  /* Header content and .app-layout share this width so their edges align. */
-  --content-max: 1050px;
+  /* Header content and .app-layout share this width so their edges align.
+     1050px of sidebar and main, plus the 300px chat column and its gap: the
+     main column keeps its old 844px wherever the screen allows it. */
+  --content-max: 1366px;
   /* The surface ladder. These four used to span 0x0c-0x1f, so a panel sat
      6/255 above the page behind it and its border did the entire job of
      separating them — at which point the whole site read as one flat plane.

@@ -1,0 +1,113 @@
+/* The lobby chat. From 1350px (DOCKED_QUERY in chat/Chat.tsx) it is a third
+   column of .app-layout, right of the main one. Narrower, it is a launcher
+   fixed to the viewport's bottom-left corner and the panel it opens in that
+   spot. Launcher and floating panel sit above the header (40) and the phone's
+   bottom tab bar (50) but under every modal (60), so the login dialog the
+   composer asks for opens on top of the chat rather than behind it. */
+
+/* The grid takes the third column only while the docked chat is in it, so
+   the breakpoint lives in one place — the query that decides to render it. */
+.app-layout:has(> .chat-docked) { grid-template-columns: clamp(150px, 16vw, 190px) minmax(0, 1fr) 300px; }
+
+.chat-launcher {
+  position: fixed; left: 16px; bottom: 16px; z-index: 55;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
+  border: 1px solid var(--color-border-light); border-radius: 999px;
+  background: var(--color-bg-float); color: var(--color-txt);
+  font-size: var(--text-sm); font-weight: var(--weight-strong);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--color-shade) 45%, transparent);
+  cursor: pointer; transition: border-color .15s, background .15s;
+}
+.chat-launcher:hover { border-color: color-mix(in srgb, var(--color-primary) 55%, transparent); background: var(--color-bg-row); }
+.chat-launcher:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.chat-launcher > svg { color: var(--color-primary-text); }
+/* The same pill the nav's counts use, so "something new" looks one way. */
+.chat-launcher-badge {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding-inline: 5px;
+  border-radius: 999px; background: var(--color-primary); color: var(--color-txt);
+  font-size: var(--text-3xs); font-weight: var(--weight-max); font-variant-numeric: tabular-nums;
+}
+
+.chat-panel {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--color-border-light); border-radius: 8px;
+  background: var(--color-bg-panel);
+}
+/* Sticky beside the main column, as the sidebar is beside it on the left;
+   74px is the sidebar's own offset, and 16px under it mirrors the gap above. */
+.chat-docked { position: sticky; top: 74px; align-self: start; height: calc(100dvh - 90px); }
+.chat-floating {
+  position: fixed; left: 16px; bottom: 16px; z-index: 55;
+  width: min(320px, calc(100% - 32px)); height: min(440px, calc(100dvh - 32px));
+  box-shadow: 0 20px 48px color-mix(in srgb, var(--color-shade) 55%, transparent);
+}
+.chat-panel:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.chat-panel-head {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.chat-panel-head h2 {
+  display: flex; align-items: center; gap: 6px; margin: 0;
+  color: var(--color-txt); font-size: var(--text-sm); font-weight: var(--weight-display);
+}
+.chat-panel-head h2 > svg { color: var(--color-primary-text); }
+.chat-panel-note { margin-right: auto; color: var(--color-txt-faint); font-size: var(--text-2xs); }
+.chat-panel-close {
+  display: grid; place-items: center; width: 32px; height: 32px; padding: 0;
+  border: 0; border-radius: 6px; background: transparent; color: var(--color-txt-dim); cursor: pointer;
+}
+.chat-panel-close:hover { background: var(--color-bg-row); color: var(--color-txt); }
+.chat-panel-close:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.chat-status:empty { display: none; }
+.chat-status {
+  margin: 0; padding: 6px 12px; border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent); color: var(--color-txt);
+  font-size: var(--text-2xs);
+}
+
+/* min-height: 0 lets the flex child shrink below its content and scroll,
+   instead of pushing the composer out of the panel. */
+.chat-log { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 8px 0; }
+.chat-log ol { margin: 0; padding: 0; list-style: none; }
+.chat-empty { margin: 24px 12px; color: var(--color-txt-faint); font-size: var(--text-xs); text-align: center; }
+.chat-line { padding: 4px 12px; }
+.chat-line:hover { background: color-mix(in srgb, var(--color-surface-tint) 3%, transparent); }
+.chat-line-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.chat-line-head strong {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-strong);
+}
+.chat-line.is-mine .chat-line-head strong { color: var(--color-primary-text); }
+.chat-line-head time { flex: 0 0 auto; color: var(--color-txt-faint); font-size: var(--text-3xs); font-variant-numeric: tabular-nums; }
+.chat-line-delete {
+  display: grid; place-items: center; width: 22px; height: 22px; margin-left: auto; padding: 0;
+  border: 0; border-radius: 4px; background: transparent; color: var(--color-txt-faint); cursor: pointer;
+}
+.chat-line-delete:hover { background: var(--color-bg-row); color: var(--color-primary-text); }
+.chat-line-delete:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 0; }
+.chat-line p { margin: 1px 0 0; color: var(--color-txt); font-size: var(--text-sm); line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.chat-composer { display: flex; gap: 6px; padding: 8px; border-top: 1px solid var(--color-border-light); }
+.chat-composer .input-base { flex: 1; min-width: 0; }
+.chat-composer .btn-primary { flex: 0 0 auto; padding-inline: 12px; }
+.chat-login { margin: 8px; }
+
+/* A phone: the launcher shrinks to its icon above the bottom tab bar, and the
+   panel becomes a full-screen sheet over everything, the tab bar included.
+   80px clears the tab bar: 8px from the bottom edge plus its 62px height, and
+   a 10px gap. Retune it when the bar's height moves in responsive.css. */
+@media (max-width: 760px) {
+  .chat-launcher {
+    left: 12px; bottom: calc(80px + env(safe-area-inset-bottom));
+    width: 44px; min-height: 44px; justify-content: center; padding: 0;
+  }
+  .chat-launcher-label { display: none; }
+  .chat-launcher-badge { position: absolute; top: -4px; right: -4px; }
+  .chat-floating {
+    inset: 0; width: auto; height: auto; border: 0; border-radius: 0;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .chat-panel-head { min-height: 52px; }
+  /* 16px stops iOS Safari zooming the page in when the field takes focus. */
+  .chat-composer .input-base { font-size: var(--text-base); }
+}

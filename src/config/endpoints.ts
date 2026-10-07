@@ -72,6 +72,11 @@ export const API = {
       `reservations/${reservationId}/comments/${commentId}`,
       '/reservations/{reservation_id}/comments/{comment_id}',
     ),
+
+  chatStream: () => fixed('chat/stream'),
+  chatMessages: () => fixed('chat/messages'),
+  chatMessage: (id: number) =>
+    templated(`chat/messages/${id}`, '/chat/messages/{message_id}'),
 } as const
 
 /** The OpenAPI templates this frontend calls, for the contract test to check
@@ -86,6 +91,7 @@ export const openapiPaths = (): string[] => {
     postComments: [1], postThumb: [1], reservations: [], reservation: [1],
     reservationParticipants: [1], ownParticipation: [1],
     reservationComments: [1], reservationComment: [1, 2],
+    chatStream: [], chatMessages: [], chatMessage: [1],
   }
   return Object.entries(API).map(([key, build]) =>
     (build as (...args: unknown[]) => Endpoint)(...samples[key as keyof typeof API]).openapiPath,

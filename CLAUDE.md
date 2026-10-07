@@ -79,6 +79,7 @@ src/
   reservation/         appointments — Reservation, reservationApi, reservationLabels
   community/           board — useCommunity, communityApi, post/comment components
   stat/                statistics — useStats, useWeeklyTop, Stats
+  chat/                lobby chat — chatStream (SSE store), Chat, launcher/panel components
   shared/              api util, Leaderboard, hooks, components, colors, formatters
 ```
 
@@ -213,8 +214,8 @@ The tab bar implements the ARIA tabs pattern — `role="tablist"`/`tab`/`tabpane
 
 ### Login
 
-Every write — reservations, their comments, and the whole board — needs a
-signed-in **RPCN account**; reads need nothing. `POST /auth/login` checks the
+Every write — reservations, their comments, the whole board and the chat —
+needs a signed-in **RPCN account**; reads need nothing. `POST /auth/login` checks the
 password with RPCN and answers a stateless bearer token (a JWT, 7 days by
 default). Nothing on the server can end it early, so signing out is just
 forgetting it.
@@ -309,6 +310,43 @@ The list groups and sorts by `start_at`, not the `HH:MM` it displays, and labels
 each start 어제/오늘/내일 (`kstDayLabel`). A time alone is ambiguous here: the
 window crosses midnight, so "01:00" can follow "23:00".
 
+### Chat
+
+Today's lobby chat, from tag2now-BE's `/chat` routes. **Reading is public,
+writing needs a login** — and the stream has to stay public, because an
+`EventSource` cannot send an `Authorization` header. `contract.test.ts` checks
+that the stream declares no security, so a backend that started asking for a
+token fails here rather than leaving every reader with an empty chat.
+
+`chat/chatStream.ts` holds it outside React, like `auth/session.ts`: one
+`EventSource` for the whole page, opened with the first subscriber, closed with
+the last and while the tab is hidden. Every connection opens with a `snapshot`
+that **replaces** the list — the backend keeps messages in memory and numbers
+them from 1 on every start, so nothing is resumed from `Last-Event-ID`. The
+backend subscribes a reader before reading its snapshot, so a message can
+arrive twice; the list is kept by id. A dropped stream the browser reconnects
+itself; one it refused (an HTTP error, so `CLOSED`) the store reopens, backing
+off. Unread counts compare `created_at`, not ids, for the same restart reason.
+
+`Chat` is mounted once, as the last child of `.app-layout`. From 1350px
+(`DOCKED_QUERY`) it is a third, always-open column right of the main one —
+1350 is measured: the narrowest width at which the home page's two rankings
+still share a row beside it. Below that it is a launcher in the viewport's
+bottom-left corner that opens a 320×440 panel, and on a phone a full-screen
+sheet over the tab bar. The grid takes the third column through
+`.app-layout:has(> .chat-docked)`, so the breakpoint is written only in JS.
+
+jsdom has no `EventSource`; `test-setup.ts` installs `chat/fakeEventSource.ts`,
+and chat tests play the server through `FakeEventSource.latest().emit(...)`.
+In E2E, `mockAllApis` answers the stream with its snapshot and a one-day
+`retry:`. That response then ends, so the chat shows its "연결이 끊겼습니다"
+notice throughout every spec; a real stream stays open.
+
+nginx needs nothing for the stream: the backend's `X-Accel-Buffering: no`
+turns proxy buffering off for that response, and its 15 s ping keeps the
+connection inside `proxy_read_timeout`. Both were checked through
+`nginx.conf.template` in a container.
+
 ### Error handling
 
 `main.tsx` registers a global `unhandledrejection` handler that shows a toast and calls `preventDefault()`. Rejected promises therefore surface to the user without a try/catch at every call site — but a caller that wants inline error state (as feature hooks do) must catch and store `e.message` itself.
@@ -319,11 +357,12 @@ window crosses midnight, so "01:00" can follow "23:00".
 
 Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. Design tokens are declared in an `@theme` block in `src/index.css` and become utilities automatically (`--color-primary` → `bg-primary`, `text-primary`, `border-primary`).
 
-`.app-layout` caps the page at `min(var(--content-max), 100% - 32px)` — sidebar
-plus main column, so it sets the width of **every** tab. A change here lands on
+`.app-layout` caps the page at `min(var(--content-max), 100% - 32px)` — sidebar,
+main column and, from 1350px, the chat column — so it sets the width of
+**every** tab. A change here lands on
 every screen, not just the tab that prompted it.
 
-`--content-max` (1050px) is shared with `.app-header`'s horizontal padding so
+`--content-max` (1366px) is shared with `.app-header`'s horizontal padding so
 the header's content edges line up with the layout's. That padding is computed
 from `100%`, not `100vw`: `100vw` counts the scrollbar and put the header ~7px
 off the content below it.
