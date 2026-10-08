@@ -121,7 +121,7 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
             {/* Stacked, not side by side: the daily panel is the home screen's,
                 full width at its own height, and beside the hourly chart it
                 could only be as tall as that one. */}
-            <div className="chart-stack">
+            <div className="grid gap-2">
               <section aria-labelledby="hourly-heading" className="chart-panel">
                 <h4 id="hourly-heading">
                   시간대별 접속자 <span className="text-2xs font-medium opacity-60">(KST {hourLabel(DAY_START_HOUR)}시 ~ 익일 {hourLabel((DAY_START_HOUR + 23) % 24)}시)</span>
@@ -134,7 +134,8 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
         )
       })()}
 
-      <div className="section-toolbar compact-toolbar stats-section-break">
+      {/* The rule above divides the two sections where a sub-tab bar used to. */}
+      <div className="section-toolbar compact-toolbar mt-6 border-t border-t-border-light pt-5">
         <div className="section-title"><span className="section-icon"><Crown size={15} /></span><div><h3>주간 철악귀</h3><p>최근 7일 매치 참여 순위</p></div></div>
         <ToggleGroup options={LIMIT_OPTIONS} value={wt.limit} onChange={wt.setLimit} />
       </div>

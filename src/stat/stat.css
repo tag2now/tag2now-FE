@@ -1,5 +1,0 @@
-.chart-stack { display: grid; gap: 8px; }
-
-/* Separates the second section on a page that stacks them, where a sub-tab bar
-   used to divide the same content. */
-.stats-section-break { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--color-border-light); }

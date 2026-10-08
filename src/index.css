@@ -30,5 +30,4 @@
 @import "./community/community.css" layer(components.app);
 @import "./reservation/reservation.css" layer(components.app);
 @import "./match/match.css" layer(components.app);
-@import "./stat/stat.css" layer(components.app);
 @import "./styles/responsive.css" layer(components.app);
