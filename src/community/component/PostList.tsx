@@ -1,12 +1,21 @@
 import useCharacterPickerDefault from '@/shared/hooks/useCharacterPickerDefault'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
+import useMediaQuery from '@/shared/hooks/useMediaQuery'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
+import Select from '@/shared/components/Select'
 import PostTypeBadge from './PostTypeBadge'
 import type { LeaderboardEntry} from "@/shared/types";
 import { MAX_POST_CHARACTERS, POST_TYPES } from "@/community/types";
 import type {PostSummary} from "@/community/types";
 import AuthorBadge from './AuthorBadge'
 import { ChevronDown, ChevronLeft, ChevronRight, MessageSquare, MessagesSquare, PenLine, RefreshCw, SlidersHorizontal, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
+
+/** Wider than a phone (the 760px breakpoint every sheet uses): the categories
+ * are buttons. A phone gets them as a select. */
+export const WIDE_QUERY = '(min-width: 761px)'
+
+/** `''` is 전체 — the value the feed's filter already uses for "no category". */
+const POST_TYPE_OPTIONS = [{ value: '', label: '전체' }, ...POST_TYPES.map((type) => ({ value: type, label: type }))]
 
 interface PostListProps {
   posts: PostSummary[]
@@ -73,6 +82,7 @@ export default function PostList({
   onPageChange, onSelectPost, onRefresh, onWrite, leaderboardEntries,
 }: PostListProps) {
   const [pickerOpen, setPickerOpen] = useCharacterPickerDefault()
+  const wide = useMediaQuery(WIDE_QUERY)
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   return (
@@ -83,22 +93,23 @@ export default function PostList({
           <div><h3>커뮤니티 피드</h3><p>전체 게시글 {total}개</p></div>
         </div>
         <div className="section-controls">
-          <div className="segmented-control" role="group" aria-label="게시글 분류">
-            {['all', ...POST_TYPES].map((t) => {
-              const active = (t === 'all' && !postType) || postType === t
-              return (
+          {wide ? (
+            <div className="segmented-control" role="group" aria-label="게시글 분류">
+              {POST_TYPE_OPTIONS.map(({ value, label }) => (
                 <button
                   type="button"
-                  key={t}
-                  onClick={() => onPostTypeChange(t === 'all' ? '' : t)}
-                  aria-pressed={active}
-                  className={`cursor-pointer transition-colors ${active ? 'active' : ''}`}
+                  key={value}
+                  onClick={() => onPostTypeChange(value)}
+                  aria-pressed={postType === value}
+                  className={`cursor-pointer transition-colors ${postType === value ? 'active' : ''}`}
                 >
-                  {t === 'all' ? '전체' : t}
+                  {label}
                 </button>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <Select label="게시글 분류" value={postType} options={POST_TYPE_OPTIONS} onChange={onPostTypeChange} />
+          )}
         </div>
         <div className="toolbar-actions">
           <button onClick={onRefresh} disabled={loading} aria-label="새로고침" className="refresh-btn"><RefreshCw size={14} aria-hidden="true" /></button>

@@ -1,14 +1,26 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
-import PostList from './PostList'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import PostList, { WIDE_QUERY } from './PostList'
 import type { PostSummary } from '@/community/types'
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+/** A viewport wider than a phone. jsdom has no matchMedia, so every other test
+ * here sees the phone layout. */
+const wideScreen = () => vi.stubGlobal('matchMedia', (query: string) => ({
+  matches: query === WIDE_QUERY,
+  addEventListener: () => {},
+  removeEventListener: () => {},
+}))
 
 const post = (id: number, title: string, postType = '자유'): PostSummary => ({
   id, author: 'alice', title, body: '', post_type: postType, characters: [],
   thumbs_up: 0, thumbs_down: 0, created_at: new Date().toISOString(), comment_count: 0,
 })
 
-function renderList(notices: PostSummary[], onSelectPost = vi.fn()) {
+function renderList(notices: PostSummary[], onSelectPost = vi.fn(), onPostTypeChange = vi.fn()) {
   render(
     <PostList
       posts={[post(1, '일반 글')]}
@@ -19,7 +31,7 @@ function renderList(notices: PostSummary[], onSelectPost = vi.fn()) {
       loading={false}
       error={null}
       postType="공략"
-      onPostTypeChange={vi.fn()}
+      onPostTypeChange={onPostTypeChange}
       characters={[]}
       onCharactersChange={vi.fn()}
       onPageChange={vi.fn()}
@@ -57,5 +69,34 @@ describe('pinned notices', () => {
     renderList([])
 
     expect(screen.queryByRole('region', { name: '공지' })).not.toBeInTheDocument()
+  })
+})
+
+describe('the category filter', () => {
+  it('is a row of buttons wider than a phone, and 전체 clears the category', () => {
+    wideScreen()
+    const onPostTypeChange = vi.fn()
+    renderList([], vi.fn(), onPostTypeChange)
+
+    const filters = screen.getByRole('group', { name: '게시글 분류' })
+    expect(within(filters).getByRole('button', { name: '공략' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByRole('combobox', { name: '게시글 분류' })).not.toBeInTheDocument()
+
+    fireEvent.click(within(filters).getByRole('button', { name: '전체' }))
+
+    expect(onPostTypeChange).toHaveBeenCalledWith('')
+  })
+
+  it('is a select on a phone, and 전체 clears the category', () => {
+    const onPostTypeChange = vi.fn()
+    renderList([], vi.fn(), onPostTypeChange)
+
+    const select = screen.getByRole('combobox', { name: '게시글 분류' })
+    expect(select).toHaveValue('공략')
+    expect(screen.queryByRole('group', { name: '게시글 분류' })).not.toBeInTheDocument()
+
+    fireEvent.change(select, { target: { value: '' } })
+
+    expect(onPostTypeChange).toHaveBeenCalledWith('')
   })
 })

@@ -18,18 +18,20 @@ test.describe('Community', () => {
     await expect(page.locator('text=Lars wall carry nerfed?')).toBeVisible()
   })
 
-  test('filter buttons are visible', async ({ page }) => {
-    await expect(page.locator('button', { hasText: '전체' })).toBeVisible()
-    await expect(page.locator('button', { hasText: '자유' })).toBeVisible()
-    await expect(page.locator('button', { hasText: '건의' })).toBeVisible()
-    await expect(page.locator('button', { hasText: '공략' })).toBeVisible()
+  // Buttons beside the title on desktop; a phone gets the same choices as a select.
+  test('the category filter offers every category', async ({ page, isMobile }) => {
+    const choices = isMobile
+      ? page.getByRole('combobox', { name: '게시글 분류' }).locator('option')
+      : page.getByRole('group', { name: '게시글 분류' }).getByRole('button')
+    await expect(choices).toHaveText(['전체', '자유', '건의', '공략'])
   })
 
-  test('clicking filter button triggers API call with post_type', async ({ page }) => {
+  test('picking a category triggers API call with post_type', async ({ page, isMobile }) => {
     const requestPromise = page.waitForRequest((req) =>
       req.url().includes('/api/community/posts') && req.url().includes('post_type')
     )
-    await page.locator('button', { hasText: '자유' }).click()
+    if (isMobile) await page.getByRole('combobox', { name: '게시글 분류' }).selectOption('자유')
+    else await page.getByRole('group', { name: '게시글 분류' }).getByRole('button', { name: '자유' }).click()
     await requestPromise
   })
 

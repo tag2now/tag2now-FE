@@ -65,8 +65,8 @@ test.describe('Navigation', () => {
   test('clicking community tab shows post list', async ({ page }) => {
     await page.getByRole('tab', { name: '커뮤니티' }).click()
 
-    // Community has filter buttons
-    await expect(page.getByRole('button', { name: '전체' })).toBeVisible()
+    // Community has its category filter: buttons on desktop, a select on a phone
+    await expect(page.getByLabel('게시글 분류')).toBeVisible()
     await expect(page.getByRole('button', { name: '글쓰기' })).toBeVisible()
   })
 

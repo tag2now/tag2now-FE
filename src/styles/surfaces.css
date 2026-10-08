@@ -59,7 +59,7 @@
 textarea.input-base { min-height: 140px; padding-block: 8px; line-height: 1.55; }
 select.input-base { appearance: none; padding-right: 34px; color-scheme: dark; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, #a3a3ad 50%), linear-gradient(135deg, #a3a3ad 50%, transparent 50%); background-position: calc(100% - 16px) 16px, calc(100% - 11px) 16px; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
 select.input-base option { background: var(--color-bg-field); color: var(--color-txt); }
-.custom-select { position: relative; min-width: 132px; }
+.custom-select { position: relative; min-width: 70px; }
 .custom-select-trigger { display: flex; width: 100%; min-height: 38px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px 0 12px; border: 1px solid color-mix(in srgb, var(--color-surface-tint) 11%, transparent); border-radius: 6px; background: var(--color-bg-field); color: var(--color-txt); font-size: var(--text-2xs); font-weight: var(--weight-label); text-align: left; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease; }
 .custom-select-trigger:hover { border-color: color-mix(in srgb, var(--color-surface-tint) 18%, transparent); background: var(--color-bg-row); }
 .custom-select:has(select:focus-visible) .custom-select-trigger, .custom-select.is-open .custom-select-trigger { border-color: color-mix(in srgb, var(--color-primary) 80%, transparent); outline: 0; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent); }
