@@ -1,7 +1,7 @@
 /* What the boards share: the filter bar, the modal frame and the controls
    more than one feature's dialogs use. Each board's own rules moved to
    community/community.css and reservation/reservation.css, and the login
-   dialog's to auth/auth.css. */
+   dialog's to auth/auth.css, its input and button overrides included. */
 
 .filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
 .filter-label { display: inline-flex; align-items: center; gap: 4px; color: var(--color-txt-dim); font-size: var(--text-3xs); font-weight: var(--weight-row); }
@@ -28,10 +28,6 @@
 .confirm-dialog-icon.is-danger { background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary-text); }
 .confirm-dialog-body { margin: 12px 0 0; color: var(--color-txt-dim); font-size: var(--text-sm); line-height: 1.6; }
 .confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 16px; }
-.login-field .input-base { min-height: 50px; border-color: color-mix(in srgb, var(--color-surface-tint) 12%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--color-bg-deep) 62%, var(--color-bg-field)); color: var(--color-txt); font-size: var(--text-base); }
-.login-field .input-base::placeholder { color: var(--color-txt-muted); }
-.login-field .input-base:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-glow); }
-.login-dialog-actions .btn-primary { width: 100%; min-height: 52px; border-radius: 8px; box-shadow: 0 8px 20px var(--color-primary-glow); font-size: var(--text-base); }
 /* Rank art is a banner: sized by height so the column keeps one shape whatever
    the rank name is. */
 .author-badge-rank { height: 16px; width: auto; flex: 0 0 auto; }

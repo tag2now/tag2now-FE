@@ -387,6 +387,22 @@ utilities — never a utility the sheet narrows on a phone. Before this, sheets
 were unlayered and won; the utilities they silently beat were removed when the
 layer moved, and the same 78-state snapshot came out identical.
 
+**Moving a sheet into utilities.** A rule moves onto the element when tokens
+and Tailwind's scale can say it; one that needs a value outside them —
+`min()`/`max()`, a shadow mixed off a token, a line height between the named
+steps — stays in the feature's sheet, where `lint:css` still checks it.
+`auth/auth.css` is the worked example. Write it mobile-first, as Tailwind
+assumes: the bare class is the phone, `md:` (Tailwind's default 48rem, 768px)
+the desktop, and a sheet rule left beside such utilities uses
+`@media (width < 48rem)` so both switch together. The sheets not yet moved
+still break at `max-width: 760px`, so the two boundaries differ by eight
+pixels until they are.
+
+Two Tailwind behaviours differ from the sheets they replace. `hover:` applies
+only where the device can hover (`@media (hover: hover)`, per Tailwind v4), so
+a tap on a phone no longer leaves a hover state behind. `transition-colors`
+uses Tailwind's easing, `cubic-bezier(0.4, 0, 0.2, 1)`, rather than `ease`.
+
 `.app-layout` caps the page at `min(var(--content-max), 100% - 32px)` — sidebar,
 main column and, from 1350px, the chat column — so it sets the width of
 **every** tab. A change here lands on

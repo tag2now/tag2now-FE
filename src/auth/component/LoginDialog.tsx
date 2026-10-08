@@ -66,7 +66,7 @@ function LoginForm({ reason }: { reason: string | null }) {
         </div>
         <h2 id="login-dialog-title" className="sr-only">RPCN 로그인</h2>
 
-        {reason && <p id="login-dialog-body" className="login-reason">{reason}</p>}
+        {reason && <p id="login-dialog-body" className="mb-4 border-l-2 border-primary bg-primary/8 px-3 py-2 text-xs leading-normal text-txt-dim break-keep">{reason}</p>}
 
         <div className="login-field">
           <label className="sr-only" htmlFor="login-username">아이디</label>
@@ -83,7 +83,7 @@ function LoginForm({ reason }: { reason: string | null }) {
             onChange={(event) => setUsername(event.target.value)}
           />
         </div>
-        <div className="login-field">
+        <div className="login-field mt-3">
           <label className="sr-only" htmlFor="login-password">비밀번호</label>
           <div className="relative">
             <input
@@ -100,7 +100,7 @@ function LoginForm({ reason }: { reason: string | null }) {
             />
             <button
               type="button"
-              className="login-reveal"
+              className="absolute top-0 right-0 grid h-full w-12 cursor-pointer place-items-center border-none bg-transparent text-txt-faint hover:text-txt aria-pressed:text-txt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={() => setShowPassword((shown) => !shown)}
               aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
               aria-pressed={showPassword}
@@ -110,34 +110,35 @@ function LoginForm({ reason }: { reason: string | null }) {
           </div>
         </div>
 
-        {error && <p role="alert" className="login-error">{error}</p>}
+        {error && <p role="alert" className="mt-3 text-sm leading-normal font-bold text-error">{error}</p>}
 
-        <div className="login-options">
-          <label className="login-remember">
+        <div className="mt-5 flex items-start justify-between gap-3 md:items-center">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 text-sm leading-normal text-txt-dim">
             <input
               type="checkbox"
+              className="peer sr-only"
               checked={remember}
               disabled={submitting}
               onChange={(event) => setRemember(event.target.checked)}
             />
-            <span className="login-checkbox" aria-hidden="true"><Check size={14} /></span>
+            <span className="grid size-5 place-items-center rounded-full border border-txt-faint text-transparent transition-colors duration-150 peer-checked:border-primary peer-checked:bg-primary peer-checked:text-bg-deep peer-disabled:opacity-55 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary" aria-hidden="true"><Check size={14} /></span>
             자동 로그인
           </label>
           <span className="login-credential-note">온라인 닉네임이 아닌 RPCN 아이디를 입력하세요.</span>
         </div>
 
-        <div className="login-dialog-actions">
+        <div className="login-dialog-actions mt-8">
           <button type="submit" className="btn-primary" disabled={submitting || !username.trim() || !password}>
             {submitting && <Loader2 size={14} aria-hidden="true" className="animate-spin" />}
             {submitting ? '로그인 중' : '로그인'}
           </button>
         </div>
-        <button type="button" className="login-cancel" onClick={dismissLoginRequest}>취소</button>
+        <button type="button" className="mx-auto mt-3 block cursor-pointer border-none bg-transparent px-2 py-0.5 text-xs leading-normal text-txt-faint hover:text-txt hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={dismissLoginRequest}>취소</button>
         <p className="login-help">RPCN 계정은 RPCS3의 RPCN 메뉴에서 생성할 수 있어요.</p>
 
         {/* Last in the DOM so the dialog opens focused on the id field; it is
             positioned in the corner, and stays usable to abandon a slow login. */}
-        <button type="button" className="login-close" onClick={dismissLoginRequest} aria-label="로그인 창 닫기">
+        <button type="button" className="absolute top-3 right-3 z-1 grid size-8 cursor-pointer place-items-center rounded-control border-none bg-transparent p-0 text-txt-faint transition-colors duration-150 hover:bg-surface-tint/7 hover:text-txt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={dismissLoginRequest} aria-label="로그인 창 닫기">
           <X size={18} aria-hidden="true" />
         </button>
       </form>
