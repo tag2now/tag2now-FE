@@ -509,7 +509,16 @@ scaffold's default and never a response to an observed problem, which left three
 cores idle. Do not put it back, and do not reserve a core for the dev server:
 it only serves static files, since every backend call is intercepted. Locally
 there are no retries, so a full run flakes occasionally on an unrelated spec;
-re-run the single spec before believing it.
+name it from that run, then confirm with `npx playwright test --last-failed`
+before believing it.
+
+**Before offering a commit, run `.claude/skills/test/SKILL.md`.** It is the
+whole pre-commit suite — the contract check, both typechecks, the CSS lint and
+E2E, plus tag2now-BE's steps when that changed — and the rule for reading it:
+each suite runs once, its output goes whole to a file under `test-results/`,
+and every failure is named from that run. In a session opened at the workspace
+root a sub-repository's skills can be discovered late, hours in, so when `test`
+is not in the skill list yet, read that file and follow it anyway.
 
 ### Contract with the backend
 
@@ -541,6 +550,7 @@ response models on the backend is what would close the rest.
 ## Custom commands
 
 `.claude/commands/` provides `/a11y-audit`, `/design-audit`, and `/design-review`.
+`.claude/skills/` holds `test` (the pre-commit suite, above) and `patch-notes`.
 
 ## Deployment
 
