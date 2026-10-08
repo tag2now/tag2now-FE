@@ -1,16 +1,17 @@
-/* @layer components: the classes other rules are allowed to build on.
-   Layered on purpose — every unlayered rule in the files below outranks these
-   regardless of source order, which is what lets a feature override a shared
-   control without an !important. */
+/* @layer primitives: the classes other rules are allowed to build on.
+   A sublayer of components.app on purpose — every rule placed directly in
+   components.app, the files below included, outranks these regardless of
+   source order, which is what lets a feature override a shared control
+   without an !important. */
 
 /* ─── Component classes ───────────────────────────────────── */
-/* Everything here is layered, so any unlayered rule below beats it no matter
-   how specific either one is. That makes this section the home of the classes
-   the app shell does NOT restyle — buttons, cells, the loading bar, sr-only.
-   A class defined both here and in the shell section would have its @apply
-   silently dropped, so keep the two sets disjoint: style a shell-owned class
-   in the shell section instead of adding a competing rule here. */
-@layer components {
+/* Everything here is in the sublayer, so any rule outside it beats it no
+   matter how specific either one is. That makes this section the home of the
+   classes the app shell does NOT restyle — buttons, cells, the loading bar,
+   sr-only. A class defined both here and in the shell section would have its
+   @apply silently dropped, so keep the two sets disjoint: style a shell-owned
+   class in the shell section instead of adding a competing rule here. */
+@layer primitives {
   /* Pseudo-elements (can't be done with @apply) */
   .tab-btn.active::before {
     content: '';

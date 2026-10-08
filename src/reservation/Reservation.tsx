@@ -172,7 +172,7 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
       <div className="relative">
         <div className="panel-heading flex flex-col gap-4 border-b border-border-light pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="panel-meta mb-1 text-primary-text">MATCH APPOINTMENT / KST</p>
+            <p className="panel-meta">MATCH APPOINTMENT / KST</p>
             <h3 className="font-display text-[15px] font-bold tracking-[0.08em] text-txt">오늘의 예약</h3>
             <p className="mt-1 text-sm text-txt-dim">미리 약속하고, 접속 시간을 맞춰 보세요.</p>
           </div>
@@ -262,8 +262,8 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
               {/* Hidden on the roomy layout, where the list is still beside
                   this and there is nothing to go back to. */}
               <button type="button" className="reservation-detail-back btn-ghost" onClick={() => navigate('/reservation')}><ChevronLeft size={15} aria-hidden="true" /> 목록으로</button>
-              <div className="flex items-start justify-between gap-3"><div><p className="panel-meta mb-1">선택한 예약</p><p className="font-display text-3xl font-extrabold text-txt">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
-              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-start justify-between gap-3"><span className="shrink-0 text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-8" className="flex-1 justify-end" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary-text">{selectedReservation.type}</strong></p></div>
+              <div className="flex items-start justify-between gap-3"><div><p className="panel-meta">선택한 예약</p><p className="font-display text-3xl font-extrabold text-txt">{selectedReservation.time}</p></div><span className={`border px-2 py-1 text-xs font-bold tracking-[0.12em] ${availability.className}`}>{availability.label}</span></div>
+              <div className="mt-4 space-y-3 border-y border-border py-4 text-sm"><p className="flex items-center justify-between"><span className="text-txt-dim">예약자</span><strong className="text-txt">{selectedReservation.host}</strong></p>{selectedReservation.ranks.length > 0 && <div className="flex items-start justify-between gap-3"><span className="shrink-0 text-txt-dim">보유 계급</span><RankSummary ranks={selectedReservation.ranks} imageClassName="h-8" className="flex-1 flex-wrap justify-end" /></div>}<p className="flex items-center justify-between"><span className="text-txt-dim">종류</span><strong className="text-primary-text">{selectedReservation.type}</strong></p></div>
               <section className="reservation-roster" aria-label="참가자 명단">
                 <div className="reservation-roster-heading">
                   <h4>참가자 <span className="reservation-roster-count">{selectedReservation.joined}/{selectedReservation.capacity}명</span></h4>

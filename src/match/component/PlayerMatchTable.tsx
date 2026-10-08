@@ -39,12 +39,12 @@ export default function PlayerMatchTable({ rooms, leaderboardEntries }: PlayerMa
 
   return (
     <div className="data-table-wrap">
-      <table className="match-table border-collapse w-full">
+      <table className="match-table player-match-table border-collapse w-full">
         <caption className="sr-only">플레이어 매치 방 목록</caption>
         <colgroup>
-          <col className="w-52" />
           <col />
-          <col className="w-24" />
+          <col />
+          <col />
         </colgroup>
         <thead>
           <tr>

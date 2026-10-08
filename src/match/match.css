@@ -7,6 +7,12 @@
    sitting on odd rows, kept theirs. */
 .tbl-row:nth-child(even) { background-color: var(--color-bg-row-alt); }
 .tbl-row:hover { background-color: color-mix(in srgb, var(--color-primary) 8%, transparent); }
+/* Column widths sit here rather than on the <col>s: the phone block below
+   narrows them, and a utility on the <col> would outrank that rule. */
+.rank-match-table col:first-child { width: 128px; }
+.rank-match-table col:nth-child(3) { width: 64px; }
+.player-match-table col:first-child { width: 208px; }
+.player-match-table col:nth-child(3) { width: 96px; }
 .tbl-td { padding: 6px 8px; color: var(--color-txt); font-size: var(--text-base); text-align: center; white-space: nowrap; }
 .tier-heading { border-top: 1px solid var(--color-border-light); border-bottom: 1px solid var(--color-border-light); background: color-mix(in srgb, var(--color-surface-tint) 1.8%, transparent); color: var(--color-txt); font-weight: var(--weight-strong); letter-spacing: .14em; text-transform: uppercase; }
 

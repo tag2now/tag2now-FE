@@ -1,10 +1,13 @@
 @import "tailwindcss";
 
 
-/* The order of these imports IS the cascade: tokens, then base, then the
-   layered primitives, then unlayered rules from the most general surface to
-   the most specific feature, and the shared viewport overrides last.
-   Reordering them changes what wins.
+/* Every sheet but the tokens and base lands in components.app, under
+   Tailwind's utilities layer: a utility in the markup beats any rule here, so
+   `className="state-msg px-4"` always gets its px-4. Inside components.app
+   the old order holds — the rules directly in it outrank its primitives
+   sublayer whatever their specificity, and among themselves the order of this
+   list decides, from the most general surface to the most specific feature,
+   with the shared viewport overrides last. Reordering them changes what wins.
 
    Global rules live in styles/, the shared components' in shared/styles/, and
    each feature's in its own folder, its phone overrides at the end of the
@@ -12,20 +15,20 @@
    list stays the one place the order is written. */
 @import "./styles/tokens.css";
 @import "./styles/base.css";
-@import "./styles/primitives.css";
-@import "./styles/shell.css";
-@import "./styles/surfaces.css";
-@import "./overview/overview.css";
-@import "./shared/styles/ranking.css";
-@import "./styles/boards.css";
-@import "./shared/styles/history.css";
-@import "./shared/styles/leaderboard.css";
-@import "./shared/styles/saves.css";
-@import "./admin/admin.css";
-@import "./chat/chat.css";
-@import "./auth/auth.css";
-@import "./community/community.css";
-@import "./reservation/reservation.css";
-@import "./match/match.css";
-@import "./stat/stat.css";
-@import "./styles/responsive.css";
+@import "./styles/primitives.css" layer(components.app);
+@import "./styles/shell.css" layer(components.app);
+@import "./styles/surfaces.css" layer(components.app);
+@import "./overview/overview.css" layer(components.app);
+@import "./shared/styles/ranking.css" layer(components.app);
+@import "./styles/boards.css" layer(components.app);
+@import "./shared/styles/history.css" layer(components.app);
+@import "./shared/styles/leaderboard.css" layer(components.app);
+@import "./shared/styles/saves.css" layer(components.app);
+@import "./admin/admin.css" layer(components.app);
+@import "./chat/chat.css" layer(components.app);
+@import "./auth/auth.css" layer(components.app);
+@import "./community/community.css" layer(components.app);
+@import "./reservation/reservation.css" layer(components.app);
+@import "./match/match.css" layer(components.app);
+@import "./stat/stat.css" layer(components.app);
+@import "./styles/responsive.css" layer(components.app);

@@ -64,7 +64,7 @@ export default function ReservationForm({ formApi, onClose, onSubmit, notice }: 
   return (
       <ReservationFormDialog onClose={onClose} onSubmit={onSubmit}>
         <div className="reservation-modal-header col-span-full">
-          <div><p className="panel-meta mb-1 text-primary-text">{isCreate ? 'NEW MATCH REQUEST' : 'EDIT MATCH REQUEST'}</p><h3 id="reservation-modal-title" className="font-display text-xl font-extrabold tracking-[0.06em] text-txt">{isCreate ? '예약 추가' : '예약 수정'}</h3><p className="modal-description">시간과 매치 조건을 설정해 참가자를 모집하세요.</p></div>
+          <div><p className="panel-meta">{isCreate ? 'NEW MATCH REQUEST' : 'EDIT MATCH REQUEST'}</p><h3 id="reservation-modal-title" className="font-display font-extrabold tracking-[0.06em] text-txt">{isCreate ? '예약 추가' : '예약 수정'}</h3><p className="modal-description">시간과 매치 조건을 설정해 참가자를 모집하세요.</p></div>
           <button type="button" aria-label="닫기" className="modal-close" onClick={onClose}><X size={16} /></button>
         </div>
         {/* Which day, not just which hour. The listing runs to the next
@@ -106,7 +106,7 @@ export default function ReservationForm({ formApi, onClose, onSubmit, notice }: 
         </fieldset>
         {form.type !== '플레이어 매치' && <fieldset className="modal-field col-span-full">
           <legend className="field-label">보유 계급 <span className="font-medium">(복수 선택 가능)</span></legend>
-          <button type="button" aria-label={form.ranks.length > 0 ? `계급 선택, 현재 ${sortRanksDescending(form.ranks).join(', ')}` : '계급 선택'} aria-expanded={rankPickerOpen} aria-controls="reservation-rank-picker" onClick={() => setRankPickerOpen((open) => !open)} className="input-base mt-1 flex min-h-12 w-full items-center justify-between gap-3 px-3 py-1.5 text-left">
+          <button type="button" aria-label={form.ranks.length > 0 ? `계급 선택, 현재 ${sortRanksDescending(form.ranks).join(', ')}` : '계급 선택'} aria-expanded={rankPickerOpen} aria-controls="reservation-rank-picker" onClick={() => setRankPickerOpen((open) => !open)} className="input-base mt-1 flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left">
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <span className="shrink-0 text-xs font-medium text-txt-dim">{form.ranks.length > 0 ? `${form.ranks.length}개 선택` : '계급을 선택해 주세요'}</span>
               {form.ranks.length > 0 && <span className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">

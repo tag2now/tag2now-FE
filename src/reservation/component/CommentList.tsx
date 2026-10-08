@@ -114,7 +114,7 @@ export default function CommentList({ reservationId, onError }: Props) {
         <label className="sr-only" htmlFor="reservation-comment-body">댓글 내용</label>
         <textarea
           id="reservation-comment-body"
-          className="input-base flex-1 resize-y py-1"
+          className="input-base flex-1 resize-y"
           rows={1}
           // textarea.input-base carries a 140px min-height for the long
           // form fields elsewhere; an element selector outranks the utility

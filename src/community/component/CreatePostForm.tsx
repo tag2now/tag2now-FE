@@ -116,7 +116,7 @@ export default function CreatePostForm({ onSubmit, onCancel, initialPost }: Crea
         placeholder="내용을 입력하세요(최대 1000자)"
         aria-label="게시글 내용"
         rows={14}
-        className="input-base w-full p-3 text-base resize-vertical"
+        className="input-base w-full text-(length:--text-base) resize-vertical"
       />
       </div>
       <div className={`character-count ${body.length > 900 ? 'near-limit' : ''}`}>{body.length.toLocaleString()} / 1,000</div>

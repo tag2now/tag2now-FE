@@ -40,18 +40,12 @@ function ToggleGroup<T extends string | number>({
     <div className="flex items-center gap-2">
       {label && <span className="text-xs text-txt-dim font-semibold tracking-wide uppercase">{label}</span>}
       <div className="segmented-control">
-        {options.map((opt, i) => (
+        {options.map((opt) => (
           <button
             key={String(opt.value)}
             onClick={() => onChange(opt.value)}
             aria-pressed={value === opt.value}
-            className={`transition-colors cursor-pointer ${
-              i > 0 ? 'border-l border-border-light' : ''
-            } ${
-              value === opt.value
-                ? 'bg-primary text-bg-deep'
-                : 'text-txt-dim hover:text-txt hover:bg-primary-hover'
-            }`}
+            className="transition-colors cursor-pointer"
           >
             {opt.label}
           </button>

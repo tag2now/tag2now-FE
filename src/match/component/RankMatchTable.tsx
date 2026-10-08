@@ -24,12 +24,12 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
 
   return (
     <div className="data-table-wrap">
-      <table className="match-table border-collapse w-full">
+      <table className="match-table rank-match-table border-collapse w-full">
         <caption className="sr-only">랭크 매치 방 목록</caption>
         <colgroup>
-          <col className="w-32" />
           <col />
-          <col className="w-16" />
+          <col />
+          <col />
           <col />
         </colgroup>
         <thead>
@@ -85,7 +85,7 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
                     <td className="player-name">
                       {r.users?.[0] ? <button onClick={() => setSelectedNpid(r.users![0].np_id)} className="player-btn">{r.users[0].online_name}</button> : '—'}
                     </td>
-                    <td className="tbl-td px-1">
+                    <td className="tbl-td">
                             <span className="inline-flex items-center" title="게임 중" aria-label="게임 중">
                               {VsLabel}
                             </span>
@@ -108,7 +108,7 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
                           {waiting.online_name}
                         </button>
                       </td>
-                      <td className="tbl-td px-1">
+                      <td className="tbl-td">
                         <span className="searching-icon" title="상대 찾는 중" aria-label="상대 찾는 중">
                           <Search size={14} aria-hidden="true" />
                         </span>

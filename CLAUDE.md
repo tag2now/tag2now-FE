@@ -167,7 +167,7 @@ larger one, left to the history panel and the profile card.
 
 The rules live in `shared/styles/ranking.css`, imported directly after
 `overview/overview.css` because that is where they were written — moving them
-would reorder them against the unlayered rules in `styles/boards.css`,
+would reorder them against the rules in `styles/boards.css`,
 `shared/styles/leaderboard.css` and `styles/responsive.css`.
 
 ### Routing
@@ -368,10 +368,24 @@ Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. D
 A rule goes to a feature's file only when that feature alone uses its classes;
 anything two features share stays global. Every sheet is still imported from
 `src/index.css` and never from a component, because **the order of that list
-is the cascade**: most rules are unlayered, so moving an import changes which
+is the cascade**: the rules share one layer, so moving an import changes which
 rule wins. The move into feature folders was checked by snapshotting every
 element's computed style on 68 screen states before and after — nothing
 changed — so a later reordering deserves the same check.
+
+**A utility in the markup always beats a sheet.** Every sheet but `tokens.css`
+and `base.css` is imported `layer(components.app)`, under Tailwind's
+`utilities` layer, so `className="panel-meta mb-1"` gets its `mb-1` whatever
+`.panel-meta` sets. Inside `components.app` the rules placed directly in it
+outrank `primitives.css`'s `@layer primitives` block regardless of
+specificity, which is what lets a feature override a shared control.
+
+The flip side: a sheet can no longer override a utility, a phone `@media`
+block included. A value that changes with the viewport belongs wholly to one
+side — both widths in the sheet (the match tables' `<col>`s), or both as
+utilities — never a utility the sheet narrows on a phone. Before this, sheets
+were unlayered and won; the utilities they silently beat were removed when the
+layer moved, and the same 78-state snapshot came out identical.
 
 `.app-layout` caps the page at `min(var(--content-max), 100% - 32px)` — sidebar,
 main column and, from 1350px, the chat column — so it sets the width of

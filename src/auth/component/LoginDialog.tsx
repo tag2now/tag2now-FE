@@ -90,7 +90,7 @@ function LoginForm({ reason }: { reason: string | null }) {
               ref={passwordRef}
               id="login-password"
               type={showPassword ? 'text' : 'password'}
-              className="input-base w-full pr-10"
+              className="input-base w-full"
               placeholder="비밀번호를 입력하세요"
               autoComplete="current-password"
               maxLength={128}
