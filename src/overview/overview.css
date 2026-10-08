@@ -107,13 +107,6 @@
 .overview-list-main { display: flex; min-width: 40px; flex: 0 1 auto; flex-direction: column; gap: 1px; }
 .overview-list-title { overflow: hidden; color: var(--color-txt); font-size: var(--text-xs); font-weight: var(--weight-row); text-overflow: ellipsis; white-space: nowrap; }
 .overview-list-sub { overflow: hidden; color: var(--color-txt-faint); font-size: var(--text-2xs); text-overflow: ellipsis; white-space: nowrap; }
-/* Sits against the host it describes rather than at the far edge of the row.
-   Neither shrinks nor wraps: letting it shrink cut a rank banner mid-image —
-   "Yaksa" rendered as "sa" — which reads as a broken asset rather than a
-   cropped one, the same failure RankImage removes itself to avoid. Two badges
-   at this size fit the narrowest row beside the name's floor, so there is
-   nothing to shrink; a third would not, which is what `max` is set from. */
-.overview-list-ranks { flex: 0 0 auto; flex-wrap: nowrap; }
 /* The one column that stays right-aligned, so the counts line up down the list
    and can be compared without reading the rows. */
 .overview-list-meta { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; margin-left: auto; color: var(--color-txt-dim); font-size: var(--text-3xs); font-weight: var(--weight-label); font-variant-numeric: tabular-nums; }

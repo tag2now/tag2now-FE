@@ -55,8 +55,11 @@ export default function OpenReservations({ reservations, limit = 2 }: { reservat
             {/* What the reader is actually deciding on: whether the host's
                 ranks are ones they can be matched against. A player match has
                 none and RankSummary renders nothing, leaving the slot empty
-                rather than repeating the match type the line above states. */}
-            <RankSummary ranks={r.host_ranks} imageClassName="h-6" max={2} className="overview-list-ranks" />
+                rather than repeating the match type the line above states.
+                It sits against the host and neither shrinks nor wraps: a shrunk
+                banner was cut mid-image ("Yaksa" as "sa"), which reads as a
+                broken asset. Two badges fit the narrowest row, hence `max`. */}
+            <RankSummary ranks={r.host_ranks} imageClassName="h-6" max={2} className="flex-none flex-nowrap" />
             <span className="overview-list-meta">
               <span><Users size={11} aria-hidden="true" />{r.participant_count}/{r.capacity}</span>
             </span>
