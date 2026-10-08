@@ -110,7 +110,7 @@ export default function ReservationForm({ formApi, onClose, onSubmit, notice }: 
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <span className="shrink-0 text-xs font-medium text-txt-dim">{form.ranks.length > 0 ? `${form.ranks.length}개 선택` : '계급을 선택해 주세요'}</span>
               {form.ranks.length > 0 && <span className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
-                {sortRanksDescending(form.ranks).map((rank) => <RankImage key={rank} rankInfo={{ name: rank }} className="h-8 w-auto shrink-0 object-contain" />)}
+                {sortRanksDescending(form.ranks).map((rank) => <RankImage key={rank} rankInfo={{ name: rank }} className="h-8 w-auto shrink-0 object-contain" plateClassName="shrink-0" />)}
               </span>}
             </span>
             <ChevronDown size={15} aria-hidden="true" className={`text-primary transition-transform ${rankPickerOpen ? 'rotate-180' : ''}`} />

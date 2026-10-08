@@ -11,9 +11,14 @@ interface RankImageProps {
    * once anything started reading that field it learned a band per rank. */
   rankInfo: CharRankInfo | RoomRankInfo | { name?: string, tier?: string } | null | undefined
   className?: string
+  /** Classes for the plate drawn when there is no art, when they should not
+   * be `className`'s. A caller sizing the banner with utilities passes this:
+   * utilities outrank `.rank-plate`, so its `h-8 w-auto` would shrink the
+   * plate to its text rather than leave it the banner's frame. */
+  plateClassName?: string
 }
 
-export default function RankImage({ rankInfo, className }: RankImageProps) {
+export default function RankImage({ rankInfo, className, plateClassName = className }: RankImageProps) {
   // Not every rank the API reports has artwork under /ranks — 'Tekken Lord' and
   // 'Initiate' among them. Without this the browser paints its broken-image
   // glyph, which reads as a bug rather than a missing asset.
@@ -37,7 +42,7 @@ export default function RankImage({ rankInfo, className }: RankImageProps) {
   // and it covers whatever gets added next.
   if (failedName === name) {
     return (
-      <span className={`rank-plate${className ? ` ${className}` : ''}`}
+      <span className={`rank-plate${plateClassName ? ` ${plateClassName}` : ''}`}
         style={{ '--tier': tierHex(tierOfRank(name)) } as React.CSSProperties}
         title={name}
         role="img"

@@ -27,6 +27,24 @@ describe('RankImage', () => {
     expect(plate).toHaveTextContent('Tekken God')
   })
 
+  it('gives the plate its own classes when the caller names them', () => {
+    // A banner sized by utilities would otherwise size the plate too, and a
+    // utility beats .rank-plate's frame.
+    render(<RankImage rankInfo={{ name: 'Tekken God' }} className="h-8 w-auto" plateClassName="shrink-0" />)
+    fireEvent.error(screen.getByRole('img', { name: 'Tekken God' }))
+
+    const plate = screen.getByRole('img', { name: 'Tekken God' })
+    expect(plate).toHaveClass('rank-plate', 'shrink-0')
+    expect(plate).not.toHaveClass('h-8')
+  })
+
+  it('gives the plate the image classes when the caller names no others', () => {
+    render(<RankImage rankInfo={{ name: 'Tekken God' }} className="mini-char-rank" />)
+    fireEvent.error(screen.getByRole('img', { name: 'Tekken God' }))
+
+    expect(screen.getByRole('img', { name: 'Tekken God' })).toHaveClass('rank-plate', 'mini-char-rank')
+  })
+
   it('a rank that does have art still renders after a different one failed', () => {
     // The failure is keyed by name because React reuses this element across
     // rows; a bare boolean would blank the next rank in the list.
