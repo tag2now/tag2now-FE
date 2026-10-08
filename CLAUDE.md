@@ -369,9 +369,10 @@ A rule goes to a feature's file only when that feature alone uses its classes;
 anything two features share stays global. Every sheet is still imported from
 `src/index.css` and never from a component, because **the order of that list
 is the cascade**: the rules share one layer, so moving an import changes which
-rule wins. The move into feature folders was checked by snapshotting every
-element's computed style on 68 screen states before and after — nothing
-changed — so a later reordering deserves the same check.
+rule wins. Any change to a sheet, its order or its classes gets the
+computed-style comparison in `e2e/style-snapshot/` (its README says how): it
+records every element on 59 screen states at three widths, before and after,
+and names each property that moved.
 
 **A utility in the markup always beats a sheet.** Every sheet but `tokens.css`
 and `base.css` is imported `layer(components.app)`, under Tailwind's
@@ -391,7 +392,8 @@ layer moved, and the same 78-state snapshot came out identical.
 and Tailwind's scale can say it; one that needs a value outside them —
 `min()`/`max()`, a shadow mixed off a token, a line height between the named
 steps — stays in the feature's sheet, where `lint:css` still checks it.
-`auth/auth.css` is the worked example. Write it mobile-first, as Tailwind
+`auth/auth.css` is the worked example, and `docs/tailwind-migration.md` tracks
+which sheets are done and how a unit goes. Write it mobile-first, as Tailwind
 assumes: the bare class is the phone, `md:` (Tailwind's default 48rem, 768px)
 the desktop, and a sheet rule left beside such utilities uses
 `@media (width < 48rem)` so both switch together. The sheets not yet moved
