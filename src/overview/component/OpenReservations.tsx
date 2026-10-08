@@ -59,7 +59,7 @@ export default function OpenReservations({ reservations, limit = 2 }: { reservat
                 It sits against the host and neither shrinks nor wraps: a shrunk
                 banner was cut mid-image ("Yaksa" as "sa"), which reads as a
                 broken asset. Two badges fit the narrowest row, hence `max`. */}
-            <RankSummary ranks={r.host_ranks} imageClassName="h-6" max={2} className="flex-none flex-nowrap" />
+            <RankSummary ranks={r.host_ranks} imageClassName="h-6" max={2} wrap={false} className="flex-none" />
             <span className="overview-list-meta">
               <span><Users size={11} aria-hidden="true" />{r.participant_count}/{r.capacity}</span>
             </span>

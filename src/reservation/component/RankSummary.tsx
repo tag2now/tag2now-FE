@@ -1,11 +1,12 @@
 import RankImage from '@/shared/components/RankImage'
-import { cn } from '@/shared/util/cn'
 import { sortRanksDescending } from '@/reservation/reservationLabels'
 
 interface RankSummaryProps {
   ranks: string[]
   imageClassName?: string
   max?: number
+  /** False keeps every badge on one line, for a row that cannot grow taller. */
+  wrap?: boolean
   className?: string
 }
 
@@ -18,13 +19,13 @@ interface RankSummaryProps {
  * Renders nothing for an empty list, which is what lets a caller drop it into a
  * row without asking whether the reservation is a rank match — a player match
  * simply leaves the slot empty. */
-export default function RankSummary({ ranks, imageClassName = 'h-8', max = Infinity, className = 'justify-center' }: RankSummaryProps) {
+export default function RankSummary({ ranks, imageClassName = 'h-8', max = Infinity, wrap = true, className = 'justify-center' }: RankSummaryProps) {
   if (ranks.length === 0) return null
   const sortedRanks = sortRanksDescending(ranks)
   const shown = sortedRanks.slice(0, max)
   const hidden = sortedRanks.length - shown.length
-  return <span className={cn('flex min-w-0 flex-wrap items-center gap-1', className)} aria-label={sortedRanks.join(', ')}>
-    {shown.map((rank) => <RankImage key={rank} rankInfo={{ name: rank }} className={cn('w-auto shrink-0 object-contain', imageClassName)} />)}
+  return <span className={`flex min-w-0 ${wrap ? 'flex-wrap' : 'flex-nowrap'} items-center gap-1 ${className}`} aria-label={sortedRanks.join(', ')}>
+    {shown.map((rank) => <RankImage key={rank} rankInfo={{ name: rank }} className={`${imageClassName} w-auto shrink-0 object-contain`} />)}
     {hidden > 0 && <span aria-label={`추가 계급 ${hidden}개`} className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-primary-dim bg-primary/10 px-1 text-xs font-extrabold text-primary-text">+{hidden}</span>}
   </span>
 }
