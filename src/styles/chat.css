@@ -33,9 +33,11 @@
   border: 1px solid var(--color-border-light); border-radius: 8px;
   background: var(--color-bg-panel);
 }
-/* Sticky beside the main column, as the sidebar is beside it on the left;
-   74px is the sidebar's own offset, and 16px under it mirrors the gap above. */
-.chat-docked { position: sticky; top: 74px; align-self: start; height: calc(100dvh - 90px); }
+/* Sticky beside the main column, as the sidebar is beside it on the left, at
+   74px, the sidebar's own offset. A fixed 660px, not the viewport's height: a
+   column as tall as the page read as a second main column. A short window
+   still keeps 16px under it. */
+.chat-docked { position: sticky; top: 74px; align-self: start; height: min(660px, calc(100dvh - 90px)); }
 .chat-floating {
   position: fixed; left: 16px; bottom: 16px; z-index: 55;
   width: min(320px, calc(100% - 32px)); height: min(440px, calc(100dvh - 32px));

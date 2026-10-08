@@ -329,9 +329,9 @@ itself; one it refused (an HTTP error, so `CLOSED`) the store reopens, backing
 off. Unread counts compare `created_at`, not ids, for the same restart reason.
 
 `Chat` is mounted once, as the last child of `.app-layout`. From 1350px
-(`DOCKED_QUERY`) it is a third, always-open column right of the main one —
-1350 is measured: the narrowest width at which the home page's two rankings
-still share a row beside it. Below that it is a launcher in the viewport's
+(`DOCKED_QUERY`) it is a third, always-open column right of the main one,
+300×660 and sticky like the sidebar. 1350 is measured: the narrowest width at
+which the home page's two rankings still share a row beside it. Below that it is a launcher in the viewport's
 bottom-left corner that opens a 320×440 panel, and on a phone a full-screen
 sheet over the tab bar. The grid takes the third column through
 `.app-layout:has(> .chat-docked)`, so the breakpoint is written only in JS.

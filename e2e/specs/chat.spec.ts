@@ -71,6 +71,7 @@ test('stands as a column right of the main one on a wide screen', async ({ page,
   const chat = (await panel(page).boundingBox())!
   expect(chat.x).toBeGreaterThanOrEqual(main.x + main.width)
   expect(chat.width).toBe(300)
+  expect(chat.height).toBe(660)
   await expect(launcher(page)).toHaveCount(0)
   // The width was chosen so the home page's two rankings still share a row.
   const weekly = (await page.getByRole('region', { name: '주간 철악귀' }).boundingBox())!
