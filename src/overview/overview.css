@@ -138,3 +138,16 @@
 .notice-banner-link:hover .notice-banner-title { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--color-info) 62%, transparent); text-underline-offset: 3px; }
 .notice-banner-title { min-width: 0; flex: 1 1 auto; overflow: hidden; color: var(--color-txt); font-size: var(--text-sm); font-weight: var(--weight-row); text-overflow: ellipsis; white-space: nowrap; }
 .notice-banner-time { flex: 0 0 auto; color: var(--color-txt-faint); font-size: var(--text-2xs); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 760px) {
+  /* Three cards across a phone gave each 108px, so every label was cut. One
+     per line instead --- the card is one line deep at any width, so three of
+     them still cost less height than the two rows of stacked cards did. */
+  .kpi-grid { grid-template-columns: minmax(0,1fr); gap: 6px; }
+  .kpi-card { padding: 8px 12px; }
+  .kpi-card-icon { width: 26px; height: 26px; }
+  .kpi-card-hint { padding-left: 32px; }
+  /* Every pixel the card frame does not take goes to the name column, which
+     is the one track on the row with nothing fixed holding it open. */
+  .overview-section { padding: 8px; }
+}

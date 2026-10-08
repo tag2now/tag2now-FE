@@ -70,7 +70,7 @@ The `@` alias resolves to `src/` and is configured in both `vite.config.ts` and 
 src/
   App.tsx              route table and layout; the only place tabs are assembled
   main.tsx             root render, Toaster, global unhandledrejection handler
-  index.css            Tailwind 4 @theme design tokens
+  index.css            the stylesheet import list; its order is the cascade
   config/              tabConfig, patchNotes, test-setup
   auth/                RPCN login — session store, useAuth, LoginDialog
   admin/               account moderation and TTT2 saves — Admin page, SaveAdmin, adminApi, saveApi (admins only)
@@ -165,10 +165,10 @@ whoever happens to land in the top three rows.
 badge, win rate and record at row size. `shared/components/CharCell` is the
 larger one, left to the history panel and the profile card.
 
-The rules live in `styles/ranking.css`, imported directly after `overview.css`
-because that is where they were written — moving them would reorder them
-against the unlayered rules in `boards.css`, `leaderboard.css` and
-`responsive.css`.
+The rules live in `shared/styles/ranking.css`, imported directly after
+`overview/overview.css` because that is where they were written — moving them
+would reorder them against the unlayered rules in `styles/boards.css`,
+`shared/styles/leaderboard.css` and `styles/responsive.css`.
 
 ### Routing
 
@@ -287,7 +287,7 @@ read only when its tab is opened, and fails on its own: a 404 is "no save", any
 other error stays inside the tab. The backend caches it for ten minutes.
 
 The character table is `shared/components/SaveCharTable`, the same one the
-admin page draws; its rules live in `styles/saves.css`, not `admin.css`.
+admin page draws; its rules live in `shared/styles/saves.css`, not `admin/admin.css`.
 
 ### Reservation ownership
 
@@ -355,7 +355,23 @@ connection inside `proxy_read_timeout`. Both were checked through
 
 ## Styling
 
-Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. Design tokens are declared in an `@theme` block in `src/index.css` and become utilities automatically (`--color-primary` → `bg-primary`, `text-primary`, `border-primary`).
+Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. Design tokens are declared in an `@theme` block in `src/styles/tokens.css` and become utilities automatically (`--color-primary` → `bg-primary`, `text-primary`, `border-primary`).
+
+**Where a rule lives follows the code it styles**, like the TS around it:
+
+| Folder | Holds |
+|--------|-------|
+| `src/styles/` | the global sheets — tokens, base, primitives, the app shell, surfaces, dialogs shared by several features, and the phone overrides that belong to no one feature |
+| `src/shared/styles/` | the shared components' — `ranking.css` (RankList), `history.css` (PlayerHistoryPanel), `leaderboard.css`, `saves.css` (SaveCharTable) |
+| `src/<feature>/<feature>.css` | one feature's own rules, its phone overrides in an `@media` block at the end of the same file |
+
+A rule goes to a feature's file only when that feature alone uses its classes;
+anything two features share stays global. Every sheet is still imported from
+`src/index.css` and never from a component, because **the order of that list
+is the cascade**: most rules are unlayered, so moving an import changes which
+rule wins. The move into feature folders was checked by snapshotting every
+element's computed style on 68 screen states before and after — nothing
+changed — so a later reordering deserves the same check.
 
 `.app-layout` caps the page at `min(var(--content-max), 100% - 32px)` — sidebar,
 main column and, from 1350px, the chat column — so it sets the width of

@@ -1,0 +1,151 @@
+.community-section-toolbar { margin-bottom: 0; }
+.toolbar-actions { display: flex; align-items: center; gap: 6px; }
+.input-shell, .textarea-shell { position: relative; display: flex; align-items: center; }
+.input-shell > svg { position: absolute; left: 11px; z-index: 1; color: var(--color-txt-faint); pointer-events: none; }
+.textarea-shell { align-items: flex-start; }
+.textarea-shell > svg { position: absolute; left: 11px; top: 12px; z-index: 1; color: var(--color-txt-faint); pointer-events: none; }
+.input-shell:focus-within > svg, .textarea-shell:focus-within > svg { color: var(--color-primary); }
+.field-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.field-heading small { color: var(--color-txt-faint); font-size: var(--text-4xs); }
+.character-count { margin-top: 6px; color: var(--color-txt-faint); font-size: var(--text-3xs); text-align: right; font-variant-numeric: tabular-nums; }
+.character-count.near-limit { color: var(--color-warning); }
+.form-section { padding: 16px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
+.form-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+.writing-form { padding: 16px; background: var(--color-bg-sunken); }
+
+/* The row that opens the grid, and the one control that clears it. Same
+   shape as the leaderboard's, because it is the same job. */
+.character-filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.character-filter { container: char-picker / inline-size; overflow: hidden; padding: 6px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg-deep); }
+.post-list { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--color-border); border-radius: 6px; }
+/* Fixed columns, not a flex row.
+ *
+ * Under flex the author, the counts and the time each started wherever the
+ * title happened to end, so nothing lined up down the list and the eye had to
+ * re-find every field on every row. Tracks make the whole column readable in
+ * one pass — which is what a feed is for.
+ *
+ * The cost is a gap after a short title, and it is the right cost: the gap is
+ * one blank region in a stable layout, where letting the columns float put a
+ * different-sized hole in a different place on every row. */
+.post-row { display: grid; width: 100%; min-height: 46px; grid-template-columns: 62px minmax(0, 1fr) 150px 40px; align-items: center; gap: 10px; padding: 6px 10px; border: 0; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface-tint) 1.2%, transparent); color: var(--color-txt); text-align: left; cursor: pointer; transition: background-color 150ms ease; }
+.post-row:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.post-row-title { min-width: 0; overflow: hidden; color: var(--color-txt); font-size: var(--text-sm); font-weight: var(--weight-row); text-overflow: ellipsis; white-space: nowrap; }
+/* The three engagement figures, together. Left-aligned inside a fixed cell so
+   the icons form a column; the cell is simply empty on a post nothing has
+   happened to yet. */
+.post-row-stats { display: inline-flex; min-width: 0; align-items: center; gap: 8px; color: var(--color-txt-dim); font-size: var(--text-3xs); font-weight: var(--weight-label); font-variant-numeric: tabular-nums; }
+.post-stat { display: inline-flex; align-items: center; gap: 3px; }
+/* Upvotes are the one figure worth finding at a glance, so they carry the
+   accent and the other two stay dim. */
+.post-stat.is-up { color: var(--color-primary-text); }
+.post-row-time { overflow: hidden; color: var(--color-txt-faint); font-size: var(--text-3xs); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.post-row:first-child { border-top: 0; }
+.post-row:hover { background: color-mix(in srgb, var(--color-primary) 8%, transparent); }
+/* Wrapping, not stacking. The two groups share one line while there is room
+   for both, and the side group drops to its own line on a phone - still
+   trailing-aligned, because `margin-left: auto` survives the wrap. */
+.post-detail-header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 0; border-bottom: 1px solid var(--color-border-light); }
+.post-detail-header h2 { margin: 0; min-width: 0; color: var(--color-txt); font-size: var(--text-md); line-height: 1.35; overflow-wrap: anywhere; }
+/* What the post is, and what it says. `1 1 260px` rather than `1 1 auto`: a
+   long title should take the width and push the byline to its own line, and a
+   short one should not leave the byline stranded mid-row. */
+.post-detail-head-main { display: flex; min-width: 0; flex: 1 1 260px; align-items: center; gap: 10px; }
+.post-detail-head-side { display: flex; flex: 0 0 auto; align-items: center; gap: 12px; margin-left: auto; }
+.post-detail-owner-actions { display: flex; flex: 0 0 auto; gap: 8px; }
+/* One line: who, then when. The dot is what joins them --- without it the two
+   read as separate facts that happen to share a row. */
+.post-detail-byline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.post-detail-time { color: var(--color-txt-faint); font-size: var(--text-2xs); }
+.post-detail-time::before { content: '·'; margin-right: 8px; color: var(--color-txt-faint); }
+.post-detail-body { min-height: 150px; padding: 16px 4px; border-bottom: 1px solid var(--color-border-light); }
+.post-detail-body p { margin: 0; color: var(--color-txt); font-size: var(--text-13); line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.comment-heading { margin: 16px 0 8px; color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-strong); }
+.comment-node { padding: 8px 8px 8px 12px; border-left: 2px solid var(--color-border-light); border-bottom: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface-tint) 1.2%, transparent); }
+.comment-node > button { display: inline-flex; min-height: 28px; align-items: center; gap: 4px; }
+.comment-composer { display: flex; gap: 6px; margin-top: 16px; padding: 8px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 1.5%, transparent); }
+
+/* ─── Post tags ───────────────────────────────────────────── */
+/* A post carries a category and up to two characters. They were one field, so
+   this is the first place both can be shown at once. */
+.post-tags { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+/* max-width/ellipsis: a legacy post can still carry a character *name* as its
+   category, which is longer than the three real ones. It truncates rather than
+   pushing the title out of its column. */
+.post-type-chip { display: inline-flex; max-width: 100%; align-items: center; min-height: 20px; flex: 0 0 auto; overflow: hidden; padding: 0 6px; text-overflow: ellipsis; border: 1px solid var(--color-primary-dim); border-radius: 4px; background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary-text); font-size: var(--text-4xs); font-weight: var(--weight-strong); letter-spacing: .04em; white-space: nowrap; }
+.post-tags-md .post-type-chip { min-height: 24px; padding: 0 9px; font-size: var(--text-xs); }
+/* Blue, the "read this" colour, so a notice is not mistaken for one more
+   category in the brand red. */
+.post-type-chip.is-notice { border-color: color-mix(in srgb, var(--color-info) 55%, transparent); background: color-mix(in srgb, var(--color-info) 16%, transparent); color: var(--color-info-text); }
+/* The pinned block: the same rows as the feed, set apart by a tinted frame
+   rather than by different columns. */
+.notice-list { margin-bottom: 12px; border-color: color-mix(in srgb, var(--color-info) 38%, transparent); background: color-mix(in srgb, var(--color-info) 5%, transparent); }
+/* The two portraits overlap slightly, which reads as a pair rather than as two
+   unrelated tags — a tag team is one choice made twice. */
+.post-tag-chars { display: inline-flex; flex: 0 0 auto; align-items: center; }
+.post-tag-char { height: 24px; border-radius: 3px; border: 1px solid var(--color-border-light); background: var(--color-bg-row); }
+.post-tag-char + .post-tag-char { margin-left: -6px; }
+.post-tags-md .post-tag-char { height: 34px; }
+/* Centred, and only as wide as the widest thing it can hold: a category chip
+   with two portraits beside it measures 58px, so 88px left a lone portrait
+   sitting 73px from the title it belongs to. Centring is what keeps a one- and
+   a two-character row reading as the same column — flush left, they started
+   together and ended 9px apart, which made the column look ragged rather than
+   aligned.
+   A fixed track, not `auto`: every row is its own grid, so an intrinsic width
+   would be measured per row and the columns would stop lining up down the
+   feed, which is the whole reason this is a grid. */
+.post-row-tags { display: flex; min-width: 0; overflow: hidden; align-items: center; justify-content: center; }
+
+/* ─── Author byline ─────────────────────────── */
+/* The badge sets the size and its parts inherit it, so a caller that wants a
+   bigger byline gets one. They used to carry their own font-size, which meant
+   the post detail's `text-sm` reached the wrapper and stopped: the name stayed
+   at the 11px a feed row wants, under a 14px context and beside a chip twice
+   its height. */
+.author-badge { align-items: center; gap: 5px; min-width: 0; font-size: var(--text-2xs); }
+.post-row .author-badge { display: inline-flex; }
+.author-badge-name { min-width: 0; overflow: hidden; color: var(--color-txt); font-size: inherit; font-weight: var(--weight-row); text-overflow: ellipsis; white-space: nowrap; }
+
+/* The post detail's byline. It names the author of the thing you opened, not
+   one row among forty, so it is set at reading size and the banner grows with
+   it rather than staying at the height a list needs. */
+.author-badge-lg { gap: 7px; font-size: var(--text-sm); }
+
+/* The picker's current selection, stated in words under the grid — the tiles
+   are small and a highlight alone is easy to lose track of. */
+.selected-characters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0; color: var(--color-txt-dim); font-size: var(--text-xs); }
+.selected-characters strong { color: var(--color-primary-text); }
+
+@media (max-width: 760px) {
+  /* Two lines below 760px: the title needs the whole width, so the byline and
+     the counts drop underneath it. The tag column stays put and spans both,
+     which is what keeps the left edge straight. */
+  .post-row {
+    grid-template-columns: 62px minmax(0, 1fr) auto auto;
+    grid-template-areas: "tags title title title" "tags author stats time";
+    gap: 4px 8px;
+    padding: 8px;
+  }
+  .post-row-tags { grid-area: tags; align-self: center; }
+  .post-row-title { grid-area: title; white-space: normal; overflow-wrap: anywhere; }
+  .post-row .author-badge { grid-area: author; }
+  .post-row-stats { grid-area: stats; }
+  .post-row-time { grid-area: time; }
+  /* The grid wraps now, so the 680px floor that used to force a sideways
+     scroll here has nothing left to do. */
+  .form-section { padding: 8px; }
+  .writing-form { padding: 12px; }
+  .field-heading { display: block; }
+  .field-heading small { display: block; margin-top: 2px; }
+}
+
+/* Attached videos follow the community board's black/red panel styling. */
+.youtube-video { margin: 1rem 0; overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-embed); }
+.youtube-video-heading { display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.85rem; color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-strong); }
+.youtube-video-heading svg { color: var(--color-error); }
+.youtube-video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
+.youtube-video-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 0.85rem; color: var(--color-txt-dim); font-size: var(--text-xs); }
+.youtube-video-footer a { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--color-primary-text); }
+.youtube-video-footer a:hover { color: white; }
+.youtube-video-footer a:focus-visible { outline: 2px solid var(--color-primary-text); outline-offset: 3px; }

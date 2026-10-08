@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { TOKEN_OF } from '@/shared/palette'
 
@@ -74,16 +74,23 @@ describe('tokens.css is the only palette', () => {
  * the one medal with no wash at all.
  */
 describe('the stylesheets cannot quietly undo the palette', () => {
-  const SHEETS = ['base', 'primitives', 'shell', 'surfaces', 'overview', 'boards', 'history', 'leaderboard', 'responsive']
-    .map((name) => [name, readFileSync(resolve(process.cwd(), `src/styles/${name}.css`), 'utf8')] as const)
+  // Every sheet, wherever its feature keeps it: a hand-kept list silently
+  // stopped covering the rules that moved into feature folders.
+  const SHEETS = readdirSync(resolve(process.cwd(), 'src'), { recursive: true, encoding: 'utf8' })
+    .filter((path) => path.endsWith('.css'))
+    .map((path) => [path.replaceAll('\\', '/'), readFileSync(resolve(process.cwd(), 'src', path), 'utf8')] as const)
 
-  it.each(SHEETS)('%s.css uses no bare white or black utility', (_name, css) => {
+  it('finds the feature sheets as well as the global ones', () => {
+    expect(SHEETS.map(([path]) => path)).toEqual(expect.arrayContaining(['styles/shell.css', 'chat/chat.css', 'shared/styles/ranking.css']))
+  })
+
+  it.each(SHEETS)('%s uses no bare white or black utility', (_name, css) => {
     expect(css).not.toMatch(/@apply[^;]*\b(?:text|bg|border|fill|stroke)-(?:white|black)\b/)
   })
 
   // Only rows can carry the wash, so only rows are checked — plenty of other
   // surfaces set `background` legitimately and have no image to lose.
-  it.each(SHEETS)('%s.css sets row backgrounds with background-color', (_name, css) => {
+  it.each(SHEETS)('%s sets row backgrounds with background-color', (_name, css) => {
     const rowRules = css.split(/\r?\n/).filter((line) => /^\.[^{]*(?:tbl-row|rank-row)[^{]*\{/.test(line.trim()))
     for (const rule of rowRules) {
       expect(rule).not.toMatch(/[^-]background:/)

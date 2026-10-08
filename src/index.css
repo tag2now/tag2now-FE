@@ -1,21 +1,31 @@
 @import "tailwindcss";
 
 
-/* Split out of a single 1033-line file. The order of these imports IS the
-   cascade: tokens, then base, then the layered primitives, then unlayered
-   rules from the most general surface to the most specific feature, and the
-   viewport overrides last. Reordering them changes what wins. */
+/* The order of these imports IS the cascade: tokens, then base, then the
+   layered primitives, then unlayered rules from the most general surface to
+   the most specific feature, and the shared viewport overrides last.
+   Reordering them changes what wins.
+
+   Global rules live in styles/, the shared components' in shared/styles/, and
+   each feature's in its own folder, its phone overrides at the end of the
+   same file. They are imported here rather than from the components, so this
+   list stays the one place the order is written. */
 @import "./styles/tokens.css";
 @import "./styles/base.css";
 @import "./styles/primitives.css";
 @import "./styles/shell.css";
 @import "./styles/surfaces.css";
-@import "./styles/overview.css";
-@import "./styles/ranking.css";
+@import "./overview/overview.css";
+@import "./shared/styles/ranking.css";
 @import "./styles/boards.css";
-@import "./styles/history.css";
-@import "./styles/leaderboard.css";
-@import "./styles/saves.css";
-@import "./styles/admin.css";
-@import "./styles/chat.css";
+@import "./shared/styles/history.css";
+@import "./shared/styles/leaderboard.css";
+@import "./shared/styles/saves.css";
+@import "./admin/admin.css";
+@import "./chat/chat.css";
+@import "./auth/auth.css";
+@import "./community/community.css";
+@import "./reservation/reservation.css";
+@import "./match/match.css";
+@import "./stat/stat.css";
 @import "./styles/responsive.css";
