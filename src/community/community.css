@@ -83,8 +83,7 @@
 /* The two portraits overlap slightly, which reads as a pair rather than as two
    unrelated tags — a tag team is one choice made twice. */
 .post-tag-chars { display: inline-flex; flex: 0 0 auto; align-items: center; }
-.post-tag-char { height: 24px; border-radius: 3px; border: 1px solid var(--color-border-light); background: var(--color-bg-row); }
-.post-tag-char + .post-tag-char { margin-left: -6px; }
+.post-tag-char { height: 34px; border-radius: 3px; border: 1px solid var(--color-border-light); background: var(--color-bg-row); }
 .post-tags-md .post-tag-char { height: 34px; }
 /* Centred, and only as wide as the widest thing it can hold: a category chip
    with two portraits beside it measures 58px, so 88px left a lone portrait
