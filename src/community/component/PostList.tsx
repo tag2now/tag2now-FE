@@ -82,31 +82,6 @@ export default function PostList({
           <span className="section-icon"><MessagesSquare size={15} /></span>
           <div><h3>커뮤니티 피드</h3><p>전체 게시글 {total}개</p></div>
         </div>
-        <div className="toolbar-actions">
-          <button onClick={onRefresh} disabled={loading} aria-label="새로고침" className="refresh-btn"><RefreshCw size={14} aria-hidden="true" /></button>
-          <button onClick={onWrite} className="btn-primary"><PenLine size={14} aria-hidden="true" /> 글쓰기</button>
-        </div>
-      </div>
-
-      {/* Above the filters, on every page and under every filter: a notice
-          is pinned to the board, not one of the posts the filters narrow.
-          The list below never holds them — the backend leaves them out. */}
-      {notices.length > 0 && (
-        <section className="post-list notice-list" aria-label="공지">
-          {notices.map((notice) => (
-            <PostRow key={notice.id} post={notice} onSelect={onSelectPost} leaderboardEntries={leaderboardEntries} />
-          ))}
-        </section>
-      )}
-
-      <div className="section-toolbar filter-toolbar">
-        <div className="section-title">
-          <span className="section-icon" aria-hidden="true"><SlidersHorizontal size={14} /></span>
-          <div>
-            <strong>게시글 분류</strong>
-            <small>보고 싶은 게시글 유형을 선택하세요.</small>
-          </div>
-        </div>
         <div className="section-controls">
           <div className="segmented-control" role="group" aria-label="게시글 분류">
             {['all', ...POST_TYPES].map((t) => {
@@ -124,6 +99,10 @@ export default function PostList({
               )
             })}
           </div>
+        </div>
+        <div className="toolbar-actions">
+          <button onClick={onRefresh} disabled={loading} aria-label="새로고침" className="refresh-btn"><RefreshCw size={14} aria-hidden="true" /></button>
+          <button onClick={onWrite} className="btn-primary"><PenLine size={14} aria-hidden="true" /> 글쓰기</button>
         </div>
       </div>
 
@@ -167,26 +146,29 @@ export default function PostList({
           />
         </div>
       )}
-      {characters.length > 0 && (
-        <p className="selected-characters" role="status">
-          <strong>{characters.join(', ')}</strong> 관련 글만 표시 중
-        </p>
-      )}
 
       {loading && <p className="state-msg">로딩 중...</p>}
       {error && <p className="state-msg error">{error}</p>}
 
-      {!loading && !error && posts.length === 0 && (
-        <p className="state-msg">게시글이 없습니다</p>
-      )}
-
-      {!loading && posts.length > 0 && (
-        <div className="post-list" aria-live="polite">
-          {posts.map((post) => (
-            <PostRow key={post.id} post={post} onSelect={onSelectPost} leaderboardEntries={leaderboardEntries} />
-          ))}
-        </div>
-      )}
+      <div className="post-list" aria-live="polite">
+        {notices.length > 0 && (
+          <section className="notice-list" aria-label="공지">
+            {notices.map((notice) => (
+              <PostRow key={notice.id} post={notice} onSelect={onSelectPost} leaderboardEntries={leaderboardEntries} />
+            ))}
+          </section>
+        )}
+        {!loading && posts.length > 0 && (
+          <div>
+            {posts.map((post) => (
+              <PostRow key={post.id} post={post} onSelect={onSelectPost} leaderboardEntries={leaderboardEntries} />
+            ))}
+          </div>
+        )}
+        {!loading && !error && posts.length === 0 && (
+          <p className="state-msg">게시글이 없습니다</p>
+        )}
+      </div>
 
       {!loading && totalPages > 1 && (
         <div className="flex justify-center items-center gap-3 mt-4">

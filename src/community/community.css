@@ -79,7 +79,8 @@
 .post-type-chip.is-notice { border-color: color-mix(in srgb, var(--color-info) 55%, transparent); background: color-mix(in srgb, var(--color-info) 16%, transparent); color: var(--color-info-text); }
 /* The pinned block: the same rows as the feed, set apart by a tinted frame
    rather than by different columns. */
-.notice-list { margin-bottom: 12px; border-color: color-mix(in srgb, var(--color-info) 38%, transparent); background: color-mix(in srgb, var(--color-info) 5%, transparent); }
+.notice-list { font-weight: 600; border-color: color-mix(in srgb, var(--color-info) 38%, transparent); background: color-mix(in srgb, var(--color-info) 5%, transparent); }
+.notice-list .post-row-title { color: var(--color-info-text);}
 /* The two portraits overlap slightly, which reads as a pair rather than as two
    unrelated tags — a tag team is one choice made twice. */
 .post-tag-chars { display: inline-flex; flex: 0 0 auto; align-items: center; }

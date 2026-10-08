@@ -33,7 +33,7 @@ function renderList(notices: PostSummary[], onSelectPost = vi.fn()) {
 
 describe('pinned notices', () => {
   // Page 2 under a 공략 filter: a notice stays pinned whatever the list shows.
-  it('pins every notice above the filters, past the first page and under a filter', () => {
+  it('pins every notice above the posts, past the first page and under a filter', () => {
     renderList([post(7, '점검 안내', '공지'), post(8, '규칙 안내', '공지')])
 
     const pinned = screen.getByRole('region', { name: '공지' })
@@ -41,8 +41,8 @@ describe('pinned notices', () => {
       expect.stringContaining('점검 안내'),
       expect.stringContaining('규칙 안내'),
     ])
-    const filters = screen.getByRole('group', { name: '게시글 분류' })
-    expect(pinned.compareDocumentPosition(filters) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const firstPost = screen.getByRole('button', { name: /일반 글/ })
+    expect(pinned.compareDocumentPosition(firstPost) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('opens a notice like any post', () => {

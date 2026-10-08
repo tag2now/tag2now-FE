@@ -22,16 +22,16 @@ test.describe('Notices', () => {
     await expect(page).toHaveURL(/\/community\/77$/)
   })
 
-  test('the board pins the notice above its filters', async ({ page }) => {
+  test('the board pins the notice above its posts', async ({ page }) => {
     await page.goto('/community')
 
     const pinned = page.getByRole('region', { name: '공지' })
     await expect(pinned.getByRole('button', { name: /서버 점검 안내/ })).toBeVisible()
-    // Pinned means above everything the filters narrow, posts included.
+    // Pinned means at the head of the feed, above every post the filters narrow.
     const pinnedBox = await pinned.boundingBox()
-    const filtersBox = await page.getByRole('group', { name: '게시글 분류' }).boundingBox()
-    expect(pinnedBox!.y).toBeLessThan(filtersBox!.y)
-    await expect(page.locator('.post-list:not(.notice-list)')).not.toContainText('서버 점검 안내')
+    const firstPostBox = await page.getByRole('button', { name: /Best tag combos for Jin\/Devil Jin/ }).boundingBox()
+    expect(pinnedBox!.y).toBeLessThan(firstPostBox!.y)
+    await expect(page.locator('.post-list > :not(.notice-list)')).not.toContainText('서버 점검 안내')
   })
 
   test('only an admin is offered 공지 when writing', async ({ page }) => {
