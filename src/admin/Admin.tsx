@@ -9,6 +9,7 @@ import useConfirm from '@/shared/hooks/useConfirm'
 import { banAccount, lookupAccount } from '@/admin/adminApi'
 import { errorText, formatInstant, warnEmpty } from '@/admin/adminText'
 import SaveAdmin from '@/admin/SaveAdmin'
+import StreamChannelAdmin from '@/admin/StreamChannelAdmin'
 import type { AccountStatus } from '@/admin/types'
 
 /** RPCN usernames are unique regardless of case, as the backend compares them. */
@@ -81,6 +82,7 @@ function AdminConsole({ self }: { self: string }) {
         <AccountModeration self={self} password={password} onMissingPassword={missingPassword} />
       </AdminPanel>
       <SaveAdmin password={password} onMissingPassword={missingPassword} />
+      <StreamChannelAdmin />
     </div>
   )
 }

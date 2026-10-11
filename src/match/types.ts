@@ -1,8 +1,19 @@
 // Room types
+/** A broadcast a room user is on air with, on the channel they registered. */
+export interface LiveStream {
+  platform: string
+  channel_name: string
+  url: string
+  title: string
+  viewer_count: number
+}
+
 export interface RoomUser {
   np_id: string
   online_name: string
   avatar_url: string
+  /** null when not live; absent from a backend that predates streams. */
+  stream?: LiveStream | null
 }
 
 export interface RoomRankInfo {

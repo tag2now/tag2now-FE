@@ -11,6 +11,12 @@ vi.mock('./adminApi', () => ({
   banAccount: vi.fn(),
 }))
 
+// The stream section loads on mount; its own tests cover it.
+vi.mock('@/streaming/streamingApi', () => ({
+  listChannels: vi.fn().mockResolvedValue([]),
+  removeChannel: vi.fn(),
+}))
+
 const signIn = (admin: boolean, username = 'root') =>
   startSession('token', 3600, { username, online_name: '운영자', avatar_url: '', admin })
 

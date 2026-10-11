@@ -6,6 +6,7 @@ import type {LeaderboardEntry} from "@/shared/types";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import {RankMatchRoom} from "@/match/types";
 import { Search } from 'lucide-react'
+import PlayerWithStream from "@/match/component/PlayerWithStream";
 
 const VsLabel = <span aria-hidden="true" className="vs-label">VS</span>
 
@@ -83,7 +84,7 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
                       <RankImage rankInfo={r.rank_info} className="rank-art" />
                     </td>
                     <td className="player-name">
-                      {r.users?.[0] ? <button onClick={() => setSelectedNpid(r.users![0].np_id)} className="player-btn">{r.users[0].online_name}</button> : '—'}
+                      {r.users?.[0] ? <PlayerWithStream user={r.users[0]} onSelect={setSelectedNpid} /> : '—'}
                     </td>
                     <td className="tbl-td">
                             <span className="inline-flex items-center" title="게임 중" aria-label="게임 중">
@@ -91,7 +92,7 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
                             </span>
                     </td>
                     <td className="player-name">
-                      {r.users?.[1] ? <button onClick={() => setSelectedNpid(r.users![1].np_id)} className="player-btn">{r.users[1].online_name}</button> : '—'}
+                      {r.users?.[1] ? <PlayerWithStream user={r.users[1]} onSelect={setSelectedNpid} /> : '—'}
                     </td>
                   </tr>
                 ))}
@@ -104,9 +105,7 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
                         <RankImage rankInfo={r.rank_info} className="rank-art" />
                       </td>
                       <td className="player-name">
-                        <button onClick={() => setSelectedNpid(waiting.np_id)} className="player-btn">
-                          {waiting.online_name}
-                        </button>
+                        <PlayerWithStream user={waiting} onSelect={setSelectedNpid} />
                       </td>
                       <td className="tbl-td">
                         <span className="searching-icon" title="상대 찾는 중" aria-label="상대 찾는 중">

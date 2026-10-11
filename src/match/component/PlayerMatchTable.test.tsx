@@ -82,4 +82,25 @@ describe('PlayerMatchTable', () => {
     expect(screen.getByText('참가자 대기 중')).toBeInTheDocument()
     expect(screen.getByText('EmptyRoom')).toBeInTheDocument()
   })
+
+  it('marks a live host or guest with a link to the broadcast', () => {
+    const stream = { platform: 'chzzk', channel_name: '채널', url: 'https://chzzk.naver.com/live/' + 'a'.repeat(32), title: '방송', viewer_count: 3 }
+    const rooms: Room[] = [
+      {
+        room_id: 1,
+        owner_online_name: 'Host',
+        rank_info: null,
+        max_slots: 4,
+        users: [
+          { online_name: 'Host', np_id: 'host', stream },
+          { online_name: 'Guest', np_id: 'guest', stream },
+          { online_name: 'Quiet', np_id: 'quiet' },
+        ] as RoomUser[],
+      },
+    ]
+    render(<PlayerMatchTable rooms={rooms} />)
+
+    expect(screen.getAllByRole('link', { name: /치지직 방송 보기/ })).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Quiet' })).toBeInTheDocument()
+  })
 })

@@ -32,7 +32,7 @@ type Spec = {
 const spec = specJson as unknown as Spec
 
 type Expectation = {
-  method: 'get' | 'post' | 'patch' | 'delete'
+  method: 'get' | 'post' | 'put' | 'patch' | 'delete'
   path: string
   /** Query parameters this frontend sends. */
   query?: string[]
@@ -74,6 +74,12 @@ const CONTRACT: Expectation[] = [
   { method: 'post', path: '/admin/saves/set-account-rank', body: [...SAVE_WRITE, 'rank'], reads: SAVE_WRITTEN, auth: true },
   { method: 'post', path: '/admin/saves/floor', body: [...SAVE_WRITE, 'rank', 'fix_points', 'refloor'], reads: [...SAVE_WRITTEN, 'floor'], auth: true },
   { method: 'post', path: '/admin/saves/restore', body: [...SAVE_WRITE, 'label'], reads: SAVE_WRITTEN, auth: true },
+  { method: 'get', path: '/admin/streams', reads: ['channels'], auth: true },
+  { method: 'delete', path: '/admin/streams/{username}', auth: true },
+
+  { method: 'get', path: '/streams/me', reads: ['channel'], auth: true },
+  { method: 'put', path: '/streams/me', body: ['channel'], reads: ['channel'], auth: true },
+  { method: 'delete', path: '/streams/me', auth: true },
 
   { method: 'get', path: '/community/posts', query: ['page', 'page_size', 'post_type', 'characters'] },
   { method: 'post', path: '/community/posts', body: ['title', 'body', 'post_type', 'characters', 'youtube_video_id'], auth: true },

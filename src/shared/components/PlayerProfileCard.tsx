@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, LogIn, LogOut, Radio, ShieldBan, Trophy } from 'lucide-react'
+import { ChevronDown, LogIn, LogOut, Radio, ShieldBan, Trophy, Tv } from 'lucide-react'
 import useAuth from '@/auth/useAuth'
 import { requestLogin } from '@/auth/session'
 import useConfirm from '@/shared/hooks/useConfirm'
@@ -13,6 +13,7 @@ import PlayerHistoryPanel from './PlayerHistoryPanel'
 import RankImage from './RankImage'
 import { indexOfRank } from '@/reservation/reservationLabels'
 import CharCell from './CharCell'
+import StreamChannelDialog from '@/streaming/StreamChannelDialog'
 
 interface PlayerProfileCardProps {
   leaderboardEntries?: LeaderboardEntry[]
@@ -34,6 +35,7 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
   const [profileOpen, setProfileOpen] = useState(false)
   const [headerTarget, setHeaderTarget] = useState<HTMLElement | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [streamOpen, setStreamOpen] = useState(false)
   const menuAnchorRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const { confirm, request: confirmRequest, onConfirm, onCancel } = useConfirm()
@@ -44,7 +46,7 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
 
   // A record open for the last account must not stay open for no account.
   useEffect(() => {
-    if (!user) { setProfileOpen(false); setMenuOpen(false) }
+    if (!user) { setProfileOpen(false); setMenuOpen(false); setStreamOpen(false) }
   }, [user])
 
   // The account menu closes on a click outside it or on Escape, which hands
@@ -140,6 +142,9 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
             >
               <Trophy size={14} aria-hidden="true" /> 내 정보 보기
             </button>
+            <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); setStreamOpen(true) }}>
+              <Tv size={14} aria-hidden="true" /> 방송 채널
+            </button>
             {user.admin && (
               <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); navigate(pathOf('admin')) }}>
                 <ShieldBan size={14} aria-hidden="true" /> 계정 관리
@@ -224,6 +229,7 @@ export default function PlayerProfileCard({ leaderboardEntries, roomUsers = [] }
         />,
         document.body,
       )}
+      {streamOpen && createPortal(<StreamChannelDialog onClose={() => setStreamOpen(false)} />, document.body)}
       {confirmRequest && createPortal(
         <ConfirmDialog request={confirmRequest} onConfirm={onConfirm} onCancel={onCancel} />,
         document.body,

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import PlayerHistoryPanel from '@/shared/components/PlayerHistoryPanel'
 import type { LeaderboardEntry } from '@/shared/types'
 import type { Room } from '@/match/types'
+import PlayerWithStream from '@/match/component/PlayerWithStream'
 
 interface PlayerMatchTableProps {
   rooms: Room[]
@@ -69,15 +70,13 @@ export default function PlayerMatchTable({ rooms, leaderboardEntries }: PlayerMa
               <tr key={room.room_id} className={`tbl-row${guests.length === 0 ? ' is-searching' : ''}`}>
                 <td className="player-name">
                   {host
-                    ? <button type="button" className="player-btn" onClick={() => setSelectedNpid(host.np_id)}>{host.online_name}</button>
+                    ? <PlayerWithStream user={host} onSelect={setSelectedNpid} />
                     : room.owner_online_name || '—'}
                 </td>
                 <td className="tbl-td room-guests">
                   {guests.length > 0
                     ? guests.map((guest) => (
-                        <button key={guest.np_id} type="button" className="player-btn" onClick={() => setSelectedNpid(guest.np_id)}>
-                          {guest.online_name}
-                        </button>
+                        <PlayerWithStream key={guest.np_id} user={guest} onSelect={setSelectedNpid} />
                       ))
                     : <span className="waiting-slot">참가자 대기 중</span>}
                 </td>

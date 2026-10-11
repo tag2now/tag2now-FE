@@ -58,6 +58,14 @@ export const POST = async (path: string, data: any, signal?: AbortSignal) => {
     })
 }
 
+export const PUT = async (path: string, data: any) => {
+    return await request(path, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+}
+
 export const PATCH = async (path: string, data: any) => {
     return await request(path, {
         method: 'PATCH',

@@ -73,4 +73,26 @@ describe('RankMatchTable', () => {
     expect(tables).toHaveLength(1)
     expect(tables[0].querySelectorAll('tbody tr.tbl-row')).toHaveLength(3)
   })
+
+  it('marks a live player with a link to the broadcast, in a match and while searching', () => {
+    const stream = { platform: 'chzzk', channel_name: '채널', url: 'https://chzzk.naver.com/live/' + 'a'.repeat(32), title: '방송', viewer_count: 3 }
+    const rooms: RankMatchRoom[] = [
+      {
+        room_id: 1,
+        rank_info: { id: 1, name: '1st 나무단', tier: '나무단' },
+        users: [{ online_name: 'Live', np_id: 'live', stream }, { online_name: 'Quiet', np_id: 'quiet', stream: null }] as RoomUser[],
+      },
+      {
+        room_id: 2,
+        rank_info: { id: 2, name: '2nd 나무단', tier: '나무단' },
+        users: [{ online_name: 'Waiting', np_id: 'waiting', stream }] as RoomUser[],
+      },
+    ]
+    render(<RankMatchTable rooms={rooms} />)
+
+    expect(screen.getAllByRole('link').map((link) => link.getAttribute('aria-label'))).toEqual([
+      'Live 치지직 방송 보기: 방송 (새 창)',
+      'Waiting 치지직 방송 보기: 방송 (새 창)',
+    ])
+  })
 })

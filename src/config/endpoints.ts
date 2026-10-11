@@ -16,7 +16,7 @@
  */
 
 export type Endpoint = {
-  /** Path passed to GET/POST/PATCH/DELETE — no leading slash, they add the base. */
+  /** Path passed to GET/POST/PUT/PATCH/DELETE — no leading slash, they add the base. */
   path: string
   /** The OpenAPI path template this resolves to, with a leading slash. */
   openapiPath: string
@@ -38,8 +38,12 @@ export const API = {
   adminSaveSetAccountRank: () => fixed('admin/saves/set-account-rank'),
   adminSaveFloor: () => fixed('admin/saves/floor'),
   adminSaveRestore: () => fixed('admin/saves/restore'),
+  adminStreams: () => fixed('admin/streams'),
+  adminStream: (username: string) =>
+    templated(`admin/streams/${encodeURIComponent(username)}`, '/admin/streams/{username}'),
 
   rooms: () => fixed('rooms/all'),
+  myStream: () => fixed('streams/me'),
   leaderboard: () => fixed('leaderboard'),
 
   stats: () => fixed('history/stats'),
@@ -87,7 +91,8 @@ export const openapiPaths = (): string[] => {
     rooms: [], leaderboard: [], stats: [], dailyStats: [], weeklyTop: [],
     playerHistory: ['npid'], playerSave: ['npid'], login: [], adminLookup: [], adminBan: [],
     adminSaveShow: [], adminSaveBackups: [], adminSaveLog: [], adminSaveSetRank: [],
-    adminSaveSetAccountRank: [], adminSaveFloor: [], adminSaveRestore: [], posts: [], post: [1],
+    adminSaveSetAccountRank: [], adminSaveFloor: [], adminSaveRestore: [], adminStreams: [], adminStream: ['user'],
+    myStream: [], posts: [], post: [1],
     postComments: [1], postThumb: [1], reservations: [], reservation: [1],
     reservationParticipants: [1], ownParticipation: [1],
     reservationComments: [1], reservationComment: [1, 2],

@@ -40,6 +40,15 @@ export interface ApiChatMessage {
   created_at: string
 }
 
+export interface ApiStreamChannel {
+  username: string
+  platform: string
+  channel_id: string
+  channel_name: string
+  channel_url: string
+  registered_at: string
+}
+
 interface MockOverrides {
   /** Today's chat, as the stream's opening snapshot carries it; none by default. */
   chat?: ApiChatMessage[]
@@ -57,6 +66,8 @@ interface MockOverrides {
   playerHistory?: Record<string, unknown>
   /** Keyed by npid; null answers "no save" (404). Anyone else gets PLAYER_SAVE. */
   playerSave?: Record<string, unknown | null>
+  /** Connected Chzzk channels, one per account; none by default. */
+  streamChannels?: ApiStreamChannel[]
   failEndpoints?: string[]
 }
 
@@ -279,6 +290,43 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const action = route.request().url().split('/').pop() ?? ''
     const [status, payload] = saveAdminAnswer(action, route.request().postDataJSON(), paul)
     await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(payload) })
+  })
+
+  /* The backend's own channel table, by account. An address names a channel
+   * when it carries 32 hex digits; the channel is "found" under that id. */
+  const streamChannels = new Map((overrides?.streamChannels ?? []).map((item) => [item.username, { ...item }]))
+  const json = (route: Route, status: number, body: unknown) =>
+    route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
+  await page.route('**/api/streams/me**', async (route) => {
+    const owner = requester(route)
+    if (owner === null) return signedOut(route)
+    const method = route.request().method()
+    const own = () => {
+      const found = streamChannels.get(owner)
+      if (!found) return null
+      const { username: _, ...channel } = found
+      return channel
+    }
+    if (method === 'GET') return json(route, 200, { channel: own() })
+    if (method === 'DELETE') {
+      streamChannels.delete(owner)
+      return route.fulfill({ status: 204 })
+    }
+    const id = String(route.request().postDataJSON().channel).toLowerCase().match(/[0-9a-f]{32}/)?.[0]
+    if (!id) return json(route, 400, { detail: '치지직 채널 주소를 확인해 주세요. 예: https://chzzk.naver.com/채널ID' })
+    streamChannels.set(owner, {
+      username: owner, platform: 'chzzk', channel_id: id, channel_name: `${owner} 채널`,
+      channel_url: `https://chzzk.naver.com/live/${id}`, registered_at: '2026-10-11T00:00:00Z',
+    })
+    return json(route, 200, { channel: own() })
+  })
+
+  await page.route('**/api/admin/streams**', async (route) => {
+    if (requester(route) === null) return signedOut(route)
+    if (route.request().method() === 'GET') return json(route, 200, { channels: [...streamChannels.values()] })
+    const username = decodeURIComponent(route.request().url().split('/').pop() ?? '')
+    if (!streamChannels.delete(username)) return json(route, 404, { detail: '연결된 방송 채널이 없습니다.' })
+    return route.fulfill({ status: 204 })
   })
 
   await page.route('**/api/leaderboard**', async (route) => {
