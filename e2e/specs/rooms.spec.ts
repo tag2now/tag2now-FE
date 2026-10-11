@@ -53,8 +53,8 @@ test.describe('Rooms', () => {
     await mockAllApis(page, {
       rooms: {
         rank_match: [
-          { room_id: 1002, owner_online_name: 'TagComboKing', rank_info: warrior, max_slots: 2, users: [{ online_name: 'TagComboKing', np_id: 'u003' }] },
-          { room_id: 1003, owner_online_name: 'Kaz', rank_info: warrior, max_slots: 2, users: [{ online_name: 'Kaz', np_id: 'u007' }] },
+          { room_id: 1002, owner_online_name: 'TagComboKing', rank_info: warrior, max_slots: 2, users: [{ online_name: 'TagComboKing', npid: 'u003' }] },
+          { room_id: 1003, owner_online_name: 'Kaz', rank_info: warrior, max_slots: 2, users: [{ online_name: 'Kaz', npid: 'u007' }] },
         ],
         player_match: [],
       },
