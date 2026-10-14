@@ -9,6 +9,10 @@
      1050px of sidebar and main, plus the 300px chat column and its gap: the
      main column keeps its old 844px wherever the screen allows it. */
   --content-max: 1366px;
+  /* The docked layout: main centred at up to --main-max, sidebar and chat beside it. */
+  --main-max: 844px;
+  --sidebar-w: clamp(150px, 16vw, 190px);
+  --chat-w: 300px;
   /* The surface ladder. These four used to span 0x0c-0x1f, so a panel sat
      6/255 above the page behind it and its border did the entire job of
      separating them — at which point the whole site read as one flat plane.

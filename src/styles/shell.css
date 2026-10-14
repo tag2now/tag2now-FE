@@ -104,7 +104,7 @@
    16vw term only governs the middle of that range — below ~940px the 150px
    floor takes over, which is what keeps the nav labels from wrapping. */
 /* Shares --content-max with the header so the two edges line up. */
-.app-layout { display: grid; grid-template-columns: clamp(150px, 16vw, 190px) minmax(0, 1fr); gap: 16px; width: min(var(--content-max), calc(100% - 32px)); margin: 16px auto 0; }
+.app-layout { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); gap: 16px; width: min(var(--content-max), calc(100% - 32px)); margin: 16px auto 0; }
 /* 74px = the header's 56px floor plus .app-layout's 16px top margin and the
    two borders between them. Retune it whenever .app-header's min-height moves. */
 .app-sidebar { position: sticky; top: 74px; align-self: start; padding: 8px; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-panel); }

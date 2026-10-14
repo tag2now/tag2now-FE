@@ -7,7 +7,13 @@
 
 /* The grid takes the third column only while the docked chat is in it, so
    the breakpoint lives in one place — the query that decides to render it. */
-.app-layout:has(> .chat-docked) { grid-template-columns: clamp(150px, 16vw, 190px) minmax(0, 1fr) 300px; }
+/* Main centred in the viewport: the two side tracks split what is left equally,
+   and the sidebar and chat sit against the main column's edges inside them. */
+.app-layout:has(> .chat-docked) {
+  grid-template-columns: minmax(max(var(--sidebar-w), var(--chat-w)), 1fr) minmax(0, var(--main-max)) minmax(max(var(--sidebar-w), var(--chat-w)), 1fr);
+  width: calc(100% - 32px);
+}
+.app-layout:has(> .chat-docked) > .app-sidebar { justify-self: end; width: var(--sidebar-w); }
 
 .chat-launcher {
   position: fixed; left: 16px; bottom: 16px; z-index: 55;
@@ -37,7 +43,7 @@
    74px, the sidebar's own offset. A fixed 660px, not the viewport's height: a
    column as tall as the page read as a second main column. A short window
    still keeps 16px under it. */
-.chat-docked { position: sticky; top: 74px; align-self: start; height: min(660px, calc(100dvh - 90px)); }
+.chat-docked { position: sticky; top: 74px; align-self: start; justify-self: start; width: var(--chat-w); height: min(660px, calc(100dvh - 90px)); }
 .chat-floating {
   position: fixed; left: 16px; bottom: 16px; z-index: 55;
   width: min(320px, calc(100% - 32px)); height: min(440px, calc(100dvh - 32px));
