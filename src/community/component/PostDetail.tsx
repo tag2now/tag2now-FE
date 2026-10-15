@@ -128,7 +128,7 @@ export default function PostDetail({ post, user, onBack, onRefresh, requireUser,
       <div className="post-detail-body"><LinkifiedText text={post.body} /></div>
       {post.youtube_video_id && <YouTubeVideo videoId={post.youtube_video_id} />}
 
-      <div className="flex gap-2 mb-4 pb-4 border-b border-border-light">
+      <div className="flex gap-2 mt-2 mb-2">
         <button
           onClick={() => handleThumb('up')}
           disabled={thumbing}
