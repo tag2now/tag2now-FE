@@ -90,14 +90,30 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-strong);
 }
-.chat-line.is-mine .chat-line-head strong { color: var(--color-primary-text); }
-/* The author's place on the board, coloured by band (rankTone.ts): first,
-   top 10, top 30, top 100, and the rest of the 500 in the quiet tone. */
-.chat-rank { flex: 0 0 auto; color: var(--color-txt-faint); font-size: var(--text-3xs); font-weight: var(--weight-strong); font-variant-numeric: tabular-nums; }
-.chat-rank.is-first { color: var(--color-tier-red); }
-.chat-rank.is-top10 { color: var(--color-tier-blue); }
-.chat-rank.is-top30 { color: var(--color-tier-purple); }
-.chat-rank.is-top100 { color: var(--color-tier-teal); }
+/* Before an admin's name: a white sword on a blue square, after Chzzk's
+   manager badge. Blue, which no name tone and no rank chip wears. */
+.chat-admin { display: inline-grid; flex: 0 0 auto; place-items: center; align-self: center; width: 16px; height: 16px; margin-right: -2px; border-radius: 4px; background: var(--color-chat-admin); color: var(--color-surface-tint); }
+/* One colour per account (nameTone.ts). As rules rather than an inline var():
+   Tailwind emits only the @theme tokens some stylesheet uses. */
+.chat-line-head .chat-name-0 { color: var(--color-chat-name-0); }
+.chat-line-head .chat-name-1 { color: var(--color-chat-name-1); }
+.chat-line-head .chat-name-2 { color: var(--color-chat-name-2); }
+.chat-line-head .chat-name-3 { color: var(--color-chat-name-3); }
+.chat-line-head .chat-name-4 { color: var(--color-chat-name-4); }
+.chat-line-head .chat-name-5 { color: var(--color-chat-name-5); }
+.chat-line-head .chat-name-6 { color: var(--color-chat-name-6); }
+.chat-line-head .chat-name-7 { color: var(--color-chat-name-7); }
+.chat-line-head .chat-name-8 { color: var(--color-chat-name-8); }
+.chat-line-head .chat-name-9 { color: var(--color-chat-name-9); }
+.chat-line-head .chat-name-10 { color: var(--color-chat-name-10); }
+.chat-line-head .chat-name-11 { color: var(--color-chat-name-11); }
+/* The author's place on the board, as a chip rather than coloured text: the
+   names beside it are coloured text, and a red #1 beside a coral name read as
+   one mark. Most people in the chat are on the 500-player board, so a chip on
+   every line in red was red on every line and singled nobody out. Only the
+   top ten are filled; the rest sit quiet in grey. */
+.chat-rank { flex: 0 0 auto; padding: 0 4px; border-radius: 3px; background: var(--color-bg-row); color: var(--color-txt-faint); font-size: var(--text-3xs); font-weight: var(--weight-strong); font-variant-numeric: tabular-nums; line-height: 1.5; }
+.chat-rank.is-top { background: var(--color-primary); color: var(--color-bg-deep); }
 .chat-line-head time { flex: 0 0 auto; color: var(--color-txt-faint); font-size: var(--text-3xs); font-variant-numeric: tabular-nums; }
 .chat-line-delete {
   display: grid; place-items: center; width: 22px; height: 22px; margin-left: auto; padding: 0;

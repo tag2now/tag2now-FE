@@ -1,10 +1,10 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Sword, Trash2 } from 'lucide-react'
 import type { AuthUser } from '@/auth/types'
 import type { ChatMessage } from '@/chat/types'
 import { kstTimeFormat } from '@/reservation/reservationLabels'
 import type { LeaderboardEntry } from '@/shared/types'
-import { rankTone } from '@/chat/rankTone'
+import { nameTone } from '@/chat/nameTone'
 
 type Props = {
   messages: ChatMessage[]
@@ -18,6 +18,9 @@ type Props = {
 
 /** How far above the bottom still counts as reading the newest line, in px. */
 const BOTTOM_SLACK = 24
+
+/** The places whose chip is filled; every other place on the board is grey. */
+const TOP_RANKS = 10
 
 /** Today's messages, oldest first, following new ones only while the reader
  * is at the bottom: someone scrolled up to read is not yanked back down by
@@ -52,9 +55,17 @@ export default function MessageList({ messages, loading, user, leaderboardEntrie
         {messages.map((message) => (
           <li key={message.id} className={isMine(message) ? 'chat-line is-mine' : 'chat-line'}>
             <div className="chat-line-head">
-              <strong>{message.author_online_name}</strong>
+              {message.author_admin && (
+                <span className="chat-admin" title="관리자">
+                  <Sword size={11} fill="currentColor" aria-hidden="true" />
+                  <span className="sr-only">관리자</span>
+                </span>
+              )}
+              <strong className={`chat-name-${nameTone(message.author_username)}`}>
+                {message.author_online_name}
+              </strong>
               {rankOf.has(message.author_username) && (
-                <span className={`chat-rank ${rankTone(rankOf.get(message.author_username)!)}`}>
+                <span className={rankOf.get(message.author_username)! <= TOP_RANKS ? 'chat-rank is-top' : 'chat-rank'}>
                   #{rankOf.get(message.author_username)}
                 </span>
               )}

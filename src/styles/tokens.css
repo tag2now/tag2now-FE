@@ -97,6 +97,26 @@
   --color-tier-purple: #c084fc;
   /* 황금단 — Tekken God and above. The same gold as the first-place medal. */
   --color-tier-gold: #e4bd67;
+  /* The admin badge before a name in the chat: a white sword on this blue,
+     after Chzzk's manager badge. 5.8:1 for the sword, 3.1:1 for the square
+     against bg-panel. */
+  --color-chat-admin: #3a55e6;
+  /* Chat author names, one per account (chat/nameTone.ts picks by RPCN id),
+     so a reader can follow who is talking the way Chzzk's chat does. Light
+     tints, each clearing 6.9:1 on bg-row, the lightest surface a line sits on.
+     Adding one reshuffles everyone's colour: the count is in nameTone.ts. */
+  --color-chat-name-0: #f28ca5;
+  --color-chat-name-1: #f5a65b;
+  --color-chat-name-2: #ecd06f;
+  --color-chat-name-3: #a3d96b;
+  --color-chat-name-4: #5fd3a1;
+  --color-chat-name-5: #5cc6e2;
+  --color-chat-name-6: #8ea6ff;
+  --color-chat-name-7: #b79cff;
+  --color-chat-name-8: #e199ee;
+  --color-chat-name-9: #f2907f;
+  --color-chat-name-10: #7fd6d0;
+  --color-chat-name-11: #d9b38c;
 
   /* Chart series. Recharts writes SVG attributes, which cannot read a custom
      property, so `chartTheme.ts` holds these as JS strings as well. They are

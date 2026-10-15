@@ -9,6 +9,9 @@ export type ChatMessage = {
   author_online_name: string
   body: string
   created_at: string
+  /** Whether the author was an admin when they posted. Optional: a backend
+   * released before the field sends none, and that reads as not an admin. */
+  author_admin?: boolean
 }
 
 /** The longest message the backend accepts: `MAX_BODY_LENGTH` in tag2now-BE's

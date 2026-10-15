@@ -69,7 +69,7 @@ describe('the lobby chat', () => {
     expect(screen.getByRole('button', { name: '채팅 열기' })).toBeInTheDocument()
   })
 
-  it('marks each ranked author with their place on the board, coloured by band', () => {
+  it('marks each ranked author with their place on the board, filled for the top ten', () => {
     const entries = [
       { np_id: 'champ', rank: 1, online_name: 'champ-name' },
       { np_id: 'rival', rank: 7, online_name: 'rival-name' },
@@ -79,11 +79,32 @@ describe('the lobby chat', () => {
     server('snapshot', [line(1, 'champ'), line(2, 'rival'), line(3, 'mid'), line(4, 'newcomer')])
     openChat()
 
-    const [first, top10, rest, unranked] = within(chatLog()).getAllByRole('listitem')
-    expect(within(first).getByText('#1')).toHaveClass('chat-rank', 'is-first')
-    expect(within(top10).getByText('#7')).toHaveClass('chat-rank', 'is-top10')
-    expect(within(rest).getByText('#250')).toHaveClass('chat-rank', 'is-ranked')
+    const [champ, rival, mid, unranked] = within(chatLog()).getAllByRole('listitem')
+    expect(within(champ).getByText('#1')).toHaveClass('chat-rank', 'is-top')
+    expect(within(rival).getByText('#7')).toHaveClass('chat-rank', 'is-top')
+    expect(within(mid).getByText('#250')).toHaveClass('chat-rank')
+    expect(within(mid).getByText('#250')).not.toHaveClass('is-top')
     expect(within(unranked).queryByText(/^#/)).not.toBeInTheDocument()
+  })
+
+  it('gives each author one name colour, the same on every line', () => {
+    render(<Chat />)
+    server('snapshot', [line(1, 'rival'), line(2, 'other'), line(3, 'rival')])
+    openChat()
+
+    const names = within(chatLog()).getAllByText(/-name$/)
+    expect(names[0].className).toMatch(/^chat-name-\d+$/)
+    expect(names[2].className).toBe(names[0].className)
+  })
+
+  it('puts a sword before an admin name, and nothing before anyone else', () => {
+    render(<Chat />)
+    server('snapshot', [{ ...line(1, 'mod'), author_admin: true }, line(2, 'rival')])
+    openChat()
+
+    const [admin, player] = within(chatLog()).getAllByRole('listitem')
+    expect(within(admin).getByText('관리자')).toBeInTheDocument()
+    expect(within(player).queryByText('관리자')).not.toBeInTheDocument()
   })
 
   it('shows the chat to a reader who is not signed in, and asks them to log in to write', () => {
