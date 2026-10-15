@@ -24,29 +24,19 @@ before the next unit.
 | `2027507` | `stat.css` folded into utilities and deleted |
 | `811599f` | `RankSummary` gets a `wrap` prop (the earlier `cn()` commits `e6e37df`/`a79ac4b` are superseded by this) |
 | `c420007` | `auth.css`: ten elements onto utilities; the rest stays, with the login input/button overrides moved in from `boards.css` |
-| *(next commits)* | Rank-plate regression from step 0 fixed (`RankImage` `plateClassName`); `e2e/style-snapshot/` added |
+| *(next commits)* | Rank-plate regression from step 0 fixed (`RankImage` `plateClassName`) |
 
 `saves.css` was looked at and left as is: its table classes are shared by three
 tables, and the rest needs values outside the token scale.
-
-Step 0 was re-verified after the fact by building the commit before it and the
-commit itself in worktrees and comparing 59 states × 3 widths. One regression
-came out — rank plates drawn by `RankSummary` shrank — and is fixed; nothing
-else moved.
 
 ## How a unit is done
 
 1. Read the sheet and list where each class is used (`git grep`). Count uses:
    a class used once is a candidate; a shared one stays.
 2. Classify each rule by the criterion above. Expect roughly half to stay.
-3. Make sure `e2e/style-snapshot` draws every class in the sheet
-   (`coverage.mjs`); add states with a `ready` locator for any that are not.
-4. Record the base build twice, edit, record again, and read
-   `diff.mjs`. Every remaining difference is either fixed or named as one of
-   the accepted ones above. See `e2e/style-snapshot/README.md`.
-5. Run the test skill (`.claude/skills/test/SKILL.md`), one run per suite,
+3. Run the test skill (`.claude/skills/test/SKILL.md`), one run per suite,
    output to `test-results/`.
-6. One commit per unit. Deleting a sheet drops `tokens.test.ts` by two cases
+4. One commit per unit. Deleting a sheet drops `tokens.test.ts` by two cases
    per file; that is not a regression.
 
 ## Remaining sheets
@@ -68,10 +58,6 @@ Smallest first, as the order went so far. Line counts as of `c420007`.
 
 ## Open items
 
-- **Classes no state draws yet** (22): mostly admin error/warning states, the
-  chat unread badge, history empty/loading states. Statically checked: none
-  shares its element with a utility, so step 0 could not have moved them; a
-  unit touching one should add its state first.
 - **Unused CSS** (8, for a separate cleanup commit): `filter-bar`,
   `filter-label`, `char-rank`, `profile-summary`, `profile-edit`,
   `profile-chars`, `sidebar-status`, `detail-tabs`. (`rank-plate` looks unused
@@ -85,13 +71,8 @@ Smallest first, as the order went so far. Line counts as of `c420007`.
   a separate fix: the login password field's `pr-10` never applied, so a long
   password runs under the 48px reveal button; the reservation labels
   ("NEW MATCH REQUEST") were meant red and render grey.
-- **The reservation form's rank plate** is covered by `RankImage`'s unit test
-  only: every rank its picker offers has art, so no state can draw the plate
-  there.
 
 ## Environment notes
 
 - The dev server on :5173 is usually the user's; do not stop it. Without
   `BE=local` it proxies to production.
-- Comparisons run against production builds served on other ports (4801…),
-  never the dev server.

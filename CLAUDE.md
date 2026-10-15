@@ -369,10 +369,7 @@ A rule goes to a feature's file only when that feature alone uses its classes;
 anything two features share stays global. Every sheet is still imported from
 `src/index.css` and never from a component, because **the order of that list
 is the cascade**: the rules share one layer, so moving an import changes which
-rule wins. Any change to a sheet, its order or its classes gets the
-computed-style comparison in `e2e/style-snapshot/` (its README says how): it
-records every element on 59 screen states at three widths, before and after,
-and names each property that moved.
+rule wins.
 
 **A utility in the markup always beats a sheet.** Every sheet but `tokens.css`
 and `base.css` is imported `layer(components.app)`, under Tailwind's
@@ -386,7 +383,7 @@ block included. A value that changes with the viewport belongs wholly to one
 side — both widths in the sheet (the match tables' `<col>`s), or both as
 utilities — never a utility the sheet narrows on a phone. Before this, sheets
 were unlayered and won; the utilities they silently beat were removed when the
-layer moved, and the same 78-state snapshot came out identical.
+layer moved.
 
 **Moving a sheet into utilities.** A rule moves onto the element when tokens
 and Tailwind's scale can say it; one that needs a value outside them —
