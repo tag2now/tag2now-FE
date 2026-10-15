@@ -86,10 +86,14 @@
 .match-table .searching-icon { display: inline-grid; place-items: center; color: var(--color-tier-yellow); }
 
 /* ─── Live on Chzzk ─────────────────────────── */
-/* The badge sits left of the name, which gives way to it: the name shrinks and
-   ellipsizes, so a long one cannot push the badge out of the cell. */
-.match-table .player-stream { display: inline-flex; max-width: 100%; align-items: center; justify-content: center; gap: 4px; vertical-align: middle; }
-.match-table .player-stream .player-btn { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* The badge sits left of the name without moving it: the third column is an
+   empty twin of the badge's, so the name stays centred like every name that has
+   no badge. Short of room, the name gives way first — it shrinks and ellipsizes,
+   and only then does the empty twin give up its width — so a long one cannot
+   push the badge out of the cell. */
+.match-table .player-stream { display: inline-grid; grid-template-columns: 1fr minmax(0, auto) 1fr; max-width: 100%; align-items: center; gap: 4px; vertical-align: middle; }
+.match-table .player-stream .stream-badge { justify-self: end; }
+.match-table .player-stream .player-btn { grid-column: 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .stream-badge { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; padding: 1px 6px; border-radius: 4px; background: var(--color-primary); color: var(--color-bg-deep); font-size: var(--text-3xs); font-weight: var(--weight-display); letter-spacing: .06em; line-height: 1.5; text-decoration: none; }
 .stream-badge::before { width: 5px; height: 5px; border-radius: 50%; background: currentColor; content: ""; }
 .stream-badge:hover { background: color-mix(in srgb, var(--color-primary) 85%, transparent); }
@@ -114,6 +118,6 @@
   .match-table .player-stream .stream-badge { position: absolute; bottom: 100%; left: 50%; padding: 1px 5px; font-size: var(--text-4xs); line-height: 1.2; transform: translateX(-50%); }
   /* A guest list wraps, so a lifted badge would land on the guest above it:
      there the badge stays in the flow, still above its name. */
-  .match-table .room-guests .player-stream { flex-direction: column; gap: 2px; }
+  .match-table .room-guests .player-stream { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
   .match-table .room-guests .player-stream .stream-badge { position: static; margin: 0; transform: none; }
 }
