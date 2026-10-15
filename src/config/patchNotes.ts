@@ -14,6 +14,15 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.9',
+    items: [
+      '로비 채팅 추가 (매일 오전 6시에 초기화)',
+      '방송 중인 플레이어에 LIVE 표시, 누르면 방송으로 이동',
+      '계정 메뉴의 "방송 채널"에서 치지직 채널 연결',
+      '게시글·댓글의 링크를 눌러 바로 이동',
+    ],
+  },
+  {
     version: '2.8',
     items: [
       '플레이어 정보에서 캐릭터별 계급 확인',
