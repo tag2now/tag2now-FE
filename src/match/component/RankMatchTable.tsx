@@ -7,6 +7,7 @@ import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import {RankMatchRoom} from "@/match/types";
 import { Search } from 'lucide-react'
 import PlayerWithStream from "@/match/component/PlayerWithStream";
+import { liveFirst } from "@/match/liveFirst";
 
 const VsLabel = <span aria-hidden="true" className="vs-label">VS</span>
 
@@ -78,24 +79,29 @@ export default memo(function RankMatchTable({ rooms, leaderboardEntries }: RankM
                     </span>
                   </th>
                 </tr>
-                {inGame.map((r) => (
-                  <tr key={r.room_id} className="tbl-row" style={rowAccentStyle}>
-                    <td className="tbl-td">
-                      <RankImage rankInfo={r.rank_info} className="rank-art" />
-                    </td>
-                    <td className="player-name">
-                      {r.users?.[0] ? <PlayerWithStream user={r.users[0]} onSelect={setSelectedNpid} /> : '—'}
-                    </td>
-                    <td className="tbl-td">
-                            <span className="inline-flex items-center" title="게임 중" aria-label="게임 중">
-                              {VsLabel}
-                            </span>
-                    </td>
-                    <td className="player-name">
-                      {r.users?.[1] ? <PlayerWithStream user={r.users[1]} onSelect={setSelectedNpid} /> : '—'}
-                    </td>
-                  </tr>
-                ))}
+                {inGame.map((r) => {
+                  // Two sides of one match, not host and guest, so the live one
+                  // can take the left without the row meaning anything else.
+                  const [left, right] = liveFirst(r.users)
+                  return (
+                    <tr key={r.room_id} className="tbl-row" style={rowAccentStyle}>
+                      <td className="tbl-td">
+                        <RankImage rankInfo={r.rank_info} className="rank-art" />
+                      </td>
+                      <td className="player-name">
+                        {left ? <PlayerWithStream user={left} onSelect={setSelectedNpid} /> : '—'}
+                      </td>
+                      <td className="tbl-td">
+                              <span className="inline-flex items-center" title="게임 중" aria-label="게임 중">
+                                {VsLabel}
+                              </span>
+                      </td>
+                      <td className="player-name">
+                        {right ? <PlayerWithStream user={right} onSelect={setSelectedNpid} /> : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
                 {searching.map((r) => {
                   const waiting = r.users?.[0]
                   if (!waiting) return null

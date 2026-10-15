@@ -95,4 +95,18 @@ describe('RankMatchTable', () => {
       'Waiting 치지직 방송 보기: 방송 (새 창)',
     ])
   })
+
+  it('puts a live player on the left, whichever slot the room listed them in', () => {
+    const stream = { platform: 'chzzk', channel_name: '채널', url: 'https://chzzk.naver.com/live/' + 'a'.repeat(32), title: '방송', viewer_count: 3 }
+    const rooms: RankMatchRoom[] = [{
+      room_id: 1,
+      rank_info: { id: 1, name: '1st 나무단', tier: '나무단' },
+      users: [{ online_name: 'Quiet', np_id: 'quiet', stream: null }, { online_name: 'Live', np_id: 'live', stream }] as RoomUser[],
+    }]
+    render(<RankMatchTable rooms={rooms} />)
+
+    const cells = screen.getAllByRole('row')[2].querySelectorAll('td')
+    expect(cells[1]).toHaveTextContent('Live')
+    expect(cells[3]).toHaveTextContent('Quiet')
+  })
 })

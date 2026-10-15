@@ -3,6 +3,7 @@ import PlayerHistoryPanel from '@/shared/components/PlayerHistoryPanel'
 import type { LeaderboardEntry } from '@/shared/types'
 import type { Room } from '@/match/types'
 import PlayerWithStream from '@/match/component/PlayerWithStream'
+import { liveFirst } from '@/match/liveFirst'
 
 interface PlayerMatchTableProps {
   rooms: Room[]
@@ -62,7 +63,8 @@ export default function PlayerMatchTable({ rooms, leaderboardEntries }: PlayerMa
             // absent from the roster still names them — the column is about who
             // opened the lobby, not about who the payload happens to list.
             const host = users.find((u) => u.online_name === room.owner_online_name)
-            const guests = users.filter((u) => u !== host)
+            // The host keeps their own column; among the guests, live ones lead.
+            const guests = liveFirst(users.filter((u) => u !== host))
             const capacity = room.max_slots ?? 0
             return (
               // Same `is-searching` treatment the rank tab gives a room with

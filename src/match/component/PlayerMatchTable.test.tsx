@@ -103,4 +103,23 @@ describe('PlayerMatchTable', () => {
     expect(screen.getAllByRole('link', { name: /치지직 방송 보기/ })).toHaveLength(2)
     expect(screen.getByRole('button', { name: 'Quiet' })).toBeInTheDocument()
   })
+
+  it('lists live guests first, and leaves the host in their column', () => {
+    const stream = { platform: 'chzzk', channel_name: '채널', url: 'https://chzzk.naver.com/live/' + 'a'.repeat(32), title: '방송', viewer_count: 3 }
+    const rooms: Room[] = [{
+      room_id: 1,
+      owner_online_name: 'Host',
+      rank_info: null,
+      max_slots: 4,
+      users: [
+        { online_name: 'Host', np_id: 'host' },
+        { online_name: 'Quiet', np_id: 'quiet' },
+        { online_name: 'Live', np_id: 'live', stream },
+      ] as RoomUser[],
+    }]
+    render(<PlayerMatchTable rooms={rooms} />)
+
+    const guests = within(rowFor('Host')).getAllByRole('button').map((button) => button.textContent)
+    expect(guests).toEqual(['Host', 'Live', 'Quiet'])
+  })
 })
