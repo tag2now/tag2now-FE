@@ -8,9 +8,14 @@
 /* The grid takes the third column only while the docked chat is in it, so
    the breakpoint lives in one place — the query that decides to render it. */
 /* Main centred in the viewport: the two side tracks split what is left equally,
-   and the sidebar and chat sit against the main column's edges inside them. */
+   and the sidebar and chat sit against the main column's edges inside them.
+   Each side track's floor is its own column, not the wider of the two: main
+   grows to --main-max before the 1fr tracks take anything, so at 1350px it
+   keeps the 796px the breakpoint was measured at. A shared 300px floor took
+   110px from it there and stacked the home page's rankings. Main is exactly
+   centred once both sides reach 300px, from about 1510px. */
 .app-layout:has(> .chat-docked) {
-  grid-template-columns: minmax(max(var(--sidebar-w), var(--chat-w)), 1fr) minmax(0, var(--main-max)) minmax(max(var(--sidebar-w), var(--chat-w)), 1fr);
+  grid-template-columns: minmax(var(--sidebar-w), 1fr) minmax(0, var(--main-max)) minmax(var(--chat-w), 1fr);
   width: calc(100% - 32px);
 }
 .app-layout:has(> .chat-docked) > .app-sidebar { justify-self: end; width: var(--sidebar-w); }
