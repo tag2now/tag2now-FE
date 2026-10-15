@@ -314,9 +314,7 @@ window crosses midnight, so "01:00" can follow "23:00".
 
 Today's lobby chat, from tag2now-BE's `/chat` routes. **Reading is public,
 writing needs a login** — and the stream has to stay public, because an
-`EventSource` cannot send an `Authorization` header. `contract.test.ts` checks
-that the stream declares no security, so a backend that started asking for a
-token fails here rather than leaving every reader with an empty chat.
+`EventSource` cannot send an `Authorization` header.
 
 `chat/chatStream.ts` holds it outside React, like `auth/session.ts`: one
 `EventSource` for the whole page, opened with the first subscriber, closed with
@@ -528,39 +526,12 @@ name it from that run, then confirm with `npx playwright test --last-failed`
 before believing it.
 
 **Before offering a commit, run `.claude/skills/test/SKILL.md`.** It is the
-whole pre-commit suite — the contract check, both typechecks, the CSS lint and
-E2E, plus tag2now-BE's steps when that changed — and the rule for reading it:
-each suite runs once, its output goes whole to a file under `test-results/`,
-and every failure is named from that run. In a session opened at the workspace
+whole pre-commit suite — unit tests, both typechecks, the CSS lint and E2E,
+for this repository only — and the rule for reading it: each suite runs once,
+its output goes whole to a file under `test-results/`, and every failure is
+named from that run. In a session opened at the workspace
 root a sub-repository's skills can be discovered late, hours in, so when `test`
 is not in the skill list yet, read that file and follow it anyway.
-
-### Contract with the backend
-
-Neither suite above can see the seam between the two repositories. Unit tests
-replace `reservationApi` with a mock, and `mockAllApis` answers with whatever
-this frontend already believed — so a backend rename leaves both green and
-breaks production. `tag2now-BE`'s own integration tests are no help either:
-they build their own requests, so they only ask that service about names that
-service chose.
-
-`src/config/openapi.json` is a copy of the schema tag2now-BE commits at its
-repository root. `src/config/contract.test.ts` asserts this frontend's actual
-assumptions against it — every path and method it calls, plus the query
-parameters, request fields, headers and response fields it names — and the
-`unit-test` job re-fetches the published file first, so the copy cannot go
-stale silently.
-
-Refresh the copy when that check fails:
-
-```bash
-curl -sSfo src/config/openapi.json https://raw.githubusercontent.com/tag2now/tag2now-BE/master/openapi.json
-```
-
-**It covers about half the surface.** Ten of the calls listed there reach routes
-with no `response_model`, so their schema is `{}` and nothing can be asserted
-about the payload — `NO_RESPONSE_MODEL` in that file names them. Adding
-response models on the backend is what would close the rest.
 
 ## Custom commands
 
@@ -582,7 +553,7 @@ absolute URLs (`og:url`, `canonical`) must use the `match.` host.
 
 | Workflow | Trigger | Does |
 |----------|---------|------|
-| `test.yml` | PR to `master`, push to `master`, `workflow_call` | API contract check, unit tests + typecheck, then E2E |
+| `test.yml` | PR to `master`, push to `master`, `workflow_call` | unit tests + typecheck, then E2E |
 | `deploy.yml` | `v*` tag | full test suite, build and push to ECR, then deploy to production over SSH |
 
 ### Versioning

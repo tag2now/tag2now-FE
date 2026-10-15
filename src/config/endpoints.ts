@@ -6,99 +6,54 @@
  * chased through grep rather than through the type system.
  *
  * The template functions take the same arguments the callers already had, so a
- * call site reads no differently; what changes is that `contract.test.ts` can
- * now enumerate this object and assert that nothing here is missing from the
- * contract list (and nothing in that list is dead).
- *
- * `openapiPath` is the OpenAPI template the path resolves to. It is what makes
- * that cross-check possible: `reservations/12/comments` cannot be looked up in
- * the schema, but `/reservations/{reservation_id}/comments` can.
+ * call site reads no differently.
  */
 
 export type Endpoint = {
   /** Path passed to GET/POST/PUT/PATCH/DELETE — no leading slash, they add the base. */
   path: string
-  /** The OpenAPI path template this resolves to, with a leading slash. */
-  openapiPath: string
 }
 
-const fixed = (path: string): Endpoint => ({ path, openapiPath: `/${path}` })
-
-const templated = (path: string, openapiPath: string): Endpoint => ({ path, openapiPath })
+const endpoint = (path: string): Endpoint => ({ path })
 
 export const API = {
-  login: () => fixed('auth/login'),
+  login: () => endpoint('auth/login'),
 
-  adminLookup: () => fixed('admin/users/lookup'),
-  adminBan: () => fixed('admin/users/ban'),
-  adminSaveShow: () => fixed('admin/saves/show'),
-  adminSaveBackups: () => fixed('admin/saves/backups'),
-  adminSaveLog: () => fixed('admin/saves/log'),
-  adminSaveSetRank: () => fixed('admin/saves/set-rank'),
-  adminSaveSetAccountRank: () => fixed('admin/saves/set-account-rank'),
-  adminSaveFloor: () => fixed('admin/saves/floor'),
-  adminSaveRestore: () => fixed('admin/saves/restore'),
-  adminStreams: () => fixed('admin/streams'),
-  adminStream: (username: string) =>
-    templated(`admin/streams/${encodeURIComponent(username)}`, '/admin/streams/{username}'),
+  adminLookup: () => endpoint('admin/users/lookup'),
+  adminBan: () => endpoint('admin/users/ban'),
+  adminSaveShow: () => endpoint('admin/saves/show'),
+  adminSaveBackups: () => endpoint('admin/saves/backups'),
+  adminSaveLog: () => endpoint('admin/saves/log'),
+  adminSaveSetRank: () => endpoint('admin/saves/set-rank'),
+  adminSaveSetAccountRank: () => endpoint('admin/saves/set-account-rank'),
+  adminSaveFloor: () => endpoint('admin/saves/floor'),
+  adminSaveRestore: () => endpoint('admin/saves/restore'),
+  adminStreams: () => endpoint('admin/streams'),
+  adminStream: (username: string) => endpoint(`admin/streams/${encodeURIComponent(username)}`),
 
-  rooms: () => fixed('rooms/all'),
-  myStream: () => fixed('streams/me'),
-  leaderboard: () => fixed('leaderboard'),
+  rooms: () => endpoint('rooms/all'),
+  myStream: () => endpoint('streams/me'),
+  leaderboard: () => endpoint('leaderboard'),
 
-  stats: () => fixed('history/stats'),
-  dailyStats: () => fixed('history/stats/daily'),
-  weeklyTop: () => fixed('history/stats/weekly-top'),
-  playerHistory: (npid: string) =>
-    templated(`history/players/${npid}`, '/history/players/{npid}'),
-  playerSave: (npid: string) =>
-    templated(`saves/players/${npid}`, '/saves/players/{npid}'),
+  stats: () => endpoint('history/stats'),
+  dailyStats: () => endpoint('history/stats/daily'),
+  weeklyTop: () => endpoint('history/stats/weekly-top'),
+  playerHistory: (npid: string) => endpoint(`history/players/${npid}`),
+  playerSave: (npid: string) => endpoint(`saves/players/${npid}`),
 
-  posts: () => fixed('community/posts'),
-  post: (postId: number) =>
-    templated(`community/posts/${postId}`, '/community/posts/{post_id}'),
-  postComments: (postId: number) =>
-    templated(`community/posts/${postId}/comments`, '/community/posts/{post_id}/comments'),
-  postThumb: (postId: number) =>
-    templated(`community/posts/${postId}/thumb`, '/community/posts/{post_id}/thumb'),
+  posts: () => endpoint('community/posts'),
+  post: (postId: number) => endpoint(`community/posts/${postId}`),
+  postComments: (postId: number) => endpoint(`community/posts/${postId}/comments`),
+  postThumb: (postId: number) => endpoint(`community/posts/${postId}/thumb`),
 
-  reservations: () => fixed('reservations'),
-  reservation: (id: number) =>
-    templated(`reservations/${id}`, '/reservations/{reservation_id}'),
-  reservationParticipants: (id: number) =>
-    templated(`reservations/${id}/participants`, '/reservations/{reservation_id}/participants'),
-  ownParticipation: (id: number) =>
-    templated(`reservations/${id}/participants/me`, '/reservations/{reservation_id}/participants/me'),
-  reservationComments: (id: number) =>
-    templated(`reservations/${id}/comments`, '/reservations/{reservation_id}/comments'),
-  reservationComment: (reservationId: number, commentId: number) =>
-    templated(
-      `reservations/${reservationId}/comments/${commentId}`,
-      '/reservations/{reservation_id}/comments/{comment_id}',
-    ),
+  reservations: () => endpoint('reservations'),
+  reservation: (id: number) => endpoint(`reservations/${id}`),
+  reservationParticipants: (id: number) => endpoint(`reservations/${id}/participants`),
+  ownParticipation: (id: number) => endpoint(`reservations/${id}/participants/me`),
+  reservationComments: (id: number) => endpoint(`reservations/${id}/comments`),
+  reservationComment: (reservationId: number, commentId: number) => endpoint(`reservations/${reservationId}/comments/${commentId}`),
 
-  chatStream: () => fixed('chat/stream'),
-  chatMessages: () => fixed('chat/messages'),
-  chatMessage: (id: number) =>
-    templated(`chat/messages/${id}`, '/chat/messages/{message_id}'),
+  chatStream: () => endpoint('chat/stream'),
+  chatMessages: () => endpoint('chat/messages'),
+  chatMessage: (id: number) => endpoint(`chat/messages/${id}`),
 } as const
-
-/** The OpenAPI templates this frontend calls, for the contract test to check
- * against its hand-written expectations. Sample arguments are arbitrary — only
- * the template each function returns is read. */
-export const openapiPaths = (): string[] => {
-  const samples: Record<keyof typeof API, unknown[]> = {
-    rooms: [], leaderboard: [], stats: [], dailyStats: [], weeklyTop: [],
-    playerHistory: ['npid'], playerSave: ['npid'], login: [], adminLookup: [], adminBan: [],
-    adminSaveShow: [], adminSaveBackups: [], adminSaveLog: [], adminSaveSetRank: [],
-    adminSaveSetAccountRank: [], adminSaveFloor: [], adminSaveRestore: [], adminStreams: [], adminStream: ['user'],
-    myStream: [], posts: [], post: [1],
-    postComments: [1], postThumb: [1], reservations: [], reservation: [1],
-    reservationParticipants: [1], ownParticipation: [1],
-    reservationComments: [1], reservationComment: [1, 2],
-    chatStream: [], chatMessages: [], chatMessage: [1],
-  }
-  return Object.entries(API).map(([key, build]) =>
-    (build as (...args: unknown[]) => Endpoint)(...samples[key as keyof typeof API]).openapiPath,
-  )
-}
