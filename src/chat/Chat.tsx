@@ -3,6 +3,7 @@ import { setReading } from '@/chat/chatStream'
 import useChatStream from '@/chat/useChatStream'
 import { ChatLauncher, ChatPanel } from '@/chat/component'
 import useMediaQuery from '@/shared/hooks/useMediaQuery'
+import type { LeaderboardEntry } from '@/shared/types'
 
 /** Wide enough for the chat to stand as a third column beside the main one.
  * At 1350px the sidebar, 300px of chat and the gaps leave the main column
@@ -20,7 +21,7 @@ export const DOCKED_QUERY = '(min-width: 1350px)'
  * moves between tabs, so the stream is held for the whole visit and a closed
  * launcher can count what arrives. Reading it needs no account; writing does.
  */
-export default function Chat() {
+export default function Chat({ leaderboardEntries }: { leaderboardEntries?: LeaderboardEntry[] }) {
   const chat = useChatStream()
   const docked = useMediaQuery(DOCKED_QUERY)
   const [open, setOpen] = useState(false)
@@ -40,7 +41,7 @@ export default function Chat() {
     setOpen(false)
   }
 
-  if (docked) return <ChatPanel chat={chat} />
-  if (open) return <ChatPanel chat={chat} onClose={close} />
+  if (docked) return <ChatPanel chat={chat} leaderboardEntries={leaderboardEntries} />
+  if (open) return <ChatPanel chat={chat} leaderboardEntries={leaderboardEntries} onClose={close} />
   return <ChatLauncher ref={launcherRef} unread={chat.unread} onOpen={() => setOpen(true)} />
 }

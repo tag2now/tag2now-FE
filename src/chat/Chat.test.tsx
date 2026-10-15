@@ -69,6 +69,23 @@ describe('the lobby chat', () => {
     expect(screen.getByRole('button', { name: '채팅 열기' })).toBeInTheDocument()
   })
 
+  it('marks each ranked author with their place on the board, coloured by band', () => {
+    const entries = [
+      { np_id: 'champ', rank: 1, online_name: 'champ-name' },
+      { np_id: 'rival', rank: 7, online_name: 'rival-name' },
+      { np_id: 'mid', rank: 250, online_name: 'mid-name' },
+    ]
+    render(<Chat leaderboardEntries={entries} />)
+    server('snapshot', [line(1, 'champ'), line(2, 'rival'), line(3, 'mid'), line(4, 'newcomer')])
+    openChat()
+
+    const [first, top10, rest, unranked] = within(chatLog()).getAllByRole('listitem')
+    expect(within(first).getByText('#1')).toHaveClass('chat-rank', 'is-first')
+    expect(within(top10).getByText('#7')).toHaveClass('chat-rank', 'is-top10')
+    expect(within(rest).getByText('#250')).toHaveClass('chat-rank', 'is-ranked')
+    expect(within(unranked).queryByText(/^#/)).not.toBeInTheDocument()
+  })
+
   it('shows the chat to a reader who is not signed in, and asks them to log in to write', () => {
     render(<Chat />)
     server('snapshot', [line(1)])

@@ -263,7 +263,7 @@ export default function App() {
         {/* The third column on a wide screen; narrower, a launcher fixed to
             the viewport. Here rather than per tab, so the stream lasts the
             whole visit. */}
-        <Chat />
+        <Chat leaderboardEntries={lb.data?.entries} />
       </div>
       <Footer />
     </div>

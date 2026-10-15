@@ -91,6 +91,13 @@
   color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-strong);
 }
 .chat-line.is-mine .chat-line-head strong { color: var(--color-primary-text); }
+/* The author's place on the board, coloured by band (rankTone.ts): first,
+   top 10, top 30, top 100, and the rest of the 500 in the quiet tone. */
+.chat-rank { flex: 0 0 auto; color: var(--color-txt-faint); font-size: var(--text-3xs); font-weight: var(--weight-strong); font-variant-numeric: tabular-nums; }
+.chat-rank.is-first { color: var(--color-tier-red); }
+.chat-rank.is-top10 { color: var(--color-tier-blue); }
+.chat-rank.is-top30 { color: var(--color-tier-purple); }
+.chat-rank.is-top100 { color: var(--color-tier-teal); }
 .chat-line-head time { flex: 0 0 auto; color: var(--color-txt-faint); font-size: var(--text-3xs); font-variant-numeric: tabular-nums; }
 .chat-line-delete {
   display: grid; place-items: center; width: 22px; height: 22px; margin-left: auto; padding: 0;

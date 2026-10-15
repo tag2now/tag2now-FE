@@ -1,14 +1,18 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { Trash2 } from 'lucide-react'
 import type { AuthUser } from '@/auth/types'
 import type { ChatMessage } from '@/chat/types'
 import { kstTimeFormat } from '@/reservation/reservationLabels'
+import type { LeaderboardEntry } from '@/shared/types'
+import { rankTone } from '@/chat/rankTone'
 
 type Props = {
   messages: ChatMessage[]
   /** No snapshot has arrived yet, so an empty list means nothing so far. */
   loading: boolean
   user: AuthUser | null
+  /** Authors are RPCN ids, which the leaderboard calls np_id. */
+  leaderboardEntries?: LeaderboardEntry[]
   onDelete: (id: number) => void
 }
 
@@ -18,10 +22,15 @@ const BOTTOM_SLACK = 24
 /** Today's messages, oldest first, following new ones only while the reader
  * is at the bottom: someone scrolled up to read is not yanked back down by
  * every arrival. Their own message is the exception — they just sent it. */
-export default function MessageList({ messages, loading, user, onDelete }: Props) {
+export default function MessageList({ messages, loading, user, leaderboardEntries, onDelete }: Props) {
   const logRef = useRef<HTMLDivElement>(null)
   const atBottom = useRef(true)
   const isMine = (message?: ChatMessage) => !!user && message?.author_username === user.username
+  // Up to 500 lines against up to 500 entries: looked up, not searched per line.
+  const rankOf = useMemo(
+    () => new Map(leaderboardEntries?.map((entry) => [entry.np_id, entry.rank]) ?? []),
+    [leaderboardEntries],
+  )
 
   useLayoutEffect(() => {
     const log = logRef.current
@@ -44,6 +53,11 @@ export default function MessageList({ messages, loading, user, onDelete }: Props
           <li key={message.id} className={isMine(message) ? 'chat-line is-mine' : 'chat-line'}>
             <div className="chat-line-head">
               <strong>{message.author_online_name}</strong>
+              {rankOf.has(message.author_username) && (
+                <span className={`chat-rank ${rankTone(rankOf.get(message.author_username)!)}`}>
+                  #{rankOf.get(message.author_username)}
+                </span>
+              )}
               <time dateTime={message.created_at}>{kstTimeFormat.format(new Date(message.created_at))}</time>
               {/* Admins moderate, so they can take down anyone's line. */}
               {user && (isMine(message) || user.admin) && (
