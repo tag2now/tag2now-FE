@@ -1,4 +1,6 @@
 // Community types
+import type { AuthUser } from '@/auth/types'
+
 export interface PostSummary {
   id: number
   author: string
@@ -61,6 +63,13 @@ export const POST_TYPES = ['자유', '건의', '공략'] as const
  * answers 403 otherwise), and the filter has nothing to narrow to — every
  * notice is already pinned above it. */
 export const NOTICE_POST_TYPE = '공지'
+
+/** Whether `user` may edit or delete `post`: its author, and for a notice every
+ * admin. Mirrors ensure_can_manage_post in the backend's community/service.py,
+ * which is the authority. Judged by the post as stored, so an admin is not
+ * offered someone else's post just because the form could make it a notice. */
+export const canManagePost = (post: Pick<PostSummary, 'author' | 'post_type'>, user: AuthUser | null): boolean =>
+  user != null && (post.author === user.username || (post.post_type === NOTICE_POST_TYPE && user.admin))
 
 /** What the write form offers: an admin can also post a notice. */
 export const postTypesFor = (admin: boolean): readonly string[] =>

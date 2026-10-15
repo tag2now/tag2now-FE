@@ -129,7 +129,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
         <PostDetail
           key={community.selectedPost.id}
           post={community.selectedPost}
-          username={user?.username ?? null}
+          user={user}
           onBack={handleBack}
           onRefresh={() => {
             community.refreshDetail()

@@ -9,7 +9,7 @@ const NOTICE = {
 
 test.describe('Notices', () => {
   test.beforeEach(async ({ page }) => {
-    await mockAllApis(page, { notices: [NOTICE] })
+    await mockAllApis(page, { notices: [NOTICE], postDetail: { ...NOTICE, comments: [] } })
     await skipPatchNotes(page)
   })
 
@@ -49,5 +49,23 @@ test.describe('Notices', () => {
 
     await expect(page.locator('.writing-form').getByRole('button', { name: '자유', exact: true })).toBeVisible()
     await expect(page.locator('.writing-form').getByRole('button', { name: '공지', exact: true })).toHaveCount(0)
+  })
+
+  test('another admin can edit and delete the notice', async ({ page }) => {
+    await signInAs(page, 'second', '부운영자', true)
+    await page.goto('/community/77')
+
+    await expect(page.getByRole('heading', { name: '서버 점검 안내' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '수정' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '삭제' })).toBeVisible()
+  })
+
+  test('a player cannot edit or delete the notice', async ({ page }) => {
+    await signInAs(page, 'alice')
+    await page.goto('/community/77')
+
+    await expect(page.getByRole('heading', { name: '서버 점검 안내' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '수정' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: '삭제' })).toHaveCount(0)
   })
 })

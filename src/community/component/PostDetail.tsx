@@ -8,13 +8,14 @@ import { thumbPost, createComment, deletePost, updatePost, type PostInput } from
 import PostTypeBadge from './PostTypeBadge'
 import CommentTree from './CommentTree'
 import type { LeaderboardEntry } from "@/shared/types";
-import type { PostDetail } from '@/community/types'
+import { canManagePost, type PostDetail } from '@/community/types'
+import type { AuthUser } from '@/auth/types'
 import AuthorBadge from './AuthorBadge'
 import { ArrowLeft, FilePenLine, Send, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react'
 
 interface PostDetailProps {
   post: PostDetail
-  username: string | null
+  user: AuthUser | null
   onBack: () => void
   onRefresh: () => void
   /** The login guard: truthy when signed in, otherwise it opens the login
@@ -24,7 +25,7 @@ interface PostDetailProps {
   leaderboardEntries?: LeaderboardEntry[]
 }
 
-export default function PostDetail({ post, username, onBack, onRefresh, requireUser, onDeleted, leaderboardEntries }: PostDetailProps) {
+export default function PostDetail({ post, user, onBack, onRefresh, requireUser, onDeleted, leaderboardEntries }: PostDetailProps) {
   const [commentText, setCommentText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [thumbing, setThumbing] = useState(false)
@@ -111,7 +112,7 @@ export default function PostDetail({ post, username, onBack, onRefresh, requireU
             <AuthorBadge name={post.author} entries={leaderboardEntries} className="author-badge-lg inline-flex" />
             <span className="post-detail-time">{formatTimeAgo(post.created_at)}</span>
           </div>
-          {username && post.author === username && (
+          {canManagePost(post, user) && (
             <div className="post-detail-owner-actions">
               <button onClick={() => setEditing(true)} className="btn-ghost inline-flex items-center gap-1">
                 <FilePenLine size={13} aria-hidden="true" /> 수정

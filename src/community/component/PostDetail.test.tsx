@@ -5,15 +5,17 @@ import { updatePost } from '@/community/communityApi'
 
 vi.mock('@/community/communityApi', () => ({ updatePost: vi.fn(), createComment: vi.fn(), thumbPost: vi.fn(), deletePost: vi.fn() }))
 const post = { id: 1, author: 'owner', title: '원래 제목', body: '원래 본문', post_type: '자유', characters: [], youtube_video_id: 'M7lc1UVf-VE', thumbs_up: 0, thumbs_down: 0, created_at: '2026-09-11T00:00:00Z', comments: [] }
-function setup(username = 'owner') {
+const notice = { ...post, author: 'root', post_type: '공지' }
+const signedIn = (username: string, admin = false) => ({ username, online_name: username, avatar_url: '', admin })
+function setup(user = signedIn('owner'), shown = post) {
   const refresh = vi.fn()
-  render(<PostDetail post={post} username={username} onBack={vi.fn()} onRefresh={refresh} requireUser={() => ({ username })} onDeleted={vi.fn()} />)
+  render(<PostDetail post={shown} user={user} onBack={vi.fn()} onRefresh={refresh} requireUser={() => user} onDeleted={vi.fn()} />)
   return refresh
 }
 
 describe('edit post', () => {
   it('only shows edit for the author', () => {
-    setup('other')
+    setup(signedIn('other'))
     expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
   })
   it('prefills the form and discards changes on cancel', () => {
@@ -50,11 +52,36 @@ describe('edit post', () => {
   })
 })
 
+// A notice is every admin's to manage, not only its author's; anything else
+// stays its author's, admin or not.
+describe('who manages a post', () => {
+  it('offers another admin edit and delete on a notice', () => {
+    setup(signedIn('second', true), notice)
+
+    expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
+  })
+
+  it("offers an admin neither on a player's post", () => {
+    setup(signedIn('second', true))
+
+    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
+  })
+
+  it('offers a player neither on a notice', () => {
+    setup(signedIn('alice'), notice)
+
+    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
+  })
+})
+
 describe('signed out', () => {
   it('asks for a login instead of sending a thumb or a comment', async () => {
     const { thumbPost, createComment } = await import('@/community/communityApi')
     const requireUser = vi.fn().mockReturnValue(null)
-    render(<PostDetail post={post} username={null} onBack={vi.fn()} onRefresh={vi.fn()} requireUser={requireUser} onDeleted={vi.fn()} />)
+    render(<PostDetail post={post} user={null} onBack={vi.fn()} onRefresh={vi.fn()} requireUser={requireUser} onDeleted={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: '추천 0' }))
     fireEvent.change(screen.getByLabelText('댓글 입력'), { target: { value: '좋은 글' } })
@@ -69,7 +96,7 @@ describe('signed out', () => {
   })
 
   it('offers no edit or delete, whoever wrote the post', () => {
-    render(<PostDetail post={post} username={null} onBack={vi.fn()} onRefresh={vi.fn()} requireUser={() => null} onDeleted={vi.fn()} />)
+    render(<PostDetail post={post} user={null} onBack={vi.fn()} onRefresh={vi.fn()} requireUser={() => null} onDeleted={vi.fn()} />)
 
     expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
   })
