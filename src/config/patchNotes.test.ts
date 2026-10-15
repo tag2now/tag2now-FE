@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { describe, it, expect } from 'vitest'
 import { PATCH_NOTE_LINE_BUDGET, PATCH_NOTES, recentPatchNotes, type PatchNote } from '@/config/patchNotes'
 
@@ -45,10 +46,10 @@ describe('recentPatchNotes', () => {
     expect(recent[0]).toEqual(PATCH_NOTES[0])
   })
 
-  it('associates the newest release with its update overview image', () => {
-    expect(PATCH_NOTES[0].image).toEqual({
-      src: '/patch-notes/v2.8-overview-simple.png',
-      alt: 'TAG2NOW 2.8 업데이트 안내: 캐릭터별 계급 확인, 홈·커뮤니티 공지 고정',
-    })
+  // An image is optional per release; one that is given must exist and say
+  // which release it belongs to.
+  it.each(PATCH_NOTES.filter(n => n.image))('ships the v$version image it names', ({ version, image }) => {
+    expect(existsSync(`public${image!.src}`)).toBe(true)
+    expect(image!.alt).toContain(version)
   })
 })

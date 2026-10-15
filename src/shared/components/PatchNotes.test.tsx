@@ -38,14 +38,14 @@ describe('PatchNotes', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('shows the newest release image beneath its change list', () => {
+  it("shows each release's image with its change list", () => {
     localStorage.removeItem(STORAGE_KEYS.seenPatchVersion)
-
     render(<PatchNotes />)
 
-    const image = screen.getByRole('img', {
-      name: 'TAG2NOW 2.7 업데이트 안내: RPCN 로그인, 홈의 주간 철악귀, 14일 접속자 그래프',
-    })
-    expect(image).toHaveAttribute('src', '/patch-notes/v2.7-overview.png')
+    fireEvent.click(screen.getByRole('button', { name: /더보기/ }))
+
+    for (const { image } of PATCH_NOTES.filter(n => n.image)) {
+      expect(screen.getByRole('img', { name: image!.alt })).toHaveAttribute('src', image!.src)
+    }
   })
 })
