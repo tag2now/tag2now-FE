@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import toast from 'react-hot-toast'
 import { dismissLoginRequest, endSession, getLoginRequest, startSession } from '@/auth/session'
@@ -38,6 +38,9 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  // Unmount first: RTL's own cleanup runs after this hook, and ending the
+  // session would re-render the mounted tree outside act.
+  cleanup()
   endSession()
   dismissLoginRequest()
   vi.unstubAllGlobals()

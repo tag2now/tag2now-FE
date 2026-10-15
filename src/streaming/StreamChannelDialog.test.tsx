@@ -50,6 +50,7 @@ describe('StreamChannelDialog', () => {
   it('asks for an address instead of sending an empty one', async () => {
     vi.mocked(getMyChannel).mockResolvedValue(null)
     render(<StreamChannelDialog onClose={() => {}} />)
+    await waitFor(() => expect(screen.queryByText('불러오는 중')).not.toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: '연결' }))
 
@@ -74,6 +75,7 @@ describe('StreamChannelDialog', () => {
     vi.mocked(getMyChannel).mockResolvedValue(null)
     const onClose = vi.fn()
     render(<StreamChannelDialog onClose={onClose} />)
+    await waitFor(() => expect(screen.queryByText('불러오는 중')).not.toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 

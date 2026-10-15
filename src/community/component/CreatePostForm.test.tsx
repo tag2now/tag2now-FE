@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { endSession, startSession } from '@/auth/session'
 import CreatePostForm from './CreatePostForm'
@@ -97,7 +97,12 @@ describe('character tags', () => {
 })
 
 describe('notices', () => {
-  afterEach(() => endSession())
+  afterEach(() => {
+    // Unmount first: RTL's own cleanup runs after this hook, and ending the
+    // session would re-render the mounted tree outside act.
+    cleanup()
+    endSession()
+  })
 
   it('offers 공지 to an admin and submits it', async () => {
     startSession('token', 3600, { username: 'root', online_name: '운영자', avatar_url: '', admin: true }, false)

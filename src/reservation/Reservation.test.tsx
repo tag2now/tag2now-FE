@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import Reservation from './Reservation'
@@ -72,6 +72,9 @@ afterEach(() => {
   // setSystemTime pins Date globally; leaving it pinned would follow the suite
   // into the next file.
   vi.useRealTimers()
+  // Unmount first: RTL's own cleanup runs after this hook, and ending the
+  // session would re-render the mounted tree outside act.
+  cleanup()
   endSession()
   dismissLoginRequest()
 })
@@ -123,8 +126,15 @@ describe('participant roster', () => {
   })
 })
 
-function openReservationModal() {
+/** Render the panel and let its first load land, so the load does not update
+ * the panel after a test that never looks at the list. */
+async function renderReservation() {
   render(<MemoryRouter><Reservation /></MemoryRouter>)
+  await waitFor(() => expect(screen.queryByText('불러오는 중')).not.toBeInTheDocument())
+}
+
+async function openReservationModal() {
+  await renderReservation()
   fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
   return screen.getByRole('dialog', { name: '예약 추가' })
 }
@@ -149,25 +159,25 @@ function selectRanks(...ranks: string[]) {
 const matchTypeControl = () => within(screen.getByRole('radiogroup', { name: '매치 종류' }))
 
 describe('Reservation', () => {
-  it('opens and closes the reservation modal', () => {
-    openReservationModal()
+  it('opens and closes the reservation modal', async () => {
+    await openReservationModal()
     expect(screen.getByRole('dialog', { name: '예약 추가' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
     expect(screen.queryByRole('dialog', { name: '예약 추가' })).not.toBeInTheDocument()
   })
 
-  it('asks a signed-out user to log in rather than opening the form', () => {
+  it('asks a signed-out user to log in rather than opening the form', async () => {
     endSession()
-    render(<MemoryRouter><Reservation /></MemoryRouter>)
+    await renderReservation()
     fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
 
     expect(screen.queryByRole('dialog', { name: '예약 추가' })).not.toBeInTheDocument()
     expect(getLoginRequest()).toEqual({ reason: '로그인하면 예약을 만들 수 있습니다.' })
   })
 
-  it('uses a mutually exclusive match type control and hides ranks for player matches', () => {
-    openReservationModal()
+  it('uses a mutually exclusive match type control and hides ranks for player matches', async () => {
+    await openReservationModal()
     const rankMatch = matchTypeControl().getByRole('radio', { name: '랭크매치' })
     const playerMatch = matchTypeControl().getByRole('radio', { name: '플레이어 매치' })
 
@@ -182,8 +192,8 @@ describe('Reservation', () => {
     expect(screen.getByLabelText('모집 인원')).toBeInTheDocument()
   })
 
-  it('shows all 43 ranks grouped by band, strongest band and rank first', () => {
-    openReservationModal()
+  it('shows all 43 ranks grouped by band, strongest band and rank first', async () => {
+    await openReservationModal()
     fireEvent.click(screen.getByRole('button', { name: /계급 선택/ }))
 
     const picker = document.getElementById('reservation-rank-picker')
@@ -204,8 +214,8 @@ describe('Reservation', () => {
     expect(imageNames.slice(-2)).toEqual(['9th kyu', 'Beginner'])
   })
 
-  it('labels every band and never splits one across a row', () => {
-    openReservationModal()
+  it('labels every band and never splits one across a row', async () => {
+    await openReservationModal()
     fireEvent.click(screen.getByRole('button', { name: /계급 선택/ }))
 
     const picker = document.getElementById('reservation-rank-picker')!
@@ -220,8 +230,8 @@ describe('Reservation', () => {
     expect(perBand.reduce((a, b) => a + b, 0)).toBe(43)
   })
 
-  it('shows selected rank images from highest to lowest in the collapsed control', () => {
-    openReservationModal()
+  it('shows selected rank images from highest to lowest in the collapsed control', async () => {
+    await openReservationModal()
     selectRanks('Vanquisher', 'Yaksa')
 
     const summary = screen.getByRole('button', { name: '계급 선택, 현재 Yaksa, Vanquisher' })
@@ -229,15 +239,15 @@ describe('Reservation', () => {
     expect(within(summary).queryByText('+1')).not.toBeInTheDocument()
   })
 
-  it('starts with no rank chosen, so a host cannot post one they never picked', () => {
-    openReservationModal()
+  it('starts with no rank chosen, so a host cannot post one they never picked', async () => {
+    await openReservationModal()
 
     expect(screen.getByRole('button', { name: '계급 선택' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '예약 등록' })).toBeDisabled()
   })
 
-  it('refuses a 21st rank, the limit the backend enforces', () => {
-    openReservationModal()
+  it('refuses a 21st rank, the limit the backend enforces', async () => {
+    await openReservationModal()
     selectRanks(...rankNames.slice(0, 20))
 
     fireEvent.click(screen.getByRole('button', { name: /계급 선택, 현재/ }))
@@ -251,16 +261,16 @@ describe('Reservation', () => {
   // The first whole hour that clears the backend's ten-minute lead time, not
   // simply the next one: at 13:55 the 14:00 slot is five minutes away and
   // would be refused, so the form opens on 15:00 rather than offering it.
-  it('defaults to the first whole hour that clears the lead time', () => {
+  it('defaults to the first whole hour that clears the lead time', async () => {
     vi.setSystemTime(new Date('2026-08-28T04:55:00Z'))  // 13:55 KST
-    openReservationModal()
+    await openReservationModal()
 
     expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 오늘 15:00')
   })
 
-  it('defaults to the next hour even moments after the last one struck', () => {
+  it('defaults to the next hour even moments after the last one struck', async () => {
     vi.setSystemTime(new Date('2026-08-28T04:01:00Z'))  // 13:01 KST
-    openReservationModal()
+    await openReservationModal()
 
     expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 오늘 14:00')
   })
@@ -268,23 +278,23 @@ describe('Reservation', () => {
   // Midnight is a real slot, and the label is what says which midnight. The
   // window runs to the next 06:00, so at 23:30 the next hour is tomorrow's
   // 00:00 --- which the day label states rather than leaving to be guessed.
-  it('crosses midnight and says which day it landed on', () => {
+  it('crosses midnight and says which day it landed on', async () => {
     vi.setSystemTime(new Date('2026-08-28T14:30:00Z'))  // 23:30 KST
-    openReservationModal()
+    await openReservationModal()
 
     expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 내일 00:00')
   })
 
-  it('offers the hour that is next when the form opens, not when the page loaded', () => {
-    render(<MemoryRouter><Reservation /></MemoryRouter>)
+  it('offers the hour that is next when the form opens, not when the page loaded', async () => {
+    await renderReservation()
     vi.setSystemTime(new Date('2026-08-28T06:20:00Z'))  // 15:20 KST, two hours later
     fireEvent.click(screen.getByRole('button', { name: '+ 예약 추가' }))
 
     expect(screen.getByRole('button', { name: /시작 시각/ })).toHaveAttribute('aria-label', '시작 시각 오늘 16:00')
   })
 
-  it('keeps the previous time on cancel and commits it on confirm', () => {
-    openReservationModal()
+  it('keeps the previous time on cancel and commits it on confirm', async () => {
+    await openReservationModal()
     const timeButton = screen.getByRole('button', { name: '시작 시각 오늘 21:00' })
 
     fireEvent.click(timeButton)
@@ -301,7 +311,7 @@ describe('Reservation', () => {
   })
 
   it('creates a rank reservation whose card shows every rank the host picked', async () => {
-    openReservationModal()
+    await openReservationModal()
     selectRanks('Vanquisher', 'Yaksa')
     vi.mocked(fetchReservations).mockResolvedValue([apiReservation])
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
@@ -329,7 +339,7 @@ describe('Reservation', () => {
   })
 
   it('sends the form values to the backend contract on submit', async () => {
-    openReservationModal()
+    await openReservationModal()
     selectRanks('Vanquisher')
     fireEvent.change(screen.getByLabelText(/메모/), { target: { value: '가볍게 한 판' } })
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
@@ -345,7 +355,7 @@ describe('Reservation', () => {
 
   it('keeps the modal open and shows the reason when creation fails', async () => {
     vi.mocked(createReservation).mockRejectedValue(new Error('이미 같은 시간에 예약이 있습니다.'))
-    openReservationModal()
+    await openReservationModal()
     selectRanks('Vanquisher')
 
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
@@ -356,7 +366,7 @@ describe('Reservation', () => {
   })
 
   it('sends a player match without ranks and with the chosen capacity', async () => {
-    openReservationModal()
+    await openReservationModal()
     fireEvent.click(matchTypeControl().getByRole('radio', { name: '플레이어 매치' }))
     fireEvent.change(screen.getByLabelText('모집 인원'), { target: { value: '3' } })
     fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
@@ -367,7 +377,7 @@ describe('Reservation', () => {
   })
 
   it('offers ranks and a capacity together when either match type will do', async () => {
-    openReservationModal()
+    await openReservationModal()
     fireEvent.click(matchTypeControl().getByRole('radio', { name: '상관없음' }))
 
     expect(screen.getByRole('group', { name: /보유 계급/ })).toBeInTheDocument()
@@ -381,7 +391,7 @@ describe('Reservation', () => {
   })
 
   it('lets a reservation for either type be posted without any rank', async () => {
-    openReservationModal()
+    await openReservationModal()
     fireEvent.click(matchTypeControl().getByRole('radio', { name: '상관없음' }))
     fireEvent.click(screen.getByRole('button', { name: '계급 선택' }))
     expect(within(document.getElementById('reservation-rank-picker')!).queryAllByRole('button', { pressed: true })).toHaveLength(0)
@@ -405,8 +415,8 @@ describe('Reservation', () => {
     }
   })
 
-  it('offers the match-type filter as a toggle defaulting to 전체', () => {
-    render(<MemoryRouter><Reservation /></MemoryRouter>)
+  it('offers the match-type filter as a toggle defaulting to 전체', async () => {
+    await renderReservation()
 
     const group = screen.getByRole('group', { name: '매치 종류 필터' })
     expect(within(group).getAllByRole('radio').map((radio) => radio.getAttribute('value')))

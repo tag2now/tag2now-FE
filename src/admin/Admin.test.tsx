@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Admin from './Admin'
 import { banAccount, lookupAccount } from './adminApi'
@@ -46,6 +46,9 @@ describe('Admin page', () => {
   })
 
   afterEach(() => {
+    // Unmount first: RTL's own cleanup runs after this hook, and ending the
+    // session would re-render the mounted tree outside act.
+    cleanup()
     endSession()
     dismissLoginRequest()
     vi.clearAllMocks()
@@ -60,9 +63,11 @@ describe('Admin page', () => {
     expect(screen.queryByLabelText('대상 RPCN 아이디')).not.toBeInTheDocument()
   })
 
-  it('asks for the admin password, and puts the cursor in it, instead of looking up without it', () => {
+  it('asks for the admin password, and puts the cursor in it, instead of looking up without it', async () => {
     signIn(true)
     render(<Admin />)
+    // The stream section loads on mount; let it land before the test ends.
+    await screen.findByText('연결된 채널이 없습니다.')
     fireEvent.change(screen.getByLabelText('대상 RPCN 아이디'), { target: { value: 'Alice' } })
 
     // pressing the button and pressing Enter in the field both submit the form

@@ -54,5 +54,6 @@ describe('PlayerHistoryPanel tabs', () => {
 
     rerender(<PlayerHistoryPanel npid="p2" onClose={() => {}} />)
     expect(tab('플레이 기록')).toHaveAttribute('aria-selected', 'true')
+    expect(await screen.findByText('12회')).toBeInTheDocument()
   })
 })

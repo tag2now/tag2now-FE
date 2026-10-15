@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import LoginDialog from './LoginDialog'
 import toast from 'react-hot-toast'
@@ -19,6 +19,9 @@ function fillIn(username = 'p1', password = 'secret') {
 beforeEach(() => vi.clearAllMocks())
 
 afterEach(() => {
+  // Unmount first: RTL's own cleanup runs after this hook, and ending the
+  // session would re-render the mounted tree outside act.
+  cleanup()
   endSession()
   dismissLoginRequest()
 })

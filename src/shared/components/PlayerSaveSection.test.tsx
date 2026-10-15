@@ -64,5 +64,6 @@ describe('PlayerSaveSection', () => {
 
     rerender(<PlayerSaveSection npid="Carol" />)
     expect(fetchPlayerSave).toHaveBeenLastCalledWith('Carol')
+    await within(section()).findAllByRole('row')
   })
 })

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import PlayerProfileCard from './PlayerProfileCard'
 import { dismissLoginRequest, endSession, getLoginRequest, getSession, startSession } from '@/auth/session'
@@ -36,6 +36,9 @@ const ranked: LeaderboardEntry = {
 
 describe('Player profile', () => {
   afterEach(() => {
+    // Unmount first: RTL's own cleanup runs after this hook, and ending the
+    // session would re-render the mounted tree outside act.
+    cleanup()
     endSession()
     dismissLoginRequest()
     document.getElementById('headerProfileSlot')?.remove()
