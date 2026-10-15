@@ -2,6 +2,7 @@ import { useState } from 'react'
 import ConfirmDialog from '@/shared/components/ConfirmDialog'
 import useConfirm from '@/shared/hooks/useConfirm'
 import YouTubeVideo from './YouTubeVideo'
+import LinkifiedText from './LinkifiedText'
 import CreatePostForm from './CreatePostForm'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
 import { thumbPost, createComment, deletePost, updatePost, type PostInput } from '@/community/communityApi'
@@ -124,7 +125,7 @@ export default function PostDetail({ post, user, onBack, onRefresh, requireUser,
           )}
         </div>
       </header>
-      <div className="post-detail-body"><p>{post.body}</p></div>
+      <div className="post-detail-body"><LinkifiedText text={post.body} /></div>
       {post.youtube_video_id && <YouTubeVideo videoId={post.youtube_video_id} />}
 
       <div className="flex gap-2 mb-4 pb-4 border-b border-border-light">

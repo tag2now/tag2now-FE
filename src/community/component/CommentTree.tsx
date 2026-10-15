@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { formatTimeAgo } from "@/shared/util/timeFormat";
 import AuthorBadge from './AuthorBadge'
+import LinkifiedText from './LinkifiedText'
 import type { LeaderboardEntry} from "@/shared/types";
 import type {CommentOut} from "@/community/types";
 import { CornerDownRight, Send } from 'lucide-react'
@@ -44,7 +45,7 @@ function CommentNode({ comment, onReply, depth, leaderboardEntries }: CommentNod
         <AuthorBadge name={comment.author} entries={leaderboardEntries} className="inline-flex" />
         <span>{formatTimeAgo(comment.created_at)}</span>
       </div>
-      <p className="m-0 text-base text-txt whitespace-pre-wrap break-words">{comment.body}</p>
+      <LinkifiedText text={comment.body} className="m-0 text-base text-txt whitespace-pre-wrap break-words" />
       <button
         onClick={() => setReplying(!replying)}
         className="mt-1 bg-transparent border-0 text-txt-dim text-xs font-bold uppercase tracking-[0.12em] cursor-pointer hover:text-primary-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
