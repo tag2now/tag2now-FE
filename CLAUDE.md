@@ -397,6 +397,14 @@ anything two features share stays global. Every sheet is still imported from
 is the cascade**: the rules share one layer, so moving an import changes which
 rule wins.
 
+**A board's controls go in its title bar.** A switch or option for a panel
+sits in that panel's `.section-toolbar`, beside its refresh button, and uses the
+shared controls (`.segmented-control`, `.toggle-group`) --- never a new row or
+bespoke styles above the `.panel`. The bar renders in loading and error states too, at
+the same position in the tree, or the control vanishes with the content and
+loses focus (`shared/Leaderboard.tsx` is the example). Check a layout change in
+desktop and phone screenshots before calling it done.
+
 **A utility in the markup always beats a sheet.** Every sheet but `tokens.css`
 and `base.css` is imported `layer(components.app)`, under Tailwind's
 `utilities` layer, so `className="panel-meta mb-1"` gets its `mb-1` whatever
