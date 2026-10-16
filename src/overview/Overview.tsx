@@ -17,8 +17,12 @@ import { CardGridSkeleton, ListSkeleton } from '@/shared/components/Skeleton'
 interface OverviewProps {
   rooms: RoomsData | null
   roomsLoading: boolean
+  /** The score board; the weekly card takes its portraits and places from it. */
   leaderboardEntries?: LeaderboardEntry[]
-  leaderboardTotal?: number
+  /** The current-rank board, which the leaderboard tab opens on and the
+   * registered count and TOP 5 summarise. */
+  currentRankEntries?: LeaderboardEntry[]
+  currentRankTotal?: number
 }
 
 /** Rooms have not loaded yet — an em dash rather than "0", which would assert
@@ -60,8 +64,8 @@ function roomsKpi(rooms: RoomsData | null, loading: boolean): { players: string;
  * the weaker copy of it. A registered total is the one figure here that is not
  * about right now, which is the whole reason it belongs beside two that are.
  *
- * `App` already holds it: the leaderboard response heads with `total_records`,
- * so this adds no request. It is absent only while that first load is in
+ * `App` already holds it: the current-rank board heads with its total, so this
+ * adds no request. It is absent only while that first load is in
  * flight. */
 function registeredPlayersKpi(total?: number): { value: string; hint: string } {
   if (total == null) return { value: UNKNOWN, hint: '불러오는 중' }
@@ -84,8 +88,8 @@ const charsOf = (entry?: LeaderboardEntry) => ({
   subChar: entry?.player_info?.sub_char_info,
 })
 
-/** No `detail`: the list is the leaderboard's own top five in order, so the
- * rank it would show is the row position the first column already prints. */
+/** The current-rank board's top five, in its order. The place is passed rather
+ * than left to the row position: players who stand equal share one. */
 const leaderboardRows = (entries: LeaderboardEntry[]): RankRow[] =>
   entries.slice(0, OVERVIEW_TOP_N).map((e) => {
     // Across both characters, which is what the leaderboard itself sorts by —
@@ -96,6 +100,7 @@ const leaderboardRows = (entries: LeaderboardEntry[]): RankRow[] =>
       key: e.np_id,
       npid: e.np_id,
       name: e.online_name,
+      rank: e.rank,
       detail: winRate === null ? undefined : `${Math.round(winRate * 100)}%`,
       detailSub: matches > 0 ? `${matches}판` : undefined,
       ...charsOf(e),
@@ -123,14 +128,15 @@ const weeklyRows = (players: WeeklyTopPlayer[], entries: LeaderboardEntry[]): Ra
   })
 }
 
-export default function Overview({ rooms, roomsLoading, leaderboardEntries = [], leaderboardTotal }: OverviewProps) {
+export default function Overview({ rooms, roomsLoading, leaderboardEntries = [], currentRankEntries = [], currentRankTotal }: OverviewProps) {
   const { data, loading, error, refresh } = useOverview()
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
 
-  // The panel wants the leaderboard row when there is one; a weekly-top player
-  // outside the leaderboard simply opens without it, as it does on the stats tab.
+  // The panel wants the player's board row when there is one: the current-rank
+  // row the TOP 5 drew, else the score board's. A weekly-top player on neither
+  // simply opens without it, as it does on the stats tab.
   const selectedEntry = selectedNpid
-    ? leaderboardEntries.find((e) => e.np_id === selectedNpid)
+    ? currentRankEntries.find((e) => e.np_id === selectedNpid) ?? leaderboardEntries.find((e) => e.np_id === selectedNpid)
     : undefined
 
   // "불러오는 중", not "로딩 중": the KPI hint below already says the first and
@@ -144,7 +150,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
 
   const kpi = roomsKpi(rooms, roomsLoading)
   const today = todayPlayers(data?.daily ?? [])
-  const registered = registeredPlayersKpi(leaderboardTotal)
+  const registered = registeredPlayersKpi(currentRankTotal)
 
   return (
     <div className="panel overview-panel">
@@ -196,7 +202,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
           {/* Names what is missing rather than "데이터". The list is empty both
               before the leaderboard lands and when its fetch failed, so the
               copy stops at what is absent and claims no reason for it. */}
-          <RankList rows={leaderboardRows(leaderboardEntries)} label="리더보드 상위 5명" detailLabel="전적" emptyMsg="리더보드 순위 없음" onSelect={setSelectedNpid} />
+          <RankList rows={leaderboardRows(currentRankEntries)} label="리더보드 상위 5명" detailLabel="전적" emptyMsg="리더보드 순위 없음" onSelect={setSelectedNpid} />
         </OverviewSection>
       </div>
 

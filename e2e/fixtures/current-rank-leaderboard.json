@@ -1,0 +1,32 @@
+{
+  "total": 4,
+  "entries": [
+    {
+      "rank": 1, "username": "np_002", "saved_at": "2026-10-16T01:00:00Z", "account_rank": 30,
+      "chars": [
+        {"id": 14, "character": "Kazuya", "rank": 33, "rank_name": "Fujin", "tier": "파랑단", "points": 4000, "streak": 2, "wins": 260, "losses": 82},
+        {"id": 13, "character": "Heihachi", "rank": 29, "rank_name": "Genbu", "tier": "빨강단", "points": 100, "streak": 0, "wins": 40, "losses": 30}
+      ]
+    },
+    {
+      "rank": 2, "username": "np_001", "saved_at": "2026-10-16T01:00:00Z", "account_rank": 30,
+      "chars": [
+        {"id": 9, "character": "Jin", "rank": 31, "rank_name": "Seiryu", "tier": "빨강단", "points": 2000, "streak": -1, "wins": 330, "losses": 50},
+        {"id": 38, "character": "Lars", "rank": 25, "rank_name": "Vanquisher", "tier": "주황단", "points": 0, "streak": 0, "wins": 20, "losses": 10}
+      ]
+    },
+    {
+      "rank": 2, "username": "np_new", "saved_at": "2026-10-16T01:00:00Z", "account_rank": 30,
+      "chars": [
+        {"id": 9, "character": "Jin", "rank": 31, "rank_name": "Seiryu", "tier": "빨강단", "points": 2000, "streak": 0, "wins": 5, "losses": 0},
+        {"id": 38, "character": "Lars", "rank": 25, "rank_name": "Vanquisher", "tier": "주황단", "points": 0, "streak": 0, "wins": 1, "losses": 0}
+      ]
+    },
+    {
+      "rank": 4, "username": "np_004", "saved_at": "2026-10-16T01:00:00Z", "account_rank": 18,
+      "chars": [
+        {"id": 11, "character": "Kuma", "rank": 18, "rank_name": "Marauder", "tier": "녹단", "points": 500, "streak": 0, "wins": 80, "losses": 140}
+      ]
+    }
+  ]
+}

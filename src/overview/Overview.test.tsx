@@ -107,7 +107,8 @@ function renderOverview(props: Partial<React.ComponentProps<typeof Overview>> = 
         rooms={ROOMS}
         roomsLoading={false}
         leaderboardEntries={ENTRIES}
-        leaderboardTotal={512}
+        currentRankEntries={ENTRIES}
+        currentRankTotal={512}
         {...props}
       />
     </MemoryRouter>,
@@ -195,7 +196,7 @@ describe('Overview', () => {
   // card has to say "not yet" rather than "0" — a registered total of zero is
   // a claim about the site, not a loading state.
   it('shows a dash rather than zero before the leaderboard lands', () => {
-    renderOverview({ leaderboardTotal: undefined })
+    renderOverview({ currentRankTotal: undefined })
 
     expect(kpiValue('등록 플레이어')).toBe('—')
   })
@@ -440,11 +441,29 @@ describe('Overview', () => {
     expect(mockedGet).toHaveBeenCalledWith('history/players/w1', expect.anything())
   })
 
+  // The TOP 5 and the registered count summarise the current-rank board the
+  // leaderboard tab opens on, not the score board, and players who stand equal
+  // share a place there.
+  it('summarises the current-rank board, shared places included', () => {
+    const current: LeaderboardEntry[] = [
+      { np_id: 'c1', rank: 1, online_name: 'NowFirst' },
+      { np_id: 'c2', rank: 2, online_name: 'NowTiedA' },
+      { np_id: 'c3', rank: 2, online_name: 'NowTiedB' },
+    ]
+    renderOverview({ currentRankEntries: current, currentRankTotal: 3 })
+
+    const top = screen.getByRole('region', { name: '리더보드 TOP 5' })
+    const rows = [...top.querySelectorAll('.rank-row')]
+    expect(rows.map((r) => r.querySelector('.player-btn')?.textContent)).toEqual(['NowFirst', 'NowTiedA', 'NowTiedB'])
+    expect(rows.map((r) => r.querySelector('[role="cell"]')?.textContent?.trim())).toEqual(['1', '2', '2'])
+    expect(kpiValue('등록 플레이어')).toBe('3')
+  })
+
   it('renders each card empty rather than failing when a source returned nothing', () => {
     mockedUseOverview.mockReturnValue(polled({ daily: [], weeklyTop: [], posts: [], notices: [], reservations: [] }))
     // The leaderboard card reads props, not useOverview, so emptying the four
     // fetched sources alone leaves it populated and "each card" untested.
-    renderOverview({ leaderboardEntries: [] })
+    renderOverview({ currentRankEntries: [] })
 
     expect(screen.getByText('게시글 없음')).toBeInTheDocument()
     expect(screen.getByText('모집 중인 예약 없음')).toBeInTheDocument()

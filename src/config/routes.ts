@@ -30,5 +30,17 @@ export function pathOf(tab: string): string {
 export const firstRoomPath = (groupKeys: string[]): string =>
   pathOf(groupKeys[0] ?? GROUP_ORDER[0])
 
+/** The leaderboard's two boards. Current ranks own the tab's own path, so the
+ * tab opens on them; the score board --- the highest rank each player reached
+ * --- is one click further. */
+export type LeaderboardView = 'current' | 'best'
+
+const LEADERBOARD_VIEW_PATHS: Record<LeaderboardView, string> = {
+  current: '/leaderboard',
+  best: '/leaderboard/best',
+}
+
+export const leaderboardPath = (view: LeaderboardView): string => LEADERBOARD_VIEW_PATHS[view]
+
 export const postPath = (id: number): string => `/community/${id}`
 export const reservationPath = (id: number): string => `/reservation/${id}`

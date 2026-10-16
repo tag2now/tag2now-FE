@@ -4,8 +4,9 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import App from "@/App";
 
 // Create stable mock functions accessible inside vi.mock factories
-const { mockedFetchLeaderboard, mockedFetchRoomsAll, mockedFetchReservations, mockedFetchPosts } = vi.hoisted(() => ({
+const { mockedFetchLeaderboard, mockedFetchCurrentRankLeaderboard, mockedFetchRoomsAll, mockedFetchReservations, mockedFetchPosts } = vi.hoisted(() => ({
   mockedFetchLeaderboard: vi.fn(),
+  mockedFetchCurrentRankLeaderboard: vi.fn(),
   mockedFetchRoomsAll: vi.fn(),
   mockedFetchReservations: vi.fn(),
   mockedFetchPosts: vi.fn(),
@@ -38,6 +39,13 @@ vi.mock('@/reservation/reservationApi', async (importOriginal) => ({
 vi.mock('@/community/communityApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/community/communityApi')>()),
   fetchPosts: mockedFetchPosts,
+}))
+
+// The leaderboard tab opens on current ranks, which it reads itself. The board
+// names the score board's player, so the tab still shows 'TestPlayer'.
+vi.mock('@/shared/hooks/useCurrentRankLeaderboard', async () => ({
+  fetchCurrentRankLeaderboard: mockedFetchCurrentRankLeaderboard,
+  default: () => usePolledData(mockedFetchCurrentRankLeaderboard as any, null),
 }))
 
 vi.mock('@/match/useRooms', async () => {
@@ -124,6 +132,10 @@ const postList = (posts: ReturnType<typeof post>[]) =>
 
 beforeEach(() => {
   mockedFetchLeaderboard.mockResolvedValue(LEADERBOARD_DATA as any)
+  mockedFetchCurrentRankLeaderboard.mockResolvedValue({
+    total: 1,
+    entries: [{ rank: 1, username: 'p1', saved_at: '2026-10-16T01:02:03Z', account_rank: 25, chars: [] }],
+  })
   mockedFetchRoomsAll.mockResolvedValue(ROOMS_DATA as any)
   mockedFetchReservations.mockResolvedValue([reservation()] as any)
   mockedFetchPosts.mockResolvedValue(postList([]) as any)
@@ -190,12 +202,8 @@ describe('App', () => {
   })
 
   it('clicking Refresh on Leaderboard tab calls fetchLeaderboard again', async () => {
-    await renderApp()
-
-    // Switch to Leaderboard tab first
-    await act(async () => {
-      fireEvent.click(screen.getByRole('tab', { name: '리더보드' }))
-    })
+    // The score board is the tab's second view; it opens on current ranks.
+    await renderAt('/leaderboard/best')
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: '새로고침' }))
@@ -332,14 +340,7 @@ describe('App', () => {
   it('shows error when fetchLeaderboard rejects', async () => {
     mockedFetchLeaderboard.mockRejectedValue(new Error('Leaderboard fetch failed: 500'))
 
-    await act(async () => {
-      render(<MemoryRouter><App /></MemoryRouter>)
-    })
-
-    // Switch to Leaderboard tab to see the error
-    await act(async () => {
-      fireEvent.click(screen.getByRole('tab', { name: '리더보드' }))
-    })
+    await renderAt('/leaderboard/best')
 
     await waitFor(() => {
       expect(screen.getByText('Leaderboard fetch failed: 500')).toBeInTheDocument()

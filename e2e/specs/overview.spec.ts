@@ -32,7 +32,7 @@ test.describe('Overview', () => {
   // by time and free seats, so the card was the weaker copy of it.
   test('heads the row with the registered total, not a second reservation count', async ({ page }) => {
     const registered = page.locator('.kpi-card', { hasText: '등록 플레이어' })
-    await expect(registered.locator('.kpi-card-value')).toHaveText('5')  // leaderboard fixture
+    await expect(registered.locator('.kpi-card-value')).toHaveText('4')  // current-rank fixture
     await expect(registered).toHaveAttribute('href', '/leaderboard')
     await expect(page.locator('.kpi-grid')).not.toContainText('모집 중인 예약')
   })

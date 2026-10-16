@@ -1,5 +1,49 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { mockAllApis, skipPatchNotes } from '../helpers/mock-api'
+
+/** The score board is the tab's second view; it opens on current ranks. */
+async function openBestBoard(page: Page) {
+  await page.getByRole('tab', { name: '최고 계급' }).click()
+  await expect(page).toHaveURL(/\/leaderboard\/best$/)
+}
+
+test.describe('Leaderboard current ranks', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockAllApis(page)
+    await skipPatchNotes(page)
+    await page.goto('/')
+    await page.locator('button.tab-btn', { hasText: '리더보드' }).click()
+    await expect(page.getByRole('tabpanel', { name: '리더보드' })).toBeVisible()
+  })
+
+  test('opens on current ranks', async ({ page }) => {
+    await expect(page).toHaveURL(/\/leaderboard$/)
+    await expect(page.getByRole('tab', { name: '현재 계급' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByText('Total records: 4')).toBeAttached()
+  })
+
+  // Names come from the score board; a save the score board does not know
+  // shows its RPCN id. Equal standings share a place.
+  test('lists players by current rank, sharing a place on a tie', async ({ page }) => {
+    const rows = page.locator('.rank-row')
+    await expect(rows.locator('button.player-btn')).toHaveText(['KingOfIronFist', 'TTT2_Master', 'np_new', 'BearPunchPro'])
+    await expect(rows.nth(1).getByRole('cell').first()).toContainText('2')
+    await expect(rows.nth(2).getByRole('cell').first()).toContainText('2')
+    await expect(rows.nth(3).getByRole('cell').first()).toContainText('4')
+  })
+
+  test('a player with one ranked character shows a dash for the second', async ({ page }) => {
+    const row = page.locator('.rank-row', { hasText: 'BearPunchPro' })
+    await expect(row.getByRole('cell').nth(4)).toContainText('—')
+  })
+
+  test('최고 계급 opens the score board, and back returns', async ({ page }) => {
+    await openBestBoard(page)
+    await expect(page.locator('.rank-row button.player-btn').first()).toHaveText('TTT2_Master')
+    await page.goBack()
+    await expect(page.getByRole('tab', { name: '현재 계급' })).toHaveAttribute('aria-selected', 'true')
+  })
+})
 
 test.describe('Leaderboard', () => {
   test.beforeEach(async ({ page }) => {
@@ -10,6 +54,7 @@ test.describe('Leaderboard', () => {
     // The router commits a tab switch as a transition, so the home panel can
     // still be on screen here --- and it lists the same players and posts.
     await expect(page.getByRole('tabpanel', { name: '리더보드' })).toBeVisible()
+    await openBestBoard(page)
   })
 
   test('shows total records count', async ({ page }) => {
@@ -111,6 +156,7 @@ test.describe('Leaderboard search, filter and toggle', () => {
     // The router commits a tab switch as a transition, so the home panel can
     // still be on screen here --- and it lists the same players and posts.
     await expect(page.getByRole('tabpanel', { name: '리더보드' })).toBeVisible()
+    await openBestBoard(page)
   })
 
   // Opens collapsed: the live board is 344 entries, which rendered in full made

@@ -101,7 +101,7 @@ export default function useRooms(): PolledState<RoomsData> {
 
 Pass `null` as the interval to fetch once without polling.
 
-`App.tsx` owns `useLeaderboard()` and `useRooms()` and passes `{ data, loading, error, onRefresh }` down. Both data sets stay fresh regardless of the active tab — switching tabs is display-only.
+`App.tsx` owns `useLeaderboard()`, `useCurrentRankLeaderboard()` and `useRooms()` and passes `{ data, loading, error, onRefresh }` down. They stay fresh regardless of the active tab — switching tabs is display-only.
 
 ### Overview (the landing tab)
 
@@ -170,6 +170,23 @@ The rules live in `shared/styles/ranking.css`, imported directly after
 would reorder them against the rules in `styles/boards.css`,
 `shared/styles/leaderboard.css` and `styles/responsive.css`.
 
+### Leaderboard: current and highest rank
+
+Both boards rank players by rank. **현재 계급** (`/leaderboard`, the default)
+is the rank each save holds now, from tag2now-BE's `GET /saves/leaderboard`;
+**최고 계급** (`/leaderboard/best`) is the RPCN score board, the highest rank a
+player reached. Name code by that difference --- `currentRank…` and `best` ---
+never bare `rank…`, which says nothing about which board.
+
+`shared/currentRankLeaderboard.ts` turns the current-rank answer into the score
+board's `LeaderboardEntry` shape --- the highest character in the main slot,
+the second in the sub --- so one `Leaderboard` draws both with the same search,
+filters and sorts. A save knows only the RPCN id, so the online name is joined
+in from the score board, and a player missing there shows their id. Players who
+stand equal share a place (1, 2, 2, 4), so pass `rank` through. The home page's
+registered count and TOP 5 summarise this board too; the weekly card still takes
+its portraits from the score board.
+
 ### Routing
 
 **The URL is the navigation state.** There is no `tab` state — `useActiveTab`
@@ -180,7 +197,8 @@ so a nav click, the back button, and a cold deep link all arrive the same way.
 |------|-------|
 | `/` | overview (the landing panel, so a bare link opens it) |
 | `/match/:group` | rooms for that group |
-| `/leaderboard`, `/stats` | those tabs |
+| `/leaderboard`, `/leaderboard/best` | the leaderboard: current ranks, or the highest each player reached |
+| `/stats` | that tab |
 | `/reservation`, `/reservation/:id` | reservations, optionally opened on one |
 | `/community`, `/community/:postId` | the board, optionally opened on one post |
 | `/admin` | account moderation and TTT2 saves; no nav tab, reached from the account menu |

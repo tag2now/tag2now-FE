@@ -1,5 +1,6 @@
 import { expect, Page, Route } from '@playwright/test'
 import leaderboardData from '../fixtures/leaderboard.json'
+import currentRankLeaderboardData from '../fixtures/current-rank-leaderboard.json'
 import roomsData from '../fixtures/rooms.json'
 import communityPostsData from '../fixtures/community-posts.json'
 import communityPostDetailData from '../fixtures/community-post-detail.json'
@@ -53,6 +54,8 @@ interface MockOverrides {
   /** Today's chat, as the stream's opening snapshot carries it; none by default. */
   chat?: ApiChatMessage[]
   leaderboard?: unknown
+  /** The current-rank board the leaderboard tab opens on; `failEndpoints: ['currentRankLeaderboard']` fails it. */
+  currentRankLeaderboard?: unknown
   rooms?: unknown
   posts?: unknown
   /** Answers `?post_type=공지`; none unless a spec sets them. */
@@ -508,6 +511,14 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       ].filter((partner) => partner.npid !== npid),
       active_hours: [20, 21, 22, 23],
     })
+  })
+
+  // The current-rank board, which the leaderboard tab opens on.
+  await page.route('**/api/saves/leaderboard**', async (route) => {
+    if (failing.has('currentRankLeaderboard')) {
+      return route.fulfill({ status: 500, body: 'Internal Server Error' })
+    }
+    return asJson(route, overrides?.currentRankLeaderboard ?? currentRankLeaderboardData)
   })
 
   // One player's TTT2 save, which the history panel reads on its own.

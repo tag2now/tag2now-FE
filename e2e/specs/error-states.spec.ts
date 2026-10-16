@@ -19,7 +19,7 @@ test.describe('Error states', () => {
   })
 
   test('leaderboard API failure shows error on leaderboard tab', async ({ page }) => {
-    await mockAllApis(page, { failEndpoints: ['leaderboard'] })
+    await mockAllApis(page, { failEndpoints: ['currentRankLeaderboard'] })
     await skipPatchNotes(page)
     await page.goto('/')
     await page.getByRole('tab', { name: '리더보드' }).click()

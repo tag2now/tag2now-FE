@@ -32,6 +32,10 @@ export const POLL = {
    * session lasts, and a manual refresh is offered in the panel. */
   leaderboard: null,
 
+  /** The current-rank board is cached on the backend for five minutes and
+   * changes only as games end; fetched when the leaderboard tab opens. */
+  currentRankLeaderboard: null,
+
   /** The overview is a snapshot with a manual refresh: the only live number on
    * it is the room count, which arrives as a prop from App's own rooms poll. */
   overview: null,

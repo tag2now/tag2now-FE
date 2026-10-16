@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Route, Routes, useNavigate } from 'react-router-dom'
-import Leaderboard from "@/shared/Leaderboard";
+import LeaderboardViews from "@/shared/LeaderboardViews";
 import Stats from "@/stat/Stats"
 import Header from "@/shared/components/Header";
 import LiveBadge from "@/shared/components/LiveBadge";
@@ -13,6 +13,8 @@ import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import { firstRoomPath, isRoomTab as isRoomTabKey, pathOf } from '@/config/routes'
 import useActiveTab from '@/shared/hooks/useActiveTab'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
+import useCurrentRankLeaderboard from "@/shared/hooks/useCurrentRankLeaderboard";
+import { toLeaderboardData } from "@/shared/currentRankLeaderboard";
 import useRooms from "@/match/useRooms";
 import useReservations, { countOpen } from "@/reservation/useReservations";
 import useCommunityFeed, { countRecent, isRecentCountCapped } from "@/community/useCommunityFeed";
@@ -45,6 +47,14 @@ export default function App() {
   const navigate = useNavigate()
   const activeTab = useActiveTab()
   const lb = useLeaderboard()
+  // The leaderboard tab opens on it and the home page summarises it. A save
+  // knows only the RPCN id, so the names come from the score board.
+  const currentRankRaw = useCurrentRankLeaderboard()
+  const currentRankData = useMemo(
+    () => currentRankRaw.data && toLeaderboardData(currentRankRaw.data, lb.data?.entries),
+    [currentRankRaw.data, lb.data],
+  )
+  const currentRank = { ...currentRankRaw, data: currentRankData }
   const rooms = useRooms()
   // One reservation poll for the whole app, shared with the panel. The rate
   // follows the active tab: a user looking at a roster fill wants it fast, and
@@ -134,7 +144,8 @@ export default function App() {
       rooms={rooms.data}
       roomsLoading={rooms.loading}
       leaderboardEntries={lb.data?.entries}
-      leaderboardTotal={lb.data?.total_records}
+      currentRankEntries={currentRank.data?.entries}
+      currentRankTotal={currentRank.data?.total_records}
     />
   )
 
@@ -249,7 +260,7 @@ export default function App() {
                   rather than at a 404 page. */}
               <Route path="/" element={overviewPanel} />
               <Route path="/match/:group" element={roomsPanel} />
-              <Route path="/leaderboard" element={<Leaderboard data={lb.data} loading={lb.loading} refreshing={lb.refreshing} error={lb.error} onRefresh={lb.refresh} />} />
+              <Route path="/leaderboard/:view?" element={<LeaderboardViews current={currentRank} best={lb} />} />
               <Route path="/reservation" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
               <Route path="/reservation/:id" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
               <Route path="/community" element={<Community leaderboardEntries={lb.data?.entries} />} />

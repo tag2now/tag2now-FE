@@ -58,7 +58,8 @@ test.describe('Navigation', () => {
   test('clicking leaderboard tab shows leaderboard content', async ({ page }) => {
     await page.getByRole('tab', { name: '리더보드' }).click()
 
-    await expect(page.getByText('Total records: 5')).toBeAttached()
+    // It opens on current ranks; the fixture has four.
+    await expect(page.getByText('Total records: 4')).toBeAttached()
     await expect(page.getByRole('columnheader', { name: 'Player' })).toBeVisible()
   })
 
@@ -72,7 +73,7 @@ test.describe('Navigation', () => {
 
   test('switching back to room tab shows rooms again', async ({ page }) => {
     await page.getByRole('tab', { name: '리더보드' }).click()
-    await expect(page.getByText('Total records: 5')).toBeAttached()
+    await expect(page.getByText('Total records: 4')).toBeAttached()
 
     await page.getByRole('tab', { name: '매칭' }).click()
     await expect(page.getByRole('columnheader', { name: '랭크' })).toBeVisible()

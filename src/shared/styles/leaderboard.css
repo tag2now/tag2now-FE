@@ -10,6 +10,14 @@
   animation: loading-slide 1s ease-in-out infinite;
 }
 
+/* ─── Leaderboard views ───────────────────────────────────── */
+/* 현재 계급 | 최고 계급, the same underlined tabs as the profile's two views. */
+.lb-views { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--color-border); }
+.lb-view { height: 40px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-strong); cursor: pointer; transition: color 150ms ease, border-color 150ms ease; }
+.lb-view:hover { color: var(--color-txt); }
+.lb-view[aria-selected="true"] { border-bottom-color: var(--color-primary); color: var(--color-primary-text); }
+.lb-view:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+
 /* ─── Leaderboard controls ────────────────────────────────── */
 .lb-controls { margin-bottom: 12px; }
 .lb-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
