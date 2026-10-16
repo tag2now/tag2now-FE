@@ -190,7 +190,10 @@ board's `LeaderboardEntry` shape --- the highest character in the main slot,
 the second in the sub --- so one `Leaderboard` draws both with the same search,
 filters and sorts. A save knows only the RPCN id, so the online name is joined
 in from the score board, and a player missing there shows their id. Players who
-stand equal share a place (1, 2, 2, 4), so pass `rank` through. The home page's
+stand equal share a place (1, 2, 2, 4), so pass `rank` through. **최근 30일**
+asks the backend for `?days=30`, which filters and re-ranks there; the request
+is made only while the option is on, and one `Leaderboard` serves every board so
+a search survives a switch. The home page's
 registered count and TOP 5 summarise this board too; the weekly card still takes
 its portraits from the score board.
 

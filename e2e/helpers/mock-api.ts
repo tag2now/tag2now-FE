@@ -56,6 +56,8 @@ interface MockOverrides {
   leaderboard?: unknown
   /** The current-rank board the leaderboard tab opens on; `failEndpoints: ['currentRankLeaderboard']` fails it. */
   currentRankLeaderboard?: unknown
+  /** Answers the current-rank board's `?days=`; the full board unless a spec sets it. */
+  recentCurrentRankLeaderboard?: unknown
   rooms?: unknown
   posts?: unknown
   /** Answers `?post_type=공지`; none unless a spec sets them. */
@@ -518,7 +520,9 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     if (failing.has('currentRankLeaderboard')) {
       return route.fulfill({ status: 500, body: 'Internal Server Error' })
     }
-    return asJson(route, overrides?.currentRankLeaderboard ?? currentRankLeaderboardData)
+    const full = overrides?.currentRankLeaderboard ?? currentRankLeaderboardData
+    const recent = new URL(route.request().url()).searchParams.has('days')
+    return asJson(route, recent ? overrides?.recentCurrentRankLeaderboard ?? full : full)
   })
 
   // One player's TTT2 save, which the history panel reads on its own.

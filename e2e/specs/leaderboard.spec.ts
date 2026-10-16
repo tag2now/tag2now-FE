@@ -37,6 +37,20 @@ test.describe('Leaderboard current ranks', () => {
     await expect(row.getByRole('cell').nth(4)).toContainText('—')
   })
 
+  test('최근 30일 shows the board the API ranks over the last 30 days', async ({ page }) => {
+    const player = (rank: number, username: string) =>
+      ({ rank, username, saved_at: new Date().toISOString(), account_rank: 20, chars: [] })
+    await page.unrouteAll({ behavior: 'ignoreErrors' })
+    await mockAllApis(page, { recentCurrentRankLeaderboard: { total: 2, entries: [player(1, 'np_002'), player(2, 'np_003')] } })
+
+    const request = page.waitForRequest((r) => r.url().includes('/api/saves/leaderboard') && new URL(r.url()).searchParams.get('days') === '30')
+    await page.getByRole('button', { name: '최근 30일' }).click()
+    await request
+    const rows = page.locator('.rank-row')
+    await expect(rows.locator('button.player-btn')).toHaveText(['KingOfIronFist', 'TagComboKing'])
+    await expect(page.getByText('Total records: 2')).toBeAttached()
+  })
+
   test('최고 계급 opens the score board, and back returns', async ({ page }) => {
     await openBestBoard(page)
     await expect(page.locator('.rank-row button.player-btn').first()).toHaveText('TTT2_Master')

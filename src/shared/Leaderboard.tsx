@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import LoadingBar from "@/shared/components/LoadingBar";
 import RankList from "@/shared/components/RankList";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import LeaderboardControls from "@/shared/components/LeaderboardControls";
-import {panelStatus} from "@/shared/util/panelStatus";
+import {statusBody} from "@/shared/util/panelStatus";
 import {filterEntries, tiersPresent, totals, COLLAPSED_VISIBLE, type SortKey} from "@/shared/util/leaderboardFilter";
 import useAuth from '@/auth/useAuth'
 import {LeaderboardData} from "@/shared/types";
@@ -16,9 +16,11 @@ interface LeaderboardProps {
   refreshing?: boolean
   error: string | null
   onRefresh?: () => void
+  /** Board switches and options, shown in the title bar beside the refresh button. */
+  controls?: ReactNode
 }
 
-export default function Leaderboard({ data, loading, refreshing, error, onRefresh }: LeaderboardProps) {
+export default function Leaderboard({ data, loading, refreshing, error, onRefresh, controls }: LeaderboardProps) {
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [character, setCharacter] = useState('')
@@ -40,28 +42,42 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
   // from memory. The row is marked instead, so it is visible the moment it is.
   const me = useAuth().user?.username ?? null
 
-  const s = panelStatus(loading, error, {
-    loadingMsg: '랭킹을 불러오는 중',
-    onRetry: onRefresh,
-    skeleton: <TableSkeleton rows={10} columns={5} label="랭킹을 불러오는 중" />,
-  })
-  if (s) return s
-  if (!data) return null
-
-  return (
-    <div className="panel relative" aria-live="polite">
-      <LoadingBar visible={refreshing} />
-      <div className="section-toolbar">
-        <div className="section-title">
-          <span className="section-icon"><Trophy size={15} aria-hidden="true" /></span>
-          <div><h3>전체 랭킹</h3><p>등록 플레이어 {data.total_records}명</p><span className="sr-only">Total records: {data.total_records}</span></div>
+  // Drawn in every state: the title controls switch boards, and a board that
+  // is loading or failed must not take the way to another one with it.
+  const toolbar = (
+    <div className="section-toolbar">
+      <div className="section-title">
+        <span className="section-icon"><Trophy size={15} aria-hidden="true" /></span>
+        <div>
+          <h3>전체 랭킹</h3>
+          {data && <><p>등록 플레이어 {data.total_records}명</p><span className="sr-only">Total records: {data.total_records}</span></>}
         </div>
+      </div>
+      {/* A phone has no room beside the title, so the controls take the next line. */}
+      <div className="flex basis-full items-center gap-2 md:basis-auto">
+        {controls}
         {onRefresh && (
           <button className="refresh-btn" aria-label="새로고침" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw size={14} aria-hidden="true" />
           </button>
         )}
       </div>
+    </div>
+  )
+
+  const status = statusBody(loading, error, {
+    loadingMsg: '랭킹을 불러오는 중',
+    onRetry: onRefresh,
+    skeleton: <TableSkeleton rows={10} columns={5} label="랭킹을 불러오는 중" />,
+  })
+  // Same children before the toolbar as below, so it keeps its place and the focus.
+  if (status) return <div className="panel relative" aria-live="polite"><LoadingBar visible={refreshing} />{toolbar}{status}</div>
+  if (!data) return null
+
+  return (
+    <div className="panel relative" aria-live="polite">
+      <LoadingBar visible={refreshing} />
+      {toolbar}
       <LeaderboardControls
         search={search}
         onSearchChange={setSearch}

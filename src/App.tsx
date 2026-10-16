@@ -260,7 +260,7 @@ export default function App() {
                   rather than at a 404 page. */}
               <Route path="/" element={overviewPanel} />
               <Route path="/match/:group" element={roomsPanel} />
-              <Route path="/leaderboard/:view?" element={<LeaderboardViews current={currentRank} best={lb} />} />
+              <Route path="/leaderboard/:view?" element={<LeaderboardViews current={currentRankRaw} best={lb} />} />
               <Route path="/reservation" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
               <Route path="/reservation/:id" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
               <Route path="/community" element={<Community leaderboardEntries={lb.data?.entries} />} />

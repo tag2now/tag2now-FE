@@ -43,7 +43,8 @@ vi.mock('@/community/communityApi', async (importOriginal) => ({
 
 // The leaderboard tab opens on current ranks, which it reads itself. The board
 // names the score board's player, so the tab still shows 'TestPlayer'.
-vi.mock('@/shared/hooks/useCurrentRankLeaderboard', async () => ({
+vi.mock('@/shared/hooks/useCurrentRankLeaderboard', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/hooks/useCurrentRankLeaderboard')>()),
   fetchCurrentRankLeaderboard: mockedFetchCurrentRankLeaderboard,
   default: () => usePolledData(mockedFetchCurrentRankLeaderboard as any, null),
 }))
