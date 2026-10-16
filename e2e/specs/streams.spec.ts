@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import roomsData from '../fixtures/rooms.json'
+import roomsData from '../fixtures/rooms.json' with { type: 'json' }
 import { mockAllApis, signInAs, skipPatchNotes } from '../helpers/mock-api'
 
 const CHANNEL_ID = 'c42cd75ec4855a9edf204a407c3c1dd2'

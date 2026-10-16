@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { mockAllApis, signInAs, skipPatchNotes } from '../helpers/mock-api'
-import detail from '../fixtures/community-post-detail.json'
+import detail from '../fixtures/community-post-detail.json' with { type: 'json' }
 
 test('author can cancel, replace and remove a video while editing', async ({ page }) => {
   let saved = { ...detail, author: 'edit-owner', youtube_video_id: 'M7lc1UVf-VE' as string | null }

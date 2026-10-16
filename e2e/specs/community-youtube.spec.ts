@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { mockAllApis, signInAs, skipPatchNotes } from '../helpers/mock-api'
-import detail from '../fixtures/community-post-detail.json'
+import detail from '../fixtures/community-post-detail.json' with { type: 'json' }
 
 test.beforeEach(async ({ page }) => {
   await mockAllApis(page, { postDetail: { ...detail, youtube_video_id: 'dQw4w9WgXcQ' } })

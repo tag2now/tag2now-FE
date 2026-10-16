@@ -1,12 +1,12 @@
 import { expect, Page, Route } from '@playwright/test'
-import leaderboardData from '../fixtures/leaderboard.json'
-import currentRankLeaderboardData from '../fixtures/current-rank-leaderboard.json'
-import roomsData from '../fixtures/rooms.json'
-import communityPostsData from '../fixtures/community-posts.json'
-import communityPostDetailData from '../fixtures/community-post-detail.json'
+import leaderboardData from '../fixtures/leaderboard.json' with { type: 'json' }
+import currentRankLeaderboardData from '../fixtures/current-rank-leaderboard.json' with { type: 'json' }
+import roomsData from '../fixtures/rooms.json' with { type: 'json' }
+import communityPostsData from '../fixtures/community-posts.json' with { type: 'json' }
+import communityPostDetailData from '../fixtures/community-post-detail.json' with { type: 'json' }
 import { LATEST_PATCH_VERSION } from '../../src/config/patchNotes'
-import dailyStatsData from '../fixtures/history-daily.json'
-import weeklyTopData from '../fixtures/history-weekly-top.json'
+import dailyStatsData from '../fixtures/history-daily.json' with { type: 'json' }
+import weeklyTopData from '../fixtures/history-weekly-top.json' with { type: 'json' }
 
 interface ApiReservationLike {
   id: number
