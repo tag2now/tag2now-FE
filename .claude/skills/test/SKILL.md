@@ -7,6 +7,26 @@ description: Run tag2now-FE's whole test suite before offering a commit — this
 
 Run this before offering a commit.
 
+## Once per commit, not once per edit
+
+The whole suite takes about five minutes, three and a half of them E2E. Run it
+**once**, when the change is final and a commit is about to be offered --- not
+after each edit, and not after a rename. Running it three times for one
+feature, once after a purely mechanical rename, turned every small request into
+ten minutes of waiting.
+
+While a change is still moving, check only what it touches:
+
+```bash
+npm run typecheck
+npx vitest run src/path/to/Changed.test.tsx
+npx playwright test e2e/specs/changed.spec.ts
+```
+
+Seconds each. If an edit lands after the full run, re-run only what that edit
+touches, unless it changed something many screens share (`App.tsx`,
+`shared/util/api.ts`, `e2e/helpers/mock-api.ts`, a global sheet).
+
 **Report honestly.** Give pass/fail counts for every step you ran, name any step
 you skipped and why, and for anything red name each failing test and paste its
 error. A step that errored for an environment reason is not a pass.
