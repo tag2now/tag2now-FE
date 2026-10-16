@@ -62,6 +62,13 @@ Key dependencies: `recharts` (statistics charts), `react-hot-toast` (notificatio
 
 The `@` alias resolves to `src/` and is configured in both `vite.config.ts` and `tsconfig.json`. Prefer `@/shared/util/api` over relative paths.
 
+## Comments
+
+A comment says in one line --- two at most --- *why* the code is as it is, when
+the code cannot say it. Not what the code does, and not its history: "used to",
+"before this", "changed because" belong in the commit message. Anything longer
+goes in this file or `docs/`.
+
 ## Architecture
 
 **Feature-folder layout.** Each feature owns its components, hooks, types, and API calls; `shared/` holds what crosses features.
