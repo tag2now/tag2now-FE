@@ -56,7 +56,7 @@ export default function ChatPanel({ chat, leaderboardEntries, onClose }: Props) 
           <MessagesSquare size={15} aria-hidden="true" />
           채팅
         </h2>
-        <span className="chat-panel-note">매일 06:00 초기화</span>
+        <span className="chat-panel-note">전날 06:00부터 표시</span>
         {floating && (
           <button type="button" className="chat-panel-close" aria-label="채팅 닫기" onClick={onClose}>
             <X size={16} aria-hidden="true" />

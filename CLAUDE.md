@@ -312,7 +312,7 @@ window crosses midnight, so "01:00" can follow "23:00".
 
 ### Chat
 
-Today's lobby chat, from tag2now-BE's `/chat` routes. **Reading is public,
+The lobby chat since the previous day's 06:00 KST, from tag2now-BE's `/chat` routes. **Reading is public,
 writing needs a login** — and the stream has to stay public, because an
 `EventSource` cannot send an `Authorization` header.
 

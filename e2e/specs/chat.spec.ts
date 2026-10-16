@@ -32,7 +32,7 @@ test.beforeEach(async ({ page }) => {
   await skipPatchNotes(page)
 })
 
-test("reads today's chat without an account", async ({ page }) => {
+test("reads the recent chat without an account", async ({ page }) => {
   await page.goto('/')
   await showChat(page)
 

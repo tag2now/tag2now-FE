@@ -8,7 +8,7 @@ import type { ChatMessage } from '@/chat/types'
  * is also dropped while the tab is hidden: a background tab would otherwise
  * hold a stream open on the one backend process for nobody to read.
  *
- * Every connection opens with a `snapshot` of today's chat, which **replaces**
+ * Every connection opens with a `snapshot` of the recent chat, which **replaces**
  * the list. Nothing is resumed: the backend keeps its messages in memory and
  * numbers them from 1 on every start, so `Last-Event-ID` would name the wrong
  * message after a deploy, and a deletion missed while disconnected only shows

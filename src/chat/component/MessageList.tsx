@@ -49,7 +49,7 @@ export default function MessageList({ messages, loading, user, leaderboardEntrie
   return (
     <div ref={logRef} className="chat-log" role="log" aria-label="채팅 메시지" onScroll={trackBottom}>
       {messages.length === 0 && (
-        <p className="chat-empty">{loading ? '불러오는 중…' : '오늘 대화가 아직 없습니다.'}</p>
+        <p className="chat-empty">{loading ? '불러오는 중…' : '최근 대화가 아직 없습니다.'}</p>
       )}
       <ol>
         {messages.map((message) => (

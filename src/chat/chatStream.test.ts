@@ -128,7 +128,7 @@ describe('the chat connection', () => {
 })
 
 describe('the chat list', () => {
-  it("starts from today's snapshot and takes each message after it", () => {
+  it("starts from the snapshot and takes each message after it", () => {
     read()
     server().emit('snapshot', [line(1), line(2)])
     server().emit('message', line(3))
