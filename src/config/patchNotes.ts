@@ -14,6 +14,13 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.10',
+    items: [
+      '리더보드가 현재 계급 기준으로 바뀜 (최고 계급은 탭에서 확인)',
+      '로비 채팅을 전날 오전 6시부터 표시',
+    ],
+  },
+  {
     version: '2.9',
     items: [
       '로비 채팅 추가 (매일 오전 6시에 초기화)',
