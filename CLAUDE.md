@@ -595,12 +595,12 @@ The one pairing still done by hand is the release tag: tag `v{version}` to match
 the new top entry.
 
 **Release is automatic on a `v*` tag.** The `deploy` job SSHes into Lightsail,
-writes `FE_IMAGE_TAG` into the instance's `.env.prod`, and restarts **only
+writes `FE_IMAGE_TAG` into the instance's `.env`, and restarts **only
 `fe`** — `be` and the datastores are left alone, and are released independently
 by the backend repo.
 
-`compose.prod.yml` lives in **tag2now-BE** and describes the whole stack,
-including this service's image. A change to how `fe` runs in production belongs
+`compose.prod.yml` lives in **tag2now-BE**, which uploads it as the instance's
+`compose.yml`; it describes the whole stack, including this service's image. A change to how `fe` runs in production belongs
 in that repo.
 
 The SSH and ECR settings are **org-level** secrets/variables on the `tag2now`

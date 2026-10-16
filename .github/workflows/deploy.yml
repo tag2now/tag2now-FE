@@ -48,7 +48,7 @@ jobs:
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
   # Production is a single Lightsail instance running docker compose, released
-  # over SSH. compose.prod.yml is owned by tag2now-BE and deployed from there;
+  # over SSH. Its compose.yml is uploaded by tag2now-BE;
   # this job only pins FE_IMAGE_TAG and restarts `fe`.
   deploy:
     name: Deploy to production
@@ -80,11 +80,11 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes "$PROD_USER@$PROD_HOST" \
             "cd '$PROD_DEPLOY_PATH' && \
-             test -f .env.prod && \
-             if grep -q '^FE_IMAGE_TAG=' .env.prod; then \
-               sed -i 's/^FE_IMAGE_TAG=.*/FE_IMAGE_TAG=$IMAGE_TAG/' .env.prod; \
+             test -f .env && \
+             if grep -q '^FE_IMAGE_TAG=' .env; then \
+               sed -i 's/^FE_IMAGE_TAG=.*/FE_IMAGE_TAG=$IMAGE_TAG/' .env; \
              else \
-               printf '\nFE_IMAGE_TAG=%s\n' '$IMAGE_TAG' >> .env.prod; \
+               printf '\nFE_IMAGE_TAG=%s\n' '$IMAGE_TAG' >> .env; \
              fi"
 
       - name: Release the frontend
@@ -98,5 +98,5 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes "$PROD_USER@$PROD_HOST" \
             "cd '$PROD_DEPLOY_PATH' && \
              aws ecr get-login-password --region '$AWS_REGION' | docker login --username AWS --password-stdin '$ECR_REGISTRY' && \
-             docker compose --env-file .env.prod -f compose.prod.yml pull fe && \
-             docker compose --env-file .env.prod -f compose.prod.yml up -d fe"
+             docker compose pull fe && \
+             docker compose up -d fe"
