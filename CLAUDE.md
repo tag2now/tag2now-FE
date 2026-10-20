@@ -373,6 +373,32 @@ turns proxy buffering off for that response, and its 15 s ping keeps the
 connection inside `proxy_read_timeout`. Both were checked through
 `nginx.conf.template` in a container.
 
+### Install sheet
+
+`public/manifest.webmanifest` makes the site installable, and
+`install/InstallSheet` offers it: a strip, not a dialog, bottom-right on a
+desktop (bottom-left while the chat is docked, whose composer owns that corner
+on a short screen) and above the tab bar on a phone. Two routes:
+
+- **Chromium** fires `beforeinstallprompt` when it would install the site.
+  `install/installPrompt.ts` catches it at module load, outside React, because
+  it can arrive before the app mounts and comes once per page. The sheet's
+  button calls its `prompt()`, which opens the browser's own dialog and only
+  works inside a click. Catching the event also suppresses Chrome's mini-infobar.
+- **iOS** has no such event. `canAddToIosHomeScreen` reads the user agent —
+  Safari or Chrome, not an in-app browser, not already launched from the home
+  screen — and the sheet explains 공유 → 홈 화면에 추가 instead.
+
+It never shows on a load that opened on the patch notes (`hasUnseenPatchNotes`,
+read once at mount), so a first visit has one overlay to close, not two. Closing
+it, or pressing 설치 whatever the dialog's answer, sets
+`installSheetDismissed` and it does not return.
+
+A test runner is not install-eligible, so E2E dispatches a synthetic
+`beforeinstallprompt`. For the real dialog, open the dev server in the Android
+emulator's Chrome through `adb reverse tcp:5173 tcp:5173` — `localhost` there is
+a secure context, as the host's LAN address is not.
+
 ### Error handling
 
 `main.tsx` registers a global `unhandledrejection` handler that shows a toast and calls `preventDefault()`. Rejected promises therefore surface to the user without a try/catch at every call site — but a caller that wants inline error state (as feature hooks do) must catch and store `e.message` itself.

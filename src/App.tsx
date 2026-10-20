@@ -9,6 +9,7 @@ import Footer from "@/shared/components/Footer";
 import PatchNotes from "@/shared/components/PatchNotes";
 import { LoginDialog } from "@/auth/component";
 import Chat from "@/chat/Chat";
+import InstallSheet from "@/install/InstallSheet";
 import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import { firstRoomPath, isRoomTab as isRoomTabKey, pathOf } from '@/config/routes'
 import useActiveTab from '@/shared/hooks/useActiveTab'
@@ -279,6 +280,7 @@ export default function App() {
         <Chat leaderboardEntries={lb.data?.entries} />
       </div>
       <Footer />
+      <InstallSheet />
     </div>
   )
 }
