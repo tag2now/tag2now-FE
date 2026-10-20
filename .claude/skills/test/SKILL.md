@@ -1,6 +1,6 @@
 ---
 name: test
-description: Run tag2now-FE's whole test suite before offering a commit — this repository's checks in CI's order — and report every step with its counts and the name of every failure. Use whenever a change here is ready to commit, or when asked to run the tests, the E2E suite, or "everything".
+description: Run tag2now-FE's whole test suite before offering a commit — this repository's checks in CI's order — and report every step with its counts and the name of every failure. Use whenever a code change here is ready to commit, or when asked to run the tests, the E2E suite, or "everything". Not for a data- or docs-only change (a manifest field, a patch-notes entry, markdown) — that gets only the check that reads it.
 ---
 
 # test — the whole frontend suite
@@ -54,8 +54,15 @@ that run.
 This repository only. A change that also touched tag2now-BE is tested by that
 repository's own `test` skill, in its own checkout.
 
-**E2E (step 4) always runs when this repository changed.** It is the only suite
-that exercises routing, the tab strip and the modals as a browser sees them.
+**E2E (step 4) runs whenever code changed** — anything under `src/` or `e2e/`,
+a stylesheet, a config. It is the only suite that exercises routing, the tab
+strip and the modals as a browser sees them.
+
+**A data- or docs-only change does not run this skill.** A manifest field, a
+patch-notes entry, a markdown file: run the one check that reads it — a JSON
+parse, `npx vitest run src/config/patchNotes.test.ts` for the line budget — or
+nothing, when no test reads it. A `v*` tag runs the whole suite in the deploy
+workflow before anything ships, so a local full run there buys only minutes.
 
 ## Steps
 

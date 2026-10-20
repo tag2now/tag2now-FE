@@ -626,10 +626,15 @@ which drives both the version shown in the header and the "seen" marker that
 decides whether the patch-notes dialog reappears. Adding an entry to the top of
 that array is therefore the whole version bump — there is no second constant to
 remember, which is what previously let the header, the dialog, and the tags
-drift apart.
+drift apart. It also **re-opens the dialog for every user**, including everyone
+who pressed 다시 보지 않기.
 
-The one pairing still done by hand is the release tag: tag `v{version}` to match
-the new top entry.
+**A release does not need an entry.** Write one only when the user asks for
+patch notes — "태그 달아서 배포하자" is a request to ship, not to announce — and
+show the proposed lines before adding them. A release without an entry gets a
+patch number on the current top version (`v2.9.1` after 2.9), which leaves the
+header and the dialog untouched. A release with a new entry is tagged
+`v{version}` to match it; that pairing is the one still done by hand.
 
 **Release is automatic on a `v*` tag.** The `deploy` job SSHes into Lightsail,
 writes `FE_IMAGE_TAG` into the instance's `.env`, and restarts **only
