@@ -14,6 +14,13 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.13',
+    items: [
+      '화면 하단 안내에서 바로 앱으로 설치',
+      '아이폰은 공유 → 홈 화면에 추가로 앱처럼 사용',
+    ],
+  },
+  {
     version: '2.12',
     items: [
       '안드로이드 크롬에서 홈 화면에 앱으로 설치 가능',
