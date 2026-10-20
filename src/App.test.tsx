@@ -19,6 +19,9 @@ vi.mock('@/overview/useOverview', async (importOriginal) => ({
   default: () => ({ data: { daily: [], weeklyTop: [], posts: [], reservations: [] }, loading: false, refreshing: false, error: null, lastUpdated: null, refresh: vi.fn() }),
 }))
 
+// The update check has its own tests and its own timer; these count data polls.
+vi.mock('@/shared/hooks/useAppUpdate', () => ({ default: () => {} }))
+
 const { default: usePolledData } = await vi.importActual<typeof import('@/shared/hooks/usePolledData')>('@/shared/hooks/usePolledData')
 vi.mock("@/shared/hooks/useLeaderboard", async () => {
   return {

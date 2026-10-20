@@ -12,6 +12,7 @@ import Chat from "@/chat/Chat";
 import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
 import { firstRoomPath, isRoomTab as isRoomTabKey, pathOf } from '@/config/routes'
 import useActiveTab from '@/shared/hooks/useActiveTab'
+import useAppUpdate from '@/shared/hooks/useAppUpdate'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
 import useCurrentRankLeaderboard from "@/shared/hooks/useCurrentRankLeaderboard";
 import { toLeaderboardData } from "@/shared/currentRankLeaderboard";
@@ -46,6 +47,7 @@ function roomCountLabel(rooms: Room[] | undefined, loaded: boolean): string {
 export default function App() {
   const navigate = useNavigate()
   const activeTab = useActiveTab()
+  useAppUpdate()
   const lb = useLeaderboard()
   // The leaderboard tab opens on it and the home page summarises it. A save
   // knows only the RPCN id, so the names come from the score board.
