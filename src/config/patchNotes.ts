@@ -14,6 +14,13 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.12',
+    items: [
+      '안드로이드 크롬에서 홈 화면에 앱으로 설치 가능',
+      '새 버전이 나오면 열어 둔 화면도 자동으로 최신 버전 적용',
+    ],
+  },
+  {
     version: '2.11',
     items: [
       '리더보드가 현재 계급 기준으로 바뀜 (최고 계급은 탭에서 확인)',
