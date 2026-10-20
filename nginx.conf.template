@@ -33,6 +33,13 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
+    # nginx's mime.types has no .webmanifest. A `types` block replaces the whole
+    # inherited map, so it is scoped to this one file rather than the server.
+    location = /manifest.webmanifest {
+        types { application/manifest+json webmanifest; }
+        add_header Cache-Control "no-cache";
+    }
+
     # SPA fallback — always revalidate index.html so new deploys take effect
     location / {
         add_header Cache-Control "no-cache";
