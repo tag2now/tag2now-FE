@@ -14,6 +14,12 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.14',
+    items: [
+      '매칭 탭에서 같은 계급 상대 찾기 (방에 있는 유저 먼저)',
+    ],
+  },
+  {
     version: '2.13',
     items: [
       '화면 하단 안내에서 바로 앱으로 설치',
