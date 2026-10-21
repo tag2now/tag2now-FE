@@ -39,3 +39,24 @@ export interface RoomsData {
   total: number
   totalUsers: number
 }
+
+/** A player to play now at a rank, from tag2now-BE's `GET /saves/current-rank-holders`. */
+export interface CurrentRankHolder {
+  username: string
+  /** ISO 8601, UTC: when the game last wrote the save. */
+  saved_at: string
+  account_rank: number
+  /** The characters they have played at the asked rank. */
+  chars: { id: number, character: string }[]
+}
+
+/** Who played a character now at `rank` within the last 30 days, lowest on the
+ * current-rank leaderboard first: a strong player's other characters are
+ * lifted by rank correction, and these are the players who belong there. */
+export interface CurrentRankHolders {
+  rank: number
+  rank_name: string
+  /** Everyone found, of whom `entries` are the first hundred. */
+  total: number
+  entries: CurrentRankHolder[]
+}

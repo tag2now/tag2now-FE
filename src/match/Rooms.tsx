@@ -5,6 +5,7 @@ import LoadingBar from "@/shared/components/LoadingBar";
 import {RankMatchRoom, Room} from "@/match/types";
 import {PlayerMatchTable, RankMatchTable} from "@/match/component";
 import { Radio, RefreshCw, SearchX } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { formatGroupName } from '@/config/tabConfig'
 import { POLL } from '@/config/polling'
 import { TableSkeleton } from '@/shared/components/Skeleton'
@@ -18,6 +19,8 @@ interface RoomsProps {
   groupKey?: string
   lastUpdated?: Date | null
   leaderboardEntries?: LeaderboardEntry[]
+  /** Beside the list's title, such as 같은 계급 상대 찾기. */
+  actions?: ReactNode
 }
 
 /** What the list adds up to, in the line that used to read "현재 접속 가능한
@@ -37,7 +40,7 @@ function roomsSummary(rooms: Room[], groupKey?: string): string {
   return `방 ${rooms.length}개 · 참가자 ${heads}명`
 }
 
-export default function Rooms({ data, loading, refreshing, error, onRefresh, groupKey, lastUpdated, leaderboardEntries }: RoomsProps) {
+export default function Rooms({ data, loading, refreshing, error, onRefresh, groupKey, lastUpdated, leaderboardEntries, actions }: RoomsProps) {
   const s = panelStatus(loading, error, {
     loadingMsg: '방 목록을 불러오는 중',
     onRetry: onRefresh,
@@ -55,6 +58,7 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
         <div className="section-title">
           <span className="section-icon"><Radio size={15} aria-hidden="true" /></span>
           <div><h3>실시간 방 목록</h3><p>{roomsSummary(rooms, groupKey)}</p></div>
+          {actions}
         </div>
         <div className="flex items-center gap-3">
           <TimeSince date={lastUpdated} />

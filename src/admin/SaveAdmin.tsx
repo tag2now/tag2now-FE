@@ -1,28 +1,23 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import { ChevronDown, Eye, Gamepad2, Loader2, RotateCcw, Search, Users } from 'lucide-react'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import ConfirmDialog from '@/shared/components/ConfirmDialog'
-import RankImage from '@/shared/components/RankImage'
 import SaveCharTable, { SavePortrait as Portrait, SaveRank as Rank } from '@/shared/components/SaveCharTable'
 import type { SelectOption } from '@/shared/components/Select'
 import ToggleGroup from '@/shared/components/ToggleGroup'
 import { charImageUrl } from '@/shared/characterImage'
 import { isUsed, signed } from '@/shared/saveChars'
-import { rankBands, type RankBand as RankBandRows } from '@/shared/rankTiers'
-import { tierHex } from '@/shared/tierColors'
+import RankField, { RankCode } from '@/shared/components/RankField'
+import usePopover from '@/shared/hooks/usePopover'
 import useConfirm from '@/shared/hooks/useConfirm'
-import { RANK_ORDER } from '@/reservation/reservationLabels'
 import { errorText, formatInstant, warnEmpty } from '@/admin/adminText'
 import { editSave, fetchSave, fetchSaveBackups, fetchSaveLog } from '@/admin/saveApi'
 import type { SaveAuditRecord, SaveBackup, SaveChar, SaveEdit, SaveInfo, SaveWriteResult, SlotState } from '@/admin/types'
 
-/** RANK_ORDER is indexed by the game's rank code. */
-const rankName = (code: number) => RANK_ORDER[code] ?? `계급 ${code}`
 
 
-const RankCode = ({ code }: { code: number }) => <Rank name={rankName(code)} />
 
 /** Floor ranks need floor points, which start at 9th kyu. */
 const FLOOR_RANK_FROM = 1
@@ -389,144 +384,6 @@ function CharacterField({ value, chars, onChange }: {
         </div>
       )}
     </div>
-  )
-}
-
-/** A picker that drops over the form rather than pushing it down. It closes on
- * a press outside it or on Escape, which hands focus back to its toggle --- the
- * first button in it. */
-function usePopover() {
-  const [open, setOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const onPointer = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
-    }
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      setOpen(false)
-      rootRef.current?.querySelector('button')?.focus()
-    }
-    document.addEventListener('pointerdown', onPointer)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('pointerdown', onPointer)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
-
-  return [open, setOpen, rootRef] as const
-}
-
-/** Slides an open panel left until it ends inside the edit form, for a field
- * far enough right that the panel would hang off it. The panel is never wider
- * than the form, so it always fits. */
-function useInsideForm(open: boolean) {
-  const panelRef = useRef<HTMLDivElement>(null)
-
-  useLayoutEffect(() => {
-    const panel = panelRef.current
-    if (!open || !panel) return
-    const form = panel.closest('form')!.getBoundingClientRect()
-    const overhang = panel.getBoundingClientRect().right - form.right
-    if (overhang > 0) panel.style.left = `${-overhang}px`
-  }, [open])
-
-  return panelRef
-}
-
-/** The reservation form's rank picker, as a single choice: bands strongest
- * first, each rank drawn. Ranks below `from` are shown but not offered. */
-function RankField({ label, value, from, onChange, autoLabel }: {
-  label: string
-  value: number | null
-  from: number
-  onChange: (value: number | null) => void
-  /** Offers "no rank" under this name, answered as null. */
-  autoLabel?: string
-}) {
-  const [open, setOpen, rootRef] = usePopover()
-  const panelRef = useInsideForm(open)
-  const choose = (code: number | null) => {
-    onChange(code)
-    setOpen(false)
-  }
-
-  return (
-    <div ref={rootRef} className="save-picker-field save-rank-field">
-      <span className="field-label">{label}</span>
-      <button
-        type="button"
-        className="input-base save-rank-toggle"
-        aria-expanded={open}
-        aria-label={`${label}: ${value === null ? autoLabel : rankName(value)}`}
-        onClick={() => setOpen((current) => !current)}
-      >
-        {value === null ? <span>{autoLabel}</span> : <RankCode code={value} />}
-        <ChevronDown size={15} aria-hidden="true" className={`text-primary transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div ref={panelRef} className="rank-picker-panel save-rank-panel">
-          {autoLabel && (
-            <button
-              type="button"
-              className={`save-rank-auto${value === null ? ' is-active' : ''}`}
-              aria-pressed={value === null}
-              onClick={() => choose(null)}
-            >
-              {autoLabel}
-            </button>
-          )}
-          <div className="rank-picker-bands max-h-72 overflow-y-auto pr-1">
-            {rankBands().map((band) => <RankBand key={band.tier} band={band} value={value} from={from} onChoose={choose} />)}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function RankBand({ band, value, from, onChoose }: {
-  band: RankBandRows
-  value: number | null
-  from: number
-  onChoose: (code: number) => void
-}) {
-  return (
-    <div className="rank-band" style={{ '--tier': tierHex(band.tier) } as React.CSSProperties}>
-      <span className="rank-band-label">{band.tier}</span>
-      <div className="rank-band-grid">
-        {band.rows.flat().map((rank, cell) => (rank === null
-          ? <span key={`gap-${cell}`} aria-hidden="true" />
-          : <RankOption key={rank} rank={rank} value={value} from={from} onChoose={onChoose} />))}
-      </div>
-    </div>
-  )
-}
-
-function RankOption({ rank, value, from, onChoose }: {
-  rank: string
-  value: number | null
-  from: number
-  onChoose: (code: number) => void
-}) {
-  const code = RANK_ORDER.indexOf(rank)
-  const selected = code === value
-  const offered = code >= from
-  return (
-    <button
-      type="button"
-      aria-label={rank}
-      aria-pressed={selected}
-      disabled={!offered}
-      onClick={() => onChoose(code)}
-      className={`rank-option${selected ? ' selected' : ''}${offered ? '' : ' opacity-40'}`}
-    >
-      <RankImage rankInfo={{ name: rank }} className="rank-option-art" />
-      <span className={`truncate text-[11px] tracking-[0.03em] ${selected ? 'text-primary-text' : 'text-txt-dim'}`}>{rank}</span>
-    </button>
   )
 }
 

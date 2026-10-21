@@ -197,6 +197,35 @@ a search survives a switch. The home page's
 registered count and TOP 5 summarise this board too; the weekly card still takes
 its portraits from the score board.
 
+### 같은 계급 상대 찾기 (the match tab)
+
+A button beside 실시간 방 목록's title, on every match tab, opens
+`match/component/CurrentRankHolders`: a dialog of players to play now --- who
+played a character currently at the chosen rank within 30 days, from
+tag2now-BE's `GET /saves/current-rank-holders` (spec 09). The backend orders
+them lowest on the current-rank leaderboard first, since rank correction lifts
+a strong player's other characters; this adds only that anyone in a room right
+now --- `roomUsers`, from App's rooms poll --- moves to the top.
+
+- Nothing is asked until the dialog opens, then once per rank chosen, never
+  polled: the backend caches for five minutes, and who is in a room already
+  refreshes with the rooms. The rank chosen survives closing and reopening.
+- A signed-in player's opens on the highest rank they *played* a character at
+  (`bestPlayedRank`, from their own save); a rank they pick wins over it even if
+  the save answers later. Signed out, nothing is asked until a rank is picked.
+- The rank is picked with `shared/components/RankField` --- the admin save
+  editor's picker, moved to `shared/` for this --- from 1st dan up.
+- Each name carries the community's byline: the account rank (the highest
+  reached, never demoted) and the place on the current-rank board, joined from
+  App's `/saves/leaderboard` by RPCN id. The reader is left off their own list.
+  A name comes from the score board, else their room, else the bare id.
+- At most five portraits a row, then `+N`: some players have played every
+  character at a rank, all 59 at once.
+- The dialog is portalled to `document.body`: inside the title bar, a phone rule
+  (`.section-title p { display: none }`) hid its paragraphs. It is capped at
+  half the screen's height, and its button at 36px on a phone, under the 44px
+  floor every other button keeps there.
+
 ### Routing
 
 **The URL is the navigation state.** There is no `tab` state — `useActiveTab`

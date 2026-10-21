@@ -23,6 +23,7 @@ import useCommunityFeed, { countRecent, isRecentCountCapped } from "@/community/
 import { POLL } from '@/config/polling'
 import Community from "@/community/Community";
 import Rooms from "@/match/Rooms";
+import CurrentRankHoldersButton from "@/match/CurrentRankHoldersButton";
 import type { Room } from "@/match/types";
 import Reservation from "@/reservation/Reservation";
 import Overview from "@/overview/Overview";
@@ -162,6 +163,7 @@ export default function App() {
       groupKey={activeTab}
       lastUpdated={rooms.lastUpdated}
       leaderboardEntries={lb.data?.entries}
+      actions={<CurrentRankHoldersButton roomUsers={roomUsers} leaderboardEntries={lb.data?.entries} currentRankEntries={currentRank.data?.entries} />}
     />
   )
 

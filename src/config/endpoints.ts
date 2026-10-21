@@ -41,6 +41,7 @@ export const API = {
   playerHistory: (npid: string) => endpoint(`history/players/${npid}`),
   playerSave: (npid: string) => endpoint(`saves/players/${npid}`),
   currentRankLeaderboard: () => endpoint('saves/leaderboard'),
+  currentRankHolders: () => endpoint('saves/current-rank-holders'),
 
   posts: () => endpoint('community/posts'),
   post: (postId: number) => endpoint(`community/posts/${postId}`),

@@ -99,7 +99,34 @@
 .stream-badge:hover { background: color-mix(in srgb, var(--color-primary) 85%, transparent); }
 .stream-badge:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
+/* 같은 계급 상대 찾기: a dialog opened beside the room list's title. A
+   container, so the rank field's panel stays inside it (100cqw). */
+.holder-dialog { display: flex; width: min(560px, 100%); max-height: 50dvh; flex-direction: column; container-type: inline-size; }
+.holder-dialog .confirm-dialog-head h2 { flex: 1; }
+/* Only the list scrolls; the heading, the note and the picker keep their height. */
+.holder-dialog > :not(.holder-list) { flex-shrink: 0; }
+.holder-dialog-close { display: grid; width: 32px; height: 32px; place-items: center; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--color-txt-dim); cursor: pointer; }
+.holder-dialog-close:hover { background: color-mix(in srgb, var(--color-surface-tint) 6%, transparent); color: var(--color-txt); }
+.holder-dialog-controls { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px; margin: 12px 0 8px; }
+.holder-summary { margin: 0; color: var(--color-txt-dim); font-size: var(--text-2xs); }
+.holder-dialog .holder-list { min-height: 0; flex: 1; overflow-y: auto; margin-inline: -16px; }
+.holder-list { margin: 0; padding: 0; list-style: none; }
+.holder-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 56px; min-height: 52px; align-items: center; gap: 12px; padding: 6px 16px; border-top: 1px solid var(--color-border); }
+.holder-name { display: flex; min-width: 0; align-items: center; gap: 6px; }
+.holder-name .player-btn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.holder-in-room { flex: 0 0 auto; padding: 1px 6px; border-radius: var(--radius-row); background: color-mix(in srgb, var(--color-primary) 16%, transparent); color: var(--color-primary-text); font-size: var(--text-3xs); font-weight: var(--weight-label); line-height: 1.5; white-space: nowrap; }
+.holder-chars { display: flex; align-items: center; gap: 4px; }
+.holder-char { height: 40px; border-radius: var(--radius-row); }
+.holder-char-name { color: var(--color-txt-dim); font-size: var(--text-2xs); }
+.holder-char-more { color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-label); white-space: nowrap; }
+.holder-seen { color: var(--color-txt-faint); font-size: var(--text-2xs); text-align: right; white-space: nowrap; }
+
 @media (max-width: 760px) {
+  /* Under the phone's 44px button floor (responsive.css): it shares the title's
+     row, and at full height it stood taller than the title beside it. */
+  .section-title .holder-open-btn { min-height: 36px; }
+  .holder-row { gap: 8px; padding-inline: 12px; }
+  .holder-char { height: 32px; }
   /* The rank art and the VS column are fixed-width, so at 375px they took 59%
      of the table and left each name 66px — narrower than the .player-btn
      inside it, which then spilled past the wrap's hidden overflow and lost its
