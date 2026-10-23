@@ -114,7 +114,7 @@
   .panel.has-selection .filter-toolbar { display: none; }
   .btn-primary, .btn-ghost, .btn-danger, .refresh-btn { min-height: 44px; }
   .refresh-btn { width: 44px; height: 44px; }
-  .segmented-control button { min-height: 42px; }
+  .segmented-control button, .toggle-group-option { min-height: 42px; }
   .rank-picker-panel .grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
   .match-table .player-btn { display: block; width: 100%; overflow: hidden; padding-inline: 4px; text-overflow: ellipsis; white-space: nowrap; }
   /* CharCell is the history panel's and the profile card's cell now — the

@@ -73,16 +73,16 @@ describe('pinned notices', () => {
 })
 
 describe('the category filter', () => {
-  it('is a row of buttons wider than a phone, and 전체 clears the category', () => {
+  it('is a radio group wider than a phone, and 전체 clears the category', () => {
     wideScreen()
     const onPostTypeChange = vi.fn()
     renderList([], vi.fn(), onPostTypeChange)
 
     const filters = screen.getByRole('group', { name: '게시글 분류' })
-    expect(within(filters).getByRole('button', { name: '공략' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(filters).getByRole('radio', { name: '공략' })).toBeChecked()
     expect(screen.queryByRole('combobox', { name: '게시글 분류' })).not.toBeInTheDocument()
 
-    fireEvent.click(within(filters).getByRole('button', { name: '전체' }))
+    fireEvent.click(within(filters).getByRole('radio', { name: '전체' }))
 
     expect(onPostTypeChange).toHaveBeenCalledWith('')
   })

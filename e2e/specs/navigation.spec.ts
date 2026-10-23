@@ -63,11 +63,11 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('columnheader', { name: 'Player' })).toBeVisible()
   })
 
-  test('clicking community tab shows post list', async ({ page }) => {
+  test('clicking community tab shows post list', async ({ page, isMobile }) => {
     await page.getByRole('tab', { name: '커뮤니티' }).click()
 
-    // Community has its category filter: buttons on desktop, a select on a phone
-    await expect(page.getByLabel('게시글 분류')).toBeVisible()
+    // The category is a radio group on desktop and a select on a phone.
+    await expect(page.getByRole(isMobile ? 'combobox' : 'group', { name: '게시글 분류' })).toBeVisible()
     await expect(page.getByRole('button', { name: '글쓰기' })).toBeVisible()
   })
 

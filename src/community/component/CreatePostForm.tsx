@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { parseYouTubeVideoId } from '@/community/youtube'
 import YouTubeVideo from './YouTubeVideo'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
+import ToggleGroup from '@/shared/components/ToggleGroup'
 import { MAX_POST_CHARACTERS, postTypesFor } from '@/community/types'
 import useAuth from '@/auth/useAuth'
 import type { PostInput } from '@/community/communityApi'
@@ -61,19 +62,13 @@ export default function CreatePostForm({ onSubmit, onCancel, initialPost }: Crea
         </div>
       <div className="form-section writing-form">
       <div className="field-heading"><span className="field-label">게시글 유형</span><small>게시글 성격에 맞는 분류를 선택하세요.</small></div>
-      <div className="segmented-control mb-3">
-        {postTypesFor(user?.admin ?? false).map((t) => (
-          <button
-            key={t}
-            onClick={() => setPostType(t)}
-            className={`cursor-pointer transition-colors ${
-              postType === t ? 'active' : ''
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      <ToggleGroup
+        label="게시글 유형"
+        value={postType}
+        options={postTypesFor(user?.admin ?? false).map((type) => ({ value: type, label: type }))}
+        onChange={setPostType}
+        className="mb-3"
+      />
 
       <div className="field-heading mt-4">
         <span className="field-label">

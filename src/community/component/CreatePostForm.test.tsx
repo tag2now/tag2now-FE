@@ -43,7 +43,7 @@ describe('character tags', () => {
   // *replace* 공략, so no post could be both.
   it('keeps the category when characters are tagged', async () => {
     const submit = setup()
-    pick('공략')
+    fireEvent.click(screen.getByRole('radio', { name: '공략' }))
     pick('Jin')
 
     fireEvent.click(screen.getByRole('button', { name: /작성/ }))
@@ -96,6 +96,40 @@ describe('character tags', () => {
   })
 })
 
+// Pre-refactor safety net: editing must preserve the category until changed.
+// A post-refactor failure means the submitted post contract changed.
+describe('editing a category', () => {
+  it('preserves the initial category and characters when saving', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(<CreatePostForm
+      initialPost={{ title: '기존 제목', body: '기존 내용', post_type: '공략', characters: ['Jin'] }}
+      onSubmit={onSubmit}
+      onCancel={vi.fn()}
+    />)
+
+    expect(screen.getByRole('radio', { name: '공략' })).toBeChecked()
+    fireEvent.click(screen.getByRole('button', { name: '저장' }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({
+      title: '기존 제목', body: '기존 내용', postType: '공략', characters: ['Jin'], youtubeVideoId: undefined,
+    }))
+  })
+
+  it('changes the category without dropping the initial characters', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(<CreatePostForm
+      initialPost={{ title: '기존 제목', body: '기존 내용', post_type: '공략', characters: ['Jin'] }}
+      onSubmit={onSubmit}
+      onCancel={vi.fn()}
+    />)
+
+    fireEvent.click(screen.getByRole('radio', { name: '건의' }))
+    fireEvent.click(screen.getByRole('button', { name: '저장' }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      postType: '건의', characters: ['Jin'],
+    })))
+  })
+})
+
 describe('notices', () => {
   afterEach(() => {
     // Unmount first: RTL's own cleanup runs after this hook, and ending the
@@ -108,7 +142,7 @@ describe('notices', () => {
     startSession('token', 3600, { username: 'root', online_name: '운영자', avatar_url: '', admin: true }, false)
     const submit = setup()
 
-    fireEvent.click(screen.getByRole('button', { name: '공지' }))
+    fireEvent.click(screen.getByRole('radio', { name: '공지' }))
     fireEvent.click(screen.getByRole('button', { name: '작성' }))
 
     await waitFor(() => expect(submit).toHaveBeenCalledWith(expect.objectContaining({ postType: '공지' })))
@@ -118,6 +152,6 @@ describe('notices', () => {
     startSession('token', 3600, { username: 'alice', online_name: 'Alice', avatar_url: '', admin: false }, false)
     setup()
 
-    expect(screen.queryByRole('button', { name: '공지' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('radio', { name: '공지' })).not.toBeInTheDocument()
   })
 })

@@ -39,7 +39,7 @@ test.describe('Notices', () => {
     await page.goto('/community')
     await page.getByRole('button', { name: '글쓰기' }).click()
 
-    await expect(page.locator('.writing-form').getByRole('button', { name: '공지', exact: true })).toBeVisible()
+    await expect(page.getByRole('group', { name: '게시글 유형' }).getByRole('radio', { name: '공지', exact: true })).toBeVisible()
   })
 
   test('a signed-in player is not offered 공지', async ({ page }) => {
@@ -47,8 +47,8 @@ test.describe('Notices', () => {
     await page.goto('/community')
     await page.getByRole('button', { name: '글쓰기' }).click()
 
-    await expect(page.locator('.writing-form').getByRole('button', { name: '자유', exact: true })).toBeVisible()
-    await expect(page.locator('.writing-form').getByRole('button', { name: '공지', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('group', { name: '게시글 유형' }).getByRole('radio', { name: '자유', exact: true })).toBeVisible()
+    await expect(page.getByRole('group', { name: '게시글 유형' }).getByRole('radio', { name: '공지', exact: true })).toHaveCount(0)
   })
 
   test('another admin can edit and delete the notice', async ({ page }) => {
