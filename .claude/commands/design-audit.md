@@ -4,15 +4,22 @@ Analyze the tag2now-FE codebase for design consistency issues across all compone
 
 ## Instructions
 
-Scan all component files in `src/components/` and `src/components/community/`, plus `src/index.css` for theme token definitions.
+Paths below are relative to the FE repository root. Read the
+[working agreement](../../AGENTS.md), [reuse search guide](../../docs/reuse.md)
+and [styling guide](../../docs/styling.md) first.
+
+Use `rg --files src -g '*.tsx' -g '*.ts' -g '*.css'` to discover App, shared
+components and every feature folder. Theme tokens live in `src/styles/tokens.css`,
+the JS palette in `src/shared/palette.ts`, and stylesheet order in `src/index.css`.
+Inspect feature sheets plus `src/styles/` and `src/shared/styles/`.
 
 For each component, check:
 
-1. **Spacing consistency** — Are padding/margin values using Tailwind's standard scale? Flag any raw pixel values or inconsistent spacing between similar elements.
-2. **Color usage** — Are all colors using CSS custom properties or Tailwind theme tokens defined in `src/index.css`? Flag hardcoded hex/rgb values.
+1. **Spacing consistency** — Use tokens and Tailwind's scale where they express the design. Check similar elements for inconsistent spacing. The styling guide permits feature-sheet values for rules outside that scale; do not treat every pixel value as a violation.
+2. **Color usage** — Use `src/styles/tokens.css` for CSS tokens and the existing JS palette/chart theme for programmatic colors. Flag new independent hex/rgb values outside those canonical definitions.
 3. **Typography** — Is font sizing consistent across similar elements (e.g., all table headers use same size)? Are `font-display` and `font-weight` used consistently?
-4. **Component structure** — Do all panel components use the `.panel` class? Do all error states use `.state-msg.error`? Do all loading states use `.state-msg`?
-5. **Responsive patterns** — Do all components handle mobile/desktop via Tailwind breakpoints consistently (sm: prefix)?
+4. **Component structure and reuse** — Discover equivalent implementations in current source and inspect their public APIs and real consumers. Search controls, ranking rows, character selectors, dialogs and status helpers by behavior before suggesting another implementation. Check whether status helpers add a panel wrapper and whether they support skeletons. Reusing a CSS class alone is not React-component reuse.
+5. **Responsive patterns** — Check desktop, phone and widths around affected boundaries. The code currently mixes 760/761px, Tailwind 48rem and feature-specific container thresholds; use the styling/migration guides to distinguish pending migration from purposeful differences. Do not impose `sm:` on every layout.
 
 ## Output Format
 
@@ -27,3 +34,7 @@ Produce a structured report grouped by category:
 ```
 
 Prioritize high-severity items (visible inconsistencies) over low-severity (code style preferences).
+
+Audit only unless implementation is separately requested and approved. For each
+suggestion, identify the existing reusable implementation or explain why none
+fits, and name the affected consumers and verification needed.
