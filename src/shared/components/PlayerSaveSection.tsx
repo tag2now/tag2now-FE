@@ -5,7 +5,7 @@ import { fetchPlayerSave } from '@/shared/playerSaveApi'
 import { isUsed, type PlayerSave } from '@/shared/saveChars'
 import { AppError } from '@/shared/util/AppError'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
-import { RANK_ORDER } from '@/reservation/reservationLabels'
+import { rankName } from '@/shared/ranks'
 
 type State =
   | { kind: 'loading' }
@@ -65,7 +65,7 @@ function LoadedSave({ save }: { save: PlayerSave }) {
     <>
       <div className="history-save-summary">
         <span className="history-save-label">계정 계급</span>
-        <SaveRank name={RANK_ORDER[save.account_rank] ?? `계급 ${save.account_rank}`} />
+        <SaveRank name={rankName(save.account_rank)} />
         <span className="history-save-record">{save.total}판 {save.wins}승 {save.losses}패</span>
       </div>
       {used.length > 0

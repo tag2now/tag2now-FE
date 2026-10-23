@@ -1,6 +1,6 @@
 import { defaultStartTime } from '@/reservation/bookingWindow'
 import { useState } from 'react'
-import { sortRanksDescending } from '@/reservation/reservationLabels'
+import { sortRanksDescending } from '@/shared/ranks'
 import {
   MAX_RANKS, matchTypeValues, type MatchType, type Reservation,
 } from '@/reservation/reservationModel'

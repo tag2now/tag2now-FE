@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { UserSearch, X } from 'lucide-react'
-import RankField, { rankName } from '@/shared/components/RankField'
+import RankField from '@/shared/components/RankField'
+import { rankName } from '@/shared/ranks'
 import RankImage from '@/shared/components/RankImage'
 import PlayerHistoryPanel from '@/shared/components/PlayerHistoryPanel'
 import { TableSkeleton } from '@/shared/components/Skeleton'

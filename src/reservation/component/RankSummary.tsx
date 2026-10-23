@@ -1,5 +1,5 @@
 import RankImage from '@/shared/components/RankImage'
-import { sortRanksDescending } from '@/reservation/reservationLabels'
+import { sortRanksDescending } from '@/shared/ranks'
 
 interface RankSummaryProps {
   ranks: string[]

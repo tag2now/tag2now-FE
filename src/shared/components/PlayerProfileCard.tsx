@@ -11,7 +11,7 @@ import type { RoomUser } from '@/match/types'
 import type { CharInfo, LeaderboardEntry } from '@/shared/types'
 import PlayerHistoryPanel from './PlayerHistoryPanel'
 import RankImage from './RankImage'
-import { indexOfRank } from '@/reservation/reservationLabels'
+import { indexOfRank } from '@/shared/ranks'
 import CharCell from './CharCell'
 import StreamChannelDialog from '@/streaming/StreamChannelDialog'
 

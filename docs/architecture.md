@@ -37,17 +37,18 @@ subfolder where needed. Not every feature needs every file or a barrel export.
   must not acquire unrelated feature behavior as part of a small UI change.
 - Compose cross-feature screens at the application boundary. `App.tsx` currently
   owns that composition, navigation and layout; extracting those is pending work.
-- Rank order and sorting are still in `reservation/reservationLabels.ts`, although
-  shared rank controls use them. Statistics types are also consumed by shared charts.
+- Rank order, code/name conversion and sorting belong to the shared game domain,
+  independent of React and feature folders. Feature screens and rank presentation
+  consume that model directly; UI modules do not re-export domain functions.
+- Statistics types are still consumed by shared charts.
 - `PlayerProfileCard` composes authentication, navigation, player history and the
   stream settings dialog. `LeaderboardViews` is a routed screen. These are not
   generic UI simply because they currently live under `shared/`.
 - The API helper reads `auth/session.ts` for bearer tokens and session expiry.
   This coupling is current behavior, not an import-boundary rule already enforced.
 
-The approved refactoring direction retains feature folders and clarifies these
-boundaries incrementally. New `app/` or domain locations and automated import rules
-are not implemented by this documentation change.
+The feature-folder layout remains in place. Extracting application composition
+into `app/` and enforcing import boundaries are pending work.
 
 ## Data flow
 

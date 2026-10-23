@@ -5,10 +5,7 @@ import { SaveRank } from '@/shared/components/SaveCharTable'
 import usePopover from '@/shared/hooks/usePopover'
 import { rankBands, type RankBand as RankBandRows } from '@/shared/rankTiers'
 import { tierHex } from '@/shared/tierColors'
-import { RANK_ORDER } from '@/reservation/reservationLabels'
-
-/** RANK_ORDER is indexed by the game's rank code. */
-export const rankName = (code: number) => RANK_ORDER[code] ?? `계급 ${code}`
+import { indexOfRank, rankName } from '@/shared/ranks'
 
 export const RankCode = ({ code }: { code: number }) => <SaveRank name={rankName(code)} />
 
@@ -106,7 +103,7 @@ function RankOption({ rank, value, from, onChoose }: {
   from: number
   onChoose: (code: number) => void
 }) {
-  const code = RANK_ORDER.indexOf(rank)
+  const code = indexOfRank(rank)
   const selected = code === value
   const offered = code >= from
   return (
