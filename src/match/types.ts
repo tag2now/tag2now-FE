@@ -34,8 +34,10 @@ export interface RankMatchRoom extends Room {
   rank_info: RoomRankInfo
 }
 
+export type RoomGroups = Record<string, Room[]> & { rank_match?: RankMatchRoom[] }
+
 export interface RoomsData {
-  groups: Record<string, Room[]>
+  groups: RoomGroups
   total: number
   totalUsers: number
 }
@@ -43,7 +45,9 @@ export interface RoomsData {
 /** The room endpoint uses RPCN's npid; the UI uses np_id. */
 export type ApiRoomUser = Omit<RoomUser, 'np_id'> & { npid: string }
 export type ApiRoom = Omit<Room, 'users'> & { users: ApiRoomUser[] }
-export type RoomsResponse = Record<string, ApiRoom[]>
+export type ApiRankMatchRoom = Omit<RankMatchRoom, 'users'> & { users: ApiRoomUser[] }
+// Rank matches have a rank; player matches and future room groups need not.
+export type RoomsResponse = Record<string, ApiRoom[]> & { rank_match?: ApiRankMatchRoom[] }
 
 /** A player to play now at a rank, from tag2now-BE's `GET /saves/current-rank-holders`. */
 export interface CurrentRankHolder {

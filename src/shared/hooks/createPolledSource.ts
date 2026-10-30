@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 import type { PolledState } from '@/shared/hooks/usePolledData'
+import { errorMessage } from '@/shared/util/errorMessage'
 
 /** Same shape as PolledState, but `refresh` is awaitable: a caller that has just
  * written something needs to know when the reread it triggered has landed. */
@@ -54,8 +55,8 @@ export default function createPolledSource<T>(fetcher: () => Promise<T>) {
           ? { ...snapshot, refreshing: false, lastUpdated }
           : { data, loading: false, refreshing: false, error: null, lastUpdated })
       },
-      (error: any) => {
-        set({ ...snapshot, loading: false, refreshing: false, error: error?.message ?? String(error) })
+      (error: unknown) => {
+        set({ ...snapshot, loading: false, refreshing: false, error: errorMessage(error) })
       },
     ).finally(() => { if (running === attempt) running = null })
 

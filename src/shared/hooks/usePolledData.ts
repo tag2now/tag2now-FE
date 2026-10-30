@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { errorMessage } from '@/shared/util/errorMessage'
 
 // Hook return type
 export interface PolledState<T> {
@@ -26,8 +27,8 @@ export default function usePolledData<T>(fetcher: () => Promise<T>, interval: nu
         if (s.data === data) return s.refreshing ? { ...s, refreshing: false, lastUpdated } : s
         return { data, loading: false, refreshing: false, error: null, lastUpdated }
       });
-    } catch (e: any) {
-      setState((s) => ({ ...s, loading: false, refreshing: false, error: e.message }))
+    } catch (e: unknown) {
+      setState((s) => ({ ...s, loading: false, refreshing: false, error: errorMessage(e) }))
     }
   }, [fetcher])
 

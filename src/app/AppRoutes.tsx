@@ -26,7 +26,6 @@ export default function AppRoutes({
   activeTab, rooms, bestLeaderboard, currentRank, currentRankData, roomUsers,
 }: AppRoutesProps) {
   const leaderboardEntries = bestLeaderboard.data?.entries
-  const activeRoomsData = isRoomTab(activeTab) ? { rooms: rooms.data?.groups[activeTab] ?? [] } : null
   // Admin has no navigation tab; its panel supplies its own accessible name.
   const panelLabel = activeTab === 'admin' ? undefined : isRoomTab(activeTab) ? `tab-${activeTab}` : `primary-tab-${activeTab}`
 
@@ -42,7 +41,7 @@ export default function AppRoutes({
 
   const roomsPanel = (
     <Rooms
-      data={activeRoomsData}
+      data={rooms.data}
       loading={rooms.loading}
       refreshing={rooms.refreshing}
       error={rooms.error}

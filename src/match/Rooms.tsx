@@ -2,7 +2,7 @@ import TimeSince from "@/shared/components/TimeSince";
 import { panelStatus} from "@/shared/util/panelStatus";
 import type {LeaderboardEntry} from "@/shared/types";
 import LoadingBar from "@/shared/components/LoadingBar";
-import {RankMatchRoom, Room} from "@/match/types";
+import type {Room, RoomsData} from "@/match/types";
 import {PlayerMatchTable, RankMatchTable} from "@/match/component";
 import { Radio, RefreshCw, SearchX } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -11,7 +11,7 @@ import { POLL } from '@/config/polling'
 import { TableSkeleton } from '@/shared/components/Skeleton'
 
 interface RoomsProps {
-  data: { rooms?: Room[] } | null
+  data: Pick<RoomsData, 'groups'> | null
   loading: boolean
   refreshing?: boolean
   error: string | null
@@ -49,7 +49,7 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
   if (s) return s
   if (!data) return null
 
-  const rooms = data.rooms ?? []
+  const rooms = data.groups[groupKey ?? 'player_match'] ?? []
 
   return (
     <div className="panel relative" aria-live="polite">
@@ -84,7 +84,7 @@ export default function Rooms({ data, loading, refreshing, error, onRefresh, gro
           </p>
         </div>
       ) : groupKey === 'rank_match' ? (
-        <RankMatchTable rooms={rooms as unknown as RankMatchRoom[]} leaderboardEntries={leaderboardEntries} />
+        <RankMatchTable rooms={data.groups.rank_match ?? []} leaderboardEntries={leaderboardEntries} />
       ) : (
         <PlayerMatchTable rooms={rooms} leaderboardEntries={leaderboardEntries} />
       )}

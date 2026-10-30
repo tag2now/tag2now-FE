@@ -58,14 +58,17 @@ const OVERVIEW_DATA: OverviewData = {
 
 const NOTICE = { id: 7, author: 'admin', title: '서버 점검 안내', body: '', post_type: '공지', characters: [], thumbs_up: 0, thumbs_down: 0, created_at: new Date().toISOString(), comment_count: 0 }
 
-const ROOMS: RoomsData = {
+const ROOMS = {
   total: 3,
   totalUsers: 7,
   groups: {
-    rank_match: [{ room_id: 'r1', users: [] }, { room_id: 'r2', users: [] }],
+    rank_match: [
+      { room_id: 'r1', rank_info: { id: 1, name: '1st dan', tier: '나무단' }, users: [] },
+      { room_id: 'r2', rank_info: { id: 2, name: '2nd dan', tier: '나무단' }, users: [] },
+    ],
     player_match: [{ room_id: 'r3', users: [] }],
   },
-}
+} satisfies RoomsData
 
 const ENTRIES: LeaderboardEntry[] = [
   { np_id: 'p1', rank: 1, online_name: 'TopPlayer', player_info: { main_char_info: { name: 'Jin', rank_info: { name: 'Destroyer', tier: '주황단' } }, sub_char_info: { name: 'Heihachi', rank_info: { name: 'Vanquisher', tier: '주황단' } } } },

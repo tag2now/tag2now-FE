@@ -30,7 +30,7 @@ describe('match update time rendering isolation', () => {
       const lastUpdated = new Date()
 
       render(view === 'Rooms'
-        ? <Rooms data={{ rooms }} loading={false} error={null} groupKey="player_match" lastUpdated={lastUpdated} />
+        ? <Rooms data={{ groups: { player_match: rooms } }} loading={false} error={null} groupKey="player_match" lastUpdated={lastUpdated} />
         : <MatchingOverview groups={{ player_match: rooms }} loading={false} error={null} lastUpdated={lastUpdated} />)
 
       expect(screen.getByRole('table', { name: '플레이어 매치 방 목록' })).toBeInTheDocument()

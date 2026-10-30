@@ -71,6 +71,11 @@ with undefined object fields omitted by the existing JSON serialization.
 DELETE defaults to a no-content contract; endpoints returning JSON declare its
 type explicitly. These types describe backend contracts without validating payloads
 at runtime. Server shapes that differ from UI models are mapped at the API boundary.
+Room groups retain their specific contracts through that mapping: rank-match rooms
+carry rank metadata, while player and additional room groups may omit it. The room
+screen selects from those groups without asserting a generic room is a rank match.
+Data hooks narrow rejected values from `unknown` with the shared error-message
+helper, preserving supplied string messages and converting other values to strings.
 
 The build-update hook separately fetches `/version.json`; chat uses `EventSource`
 with a URL from `chat/chatApi.ts`. Do not route either through JSON API helpers
