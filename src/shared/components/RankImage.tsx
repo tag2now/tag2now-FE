@@ -1,15 +1,10 @@
 import { useState } from 'react'
-import {RoomRankInfo} from "@/match/types";
-import {CharRankInfo} from "@/shared/types";
 import { rememberTier, tierOfRank } from '@/shared/rankTiers';
 import { tierHex } from '@/shared/tierColors';
 
 interface RankImageProps {
-  /** `tier` is optional because two callers have only a rank *name* — the
-   * reservation form and its summary, where a host picks from a list. They
-   * used to fill the gap with `tier: rank`, which is a lie the type accepted:
-   * once anything started reading that field it learned a band per rank. */
-  rankInfo: CharRankInfo | RoomRankInfo | { name?: string, tier?: string } | null | undefined
+  /** A chosen rank may have only a name; payload-specific fields are not needed here. */
+  rankInfo: { name?: string, tier?: string } | null | undefined
   className?: string
   /** Classes for the plate drawn when there is no art, when they should not
    * be `className`'s. A caller sizing the banner with utilities passes this:
@@ -31,7 +26,7 @@ export default function RankImage({ rankInfo, className, plateClassName = classN
   // sees all of them. Recording it here is what lets a rank the backend adds
   // later pick up its real colour without a release — the static table only has
   // to be right about the ranks that existed when it was written.
-  rememberTier(name, (rankInfo as { tier?: string } | null | undefined)?.tier)
+  rememberTier(name, rankInfo?.tier)
 
   if (!name) return null
 

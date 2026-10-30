@@ -5,7 +5,6 @@ import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import LeaderboardControls from "@/shared/components/LeaderboardControls";
 import {statusBody} from "@/shared/util/panelStatus";
 import {filterEntries, tiersPresent, totals, COLLAPSED_VISIBLE, type SortKey} from "@/shared/util/leaderboardFilter";
-import useAuth from '@/auth/useAuth'
 import {LeaderboardData} from "@/shared/types";
 import { RefreshCw, Trophy } from 'lucide-react'
 import { TableSkeleton } from '@/shared/components/Skeleton'
@@ -18,9 +17,11 @@ interface LeaderboardProps {
   onRefresh?: () => void
   /** Board switches and options, shown in the title bar beside the refresh button. */
   controls?: ReactNode
+  /** RPCN id of the reader whose row should be marked. */
+  viewerNpid?: string | null
 }
 
-export default function Leaderboard({ data, loading, refreshing, error, onRefresh, controls }: LeaderboardProps) {
+export default function Leaderboard({ data, loading, refreshing, error, onRefresh, controls, viewerNpid = null }: LeaderboardProps) {
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [character, setCharacter] = useState('')
@@ -38,10 +39,6 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
     [entries, search, character, tier, sort, collapsed],
   )
   const tiers = useMemo(() => tiersPresent(entries), [entries])
-  // Finding yourself on a 344-row board meant scrolling or typing your own name
-  // from memory. The row is marked instead, so it is visible the moment it is.
-  const me = useAuth().user?.username ?? null
-
   // Drawn in every state: the title controls switch boards, and a board that
   // is loading or failed must not take the way to another one with it.
   const toolbar = (
@@ -114,7 +111,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
             detailEmpty: total.winRate === null ? '기록 없음' : undefined,
             mainChar: e.player_info?.main_char_info,
             subChar: e.player_info?.sub_char_info,
-            isMe: me != null && e.np_id === me,
+            isMe: viewerNpid != null && e.np_id === viewerNpid,
           }
         })}
         label="전체 랭킹"

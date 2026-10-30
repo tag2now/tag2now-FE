@@ -12,7 +12,7 @@ find current implementations before adding an equivalent.
 ```
 src/
   App.tsx              visit-wide data subscriptions and application composition
-  app/                 application layout, routes, navigation and account composition
+  app/                 application layout, routes, navigation, account and ranking-view composition
   main.tsx             root render, Toaster, global unhandledrejection handler
   index.css            the stylesheet import list; its order is the cascade
   config/              routes, endpoints, polling, tabConfig, patchNotes, test-setup
@@ -49,7 +49,12 @@ subfolder where needed. Not every feature needs every file or a barrel export.
 - Account composition belongs to `app/`: it connects authentication, the header
   portal, player history and stream settings. The shared profile card receives
   display data and a history callback without owning those application behaviors.
-- `LeaderboardViews` is still a routed screen under `shared/`, not generic UI.
+- Ranking-view composition belongs to `app/`: it connects URL selection, board
+  data and the signed-in reader. The shared leaderboard receives the reader's id
+  as a prop alongside its data, without subscribing to authentication itself.
+- Shared rank presentation accepts a name and optional tier, independently of
+  room and character response types. Feature-owned payload fields remain in
+  their models rather than becoming dependencies of the shared image component.
 - The API helper reads `auth/session.ts` for bearer tokens and session expiry.
   This coupling is current behavior, not an import-boundary rule already enforced.
 

@@ -1,10 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
-import LeaderboardViews from '@/shared/LeaderboardViews'
+import LeaderboardViews from '@/app/LeaderboardViews'
 import type { PolledState } from '@/shared/hooks/usePolledData'
 import type { CurrentRankLeaderboard } from '@/shared/currentRankLeaderboard'
 import type { LeaderboardData } from '@/shared/types'
+import { endSession, startSession } from '@/auth/session'
 
 const { mockedGet } = vi.hoisted(() => ({ mockedGet: vi.fn() }))
 
@@ -59,6 +60,30 @@ const places = () => Array.from(document.querySelectorAll('.rank-row')).map((r) 
 describe('LeaderboardViews', () => {
   beforeEach(() => {
     mockedGet.mockReset()
+    endSession()
+  })
+  afterEach(() => { act(() => endSession()) })
+
+  // Pre-refactor safety net: moving auth ownership must keep the live reader marker on both boards.
+  it('updates the reader marker on login, board changes and logout without clearing search', async () => {
+    await renderAt('/leaderboard')
+    expect(document.querySelector('.rank-row.is-me')).toBeNull()
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Now' } })
+
+    act(() => {
+      startSession('token', 3600, { username: 'np_now', online_name: 'Different display name', avatar_url: '', admin: false }, false)
+    })
+    expect(document.querySelector('.rank-row.is-me')).toHaveTextContent('NowPlayer')
+    expect(screen.getByText('나')).toBeInTheDocument()
+
+    await act(async () => { fireEvent.click(screen.getByRole('tab', { name: '최고 계급' })) })
+    expect(document.querySelector('.rank-row.is-me')).toHaveTextContent('NowPlayer')
+    expect(screen.getByRole('searchbox')).toHaveValue('Now')
+
+    act(() => endSession())
+    expect(document.querySelector('.rank-row.is-me')).toBeNull()
+    expect(screen.queryByText('나')).not.toBeInTheDocument()
+    expect(screen.getByRole('searchbox')).toHaveValue('Now')
   })
 
   it('opens on current ranks, named from the score board', async () => {

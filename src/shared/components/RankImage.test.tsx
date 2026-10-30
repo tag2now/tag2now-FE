@@ -1,8 +1,21 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import RankImage from '@/shared/components/RankImage'
+import type { RoomRankInfo } from '@/match/types'
+import type { CharRankInfo } from '@/shared/types'
 
 describe('RankImage', () => {
+  // Pre-refactor safety net: both feature payloads use the same shared rank presentation.
+  it('renders room and character rank metadata through the same public input', () => {
+    const roomRank: RoomRankInfo = { id: 1, name: 'Vanquisher', tier: '주황단' }
+    const charRank: CharRankInfo = { name: 'Destroyer', tier: '주황단' }
+    const view = render(<RankImage rankInfo={roomRank} />)
+    expect(screen.getByRole('img', { name: 'Vanquisher' })).toHaveAttribute('src', '/ranks/Vanquisher.png')
+
+    view.rerender(<RankImage rankInfo={charRank} />)
+    expect(screen.getByRole('img', { name: 'Destroyer' })).toHaveAttribute('src', '/ranks/Destroyer.png')
+  })
+
   it('renders nothing without a rank', () => {
     const { container } = render(<RankImage rankInfo={null} />)
     expect(container.firstChild).toBeNull()
