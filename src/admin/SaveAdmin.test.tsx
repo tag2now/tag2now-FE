@@ -131,7 +131,7 @@ describe('Save admin', () => {
   it('previews an edit, then applies exactly that edit with the previewed sha256', async () => {
     await loaded()
     pickRank('계급', 'Genbu')
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
 
     await waitFor(() => expect(section('미리보기').getAllByRole('row')).toHaveLength(2))
     expect(imagesIn(section('미리보기').getAllByRole('row')[1])).toEqual(['Paul', 'Berserker', 'Genbu'])
@@ -152,7 +152,7 @@ describe('Save admin', () => {
   // Failures after extraction indicate changes to the public save-edit workflow.
   it('keeps the preview and sends no write when confirmation is cancelled', async () => {
     await loaded()
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
     const card = await screen.findByRole('region', { name: '미리보기' })
     fireEvent.click(within(card).getByRole('button', { name: '적용' }))
     fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '취소' }))
@@ -165,7 +165,7 @@ describe('Save admin', () => {
 
   it('shows a SHA conflict and keeps the loaded save and preview available', async () => {
     await loaded()
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
     const card = await screen.findByRole('region', { name: '미리보기' })
     vi.mocked(editSave).mockRejectedValueOnce(new AppError('세이브가 변경되었습니다. 다시 조회해 주세요.', 409))
     fireEvent.click(within(card).getByRole('button', { name: '적용' }))
@@ -183,7 +183,7 @@ describe('Save admin', () => {
     pickRank('계급', 'Genbu')
     fireEvent.change(screen.getByLabelText('점수 (비우면 그대로)'), { target: { value: '3000' } })
     fireEvent.click(section('캐릭터 목록').getByRole('checkbox'))
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
     await screen.findByRole('region', { name: '미리보기' })
 
     vi.mocked(fetchSave).mockResolvedValueOnce({ ...save, username: 'Bob', chars: [char(5, 'Law', 20, 1)] })
@@ -194,13 +194,13 @@ describe('Save admin', () => {
     expect(screen.getByLabelText('점수 (비우면 그대로)')).toHaveValue('')
     expect(section('캐릭터 목록').getByRole('checkbox')).not.toBeChecked()
     expect(screen.getByRole('button', { name: '캐릭터: Law' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
     await waitFor(() => expect(editSave).toHaveBeenLastCalledWith('Bob', 'pw', { action: 'set-rank', char: 5, rank: 10 }, null))
   })
 
   it('drops the preview when the form changes', async () => {
     await loaded()
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
     await waitFor(() => expect(screen.getByRole('region', { name: '미리보기' })).toBeInTheDocument())
 
     pickRank('계급', 'Byakko')
@@ -211,10 +211,10 @@ describe('Save admin', () => {
   it('sends points only when given, and refuses ones the save cannot hold', async () => {
     await loaded()
     fireEvent.change(screen.getByLabelText('점수 (비우면 그대로)'), { target: { value: '70000' } })
-    expect(screen.getByRole('button', { name: '미리보기' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '미리보기 & 적용' })).toBeDisabled()
 
     fireEvent.change(screen.getByLabelText('점수 (비우면 그대로)'), { target: { value: '3000' } })
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
 
     await waitFor(() => expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'set-rank', char: 0, rank: 10, points: 3000 }, null))
   })
@@ -227,7 +227,7 @@ describe('Save admin', () => {
     fireEvent.click(screen.getByRole('button', { name: '9th kyu' }))
 
     expect(screen.queryByLabelText('점수 (비우면 그대로)')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
 
     await waitFor(() => expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'set-rank', char: 'all', rank: 1 }, null))
   })
@@ -237,7 +237,7 @@ describe('Save admin', () => {
     await loaded()
     fireEvent.click(screen.getByRole('radio', { name: 'floor (최저 계급 올리기)' }))
     fireEvent.click(screen.getByRole('checkbox', { name: '강등으로 보이는 캐릭터도 올리기' }))
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
 
     await waitFor(() => expect(section('미리보기').getByText(/58칸 올림/)).toBeInTheDocument())
     expect(imagesIn(section('미리보기').getByText(/58칸 올림/))).toEqual(['Byakko', 'Fighter'])
@@ -247,7 +247,7 @@ describe('Save admin', () => {
   it('does not offer to apply what the server would refuse', async () => {
     vi.mocked(editSave).mockResolvedValue({ ...preview, online: true })
     await loaded()
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
 
     await waitFor(() => expect(section('미리보기').getByText(/게임에 접속 중인 계정은 수정할 수 없습니다/)).toBeInTheDocument())
     expect(section('미리보기').getByRole('button', { name: '적용' })).toBeDisabled()
@@ -256,7 +256,7 @@ describe('Save admin', () => {
   it('does not offer to apply a preview that changes nothing', async () => {
     vi.mocked(editSave).mockResolvedValue({ ...preview, changes: { account_rank: null, chars: [] } })
     await loaded()
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
 
     await waitFor(() => expect(section('미리보기').getByText('바뀌는 것이 없습니다.')).toBeInTheDocument())
     expect(section('미리보기').getByRole('button', { name: '적용' })).toBeDisabled()
@@ -267,7 +267,7 @@ describe('Save admin', () => {
     pickCharacter('Law')
 
     expect(screen.getByRole('button', { name: '캐릭터: Law' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기 & 적용' }))
     await waitFor(() => expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'set-rank', char: 1, rank: 10 }, null))
   })
 

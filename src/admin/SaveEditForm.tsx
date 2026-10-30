@@ -115,8 +115,8 @@ export default function SaveEditForm({ chars, busy, onChange, onPreview }: {
       )}
       {everyone && <p className="admin-hint">모든 캐릭터와 계정 계급을 이 계급의 floor 점수, 연승 0으로 맞춥니다.</p>}
       {parsed === null && <p className="admin-error">점수는 0에서 65535 사이의 정수여야 합니다.</p>}
-      <button type="submit" className="btn-ghost" disabled={busy || parsed === null}>
-        <Eye size={14} aria-hidden="true" /> 미리보기
+      <button type="submit" className="btn-primary" disabled={busy || parsed === null}>
+        <Eye size={14} aria-hidden="true" /> 미리보기 &amp; 적용
       </button>
     </form>
   )
