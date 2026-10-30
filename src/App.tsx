@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Route, Routes, useNavigate } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import LeaderboardViews from "@/shared/LeaderboardViews";
 import Stats from "@/stat/Stats"
 import Header from "@/shared/components/Header";
@@ -10,8 +10,8 @@ import PatchNotes from "@/shared/components/PatchNotes";
 import { LoginDialog } from "@/auth/component";
 import Chat from "@/chat/Chat";
 import InstallSheet from "@/install/InstallSheet";
-import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
-import { firstRoomPath, isRoomTab as isRoomTabKey, pathOf } from '@/config/routes'
+import { GROUP_ORDER } from '@/config/tabConfig'
+import { isRoomTab as isRoomTabKey } from '@/config/routes'
 import useActiveTab from '@/shared/hooks/useActiveTab'
 import useAppUpdate from '@/shared/hooks/useAppUpdate'
 import useLeaderboard from "@/shared/hooks/useLeaderboard";
@@ -24,30 +24,13 @@ import { POLL } from '@/config/polling'
 import Community from "@/community/Community";
 import Rooms from "@/match/Rooms";
 import CurrentRankHoldersButton from "@/match/CurrentRankHoldersButton";
-import type { Room } from "@/match/types";
 import Reservation from "@/reservation/Reservation";
 import Overview from "@/overview/Overview";
 import Admin from "@/admin/Admin";
-import {
-  BarChart3,
-  LayoutDashboard,
-  CalendarDays,
-  ChevronRight,
-  MessageSquareText,
-  Swords,
-  Trophy,
-} from 'lucide-react'
-
-// Before the first successful load the count is unknown, not zero - "(0)" would
-// assert there are no rooms while the fetch is still in flight or has failed.
-// Once rooms have loaded, a group the payload omits really is empty.
-function roomCountLabel(rooms: Room[] | undefined, loaded: boolean): string {
-  if (!loaded) return '—'
-  return String(rooms?.length ?? 0)
-}
+import PrimaryNavigation from '@/app/PrimaryNavigation'
+import RoomTabs from '@/app/RoomTabs'
 
 export default function App() {
-  const navigate = useNavigate()
   const activeTab = useActiveTab()
   useAppUpdate()
   const lb = useLeaderboard()
@@ -98,48 +81,8 @@ export default function App() {
   // away stops signalling that something arrived.
   const recentPosts = countRecent(communityFeed.data) || undefined
   const recentPostsCapped = isRecentCountCapped(communityFeed.data)
-  const primaryTabs = useMemo(() => [
-    // '홈', not '개요'. This tab owns "/" and is where the site opens, and what
-    // it shows is what is happening right now — not a summary of a document.
-    // The panel's own heading (한눈에 보기) already does the summarising, so
-    // naming the tab that too gave one screen three names.
-    { key: 'overview', label: '홈' },
-    // `spoken` is the whole badge as assistive tech reads it, in one element:
-    // an accessible name is joined across element boundaries with a space, so
-    // splitting the number from its unit would say "방 3 개".
-    { key: 'match', label: '매칭', badge: roomsLoaded ? rooms.data?.total ?? 0 : undefined, spoken: (n: number) => ` 방 ${n}개` },
-    { key: 'reservation', label: '예약', badge: openReservations ?? undefined, spoken: (n: number) => ` 모집중 ${n}건` },
-    // 커뮤니티 before 리더보드: the first three tabs are things happening now
-    // and the last three are places to read, and of those two the board is the
-    // one that changes daily.
-    // `display` overrides the figure the eye reads without touching the one
-    // assistive tech hears — a capped count is a floor, not a total.
-    {
-      key: 'community', label: '커뮤니티',
-      badge: recentPosts,
-      display: recentPostsCapped ? `${recentPosts}+` : undefined,
-      spoken: (n: number) => recentPostsCapped ? ` 새 글 ${n}개 이상` : ` 새 글 ${n}개`,
-    },
-    { key: 'leaderboard', label: '리더보드' },
-    { key: 'stats', label: '통계' },
-  ], [roomsLoaded, rooms.data?.total, openReservations, recentPosts, recentPostsCapped])
-  const activePrimary = isRoomTab ? 'match' : activeTab
-  // The admin panel has no tab of its own. The strip then selects nothing, but
-  // the first tab keeps the roving tabindex so the nav stays reachable, and the
-  // panel is labelled by its own heading rather than by a tab that is not there.
-  const hasPrimaryTab = primaryTabs.some((tab) => tab.key === activePrimary)
-  const focusableTab = hasPrimaryTab ? activePrimary : primaryTabs[0].key
-  const panelLabel = isRoomTab ? `tab-${activeTab}` : hasPrimaryTab ? `primary-tab-${activeTab}` : undefined
-
-  const tabIcon = (key: string) => {
-    if (key === 'overview') return LayoutDashboard
-    if (key === 'match') return Swords
-    if (key === 'reservation') return CalendarDays
-    if (key === 'leaderboard') return Trophy
-    if (key === 'community') return MessageSquareText
-    if (key === 'stats') return BarChart3
-    return Swords
-  }
+  // Admin has no navigation tab; its panel supplies its own accessible name.
+  const panelLabel = activeTab === 'admin' ? undefined : isRoomTab ? `tab-${activeTab}` : `primary-tab-${activeTab}`
 
   // Both panels close over App-level polled data, so they are built here rather
   // than inline in the route table, which would make that table unreadable.
@@ -183,79 +126,20 @@ export default function App() {
           {/* One PlayerProfileCard renders both surfaces — this card and, through
               a portal, the header slot that replaces it on a phone — so the
               signed-in account is shown from one piece of state, not two. */}
-          <div className="sidebar-nav-card">
-          <div className="sidebar-heading">
-            <span>Navigation</span>
-            <ChevronRight size={14} aria-hidden="true" />
-          </div>
-          <nav className="app-nav" role="tablist" aria-label="Main navigation">
-            {primaryTabs.map((t) => (
-              (() => {
-                const Icon = tabIcon(t.key)
-                return (
-                  <button
-                    key={t.key}
-                    role="tab"
-                    id={`primary-tab-${t.key}`}
-                    aria-selected={activePrimary === t.key}
-                    aria-controls={t.key === 'match' ? `tabpanel-${isRoomTab ? activeTab : groupKeys[0] ?? 'leaderboard'}` : `tabpanel-${t.key}`}
-                    tabIndex={focusableTab === t.key ? 0 : -1}
-                    onClick={() => navigate(t.key === 'match' ? firstRoomPath(groupKeys) : pathOf(t.key))}
-                    onKeyDown={(e) => {
-                      const idx = primaryTabs.findIndex(x => x.key === t.key)
-                      let next = -1
-                      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (idx + 1) % primaryTabs.length
-                      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (idx - 1 + primaryTabs.length) % primaryTabs.length
-                      if (next >= 0) {
-                        e.preventDefault()
-                        const nextKey = primaryTabs[next].key
-                        navigate(nextKey === 'match' ? firstRoomPath(groupKeys) : pathOf(nextKey))
-                        document.getElementById(`primary-tab-${nextKey}`)?.focus()
-                      }
-                    }}
-                    className={`tab-btn${activePrimary === t.key ? ' active' : ''}`}
-                  >
-                    <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-                    <span>{t.label}</span>
-                    {t.badge != null && (
-                      <span className="nav-badge">
-                        <span aria-hidden="true">{t.display ?? t.badge}</span>
-                        <span className="sr-only">{t.spoken(t.badge)}</span>
-                      </span>
-                    )}
-                  </button>
-                )
-              })()
-            ))}
-          </nav>
-          </div>
+          <PrimaryNavigation
+            activeTab={activeTab}
+            groupKeys={groupKeys}
+            roomCount={roomsLoaded ? rooms.data?.total ?? 0 : undefined}
+            openReservations={openReservations ?? undefined}
+            recentPosts={recentPosts}
+            recentPostsCapped={recentPostsCapped}
+          />
           <PlayerProfileCard leaderboardEntries={lb.data?.entries} roomUsers={roomUsers} />
         </aside>
 
         <main id="mainContent" className="app-main">
           {isRoomTab && groupKeys.length > 0 && (
-            <nav className="room-tabs" role="tablist" aria-label="매칭 종류 선택">
-              <span className="room-tabs-label">매칭 종류</span>
-              <div>
-                {groupKeys.map((key) => (
-                  <button
-                    key={key}
-                    role="tab"
-                    aria-label={`${formatGroupName(key)} (${roomCountLabel(groups[key], roomsLoaded)})`}
-                    id={`tab-${key}`}
-                    aria-selected={activeTab === key}
-                    aria-controls={`tabpanel-${key}`}
-                    tabIndex={activeTab === key ? 0 : -1}
-                    onClick={() => navigate(pathOf(key))}
-                    className={activeTab === key ? 'active' : ''}
-                  >
-                    <Swords size={14} aria-hidden="true" />
-                    {formatGroupName(key)}
-                    <span>{roomCountLabel(groups[key], roomsLoaded)}</span>
-                  </button>
-                ))}
-              </div>
-            </nav>
+            <RoomTabs activeTab={activeTab} groupKeys={groupKeys} groups={groups} loaded={roomsLoaded} />
           )}
           <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={panelLabel} aria-label={panelLabel ? undefined : '계정 관리'} tabIndex={0}>
             <Routes>

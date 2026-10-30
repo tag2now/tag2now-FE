@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, act, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import App from "@/App";
 
@@ -395,6 +395,89 @@ describe('App', () => {
       })
 
       expect(seen).toBe('/leaderboard')
+    })
+  })
+
+  // Pre-refactor safety net for app navigation: paths, focus, panel labels and
+  // fixed/extra room groups. A post-refactor failure means behavior changed.
+  describe('navigation contract', () => {
+    it.each([
+      ['/', '홈', 'ArrowRight', /^매칭/, '/match/rank_match'],
+      ['/', '홈', 'ArrowDown', /^매칭/, '/match/rank_match'],
+      ['/match/rank_match', /^매칭/, 'ArrowLeft', '홈', '/'],
+      ['/match/rank_match', /^매칭/, 'ArrowUp', '홈', '/'],
+    ] as const)('moves from %s with %s and %s', async (initialPath, from, key, to, expectedPath) => {
+      let path = ''
+      function Probe() {
+        path = useLocation().pathname
+        return null
+      }
+      await act(async () => {
+        render(<MemoryRouter initialEntries={[initialPath]}><App /><Probe /></MemoryRouter>)
+      })
+      const navigation = within(screen.getByRole('tablist', { name: 'Main navigation' }))
+      const source = navigation.getByRole('tab', { name: from })
+      source.focus()
+
+      await act(async () => { fireEvent.keyDown(source, { key }) })
+
+      const target = navigation.getByRole('tab', { name: to })
+      expect(path).toBe(expectedPath)
+      expect(target).toHaveFocus()
+      expect(target).toHaveAttribute('aria-selected', 'true')
+      expect(target).toHaveAttribute('tabindex', '0')
+      expect(source).toHaveAttribute('tabindex', '-1')
+      expect(mockedFetchRoomsAll).toHaveBeenCalledOnce()
+      expect(mockedFetchLeaderboard).toHaveBeenCalledOnce()
+      expect(mockedFetchCurrentRankLeaderboard).toHaveBeenCalledOnce()
+    })
+
+    it('wraps focus from the first primary tab to the last and back', async () => {
+      await renderApp()
+      const home = screen.getByRole('tab', { name: '홈' })
+      home.focus()
+
+      await act(async () => { fireEvent.keyDown(home, { key: 'ArrowLeft' }) })
+      const stats = screen.getByRole('tab', { name: '통계' })
+      expect(stats).toHaveFocus()
+      expect(stats).toHaveAttribute('aria-selected', 'true')
+
+      await act(async () => { fireEvent.keyDown(stats, { key: 'ArrowRight' }) })
+      expect(home).toHaveFocus()
+      expect(home).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('keeps navigation reachable on the admin route without selecting a primary tab', async () => {
+      await renderAt('/admin')
+      const navigation = within(screen.getByRole('tablist', { name: 'Main navigation' }))
+
+      expect(navigation.queryAllByRole('tab', { selected: true })).toHaveLength(0)
+      expect(navigation.getByRole('tab', { name: '홈' })).toHaveAttribute('tabindex', '0')
+      expect(navigation.getAllByRole('tab').filter(tab => tab.tabIndex === 0)).toHaveLength(1)
+      expect(screen.getByRole('tabpanel', { name: '계정 관리' })).not.toHaveAttribute('aria-labelledby')
+      expect(screen.queryByRole('tablist', { name: '매칭 종류 선택' })).not.toBeInTheDocument()
+    })
+
+    it('keeps known room groups first, selects an extra group and links its panel', async () => {
+      mockedFetchRoomsAll.mockResolvedValue({
+        ...ROOMS_DATA,
+        groups: { custom_mode: [], player_match: [], rank_match: ROOMS_DATA.groups.rank_match },
+      })
+      await renderAt('/match/custom_mode')
+      const tabs = within(screen.getByRole('tablist', { name: '매칭 종류 선택' }))
+
+      expect(tabs.getAllByRole('tab').map(tab => tab.getAttribute('aria-label')))
+        .toEqual(['랭매 (1)', '플매 (0)', 'Custom Mode (0)'])
+      const selected = tabs.getByRole('tab', { name: 'Custom Mode (0)', selected: true })
+      const panel = screen.getByRole('tabpanel', { name: 'Custom Mode (0)' })
+      expect(selected).toHaveAttribute('aria-controls', panel.id)
+      expect(panel).toHaveAttribute('aria-labelledby', selected.id)
+      expect(screen.getByRole('tab', { name: /^매칭/ })).toHaveAttribute('aria-controls', panel.id)
+
+      await act(async () => { fireEvent.click(tabs.getByRole('tab', { name: '플매 (0)' })) })
+      expect(tabs.getByRole('tab', { name: '플매 (0)' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByRole('tabpanel', { name: '플매 (0)' })).toBeInTheDocument()
+      expect(mockedFetchRoomsAll).toHaveBeenCalledOnce()
     })
   })
 

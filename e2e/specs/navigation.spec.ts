@@ -117,6 +117,28 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-selected', 'false')
   })
 
+  // Navigation extraction regression check in a real browser at both widths.
+  test('arrow navigation moves focus and URL, and back restores the room group', async ({ page }) => {
+    const home = page.getByRole('tab', { name: '홈' })
+    await home.focus()
+    await home.press('ArrowRight')
+
+    const match = page.getByRole('tab', { name: /^매칭/ })
+    await expect(page).toHaveURL(/\/match\/rank_match$/)
+    await expect(match).toBeFocused()
+    await expect(match).toHaveAttribute('tabindex', '0')
+    await expect(home).toHaveAttribute('tabindex', '-1')
+
+    await page.getByRole('tab', { name: /^플매/ }).click()
+    await expect(page).toHaveURL(/\/match\/player_match$/)
+    await expect(page.locator('#tabpanel-player_match')).toHaveAttribute('aria-labelledby', 'tab-player_match')
+
+    await page.goBack()
+    await expect(page).toHaveURL(/\/match\/rank_match$/)
+    await expect(page.getByRole('tab', { name: /^랭매/ })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.locator('#tabpanel-rank_match')).toHaveAttribute('aria-labelledby', 'tab-rank_match')
+  })
+
   // Every width: the header is where a login is looked for, so the account
   // lives there on a desktop too. The sidebar card is the profile, and goes
   // with it.

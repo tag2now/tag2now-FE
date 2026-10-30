@@ -11,7 +11,8 @@ find current implementations before adding an equivalent.
 
 ```
 src/
-  App.tsx              route table, application layout and primary/room navigation
+  App.tsx              route table, application layout and visit-wide data subscriptions
+  app/                 application navigation composed by App
   main.tsx             root render, Toaster, global unhandledrejection handler
   index.css            the stylesheet import list; its order is the cascade
   config/              routes, endpoints, polling, tabConfig, patchNotes, test-setup
@@ -36,7 +37,8 @@ subfolder where needed. Not every feature needs every file or a barrel export.
 - Keep feature-specific rules in the feature. Generic UI and transport helpers
   must not acquire unrelated feature behavior as part of a small UI change.
 - Compose cross-feature screens at the application boundary. `App.tsx` currently
-  owns that composition, navigation and layout; extracting those is pending work.
+  owns the route table, data subscriptions and layout. Application navigation lives
+  in `app/` and receives data from App instead of starting its own subscriptions.
 - Rank order, code/name conversion and sorting belong to the shared game domain,
   independent of React and feature folders. Feature screens and rank presentation
   consume that model directly; UI modules do not re-export domain functions.
@@ -49,8 +51,8 @@ subfolder where needed. Not every feature needs every file or a barrel export.
 - The API helper reads `auth/session.ts` for bearer tokens and session expiry.
   This coupling is current behavior, not an import-boundary rule already enforced.
 
-The feature-folder layout remains in place. Extracting application composition
-into `app/` and enforcing import boundaries are pending work.
+The feature-folder layout remains in place. Extracting the route table and layout
+from App and enforcing import boundaries are pending work.
 
 ## Data flow
 
@@ -249,7 +251,7 @@ somewhere sensible.
 
 ## Tabs
 
-Navigation has two levels in `App.tsx`:
+Navigation has two levels in `app/`, composed by `App.tsx`:
 
 - The primary navigation is fixed: home, match, reservation, community, leaderboard
   and stats. Match opens the first room group; admin is reached through the account menu.
