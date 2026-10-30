@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { GET} from "@/shared/util/api";
 import { API } from "@/config/endpoints";
-import type { WeeklyTopPlayer} from "@/stat/types";
+import type { WeeklyTopPlayer } from '@/shared/activityTypes'
 
 export type WeeklyTopLimit = 10 | 25 | 50
 

@@ -17,7 +17,7 @@ import CharCell from '@/shared/components/CharCell'
 import ActiveHoursClock from '@/shared/components/ActiveHoursClock'
 import PlayerSaveSection from '@/shared/components/PlayerSaveSection'
 import type { LeaderboardEntry } from '@/shared/types'
-import type { PlayerHistory } from '@/stat/types'
+import type { PlayerHistory } from '@/shared/playerHistoryTypes'
 
 type Days = 7 | 30 | 90
 

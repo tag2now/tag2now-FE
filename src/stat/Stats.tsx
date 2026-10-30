@@ -4,7 +4,7 @@ import { panelStatus, statusBody } from "@/shared/util/panelStatus";
 import useStats, { type StatsDays} from "@/stat/useStats";
 import useWeeklyTop, { type WeeklyTopLimit} from "@/stat/useWeeklyTop";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
-import type { WeeklyTopPlayer } from '@/stat/types'
+import type { WeeklyTopPlayer } from '@/shared/activityTypes'
 import HourlyChart from '@/stat/HourlyChart'
 import DailyPlayersPanel from '@/shared/components/DailyPlayersPanel'
 import { DAY_START_HOUR, hourLabel } from '@/shared/dayBoundary'

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { GET} from "@/shared/util/api";
 import { API } from "@/config/endpoints";
-import type { HourlyActivity, DailySummary} from "@/stat/types";
+import type { HourlyActivity } from '@/stat/types'
+import type { DailySummary } from '@/shared/activityTypes'
 
 export type StatsDays = 7 | 14 | 30 | 90
 

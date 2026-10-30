@@ -40,7 +40,9 @@ subfolder where needed. Not every feature needs every file or a barrel export.
 - Rank order, code/name conversion and sorting belong to the shared game domain,
   independent of React and feature folders. Feature screens and rank presentation
   consume that model directly; UI modules do not re-export domain functions.
-- Statistics types are still consumed by shared charts.
+- Activity summaries and player-history contracts used across features belong to
+  shared domain models. Shared charts and helpers consume those models directly;
+  types used only by a feature remain in that feature.
 - `PlayerProfileCard` composes authentication, navigation, player history and the
   stream settings dialog. `LeaderboardViews` is a routed screen. These are not
   generic UI simply because they currently live under `shared/`.

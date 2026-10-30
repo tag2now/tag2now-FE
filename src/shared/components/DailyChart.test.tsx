@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { vi } from 'vitest'
 import DailyChart, { fittedScale } from '@/shared/components/DailyChart'
-import type { DailySummary } from '@/stat/types'
+import type { DailySummary } from '@/shared/activityTypes'
 
 vi.mock('recharts', () => ({
   CartesianGrid: () => null,
