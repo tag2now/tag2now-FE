@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { completedDays, statDayOf } from '@/shared/util/completedDays'
-import type { DailySummary } from '@/stat/types'
+import type { DailySummary } from '@/shared/activityTypes'
 
 const day = (date: string, uniquePlayers = 10): DailySummary => ({
   date,

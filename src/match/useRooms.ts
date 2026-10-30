@@ -1,27 +1,29 @@
 import usePolledData, {PolledState} from "@/shared/hooks/usePolledData";
-import type {RoomsData, Room} from "@/match/types";
+import type {ApiRoom, RoomGroups, RoomsData, RoomsResponse} from "@/match/types";
 import {GET} from "@/shared/util/api";
 import { API } from "@/config/endpoints";
 import { POLL } from "@/config/polling";
 
-export const fetchRoomsAll =  async () => {
-  const data: Record<string, any> = await GET(API.rooms().path);
-  // @ts-ignore
+const toRoom = <T extends ApiRoom>(room: T) => ({
+  ...room,
+  users: room.users.map(user => ({ ...user, np_id: user.npid })),
+})
 
-  Object.values(data).forEach(rooms =>
-    // @ts-ignore
-    rooms.forEach(({users}) =>
-      // @ts-ignore
-      users.forEach(user => user['np_id'] = user.npid)
-    )
-  )
+export const fetchRoomsAll =  async (): Promise<RoomsData> => {
+  const data = await GET<RoomsResponse>(API.rooms().path);
 
-  const groups = Object.fromEntries(
-      Object.entries(data)
-          .filter(([, v]) => Array.isArray(v))
-          // shuffle 1p 2p
-          .sort(() => Math.random() - 0.5)
-  ) as Record<string, Room[]>;
+  const groups: RoomGroups = {}
+  const entries = Object.entries(data)
+    .filter(([, v]) => Array.isArray(v))
+    // shuffle 1p 2p
+    .sort(() => Math.random() - 0.5)
+  for (const [key, rooms] of entries) {
+    if (key === 'rank_match') {
+      groups.rank_match = data.rank_match?.map(toRoom) ?? []
+    } else {
+      groups[key] = rooms.map(toRoom)
+    }
+  }
 
   const { total, totalUsers } = Object.values(groups).reduce(
       (acc, arr) => ({

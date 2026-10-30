@@ -1,6 +1,6 @@
 import { GET, POST, PATCH, DELETE } from '@/shared/util/api'
 import { API } from '@/config/endpoints'
-import { NOTICE_POST_TYPE, type PostDetail, type PostListResponse, type PostSummary } from "@/community/types";
+import { NOTICE_POST_TYPE, type CommentOut, type PostDetail, type PostListResponse, type PostSummary } from "@/community/types";
 
 export const fetchPosts = (page: number, pageSize: number, postType?: string, characters: string[] = []): Promise<PostListResponse> => {
   // URLSearchParams repeats a key for each array entry, which is the shape
@@ -8,7 +8,7 @@ export const fetchPosts = (page: number, pageSize: number, postType?: string, ch
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) })
   if (postType) params.set('post_type', postType)
   characters.forEach((name) => params.append('characters', name))
-  return GET(API.posts().path, params)
+  return GET<PostListResponse>(API.posts().path, params)
 }
 
 /** The backend's page_size cap. Every notice is pinned, and there are a handful
@@ -20,7 +20,7 @@ export const fetchNotices = (limit = NOTICE_LIMIT): Promise<PostSummary[]> =>
   fetchPosts(1, limit, NOTICE_POST_TYPE).then((res) => res.posts)
 
 export const fetchPostDetail =(postId: number): Promise<PostDetail> =>
-  GET(API.post(postId).path)
+  GET<PostDetail>(API.post(postId).path)
 
 export interface PostInput {
   title: string
@@ -31,25 +31,30 @@ export interface PostInput {
   youtubeVideoId?: string
 }
 
-export const createPost = ({ title, body, postType, characters, youtubeVideoId }: PostInput) =>
-  POST(API.posts().path, {
+type PostWriteRequest = Pick<PostSummary, 'title' | 'body' | 'post_type' | 'characters' | 'youtube_video_id'>
+type CreatedPost = Omit<PostSummary, 'comment_count'>
+type CreatedComment = Omit<CommentOut, 'replies'>
+type ThumbResult = Pick<PostSummary, 'thumbs_up' | 'thumbs_down'>
+
+export const createPost = ({ title, body, postType, characters, youtubeVideoId }: PostInput): Promise<CreatedPost> =>
+  POST<CreatedPost>(API.posts().path, {
     title, body, post_type: postType, characters,
     ...(youtubeVideoId && { youtube_video_id: youtubeVideoId }),
-  })
+  } satisfies PostWriteRequest)
 
 /** PATCH requires every field, so an omitted one is not "leave it alone" — it
  * is a 422. Both nullable fields are therefore always sent. */
-export const updatePost = (postId: number, { title, body, postType, characters, youtubeVideoId }: PostInput) =>
-  PATCH(API.post(postId).path, {
+export const updatePost = (postId: number, { title, body, postType, characters, youtubeVideoId }: PostInput): Promise<PostSummary> =>
+  PATCH<PostSummary>(API.post(postId).path, {
     title, body, post_type: postType, characters,
     youtube_video_id: youtubeVideoId ?? null,
-  })
+  } satisfies Required<PostWriteRequest>)
 
-export const deletePost = (postId: number) =>
+export const deletePost = (postId: number): Promise<void> =>
   DELETE(API.post(postId).path)
 
-export const createComment = (postId: number, body: string, parentId?: number) =>
-  POST(API.postComments(postId).path, { body, ...(parentId != null && { parent_id: parentId }) })
+export const createComment = (postId: number, body: string, parentId?: number): Promise<CreatedComment> =>
+  POST<CreatedComment>(API.postComments(postId).path, { body, ...(parentId != null && { parent_id: parentId }) })
 
-export const thumbPost = (postId: number, direction: 'up' | 'down') =>
-  POST(API.postThumb(postId).path, { direction })
+export const thumbPost = (postId: number, direction: 'up' | 'down'): Promise<ThumbResult> =>
+  POST<ThumbResult>(API.postThumb(postId).path, { direction })

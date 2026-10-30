@@ -1,4 +1,4 @@
-import type { DailySummary, WeeklyTopPlayer } from '@/stat/types'
+import type { DailySummary, WeeklyTopPlayer } from '@/shared/activityTypes'
 import type { PostSummary } from '@/community/types'
 import type { ApiReservation } from '@/reservation/reservationApi'
 

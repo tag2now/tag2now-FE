@@ -134,9 +134,9 @@ describe('createPolledSource', () => {
     expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
-  it('reports a failure to every subscriber and keeps polling', async () => {
+  it.each([new Error('서버가 응답하지 않습니다.'), { message: '서버가 응답하지 않습니다.' }, '서버가 응답하지 않습니다.'])('reports a failure to every subscriber and keeps polling: %j', async (error) => {
     const fetcher = vi.fn<() => Promise<string[]>>()
-      .mockRejectedValueOnce(new Error('서버가 응답하지 않습니다.'))
+      .mockRejectedValueOnce(error)
       .mockResolvedValue(['recovered'])
     const usePolled = createPolledSource(fetcher)
 

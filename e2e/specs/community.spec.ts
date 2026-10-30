@@ -18,12 +18,16 @@ test.describe('Community', () => {
     await expect(page.locator('text=Lars wall carry nerfed?')).toBeVisible()
   })
 
-  // Buttons beside the title on desktop; a phone gets the same choices as a select.
+  // Radio choices beside the title on desktop; a phone gets a select.
   test('the category filter offers every category', async ({ page, isMobile }) => {
-    const choices = isMobile
-      ? page.getByRole('combobox', { name: '게시글 분류' }).locator('option')
-      : page.getByRole('group', { name: '게시글 분류' }).getByRole('button')
-    await expect(choices).toHaveText(['전체', '자유', '건의', '공략'])
+    const names = ['전체', '자유', '건의', '공략']
+    if (isMobile) {
+      await expect(page.getByRole('combobox', { name: '게시글 분류' }).locator('option')).toHaveText(names)
+    } else {
+      const choices = page.getByRole('group', { name: '게시글 분류' }).getByRole('radio')
+      await expect(choices).toHaveCount(names.length)
+      for (const [index, name] of names.entries()) await expect(choices.nth(index)).toHaveAccessibleName(name)
+    }
   })
 
   test('picking a category triggers API call with post_type', async ({ page, isMobile }) => {
@@ -31,8 +35,15 @@ test.describe('Community', () => {
       req.url().includes('/api/community/posts') && req.url().includes('post_type')
     )
     if (isMobile) await page.getByRole('combobox', { name: '게시글 분류' }).selectOption('자유')
-    else await page.getByRole('group', { name: '게시글 분류' }).getByRole('button', { name: '자유' }).click()
-    await requestPromise
+    else await page.getByRole('group', { name: '게시글 분류' }).getByText('자유', { exact: true }).click()
+    expect(new URL((await requestPromise).url()).searchParams.get('post_type')).toBe('자유')
+
+    const cleared = page.waitForRequest((req) =>
+      new URL(req.url()).pathname === '/api/community/posts' && !new URL(req.url()).searchParams.has('post_type')
+    )
+    if (isMobile) await page.getByRole('combobox', { name: '게시글 분류' }).selectOption('')
+    else await page.getByRole('group', { name: '게시글 분류' }).getByText('전체', { exact: true }).click()
+    await cleared
   })
 
   // Positions only mean something in the game's own arrangement. Without it the

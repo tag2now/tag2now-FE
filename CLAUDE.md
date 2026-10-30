@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Start with [AGENTS.md](AGENTS.md) for the working agreement and required reuse review. This file is the project entry point for Claude Code and other contributors.
 
 ## Project
 
@@ -16,7 +16,11 @@ npm run build        # production build → dist/
 npm test             # vitest run (unit/component, once)
 npm run test:watch   # vitest watch mode
 npm run test:coverage  # v8 coverage
+npm run test:architecture  # project boundary-policy tests
+npm run lint:architecture  # dependency-cruiser import boundaries
 npm run typecheck    # tsc --noEmit
+npm run typecheck:e2e  # E2E TypeScript project
+npm run lint:css     # stylesheet token rules
 npm run test:e2e     # playwright (auto-starts the dev server)
 npm run test:e2e:ui  # playwright UI mode
 ```
@@ -41,6 +45,13 @@ BE=local npm run dev
 
 The proxy strips the `/api` prefix before forwarding.
 
+PowerShell equivalent:
+
+```powershell
+$env:BE = 'local'
+npm run dev
+```
+
 ### Running from a worktree
 
 Just run `npm run dev` from the worktree. Do not pass `--port`, do not add a
@@ -49,10 +60,8 @@ it is most likely the one the user is working in. Vite takes the next free port
 by itself and prints the URL it settled on; read that line instead of assuming
 :5173.
 
-Forcing a port makes things worse rather than better: `npm run dev -- --port N`
-routes through `npx`, which resolves `vite` from the npm cache rather than the
-worktree's own `node_modules`. That copy runs with the wrong root and serves 404
-for every request, including `/`, while still reporting a healthy startup.
+If a server serves the wrong checkout, check its working directory and printed
+URL before starting another one. Do not infer the checkout from the port alone.
 
 ## Stack
 
@@ -67,565 +76,27 @@ The `@` alias resolves to `src/` and is configured in both `vite.config.ts` and 
 A comment says in one line --- two at most --- *why* the code is as it is, when
 the code cannot say it. Not what the code does, and not its history: "used to",
 "before this", "changed because" belong in the commit message. Anything longer
-goes in this file or `docs/`.
-
-## Architecture
-
-**Feature-folder layout.** Each feature owns its components, hooks, types, and API calls; `shared/` holds what crosses features.
-
-```
-src/
-  App.tsx              route table and layout; the only place tabs are assembled
-  main.tsx             root render, Toaster, global unhandledrejection handler
-  index.css            the stylesheet import list; its order is the cascade
-  config/              tabConfig, patchNotes, test-setup
-  auth/                RPCN login — session store, useAuth, LoginDialog
-  admin/               account moderation and TTT2 saves — Admin page, SaveAdmin, adminApi, saveApi (admins only)
-  overview/            landing summary — useOverview, Overview, KPI and top-five cards
-  match/               rooms — useRooms, Rooms, RankMatchTable, PlayerMatchTable
-  reservation/         appointments — Reservation, reservationApi, reservationLabels
-  community/           board — useCommunity, communityApi, post/comment components
-  stat/                statistics — useStats, useWeeklyTop, Stats
-  chat/                lobby chat — chatStream (SSE store), Chat, launcher/panel components
-  shared/              api util, Leaderboard, hooks, components, colors, formatters
-```
-
-A feature folder holds `<Feature>.tsx` (container), `use<Feature>.ts` (state), `types.ts`, and a `component/` subfolder with an `index.ts` barrel re-export.
-
-### Data flow
-
-`shared/util/api.ts` is the only place `fetch` is called. `GET`/`POST`/`PATCH`/`DELETE` prepend the base URL, attach `Authorization: Bearer <token>` whenever someone is signed in, and throw on non-2xx. A 401 on a request that carried a token ends the session and reopens the login dialog with the server's reason.
-
-The base URL is `window.__ENV__?.API_BASE ?? '/api'`, letting a deployed build override the endpoint at runtime without a rebuild.
-
-**Polling** is centralised in `shared/hooks/usePolledData.ts`. It returns `{ data, loading, refreshing, error, refresh, lastUpdated }` and distinguishes first load (`loading`) from background refresh (`refreshing`) so the UI does not blank out on every poll. Feature hooks are thin wrappers:
-
-```ts
-export default function useRooms(): PolledState<RoomsData> {
-  return usePolledData(fetchRoomsAll, ROOMS_REFRESH_INTERVAL)  // 5s
-}
-```
-
-Pass `null` as the interval to fetch once without polling.
-
-`App.tsx` owns `useLeaderboard()`, `useCurrentRankLeaderboard()` and `useRooms()` and passes `{ data, loading, error, onRefresh }` down. They stay fresh regardless of the active tab — switching tabs is display-only.
-
-### Overview (the landing tab)
-
-A summary of the other tabs, and the entry point rather than a replacement for
-them: every card links to the tab it summarises.
-
-**It fetches almost nothing of its own.** Rooms and the leaderboard arrive as
-props — `App.tsx` already polls both — so the overview adds four one-shot
-requests: daily stats, weekly top, recent posts, open reservations. Do not add a
-`useRooms()` or `useLeaderboard()` call here; that would double the traffic for
-data the page already holds.
-
-`useOverview` batches those four with `Promise.allSettled`, and a rejected
-source degrades to an empty list. One failing endpoint therefore costs its own
-card, not the page. It polls with a `null` interval — a snapshot, since only
-the room figures are genuinely live and those stay fresh through App's poll.
-There is no refresh button: the route remounts when the reader leaves the tab
-and comes back, which refetches, and the error state keeps its own retry. The
-panel's h2 is `sr-only` — it holds the heading outline together (h1 → h2 →
-the cards' h3) without spending a toolbar's height above the figures.
-
-**Two joins worth knowing:**
-
-- The weekly-top endpoint reports match counts, not characters. Portraits are
-  joined in from the leaderboard by npid, the same pairing the stats tab makes;
-  a player outside the leaderboard renders dashes rather than dropping columns.
-- `fetchRoomsAll` deliberately shuffles group order, so the "활성 방" hint reads
-  the groups back in `GROUP_ORDER`. Without that the KPI reorders itself on
-  every 5s poll.
-
-The two ranking cards are `shared/components/RankList`, the same component the
-leaderboard tab and 통계 draw — see **Rankings** below.
-
-### Rankings
-
-**One list, three tabs.** The leaderboard, 이번 주 활동왕 on 통계, and the two
-summary cards on the home page show the same five things about the same
-players — position, name, the figure the list is ranked by, main, sub. They
-used to be two `<table>`s of differing column counts and a grid of `<li>`s, so
-the same player looked like different data depending on which tab you reached
-them from. `shared/components/RankList` is the only thing that renders a
-ranking now; a caller supplies rows and the heading over the figure.
-
-It is a **grid carrying the table roles** (`role="table"/"row"/"columnheader"/
-"cell"`) rather than a real `<table>`: in a narrow list the figure moves *under*
-the name, which table layout cannot express. Five tracks hold 386px before the
-name gets any, so a list under 540px runs four columns and two lines instead.
-That is a **container query on `.rank-list`**, not a media query: a phone
-lands there, and so do the home page's two rankings, which sit side by side —
-주간 철악귀 left, above the chart — at half a desktop each. The cells are
-placed by **`:nth-child`, never `:nth-of-type`**: every child of a row is a
-`<span>`, so by type they all count as one and a `:nth-of-type` rule silently
-selects the position cell instead.
-
-`rank` is the position shown and the one the podium colours key off, and it
-defaults to the row's place in the list. Pass it explicitly wherever the list
-can be filtered — the leaderboard does — or a filtered view awards a medal to
-whoever happens to land in the top three rows.
-
-`MiniCharCell` is the character cell every ranking uses: the portrait, rank
-badge, win rate and record at row size. `shared/components/CharCell` is the
-larger one, left to the history panel and the profile card.
-
-The rules live in `shared/styles/ranking.css`, imported directly after
-`overview/overview.css` because that is where they were written — moving them
-would reorder them against the rules in `styles/boards.css`,
-`shared/styles/leaderboard.css` and `styles/responsive.css`.
-
-### Leaderboard: current and highest rank
-
-Both boards rank players by rank. **현재 계급** (`/leaderboard`, the default)
-is the rank each save holds now, from tag2now-BE's `GET /saves/leaderboard`;
-**최고 계급** (`/leaderboard/best`) is the RPCN score board, the highest rank a
-player reached. Name code by that difference --- `currentRank…` and `best` ---
-never bare `rank…`, which says nothing about which board.
-
-`shared/currentRankLeaderboard.ts` turns the current-rank answer into the score
-board's `LeaderboardEntry` shape --- the highest character in the main slot,
-the second in the sub --- so one `Leaderboard` draws both with the same search,
-filters and sorts. A save knows only the RPCN id, so the online name is joined
-in from the score board, and a player missing there shows their id. Players who
-stand equal share a place (1, 2, 2, 4), so pass `rank` through. **최근 30일**
-asks the backend for `?days=30`, which filters and re-ranks there; the request
-is made only while the option is on, and one `Leaderboard` serves every board so
-a search survives a switch. The home page's
-registered count and TOP 5 summarise this board too; the weekly card still takes
-its portraits from the score board.
-
-### Routing
-
-**The URL is the navigation state.** There is no `tab` state — `useActiveTab`
-(`shared/hooks/useActiveTab.ts`) derives the selected tab from `useLocation()`,
-so a nav click, the back button, and a cold deep link all arrive the same way.
-
-| Path | Panel |
-|------|-------|
-| `/` | overview (the landing panel, so a bare link opens it) |
-| `/match/:group` | rooms for that group |
-| `/leaderboard`, `/leaderboard/best` | the leaderboard: current ranks, or the highest each player reached |
-| `/stats` | that tab |
-| `/reservation`, `/reservation/:id` | reservations, optionally opened on one |
-| `/community`, `/community/:postId` | the board, optionally opened on one post |
-| `/admin` | account moderation and TTT2 saves; no nav tab, reached from the account menu |
-| anything else | overview, via the catch-all route |
-
-`config/routes.ts` is the single answer to "what URL is this tab?" — `pathOf`,
-`postPath`, `reservationPath`, and `FIXED_TABS`/`isRoomTab`. The nav, the
-overview's section links, and the tests all read it, so none of them can drift
-apart. Adding a non-room tab means adding it to `FIXED_TABS` **and** `TAB_PATHS`
-there; miss the first and it is handed the rooms panel.
-
-**Detail views are routes, not local state.** `Community` reads `:postId` and
-`Reservation` reads `:id` rather than holding a selection of their own, which is
-what makes a post link shareable. `Community` keeps one genuinely local mode —
-`create` — because there is nothing to link to until the post exists; a `mode`
-value collapses it with the URL-derived detail so the branches stay exclusive.
-
-The catch-all matters in production: nginx serves `index.html` for every path
-(`try_files`), so a typo reaches the app rather than a 404 page and has to land
-somewhere sensible.
-
-### Tabs
-
-The tab strip is **fixed layout, not derived from the response**: `overview` first, then one tab per key in `GROUP_ORDER` (`config/tabConfig.ts`) — always rendered, even before rooms load or after the fetch fails — plus any unknown group the API returns appended after them, followed by the fixed `reservation`, `leaderboard`, `community`, and `stats` tabs.
-
-Room data affects only the **count in the label**, never which tabs exist. Until the first successful load the count renders as `(—)` rather than `(0)`, so a pending or failed fetch is not mistaken for "no rooms"; afterwards a group the payload omits is genuinely `(0)`.
-
-Do not gate room tabs on the rooms response. Doing so made the tab strip shift during load, silently moved the default tab to `reservation`, and required a fallback that rendered the rooms error panel on top of unrelated tabs.
-
-The tab bar implements the ARIA tabs pattern — `role="tablist"`/`tab`/`tabpanel`, roving `tabIndex`, and Arrow Left/Right navigation. Preserve this when touching the nav. The nav buttons stay `<button>`s that `navigate()` rather than becoming `<a>`s, because the ARIA tabs contract is what the specs assert; the overview's section and row links **are** real `<Link>`s, since those are content, not a tabs widget.
-
-### Login
-
-Every write — reservations, their comments, the whole board and the chat —
-needs a signed-in **RPCN account**; reads need nothing. `POST /auth/login` checks the
-password with RPCN and answers a stateless bearer token (a JWT, 7 days by
-default). Nothing on the server can end it early, so signing out is just
-forgetting it.
-
-`auth/session.ts` holds the session outside React, so `api.ts` can read the
-token: stored under `ttt2-session`, forgotten on a timer when it expires, and
-kept in step across tabs through `storage` events. Components read it with
-`useAuth()` (`useSyncExternalStore`).
-
-**Guard writes with `requireUser(reason, retry)`**, never by checking `user` and
-showing an error: it returns the user, or opens the one `LoginDialog` App
-mounts — with `reason` as its lead line — and returns null so the handler just
-returns. It does not throw; the dialog is the message. Pass the handler itself
-as `retry`: it runs again once the login succeeds, so the press that asked is
-not lost. Dismissing the dialog drops it, and closing the dialog aborts a login
-still in flight — a cancelled login must never sign anyone in.
-
-The account lives in the header at every width: a login button while signed
-out, otherwise the name, which opens an account menu (내 정보 보기, 계정 관리
-for admins, 로그아웃) rather than signing out. Signing out always goes through
-a confirmation. The sidebar card is the profile — characters, ranks, the record — and renders only
-while someone is signed in; a phone hides it.
-
-**"Is this mine?" compares `user.username`** — the RPCN id, which is also the
-leaderboard's `np_id` — never a displayed name. Reservations carry
-`host_username`, participants `username`, comments `author_username`; the
-board's `author` *is* the username. `online_name` is for display only. The
-profile card and the leaderboard's own-row mark find the record by `np_id` for
-the same reason; two players can share an online name. Rows written before
-login have a null username and belong to nobody.
-
-### Account moderation
-
-`/admin` looks an RPCN account up and bans it, through `POST /admin/users/lookup`
-and `/admin/users/ban`. rpcn-narco wants the admin's password on **every**
-call and the backend keeps none, so the page asks for it once --- one field at
-the top, shared by both sections --- and holds it in component state only ---
-never in `session.ts` or storage --- until the page is left. A ban goes to the
-account that was looked up, not whatever the id field says by then.
-
-The lookup buttons are **not** disabled for an empty password or id: pressing
-one, or Enter, warns in a toast and puts the cursor in the empty field
-(`warnEmpty`). A dimmed button that does nothing explains nothing.
-
-The second section, `SaveAdmin`, edits a player's TTT2 save through
-`/admin/saves/*` (tag2now-BE spec `09-save-admin.md`). **An edit is two
-requests**: the preview (`dry_run`) answers the changes and the save's
-`sha256`, and 적용 sends the *previewed* edit back with that sha256 as
-`expect_sha256`, so a save the game rewrote in between is refused (409) rather
-than overwritten. Changing any form field drops the preview, and 적용 is not
-offered for what the server would refuse: an online player, a floor that reads
-as demotions, or a preview that changes nothing. The server stays the
-authority; those are 409s too.
-
-`user.admin` only decides whether the form is shown; RPCN re-checks the role
-each time. A wrong admin password comes back **400**, not 401, because a 401 on
-a signed-in request ends the session in `api.ts`.
-
-It is the one fixed panel with no nav tab. `admin` is in `FIXED_TABS` so it is
-not handed the rooms panel, and App then selects no tab, gives the roving
-tabindex to the first one, and names the tabpanel itself.
-
-### Save ranks on a profile
-
-`PlayerHistoryPanel` --- the profile every player name opens, 내 정보 보기
-included --- has two ARIA tabs: 플레이 기록 (the default) and 캐릭터별 계급,
-anyone's TTT2 save from the public `GET /saves/players/{npid}`. The save is
-read only when its tab is opened, and fails on its own: a 404 is "no save", any
-other error stays inside the tab. The backend caches it for ten minutes.
-
-The character table is `shared/components/SaveCharTable`, the same one the
-admin page draws; its rules live in `shared/styles/saves.css`, not `admin/admin.css`.
-
-### Reservation ownership
-
-Editing (`PATCH /reservations/{id}`) is refused once anyone has joined: participants agreed to the conditions as they stood, and letting the host move the time underneath them would bind people to an appointment they never accepted. The host cancels and re-posts instead. The edit button is disabled once `participant_count > 0` so the host sees the restriction before acting, but the server stays the authority — a participant arriving while the editor is already open is caught by the 400, not by the disabled state. The create modal doubles as the edit form — same fields, same validation — so a rule cannot drift between posting and editing.
-
-Cancelling is a soft delete (`status = 'cancelled'`) that also releases every participant. `GET /reservations` returns only `open` and `matched`, so a cancelled reservation disappears on the next poll without any client-side removal.
-
-Match-type labels and the KST time format live in `reservationLabels.ts`, not
-`reservationApi.ts`: the overview needs them too, and `Reservation.test.tsx`
-replaces the whole API module with a mock, so anything the UI reads at import
-time has to sit outside it.
-
-The booking window — at least ten minutes out, before the next 06:00 KST — is
-the backend's rule, mirrored in `bookingWindow.ts` so the form can refuse a
-start instead of submitting it. Its constants are copies of `LEAD_TIME` and
-`DAY_END_HOUR` in tag2now-BE's `reservation/domain.py`: change both together.
-The server still rejects whatever a stale copy lets through.
-
-The list groups and sorts by `start_at`, not the `HH:MM` it displays, and labels
-each start 어제/오늘/내일 (`kstDayLabel`). A time alone is ambiguous here: the
-window crosses midnight, so "01:00" can follow "23:00".
-
-### Chat
-
-The lobby chat since the previous day's 06:00 KST, from tag2now-BE's `/chat` routes. **Reading is public,
-writing needs a login** — and the stream has to stay public, because an
-`EventSource` cannot send an `Authorization` header.
-
-`chat/chatStream.ts` holds it outside React, like `auth/session.ts`: one
-`EventSource` for the whole page, opened with the first subscriber, closed with
-the last and while the tab is hidden. Every connection opens with a `snapshot`
-that **replaces** the list — the backend keeps messages in memory and numbers
-them from 1 on every start, so nothing is resumed from `Last-Event-ID`. The
-backend subscribes a reader before reading its snapshot, so a message can
-arrive twice; the list is kept by id. A dropped stream the browser reconnects
-itself; one it refused (an HTTP error, so `CLOSED`) the store reopens, backing
-off. Unread counts compare `created_at`, not ids, for the same restart reason.
-
-`Chat` is mounted once, as the last child of `.app-layout`. From 1350px
-(`DOCKED_QUERY`) it is a third, always-open column right of the main one,
-300×660 and sticky like the sidebar. 1350 is measured: the narrowest width at
-which the home page's two rankings still share a row beside it. Below that it is a launcher in the viewport's
-bottom-left corner that opens a 320×440 panel, and on a phone a full-screen
-sheet over the tab bar. The grid takes the third column through
-`.app-layout:has(> .chat-docked)`, so the breakpoint is written only in JS.
-
-jsdom has no `EventSource`; `test-setup.ts` installs `chat/fakeEventSource.ts`,
-and chat tests play the server through `FakeEventSource.latest().emit(...)`.
-In E2E, `mockAllApis` answers the stream with its snapshot and a one-day
-`retry:`. That response then ends, so the chat shows its "연결이 끊겼습니다"
-notice throughout every spec; a real stream stays open.
-
-nginx needs nothing for the stream: the backend's `X-Accel-Buffering: no`
-turns proxy buffering off for that response, and its 15 s ping keeps the
-connection inside `proxy_read_timeout`. Both were checked through
-`nginx.conf.template` in a container.
-
-### Error handling
-
-`main.tsx` registers a global `unhandledrejection` handler that shows a toast and calls `preventDefault()`. Rejected promises therefore surface to the user without a try/catch at every call site — but a caller that wants inline error state (as feature hooks do) must catch and store `e.message` itself.
-
-`shared/util/panelStatus.tsx` renders shared loading/error/empty panel states.
-
-## Styling
-
-Tailwind CSS 4 with the CSS-first config — there is no `tailwind.config.js`. Design tokens are declared in an `@theme` block in `src/styles/tokens.css` and become utilities automatically (`--color-primary` → `bg-primary`, `text-primary`, `border-primary`).
-
-**Where a rule lives follows the code it styles**, like the TS around it:
-
-| Folder | Holds |
-|--------|-------|
-| `src/styles/` | the global sheets — tokens, base, primitives, the app shell, surfaces, dialogs shared by several features, and the phone overrides that belong to no one feature |
-| `src/shared/styles/` | the shared components' — `ranking.css` (RankList), `history.css` (PlayerHistoryPanel), `leaderboard.css`, `saves.css` (SaveCharTable) |
-| `src/<feature>/<feature>.css` | one feature's own rules, its phone overrides in an `@media` block at the end of the same file |
-
-A rule goes to a feature's file only when that feature alone uses its classes;
-anything two features share stays global. Every sheet is still imported from
-`src/index.css` and never from a component, because **the order of that list
-is the cascade**: the rules share one layer, so moving an import changes which
-rule wins.
-
-**A board's controls go in its title bar.** A switch or option for a panel
-sits in that panel's `.section-toolbar`, beside its refresh button, and uses the
-shared controls (`.segmented-control`, `.toggle-group`) --- never a new row or
-bespoke styles above the `.panel`. The bar renders in loading and error states too, at
-the same position in the tree, or the control vanishes with the content and
-loses focus (`shared/Leaderboard.tsx` is the example). Check a layout change in
-desktop and phone screenshots before calling it done.
-
-**A utility in the markup always beats a sheet.** Every sheet but `tokens.css`
-and `base.css` is imported `layer(components.app)`, under Tailwind's
-`utilities` layer, so `className="panel-meta mb-1"` gets its `mb-1` whatever
-`.panel-meta` sets. Inside `components.app` the rules placed directly in it
-outrank `primitives.css`'s `@layer primitives` block regardless of
-specificity, which is what lets a feature override a shared control.
-
-The flip side: a sheet can no longer override a utility, a phone `@media`
-block included. A value that changes with the viewport belongs wholly to one
-side — both widths in the sheet (the match tables' `<col>`s), or both as
-utilities — never a utility the sheet narrows on a phone. Before this, sheets
-were unlayered and won; the utilities they silently beat were removed when the
-layer moved.
-
-**Moving a sheet into utilities.** A rule moves onto the element when tokens
-and Tailwind's scale can say it; one that needs a value outside them —
-`min()`/`max()`, a shadow mixed off a token, a line height between the named
-steps — stays in the feature's sheet, where `lint:css` still checks it.
-`auth/auth.css` is the worked example, and `docs/tailwind-migration.md` tracks
-which sheets are done and how a unit goes. Write it mobile-first, as Tailwind
-assumes: the bare class is the phone, `md:` (Tailwind's default 48rem, 768px)
-the desktop, and a sheet rule left beside such utilities uses
-`@media (width < 48rem)` so both switch together. The sheets not yet moved
-still break at `max-width: 760px`, so the two boundaries differ by eight
-pixels until they are.
-
-Two Tailwind behaviours differ from the sheets they replace. `hover:` applies
-only where the device can hover (`@media (hover: hover)`, per Tailwind v4), so
-a tap on a phone no longer leaves a hover state behind. `transition-colors`
-uses Tailwind's easing, `cubic-bezier(0.4, 0, 0.2, 1)`, rather than `ease`.
-
-`.app-layout` caps the page at `min(var(--content-max), 100% - 32px)` — sidebar,
-main column and, from 1350px, the chat column — so it sets the width of
-**every** tab. A change here lands on
-every screen, not just the tab that prompted it.
-
-`--content-max` (1366px) is shared with `.app-header`'s horizontal padding so
-the header's content edges line up with the layout's. That padding is computed
-from `100%`, not `100vw`: `100vw` counts the scrollbar and put the header ~7px
-off the content below it.
-
-Use tokens rather than raw hex or arbitrary values. **Pretendard** backs both
-`--font-sans` and `--font-display`, imported as an npm package in `main.tsx`
-(`pretendard/…/pretendardvariable-dynamic-subset.css`) — not from Google Fonts.
-
-`--color-txt-faint` is the floor for tertiary text: it is the dimmest grey that
-still clears 4.5:1 on every surface in play, the `#1b1b1f` input fill included.
-Reach for it rather than inventing another hex — several of the greys it
-replaced sat at 4.0–4.3, and the 7–10px sizes this text uses get no large-text
-exemption. The one deliberate holdout is `.input-base:disabled`, where WCAG
-exempts inactive controls anyway.
-
-Rank/tier and medal colours live in `shared/tierColors.ts` and `shared/medalColors.ts`; character art paths in `shared/characterImage.ts`.
-
-Recharts renders SVG attributes, which cannot read CSS custom properties, so
-`shared/components/chartTheme.ts` mirrors the relevant `@theme` tokens as JS
-constants — keep the two in step when a token moves.
-
-**The daily chart is one panel on two pages.** The stats tab and the home
-screen both render `shared/components/DailyPlayersPanel`, full width, and it
-takes the rows and nothing else: no height, heading level or class. That is
-deliberate. When each page passed its own, the two drew the same chart at
-different sizes, and changes were checked on one page and shipped to both. The
-stats tab stacks the hourly chart above it rather than beside it, so the panel
-keeps the same size there. A change to it is still a change to **both pages**;
-check each of them, at desktop and phone width.
-
-Its two plots — 접속자 수 and 최대 동시 접속 — sit side by side from 600px of
-chart width and stack below that. `DailyChart` measures itself with
-`shared/hooks/useMinWidth` rather than leaving this to a container query,
-because the arrangement changes Recharts props: side by side, each plot is
-200px and draws its own dates; stacked, the pair shares 280px and only the
-bottom one does.
-
-Not every rank the API reports has artwork under `public/ranks/` — `Tekken Lord`
-and `Initiate` among them. `RankImage` removes itself on the load error rather
-than leaving the browser's broken-image glyph, and keys that failure to the rank
-**name**: React reuses the element across list rows, so a bare boolean would
-blank the next rank that does have art.
-
-### Brand assets
-
-`public/favicon.svg` and `public/og-image.png` both carry the black-and-red
-palette; keep them in step with `--color-primary` when it moves.
-
-The 1200×630 share card is generated, not hand-drawn — edit
-`scripts/og-image.html` and re-render:
-
-```bash
-node scripts/generate-og-image.mjs
-```
-
-It renders through the Chromium that Playwright already installs, so it needs
-no extra dependency. Commit the regenerated PNG; a raster is required because
-Discord and KakaoTalk ignore SVG in `og:image`.
-
-## Tests
-
-Two independent suites.
-
-**Unit / component — Vitest + Testing Library.** Tests sit beside the code they cover (`src/**/*.test.tsx`), jsdom environment, globals enabled, `src/config/test-setup.ts` imports `@testing-library/jest-dom`. `vitest.config.ts` merges `vite.config.ts`, so the `@` alias works in tests.
-
-Component tests are prop-driven and need no mocks. `App.test.tsx` mocks the feature hooks. When testing polling, use `vi.useFakeTimers()` and always restore with `vi.useRealTimers()` in `afterEach`, so a mid-test failure cannot corrupt later tests.
-
-**E2E — Playwright**, in `e2e/`, against two projects: `chromium` (Desktop Chrome) and `mobile` (Pixel 5). The config starts `npm run dev` automatically and reuses a running server outside CI.
-
-- `e2e/helpers/mock-api.ts` — route interception; E2E does not hit a real backend.
-  `mockAllApis` must route every endpoint the landing tab calls, the overview's
-  history/community/reservation reads included; anything unrouted reaches
-  whatever the dev server proxies to, which is **production** by default.
-- `e2e/specs/` — behavioural specs per feature.
-- `e2e/visual/tokens.spec.ts` — asserts a `color-mix` off a token rasterises to
-  the same pixels as the literal it replaced. It compares computed colours
-  through a canvas, not baseline images, so it runs anywhere.
-
-Helpers worth reaching for: `goToMatchTab` (the overview is the landing tab, so
-a rooms spec can click through or `goto('/match/rank_match')`) and
-`skipPatchNotes`, which every spec calls **before its first navigation** — it
-seeds the seen marker from `LATEST_PATCH_VERSION`, so a version bump cannot
-silently stop suppressing the dialog.
-
-`skipPatchNotes` registers an init script, so one call in a `beforeEach` holds
-for every later `goto` and `reload` in that test. Do not repeat it per
-navigation. `dismissPatchNotes` clicks the dialog's X instead, and the X writes
-nothing — so it has to run again after every navigation, and a spec that
-forgets leaves the modal covering whatever it asserts next. It is now used only
-by `e2e/specs/patch-notes.spec.ts`, which is the one place the dialog itself is
-under test; nothing else should reach for it.
-
-**Do not wait out a poll in real time.** Install `page.clock` before the first
-navigation and use `fastForward`, not `runFor`: `runFor` replays every timer
-callback along the way, which measured 2.7s of the rooms auto-refresh test on
-its own. `fastForward` jumps to the target instant — that test went 5.6s → 1.6s.
-
-**There is no screenshot suite, deliberately.** `e2e/visual/screenshots.spec.ts`
-and the `Update Visual Baselines` workflow were removed: its baselines were
-gitignored, so nothing was tracked, CI could not run it, and every developer
-compared against whatever their own machine last rendered. It never caught a
-regression and went red on unrelated changes — a version string in the header
-changing width was enough. At the end it failed 8 of 10 on an untouched
-checkout.
-
-Reinstating pixel comparison means solving the baseline problem first, not
-re-adding `toHaveScreenshot`: commit Linux PNGs generated in a container and run
-them in CI, or use a hosted service. A suite whose baselines live only on one
-machine is worse than none, because it trains you to ignore a red run.
-
-**Parallelism.** `workers` matches the core count — 4 on CI (`ubuntu-latest`),
-unset locally — with `retries: 1` on CI only. It was 1 on CI, the Playwright
-scaffold's default and never a response to an observed problem, which left three
-cores idle. Do not put it back, and do not reserve a core for the dev server:
-it only serves static files, since every backend call is intercepted. Locally
-there are no retries, so a full run flakes occasionally on an unrelated spec;
-name it from that run, then confirm with `npx playwright test --last-failed`
-before believing it.
-
-**Before offering a commit, run `.claude/skills/test/SKILL.md`.** It is the
-whole pre-commit suite — unit tests, both typechecks, the CSS lint and E2E,
-for this repository only — and the rule for reading it: each suite runs once,
-its output goes whole to a file under `test-results/`, and every failure is
-named from that run. In a session opened at the workspace
-root a sub-repository's skills can be discovered late, hours in, so when `test`
-is not in the skill list yet, read that file and follow it anyway.
+goes in the relevant document under `docs/`.
+
+## Documentation
+
+| Document | Owns |
+|----------|------|
+| [AGENTS.md](AGENTS.md) | Planning, reuse review, verification and Git rules |
+| [Reuse search guide](docs/reuse.md) | Finding current implementations and consumers; deciding reuse, extension or local ownership |
+| [Architecture](docs/architecture.md) | Current folders, data ownership, routing and feature behavior |
+| [Styling](docs/styling.md) | Tokens, stylesheet ownership, cascade and responsive behavior |
+| [Testing](docs/testing.md) | Unit/E2E patterns and links to the test workflow |
+| [Test workflow](.claude/skills/test/SKILL.md) | Exact full-suite commands and failure reporting |
+| [Operations](docs/operations.md) | Build, deployment, versioning and analytics integration |
+| [Tailwind migration](docs/tailwind-migration.md) | Migration decisions and remaining stylesheet work |
+
+Keep each explanation in its owning document and link to it from other pages.
+Update documentation when architectural decisions, routes, data flow, commands or
+stylesheet ownership change. Component props and consumer lists stay in source;
+adding a component does not require a documentation entry. Describe current
+behavior separately from planned refactoring.
 
 ## Custom commands
 
-`.claude/commands/` provides `/a11y-audit`, `/design-audit`, and `/design-review`.
-`.claude/skills/` holds `test` (the pre-commit suite, above) and `patch-notes`.
-
-## Deployment
-
-Docker multi-stage: `node:24-alpine` builds the SPA, `nginx:alpine` serves `dist/`. `nginx.conf.template` is rendered by nginx's envsubst with `BACKEND_URL` (filtered to the `BACKEND` prefix), proxying `/api/` to the backend.
-
-Caching in nginx: hashed `/assets/` are immutable for a year; `index.html` is `no-cache` so deploys take effect immediately.
-
-Images go to ECR (`864573346741.dkr.ecr.ap-northeast-2.amazonaws.com/tag2-now/fe`). Production is a **single AWS Lightsail instance** running docker compose alongside the backend and its datastores — not ECS.
-
-The site is served at **`match.tag2now.click`**, which fronts both the SPA and
-`/api` through CloudFront — responses on both carry a `Via: … cloudfront.net`
-header. The bare `tag2now.click` has no address record and serves nothing, so
-absolute URLs (`og:url`, `canonical`) must use the `match.` host.
-
-| Workflow | Trigger | Does |
-|----------|---------|------|
-| `test.yml` | PR to `master`, push to `master`, `workflow_call` | unit tests + typecheck, then E2E |
-| `deploy.yml` | `v*` tag | full test suite, build and push to ECR, then deploy to production over SSH |
-
-### Versioning
-
-There is no `APP_VERSION` constant. `src/config/patchNotes.ts` is the single
-source of truth: `PATCH_NOTES[0].version` is exported as `LATEST_PATCH_VERSION`,
-which drives both the version shown in the header and the "seen" marker that
-decides whether the patch-notes dialog reappears. Adding an entry to the top of
-that array is therefore the whole version bump — there is no second constant to
-remember, which is what previously let the header, the dialog, and the tags
-drift apart.
-
-The one pairing still done by hand is the release tag: tag `v{version}` to match
-the new top entry.
-
-**Release is automatic on a `v*` tag.** The `deploy` job SSHes into Lightsail,
-writes `FE_IMAGE_TAG` into the instance's `.env`, and restarts **only
-`fe`** — `be` and the datastores are left alone, and are released independently
-by the backend repo.
-
-`compose.prod.yml` lives in **tag2now-BE**, which uploads it as the instance's
-`compose.yml`; it describes the whole stack, including this service's image. A change to how `fe` runs in production belongs
-in that repo.
-
-The SSH and ECR settings are **org-level** secrets/variables on the `tag2now`
-org, shared with tag2now-BE; this repo defines only `ECR_REPOSITORY`
-(`tag2-now/fe`) and its own `production` environment. See
-[aws-setup.md](../tag2now-BE/docs/aws-setup.md#actions-configuration).
-
-## Analytics
-
-Google Analytics (`G-S4Y67MPNPR`) is loaded via a gtag snippet in `index.html`. Device category and OS are collected automatically by Enhanced Measurement — no per-event code. Check *Reports → Tech → Tech details* before adding custom tracking.
-
-GA4 records one `page_view` per load. Client-side route changes are **not**
-tracked — gtag has no history listener by default, so a tab switch or a post
-opened from the overview goes uncounted. Sending them means calling `gtag` on
-a `useLocation()` change.
-
-The CloudFront distribution is on the **Free plan**, where standard and real-time access logging are locked behind paid tiers, so the S3 → Athena pipeline described in `aws-setup.md` cannot currently be enabled. GA4 is the only source actually collecting.
+[Accessibility audit](.claude/commands/a11y-audit.md), [design audit](.claude/commands/design-audit.md), and [design review](.claude/commands/design-review.md) follow the reuse search guide and inspect the current source. `.claude/skills/` also holds the test workflow and patch-notes workflow.

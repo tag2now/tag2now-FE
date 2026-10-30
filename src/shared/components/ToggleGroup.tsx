@@ -1,18 +1,15 @@
 import { useId } from 'react'
-import type { SelectOption } from '@/shared/components/Select'
 
-type ToggleGroupProps<T extends string> = {
+type ToggleGroupProps<T extends string | number> = {
   value: T
-  options: SelectOption<T>[]
+  options: { value: T; label: string }[]
   onChange: (value: T) => void
   label: string
   className?: string
 }
 
-/** A Select-shaped control that lays its options out as buttons instead of
- * hiding them behind a menu. Same props as Select, so a field can move between
- * the two without its call site changing. */
-export default function ToggleGroup<T extends string>({ value, options, onChange, label, className = '' }: ToggleGroupProps<T>) {
+/** Native radio choices whose callbacks preserve the original value type. */
+export default function ToggleGroup<T extends string | number>({ value, options, onChange, label, className = '' }: ToggleGroupProps<T>) {
   const name = useId()
 
   return (

@@ -7,7 +7,7 @@ import type { AuthUser, LoginResponse } from '@/auth/types'
  * answers with a bearer token, which every later request carries.
  * An aborted `signal` never starts a session, even if the answer already arrived. */
 export async function login(username: string, password: string, signal?: AbortSignal, persist = true): Promise<AuthUser> {
-  const result: LoginResponse = await POST(API.login().path, { username, password }, signal)
+  const result = await POST<LoginResponse>(API.login().path, { username, password }, signal)
   signal?.throwIfAborted()
   return startSession(result.access_token, result.expires_in, result.user, persist).user
 }

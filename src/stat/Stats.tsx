@@ -4,13 +4,14 @@ import { panelStatus, statusBody } from "@/shared/util/panelStatus";
 import useStats, { type StatsDays} from "@/stat/useStats";
 import useWeeklyTop, { type WeeklyTopLimit} from "@/stat/useWeeklyTop";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
-import type { WeeklyTopPlayer } from '@/stat/types'
+import type { WeeklyTopPlayer } from '@/shared/activityTypes'
 import HourlyChart from '@/stat/HourlyChart'
 import DailyPlayersPanel from '@/shared/components/DailyPlayersPanel'
 import { DAY_START_HOUR, hourLabel } from '@/shared/dayBoundary'
 import type {LeaderboardEntry} from "@/shared/types";
 import { Activity, Crown } from 'lucide-react'
 import { TableSkeleton } from '@/shared/components/Skeleton'
+import ToggleGroup from '@/shared/components/ToggleGroup'
 
 const DAY_OPTIONS: { value: StatsDays; label: string }[] = [
   { value: 7, label: '7일' },
@@ -24,36 +25,6 @@ const LIMIT_OPTIONS: { value: WeeklyTopLimit; label: string }[] = [
   { value: 25, label: '25' },
   { value: 50, label: '50' },
 ]
-
-function ToggleGroup<T extends string | number>({
-  options,
-  value,
-  onChange,
-  label,
-}: {
-  options: { value: T; label: string }[]
-  value: T
-  onChange: (v: T) => void
-  label?: string
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      {label && <span className="text-xs text-txt-dim font-semibold tracking-wide uppercase">{label}</span>}
-      <div className="segmented-control">
-        {options.map((opt) => (
-          <button
-            key={String(opt.value)}
-            onClick={() => onChange(opt.value)}
-            aria-pressed={value === opt.value}
-            className="transition-colors cursor-pointer"
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; entries: LeaderboardEntry[]; onSelect: (npid: string) => void }) {
   const entryByNpid = new Map(entries.map((e) => [e.np_id, e]))
@@ -116,7 +87,10 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
                 <span className="section-icon"><Activity size={15} /></span>
                 <div><h3>접속자 흐름</h3><p>시간대와 날짜별 활성 사용자</p></div>
               </div>
-              <ToggleGroup options={DAY_OPTIONS} value={days} onChange={setDays} label="기간" />
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 whitespace-nowrap text-xs text-txt-dim font-semibold tracking-wide uppercase">기간</span>
+                <ToggleGroup options={DAY_OPTIONS} value={days} onChange={setDays} label="통계 기간" />
+              </div>
             </div>
             {/* Stacked, not side by side: the daily panel is the home screen's,
                 full width at its own height, and beside the hourly chart it
@@ -137,7 +111,7 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
       {/* The rule above divides the two sections where a sub-tab bar used to. */}
       <div className="section-toolbar compact-toolbar mt-6 border-t border-t-border-light pt-5">
         <div className="section-title"><span className="section-icon"><Crown size={15} /></span><div><h3>주간 철악귀</h3><p>최근 7일 매치 참여 순위</p></div></div>
-        <ToggleGroup options={LIMIT_OPTIONS} value={wt.limit} onChange={wt.setLimit} />
+        <ToggleGroup options={LIMIT_OPTIONS} value={wt.limit} onChange={wt.setLimit} label="주간 순위 표시 개수" />
       </div>
       {statusBody(wt.loading, wt.error, {
         loadingMsg: '활동왕을 불러오는 중',

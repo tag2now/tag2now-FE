@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { DELETE, GET, POST } from './api'
+import { DELETE, GET, PATCH, POST, PUT } from './api'
 import { dismissLoginRequest, endSession, getLoginRequest, getSession, startSession } from '@/auth/session'
 
 function respondWith(status: number, body: unknown) {
@@ -9,6 +9,69 @@ function respondWith(status: number, body: unknown) {
     json: async () => body,
   }))
 }
+
+// Pre-refactor safety net for the public HTTP helpers. Type changes must keep
+// serialization, cancellation and empty-response behavior unchanged.
+describe('api request contracts', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('serializes scalar query values and preserves the response body', async () => {
+    respondWith(200, { entries: [] })
+
+    expect(await GET('leaderboard', { top: 50, online: false, name: 'Jin & King' }))
+      .toEqual({ entries: [] })
+    expect(vi.mocked(fetch).mock.calls[0][0]).toBe('/api/leaderboard?top=50&online=false&name=Jin+%26+King')
+  })
+
+  it('preserves repeated query keys from URLSearchParams', async () => {
+    respondWith(200, [])
+    const params = new URLSearchParams([['characters', 'Jin'], ['characters', 'King']])
+
+    await GET('community/posts', params)
+
+    expect(vi.mocked(fetch).mock.calls[0][0]).toBe('/api/community/posts?characters=Jin&characters=King')
+  })
+
+  it.each([['POST', POST], ['PUT', PUT], ['PATCH', PATCH]] as const)('%s sends JSON without changing its fields', async (method, send) => {
+    respondWith(200, { id: 1 })
+    const body = { title: '제목', characters: ['Jin'], youtube_video_id: null }
+
+    expect(await send('community/posts', body)).toEqual({ id: 1 })
+    const options = vi.mocked(fetch).mock.calls[0][1]!
+    expect(options.method).toBe(method)
+    expect(options.body).toBe(JSON.stringify(body))
+    expect(new Headers(options.headers).get('Content-Type')).toBe('application/json')
+  })
+
+  it('passes the login cancellation signal to fetch', async () => {
+    respondWith(200, {})
+    const controller = new AbortController()
+
+    await POST('auth/login', { username: 'p1', password: 'password' }, controller.signal)
+
+    expect(vi.mocked(fetch).mock.calls[0][1]?.signal).toBe(controller.signal)
+  })
+
+  it('does not parse JSON for a DELETE 204 response', async () => {
+    const json = vi.fn()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 204, json }))
+
+    expect(await DELETE('community/posts/1')).toBeUndefined()
+    expect(json).not.toHaveBeenCalled()
+  })
+
+  it('returns the JSON payload from a DELETE that has a response body', async () => {
+    respondWith(200, { id: 1, status: 'open' })
+
+    expect(await DELETE<{ id: number; status: string }>('reservations/1/participants/me')).toEqual({ id: 1, status: 'open' })
+  })
+
+  it('uses the status fallback for a non-string error detail', async () => {
+    respondWith(422, { detail: [{ msg: 'invalid' }] })
+
+    await expect(GET('reservations')).rejects.toThrow('request failed: 422')
+  })
+})
 
 describe('api error handling', () => {
   afterEach(() => vi.unstubAllGlobals())

@@ -1,15 +1,19 @@
 import { useState } from 'react'
 import { PATCH_NOTES, LATEST_PATCH_VERSION, recentPatchNotes } from '@/config/patchNotes'
 import useModalDialog from '@/shared/hooks/useModalDialog'
-import { STORAGE_KEYS } from '@/shared/util/storage'
+import { STORAGE_KEYS, readItem } from '@/shared/util/storage'
 import { BellRing, ChevronDown, X } from 'lucide-react'
 
 const LS_KEY = STORAGE_KEYS.seenPatchVersion
 
+/** Whether the dialog opens on this load. Read it once, at mount: dismissing
+ * the dialog changes the answer, not the fact that it opened. */
+export function hasUnseenPatchNotes(): boolean {
+  return readItem(LS_KEY) !== LATEST_PATCH_VERSION
+}
+
 export default function PatchNotes() {
-  const [visible, setVisible] = useState(() => {
-    return localStorage.getItem(LS_KEY) !== LATEST_PATCH_VERSION
-  })
+  const [visible, setVisible] = useState(hasUnseenPatchNotes)
 
   if (!visible) return null
   return <PatchNotesDialog onClose={() => setVisible(false)} />

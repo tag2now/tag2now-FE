@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "click.tag2now.twa",
+      "sha256_cert_fingerprints": [
+        "75:EF:68:18:78:8E:B4:BA:E0:C1:F9:5A:F9:58:BC:94:F9:7F:D3:5F:DA:D5:21:8D:29:2B:5B:C6:5B:67:33:90"
+      ]
+    }
+  }
+]

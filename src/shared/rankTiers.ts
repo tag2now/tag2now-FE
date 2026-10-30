@@ -1,4 +1,4 @@
-import { RANK_ORDER } from '@/reservation/reservationLabels'
+import { RANK_ORDER } from '@/shared/ranks'
 
 /** Which colour band each rank belongs to, and how the picker lays them out.
  *

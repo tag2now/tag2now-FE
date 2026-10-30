@@ -17,7 +17,7 @@ import CharCell from '@/shared/components/CharCell'
 import ActiveHoursClock from '@/shared/components/ActiveHoursClock'
 import PlayerSaveSection from '@/shared/components/PlayerSaveSection'
 import type { LeaderboardEntry } from '@/shared/types'
-import type { PlayerHistory } from '@/stat/types'
+import type { PlayerHistory } from '@/shared/playerHistoryTypes'
 
 type Days = 7 | 30 | 90
 
@@ -91,10 +91,10 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
     let cancelled = false
     setLoading(true)
     setError(null)
-    GET(API.playerHistory(viewing).path, { days })
+    GET<PlayerHistory>(API.playerHistory(viewing).path, { days })
       .then((res) => {
         if (cancelled) return
-        setData(res as PlayerHistory)
+        setData(res)
         setLoading(false)
       })
       .catch((e: unknown) => {

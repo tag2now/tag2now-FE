@@ -60,7 +60,8 @@ test.describe('Account management', () => {
 
     await page.getByRole('button', { name: /^계급:/ }).click()
     await page.getByRole('button', { name: 'Genbu', exact: true }).click()
-    await page.getByRole('button', { name: '미리보기', exact: true }).click()
+    await page.screenshot({ path: test.info().outputPath('save-edit-action.png'), fullPage: true })
+    await page.getByRole('button', { name: '미리보기 & 적용', exact: true }).click()
 
     const preview = page.getByRole('region', { name: '미리보기', exact: true })
     const change = preview.getByRole('row').nth(1)

@@ -49,3 +49,10 @@
    occupy the same box so the grid does not shift between them. */
 .rank-option-art { height: 36px; max-width: 100%; width: auto; object-fit: contain; }
 img.rank-option-art { display: block; }
+/* RankField (shared/components): one rank from the bands above, dropped over
+   whatever holds it and no wider than its container (100cqw). */
+.rank-field { position: relative; display: flex; min-width: 0; flex-direction: column; }
+.rank-field-toggle { display: flex; width: fit-content; min-width: 200px; min-height: 40px; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 10px; cursor: pointer; }
+.rank-field-panel { right: auto; width: min(560px, 100cqw); }
+.rank-field-auto { width: 100%; min-height: 36px; margin-bottom: 8px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg-panel); color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-label); cursor: pointer; }
+.rank-field-auto.is-active { border-color: color-mix(in srgb, var(--color-primary) 65%, transparent); color: var(--color-primary-text); }

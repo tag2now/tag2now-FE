@@ -1,5 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import type { DailySummary } from '@/stat/types'
+import type { DailySummary } from '@/shared/activityTypes'
 import { COLOR_BORDER, COLOR_TXT_DIM, SERIES_COLOR, TOOLTIP_STYLE, seriesName } from '@/shared/components/chartTheme'
 import useMinWidth from '@/shared/hooks/useMinWidth'
 

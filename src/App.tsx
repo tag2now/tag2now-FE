@@ -1,53 +1,27 @@
 import { useMemo } from 'react'
-import { Route, Routes, useNavigate } from 'react-router-dom'
-import LeaderboardViews from "@/shared/LeaderboardViews";
-import Stats from "@/stat/Stats"
-import Header from "@/shared/components/Header";
-import LiveBadge from "@/shared/components/LiveBadge";
-import PlayerProfileCard from '@/shared/components/PlayerProfileCard'
-import Footer from "@/shared/components/Footer";
-import PatchNotes from "@/shared/components/PatchNotes";
-import { LoginDialog } from "@/auth/component";
-import Chat from "@/chat/Chat";
-import { GROUP_ORDER, formatGroupName } from '@/config/tabConfig'
-import { firstRoomPath, isRoomTab as isRoomTabKey, pathOf } from '@/config/routes'
-import useActiveTab from '@/shared/hooks/useActiveTab'
-import useLeaderboard from "@/shared/hooks/useLeaderboard";
-import useCurrentRankLeaderboard from "@/shared/hooks/useCurrentRankLeaderboard";
-import { toLeaderboardData } from "@/shared/currentRankLeaderboard";
-import useRooms from "@/match/useRooms";
-import useReservations, { countOpen } from "@/reservation/useReservations";
-import useCommunityFeed, { countRecent, isRecentCountCapped } from "@/community/useCommunityFeed";
+import AppLayout from '@/app/AppLayout'
+import AppRoutes from '@/app/AppRoutes'
+import PrimaryNavigation from '@/app/PrimaryNavigation'
+import RoomTabs from '@/app/RoomTabs'
+import LiveBadge from '@/shared/components/LiveBadge'
+import AccountProfile from '@/app/AccountProfile'
+import Chat from '@/chat/Chat'
+import { EventFloatingLink, EventSidebarCard } from '@/event/component'
+import { GROUP_ORDER } from '@/config/tabConfig'
+import { isRoomTab as isRoomTabKey } from '@/config/routes'
 import { POLL } from '@/config/polling'
-import Community from "@/community/Community";
-import Rooms from "@/match/Rooms";
-import type { Room } from "@/match/types";
-import Reservation from "@/reservation/Reservation";
-import Overview from "@/overview/Overview";
-import Admin from "@/admin/Admin";
-import EventPage from "@/event/Event";
-import { EventFloatingLink, EventSidebarCard } from "@/event/component";
-import {
-  BarChart3,
-  LayoutDashboard,
-  CalendarDays,
-  ChevronRight,
-  MessageSquareText,
-  Swords,
-  Trophy,
-} from 'lucide-react'
-
-// Before the first successful load the count is unknown, not zero - "(0)" would
-// assert there are no rooms while the fetch is still in flight or has failed.
-// Once rooms have loaded, a group the payload omits really is empty.
-function roomCountLabel(rooms: Room[] | undefined, loaded: boolean): string {
-  if (!loaded) return '—'
-  return String(rooms?.length ?? 0)
-}
+import useActiveTab from '@/shared/hooks/useActiveTab'
+import useAppUpdate from '@/shared/hooks/useAppUpdate'
+import useLeaderboard from '@/shared/hooks/useLeaderboard'
+import useCurrentRankLeaderboard from '@/shared/hooks/useCurrentRankLeaderboard'
+import { toLeaderboardData } from '@/shared/currentRankLeaderboard'
+import useRooms from '@/match/useRooms'
+import useReservations, { countOpen } from '@/reservation/useReservations'
+import useCommunityFeed, { countRecent, isRecentCountCapped } from '@/community/useCommunityFeed'
 
 export default function App() {
-  const navigate = useNavigate()
   const activeTab = useActiveTab()
+  useAppUpdate()
   const lb = useLeaderboard()
   // The leaderboard tab opens on it and the home page summarises it. A save
   // knows only the RPCN id, so the names come from the score board.
@@ -56,7 +30,6 @@ export default function App() {
     () => currentRankRaw.data && toLeaderboardData(currentRankRaw.data, lb.data?.entries),
     [currentRankRaw.data, lb.data],
   )
-  const currentRank = { ...currentRankRaw, data: currentRankData }
   const rooms = useRooms()
   // One reservation poll for the whole app, shared with the panel. The rate
   // follows the active tab: a user looking at a roster fill wants it fast, and
@@ -85,7 +58,6 @@ export default function App() {
   }, [groups])
 
   const isRoomTab = isRoomTabKey(activeTab)
-  const activeRoomsData = isRoomTab ? { rooms: groups[activeTab] ?? [] } : null
 
   // A badge is a live count, so it carries the same "unknown is not zero" rule
   // as the room tabs: undefined until the first load settles, and the badge is
@@ -96,192 +68,42 @@ export default function App() {
   // away stops signalling that something arrived.
   const recentPosts = countRecent(communityFeed.data) || undefined
   const recentPostsCapped = isRecentCountCapped(communityFeed.data)
-  const primaryTabs = useMemo(() => [
-    // '홈', not '개요'. This tab owns "/" and is where the site opens, and what
-    // it shows is what is happening right now — not a summary of a document.
-    // The panel's own heading (한눈에 보기) already does the summarising, so
-    // naming the tab that too gave one screen three names.
-    { key: 'overview', label: '홈' },
-    // `spoken` is the whole badge as assistive tech reads it, in one element:
-    // an accessible name is joined across element boundaries with a space, so
-    // splitting the number from its unit would say "방 3 개".
-    { key: 'match', label: '매칭', badge: roomsLoaded ? rooms.data?.total ?? 0 : undefined, spoken: (n: number) => ` 방 ${n}개` },
-    { key: 'reservation', label: '예약', badge: openReservations ?? undefined, spoken: (n: number) => ` 모집중 ${n}건` },
-    // 커뮤니티 before 리더보드: the first three tabs are things happening now
-    // and the last three are places to read, and of those two the board is the
-    // one that changes daily.
-    // `display` overrides the figure the eye reads without touching the one
-    // assistive tech hears — a capped count is a floor, not a total.
-    {
-      key: 'community', label: '커뮤니티',
-      badge: recentPosts,
-      display: recentPostsCapped ? `${recentPosts}+` : undefined,
-      spoken: (n: number) => recentPostsCapped ? ` 새 글 ${n}개 이상` : ` 새 글 ${n}개`,
-    },
-    { key: 'leaderboard', label: '리더보드' },
-    { key: 'stats', label: '통계' },
-  ], [roomsLoaded, rooms.data?.total, openReservations, recentPosts, recentPostsCapped])
-  const activePrimary = isRoomTab ? 'match' : activeTab
-  // The admin panel has no tab of its own. The strip then selects nothing, but
-  // the first tab keeps the roving tabindex so the nav stays reachable, and the
-  // panel is labelled by its own heading rather than by a tab that is not there.
-  const hasPrimaryTab = primaryTabs.some((tab) => tab.key === activePrimary)
-  const focusableTab = hasPrimaryTab ? activePrimary : primaryTabs[0].key
-  const panelLabel = isRoomTab ? `tab-${activeTab}` : hasPrimaryTab ? `primary-tab-${activeTab}` : undefined
-
-  const tabIcon = (key: string) => {
-    if (key === 'overview') return LayoutDashboard
-    if (key === 'match') return Swords
-    if (key === 'reservation') return CalendarDays
-    if (key === 'leaderboard') return Trophy
-    if (key === 'community') return MessageSquareText
-    if (key === 'stats') return BarChart3
-    return Swords
-  }
-
-  // Both panels close over App-level polled data, so they are built here rather
-  // than inline in the route table, which would make that table unreadable.
-  const overviewPanel = (
-    <Overview
-      rooms={rooms.data}
-      roomsLoading={rooms.loading}
-      leaderboardEntries={lb.data?.entries}
-      currentRankEntries={currentRank.data?.entries}
-      currentRankTotal={currentRank.data?.total_records}
-    />
-  )
-
-  const roomsPanel = (
-    <Rooms
-      data={activeRoomsData}
-      loading={rooms.loading}
-      refreshing={rooms.refreshing}
-      error={rooms.error}
-      onRefresh={rooms.refresh}
-      groupKey={activeTab}
-      lastUpdated={rooms.lastUpdated}
-      leaderboardEntries={lb.data?.entries}
-    />
-  )
 
   return (
-    <div className="app-shell">
-      <a className="skip-link" href="#mainContent">본문으로 건너뛰기</a>
-      <PatchNotes />
-      {/* Any feature opens it through requestLogin; one instance serves all. */}
-      <LoginDialog />
-      <Header />
-      <div className="app-layout">
-        <aside className="app-sidebar" aria-label="서비스 메뉴">
-          {/* Live above the nav, with the badges it belongs beside — not in the
-              header, where it was a lone figure between the wordmark and the
-              profile, belonging to neither. */}
+    <AppLayout
+      sidebar={(
+        <>
           <LiveBadge totalUsers={rooms.data?.totalUsers} />
-          {/* One PlayerProfileCard renders both surfaces — this card and, through
-              a portal, the header slot that replaces it on a phone — so the
-              signed-in account is shown from one piece of state, not two. */}
-          <div className="sidebar-nav-card">
-          <div className="sidebar-heading">
-            <span>Navigation</span>
-            <ChevronRight size={14} aria-hidden="true" />
-          </div>
-          <nav className="app-nav" role="tablist" aria-label="Main navigation">
-            {primaryTabs.map((t) => (
-              (() => {
-                const Icon = tabIcon(t.key)
-                return (
-                  <button
-                    key={t.key}
-                    role="tab"
-                    id={`primary-tab-${t.key}`}
-                    aria-selected={activePrimary === t.key}
-                    aria-controls={t.key === 'match' ? `tabpanel-${isRoomTab ? activeTab : groupKeys[0] ?? 'leaderboard'}` : `tabpanel-${t.key}`}
-                    tabIndex={focusableTab === t.key ? 0 : -1}
-                    onClick={() => navigate(t.key === 'match' ? firstRoomPath(groupKeys) : pathOf(t.key))}
-                    onKeyDown={(e) => {
-                      const idx = primaryTabs.findIndex(x => x.key === t.key)
-                      let next = -1
-                      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (idx + 1) % primaryTabs.length
-                      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (idx - 1 + primaryTabs.length) % primaryTabs.length
-                      if (next >= 0) {
-                        e.preventDefault()
-                        const nextKey = primaryTabs[next].key
-                        navigate(nextKey === 'match' ? firstRoomPath(groupKeys) : pathOf(nextKey))
-                        document.getElementById(`primary-tab-${nextKey}`)?.focus()
-                      }
-                    }}
-                    className={`tab-btn${activePrimary === t.key ? ' active' : ''}`}
-                  >
-                    <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-                    <span>{t.label}</span>
-                    {t.badge != null && (
-                      <span className="nav-badge">
-                        <span aria-hidden="true">{t.display ?? t.badge}</span>
-                        <span className="sr-only">{t.spoken(t.badge)}</span>
-                      </span>
-                    )}
-                  </button>
-                )
-              })()
-            ))}
-          </nav>
-          </div>
+          <PrimaryNavigation
+            activeTab={activeTab}
+            groupKeys={groupKeys}
+            roomCount={roomsLoaded ? rooms.data?.total ?? 0 : undefined}
+            openReservations={openReservations ?? undefined}
+            recentPosts={recentPosts}
+            recentPostsCapped={recentPostsCapped}
+          />
           <EventSidebarCard />
-          <PlayerProfileCard leaderboardEntries={lb.data?.entries} roomUsers={roomUsers} />
-        </aside>
-
-        <main id="mainContent" className="app-main">
-          {isRoomTab && groupKeys.length > 0 && (
-            <nav className="room-tabs" role="tablist" aria-label="매칭 종류 선택">
-              <span className="room-tabs-label">매칭 종류</span>
-              <div>
-                {groupKeys.map((key) => (
-                  <button
-                    key={key}
-                    role="tab"
-                    aria-label={`${formatGroupName(key)} (${roomCountLabel(groups[key], roomsLoaded)})`}
-                    id={`tab-${key}`}
-                    aria-selected={activeTab === key}
-                    aria-controls={`tabpanel-${key}`}
-                    tabIndex={activeTab === key ? 0 : -1}
-                    onClick={() => navigate(pathOf(key))}
-                    className={activeTab === key ? 'active' : ''}
-                  >
-                    <Swords size={14} aria-hidden="true" />
-                    {formatGroupName(key)}
-                    <span>{roomCountLabel(groups[key], roomsLoaded)}</span>
-                  </button>
-                ))}
-              </div>
-            </nav>
-          )}
-          <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={panelLabel} aria-label={panelLabel ? undefined : activeTab === 'event' ? '이벤트' : '계정 관리'} tabIndex={0}>
-            <Routes>
-              {/* The overview owns "/" so a bare link opens the landing panel,
-                  and the catch-all sends an unknown path to that same screen —
-                  nginx serves index.html for every path, so a typo arrives here
-                  rather than at a 404 page. */}
-              <Route path="/" element={overviewPanel} />
-              <Route path="/match/:group" element={roomsPanel} />
-              <Route path="/leaderboard/:view?" element={<LeaderboardViews current={currentRankRaw} best={lb} />} />
-              <Route path="/reservation" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
-              <Route path="/reservation/:id" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
-              <Route path="/community" element={<Community leaderboardEntries={lb.data?.entries} />} />
-              <Route path="/community/:postId" element={<Community leaderboardEntries={lb.data?.entries} />} />
-              <Route path="/stats" element={<Stats leaderboardEntries={lb.data?.entries} />} />
-              <Route path="/event" element={<EventPage />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="*" element={overviewPanel} />
-            </Routes>
-          </div>
-        </main>
-        <EventFloatingLink />
-        {/* The third column on a wide screen; narrower, a launcher fixed to
-            the viewport. Here rather than per tab, so the stream lasts the
-            whole visit. */}
-        <Chat leaderboardEntries={lb.data?.entries} />
-      </div>
-      <Footer />
-    </div>
+          <AccountProfile leaderboardEntries={lb.data?.entries} roomUsers={roomUsers} />
+        </>
+      )}
+      chat={(
+        <>
+          <EventFloatingLink />
+          <Chat leaderboardEntries={lb.data?.entries} />
+        </>
+      )}
+    >
+      {isRoomTab && groupKeys.length > 0 && (
+        <RoomTabs activeTab={activeTab} groupKeys={groupKeys} groups={groups} loaded={roomsLoaded} />
+      )}
+      <AppRoutes
+        activeTab={activeTab}
+        rooms={rooms}
+        bestLeaderboard={lb}
+        currentRank={currentRankRaw}
+        currentRankData={currentRankData}
+        roomUsers={roomUsers}
+      />
+    </AppLayout>
   )
 }

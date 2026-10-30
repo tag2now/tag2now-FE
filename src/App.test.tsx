@@ -1,15 +1,20 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, act, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import App from "@/App";
+import FakeEventSource from '@/chat/fakeEventSource'
+import type { LeaderboardData } from '@/shared/types'
+import type { RoomsData } from '@/match/types'
+import type { ApiReservation } from '@/reservation/reservationApi'
+import type { PostListResponse, PostSummary } from '@/community/types'
 
 // Create stable mock functions accessible inside vi.mock factories
 const { mockedFetchLeaderboard, mockedFetchCurrentRankLeaderboard, mockedFetchRoomsAll, mockedFetchReservations, mockedFetchPosts } = vi.hoisted(() => ({
-  mockedFetchLeaderboard: vi.fn(),
-  mockedFetchCurrentRankLeaderboard: vi.fn(),
-  mockedFetchRoomsAll: vi.fn(),
-  mockedFetchReservations: vi.fn(),
-  mockedFetchPosts: vi.fn(),
+  mockedFetchLeaderboard: vi.fn<typeof import('@/shared/hooks/useLeaderboard').fetchLeaderboard>(),
+  mockedFetchCurrentRankLeaderboard: vi.fn<typeof import('@/shared/hooks/useCurrentRankLeaderboard').fetchCurrentRankLeaderboard>(),
+  mockedFetchRoomsAll: vi.fn<typeof import('@/match/useRooms').fetchRoomsAll>(),
+  mockedFetchReservations: vi.fn<typeof import('@/reservation/reservationApi').fetchReservations>(),
+  mockedFetchPosts: vi.fn<typeof import('@/community/communityApi').fetchPosts>(),
 }))
 
 // Overview fetches four sources of its own; these tests are about tab wiring,
@@ -19,11 +24,14 @@ vi.mock('@/overview/useOverview', async (importOriginal) => ({
   default: () => ({ data: { daily: [], weeklyTop: [], posts: [], reservations: [] }, loading: false, refreshing: false, error: null, lastUpdated: null, refresh: vi.fn() }),
 }))
 
+// The update check has its own tests and its own timer; these count data polls.
+vi.mock('@/shared/hooks/useAppUpdate', () => ({ default: () => {} }))
+
 const { default: usePolledData } = await vi.importActual<typeof import('@/shared/hooks/usePolledData')>('@/shared/hooks/usePolledData')
 vi.mock("@/shared/hooks/useLeaderboard", async () => {
   return {
     fetchLeaderboard: mockedFetchLeaderboard,
-    default: () => usePolledData(mockedFetchLeaderboard as any, null),
+    default: () => usePolledData(mockedFetchLeaderboard, null),
   }
 })
 
@@ -46,13 +54,13 @@ vi.mock('@/community/communityApi', async (importOriginal) => ({
 vi.mock('@/shared/hooks/useCurrentRankLeaderboard', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/hooks/useCurrentRankLeaderboard')>()),
   fetchCurrentRankLeaderboard: mockedFetchCurrentRankLeaderboard,
-  default: () => usePolledData(mockedFetchCurrentRankLeaderboard as any, null),
+  default: () => usePolledData(mockedFetchCurrentRankLeaderboard, null),
 }))
 
 vi.mock('@/match/useRooms', async () => {
   return {
     fetchRoomsAll: mockedFetchRoomsAll,
-    default: () => usePolledData(mockedFetchRoomsAll as any, 5_000),
+    default: () => usePolledData(mockedFetchRoomsAll, 5_000),
   }
 })
 
@@ -69,7 +77,7 @@ const LEADERBOARD_DATA = {
       },
     },
   ],
-} as const
+} satisfies LeaderboardData
 
 const ROOMS_DATA = {
   total: 1,
@@ -82,13 +90,13 @@ const ROOMS_DATA = {
         rank_info: { id: 1, name: 'Platinum', tier: 'Platinum' },
         max_slots: 6,
         users: [
-          { online_name: 'RoomOwner', np_id: 'RoomOwner' },
-          { online_name: 'Challenger', np_id: 'Challenger' },
+          { online_name: 'RoomOwner', np_id: 'RoomOwner', avatar_url: '' },
+          { online_name: 'Challenger', np_id: 'Challenger', avatar_url: '' },
         ],
       },
     ],
   },
-} as const
+} satisfies RoomsData
 
 /** The panel is chosen by the URL, so a test can either land on a route or
  * click its way there. `tab` still clicks, which is what keeps these tests
@@ -112,9 +120,9 @@ async function renderAt(path: string) {
   })
 }
 
-const reservation = (over: Record<string, unknown> = {}) => ({
+const reservation = (over: Partial<ApiReservation> = {}): ApiReservation => ({
   id: 1, start_at: '2026-01-01T12:00:00+09:00',
-  host_display_name: 'Host', host_ranks: [], match_type: 'rank_match',
+  host_display_name: 'Host', host_username: null, host_ranks: [], match_type: 'rank_match',
   capacity: 2, memo: '', status: 'open', participant_count: 0,
   created_at: '2026-01-01T00:00:00+09:00', ...over,
 })
@@ -122,24 +130,24 @@ const reservation = (over: Record<string, unknown> = {}) => ({
 /** A post written `hoursAgo` before now. The badge's window is measured from
  * the current clock, so a fixed timestamp would age out of it and the test
  * would start failing on a date nobody changed anything on. */
-const post = (id: number, hoursAgo: number) => ({
+const post = (id: number, hoursAgo: number): PostSummary => ({
   id, author: 'Writer', title: `post ${id}`, body: '', post_type: '자유',
   characters: [], thumbs_up: 0, thumbs_down: 0, comment_count: 0,
   created_at: new Date(Date.now() - hoursAgo * 3_600_000).toISOString(),
 })
 
-const postList = (posts: ReturnType<typeof post>[]) =>
+const postList = (posts: PostSummary[]): PostListResponse =>
   ({ posts, total: posts.length, page: 1, page_size: 20 })
 
 beforeEach(() => {
-  mockedFetchLeaderboard.mockResolvedValue(LEADERBOARD_DATA as any)
+  mockedFetchLeaderboard.mockResolvedValue(LEADERBOARD_DATA)
   mockedFetchCurrentRankLeaderboard.mockResolvedValue({
     total: 1,
     entries: [{ rank: 1, username: 'p1', saved_at: '2026-10-16T01:02:03Z', account_rank: 25, chars: [] }],
   })
-  mockedFetchRoomsAll.mockResolvedValue(ROOMS_DATA as any)
-  mockedFetchReservations.mockResolvedValue([reservation()] as any)
-  mockedFetchPosts.mockResolvedValue(postList([]) as any)
+  mockedFetchRoomsAll.mockResolvedValue(ROOMS_DATA)
+  mockedFetchReservations.mockResolvedValue([reservation()])
+  mockedFetchPosts.mockResolvedValue(postList([]))
 })
 
 afterEach(() => {
@@ -258,6 +266,28 @@ describe('App', () => {
     // rate, but that is a retime of the same timer, not a fourth one.
     expect(clearIntervalSpy).toHaveBeenCalledTimes(3)
     clearIntervalSpy.mockRestore()
+  })
+
+  // Pre-refactor safety net for layout lifetime. Moving routes must retain
+  // the open chat and its connection; a post-refactor red means that changed.
+  it('keeps the chat open and its stream connected while moving between routes', async () => {
+    await renderApp()
+    const connection = FakeEventSource.latest()
+    const connectionCount = FakeEventSource.instances.length
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^채팅 열기/ }))
+    })
+
+    for (const name of ['리더보드', /^매칭/]) {
+      await act(async () => { fireEvent.click(screen.getByRole('tab', { name })) })
+      expect(screen.getByRole('region', { name: '채팅' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^채팅 열기/ })).not.toBeInTheDocument()
+      expect(FakeEventSource.open()).toEqual([connection])
+      expect(FakeEventSource.instances).toHaveLength(connectionCount)
+    }
+    expect(mockedFetchRoomsAll).toHaveBeenCalledOnce()
+    expect(mockedFetchLeaderboard).toHaveBeenCalledOnce()
+    expect(mockedFetchCurrentRankLeaderboard).toHaveBeenCalledOnce()
   })
 
   it('renders app title and online user count', async () => {
@@ -395,12 +425,98 @@ describe('App', () => {
     })
   })
 
+  // Pre-refactor safety net for app navigation: paths, focus, panel labels and
+  // fixed/extra room groups. A post-refactor failure means behavior changed.
+  describe('navigation contract', () => {
+    it.each([
+      ['/', '홈', 'ArrowRight', /^매칭/, '/match/rank_match'],
+      ['/', '홈', 'ArrowDown', /^매칭/, '/match/rank_match'],
+      ['/match/rank_match', /^매칭/, 'ArrowLeft', '홈', '/'],
+      ['/match/rank_match', /^매칭/, 'ArrowUp', '홈', '/'],
+    ] as const)('moves from %s with %s and %s', async (initialPath, from, key, to, expectedPath) => {
+      let path = ''
+      function Probe() {
+        path = useLocation().pathname
+        return null
+      }
+      await act(async () => {
+        render(<MemoryRouter initialEntries={[initialPath]}><App /><Probe /></MemoryRouter>)
+      })
+      const navigation = within(screen.getByRole('tablist', { name: 'Main navigation' }))
+      const source = navigation.getByRole('tab', { name: from })
+      source.focus()
+
+      await act(async () => { fireEvent.keyDown(source, { key }) })
+
+      const target = navigation.getByRole('tab', { name: to })
+      expect(path).toBe(expectedPath)
+      expect(target).toHaveFocus()
+      expect(target).toHaveAttribute('aria-selected', 'true')
+      expect(target).toHaveAttribute('tabindex', '0')
+      expect(source).toHaveAttribute('tabindex', '-1')
+      expect(mockedFetchRoomsAll).toHaveBeenCalledOnce()
+      expect(mockedFetchLeaderboard).toHaveBeenCalledOnce()
+      expect(mockedFetchCurrentRankLeaderboard).toHaveBeenCalledOnce()
+    })
+
+    it('wraps focus from the first primary tab to the last and back', async () => {
+      await renderApp()
+      const home = screen.getByRole('tab', { name: '홈' })
+      home.focus()
+
+      await act(async () => { fireEvent.keyDown(home, { key: 'ArrowLeft' }) })
+      const stats = screen.getByRole('tab', { name: '통계' })
+      expect(stats).toHaveFocus()
+      expect(stats).toHaveAttribute('aria-selected', 'true')
+
+      await act(async () => { fireEvent.keyDown(stats, { key: 'ArrowRight' }) })
+      expect(home).toHaveFocus()
+      expect(home).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('keeps navigation reachable on the admin route without selecting a primary tab', async () => {
+      await renderAt('/admin')
+      const navigation = within(screen.getByRole('tablist', { name: 'Main navigation' }))
+
+      expect(navigation.queryAllByRole('tab', { selected: true })).toHaveLength(0)
+      expect(navigation.getByRole('tab', { name: '홈' })).toHaveAttribute('tabindex', '0')
+      expect(navigation.getAllByRole('tab').filter(tab => tab.tabIndex === 0)).toHaveLength(1)
+      expect(screen.getByRole('tabpanel', { name: '계정 관리' })).not.toHaveAttribute('aria-labelledby')
+      expect(screen.queryByRole('tablist', { name: '매칭 종류 선택' })).not.toBeInTheDocument()
+    })
+
+    it('keeps known room groups first, selects an extra group and links its panel', async () => {
+      mockedFetchRoomsAll.mockResolvedValue({
+        ...ROOMS_DATA,
+        groups: { custom_mode: [], player_match: [], rank_match: ROOMS_DATA.groups.rank_match },
+      })
+      await renderAt('/match/custom_mode')
+      const tabs = within(screen.getByRole('tablist', { name: '매칭 종류 선택' }))
+
+      expect(tabs.getAllByRole('tab').map(tab => tab.getAttribute('aria-label')))
+        .toEqual(['랭매 (1)', '플매 (0)', 'Custom Mode (0)'])
+      const selected = tabs.getByRole('tab', { name: 'Custom Mode (0)', selected: true })
+      const panel = screen.getByRole('tabpanel', { name: 'Custom Mode (0)' })
+      expect(selected).toHaveAttribute('aria-controls', panel.id)
+      expect(panel).toHaveAttribute('aria-labelledby', selected.id)
+      expect(screen.getByRole('tab', { name: /^매칭/ })).toHaveAttribute('aria-controls', panel.id)
+
+      await act(async () => { fireEvent.click(tabs.getByRole('tab', { name: '플매 (0)' })) })
+      expect(tabs.getByRole('tab', { name: '플매 (0)' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByRole('tabpanel', { name: '플매 (0)' })).toBeInTheDocument()
+      expect(mockedFetchRoomsAll).toHaveBeenCalledOnce()
+    })
+  })
+
   describe('nav count badges', () => {
     it('counts every room across groups on the match tab', async () => {
       mockedFetchRoomsAll.mockResolvedValue({
         total: 3, totalUsers: 6,
-        groups: { rank_match: [{}, {}], player_match: [{}] },
-      } as any)
+        groups: {
+          rank_match: [ROOMS_DATA.groups.rank_match[0], { ...ROOMS_DATA.groups.rank_match[0], room_id: 'r2' }],
+          player_match: [{ ...ROOMS_DATA.groups.rank_match[0], room_id: 'r3', rank_info: null }],
+        },
+      })
 
       await renderApp()
 
@@ -413,7 +529,7 @@ describe('App', () => {
         reservation({ id: 2, capacity: 2, participant_count: 2 }),  // full
         reservation({ id: 3, status: 'matched' }),                  // no longer open
         reservation({ id: 4 }),
-      ] as any)
+      ])
 
       await renderApp()
 
@@ -423,8 +539,8 @@ describe('App', () => {
     it('shows no badge until the first load settles', async () => {
       // A pending fetch is not an assertion that there is nothing to see, so the
       // badge stays absent rather than claiming zero.
-      mockedFetchRoomsAll.mockReturnValue(new Promise(() => {}) as any)
-      mockedFetchReservations.mockReturnValue(new Promise(() => {}) as any)
+      mockedFetchRoomsAll.mockReturnValue(new Promise(() => {}))
+      mockedFetchReservations.mockReturnValue(new Promise(() => {}))
 
       await renderApp()
 
@@ -433,8 +549,8 @@ describe('App', () => {
     })
 
     it('keeps a zero badge, which is a real answer', async () => {
-      mockedFetchRoomsAll.mockResolvedValue({ total: 0, totalUsers: 0, groups: {} } as any)
-      mockedFetchReservations.mockResolvedValue([] as any)
+      mockedFetchRoomsAll.mockResolvedValue({ total: 0, totalUsers: 0, groups: {} })
+      mockedFetchReservations.mockResolvedValue([])
 
       await renderApp()
 
@@ -445,7 +561,7 @@ describe('App', () => {
     it('counts only posts from the last 24 hours on the community tab', async () => {
       mockedFetchPosts.mockResolvedValue(postList([
         post(3, 1), post(2, 23), post(1, 25),
-      ]) as any)
+      ]))
 
       await renderApp()
 
@@ -455,7 +571,7 @@ describe('App', () => {
     it('drops the community badge when nothing is new, unlike the counts above', async () => {
       // Zero rooms is news; zero new posts is the ordinary state of a board,
       // and a badge that never goes away stops meaning anything.
-      mockedFetchPosts.mockResolvedValue(postList([post(1, 48)]) as any)
+      mockedFetchPosts.mockResolvedValue(postList([post(1, 48)]))
 
       await renderApp()
 
@@ -467,7 +583,7 @@ describe('App', () => {
       // is a lower bound, not a total.
       mockedFetchPosts.mockResolvedValue(postList(
         Array.from({ length: 20 }, (_, i) => post(i + 1, 1)),
-      ) as any)
+      ))
 
       await renderApp()
 

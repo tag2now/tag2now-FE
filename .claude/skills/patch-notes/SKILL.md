@@ -1,6 +1,6 @@
 ---
 name: patch-notes
-description: Write or revise an entry in src/config/patchNotes.ts for a tag2now-FE release. Use when preparing a release, adding a version to the patch notes, or when asked to trim or rewrite notes that read as a changelog. Covers what earns a line, the 10-line budget that decides how many versions stay visible, and how the top version drives the dialog.
+description: Write or revise an entry in src/config/patchNotes.ts for a tag2now-FE release. Use only when the user asks for patch notes — to add a version, or to trim or rewrite notes that read as a changelog. A request to tag, release or deploy is not such a request. Covers what earns a line, the 10-line budget that decides how many versions stay visible, and how the top version drives the dialog.
 ---
 
 # Writing tag2now patch notes
@@ -8,6 +8,17 @@ description: Write or revise an entry in src/config/patchNotes.ts for a tag2now-
 The notes live in `src/config/patchNotes.ts`, newest first. They are shown in a
 modal on the user's first visit after a release — to players checking whether a
 room is up, not to anyone reading a changelog.
+
+## Only when asked
+
+A new entry re-opens that modal for **every** user, including everyone who
+pressed 다시 보지 않기. That is the user's call, never a step of a release:
+"태그 달아서 배포하자" means tag and ship. A release needs no entry — see
+Versioning below.
+
+When the user does ask, show the proposed lines and wait for a yes before
+writing them. When a release looks like it might deserve notes, ask; do not
+draft them unprompted.
 
 ## The one test
 
@@ -69,6 +80,10 @@ The top entry's `version` **is** the localStorage seen-marker
 (`LATEST_PATCH_VERSION`), so adding an entry is what re-shows the dialog to
 everyone. There is no second constant to update. A version in the file must
 match the tag that ships it.
+
+The reverse does not hold: a tag needs no entry. A release without one is tagged
+with a patch number on the current top version — `v2.9.1` shipped after 2.9
+with no entry of its own — and leaves the header and the dialog as they were.
 
 ## Steps
 

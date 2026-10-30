@@ -69,6 +69,8 @@ interface MockOverrides {
   hourly?: unknown
   /** Keyed by npid. A player the map does not name still gets a response. */
   playerHistory?: Record<string, unknown>
+  /** Answers the match tab's 같은 계급 상대 찾기 whatever the rank asked; CURRENT_RANK_HOLDERS by default. */
+  currentRankHolders?: unknown
   /** Keyed by npid; null answers "no save" (404). Anyone else gets PLAYER_SAVE. */
   playerSave?: Record<string, unknown | null>
   /** Connected Chzzk channels, one per account; none by default. */
@@ -227,6 +229,19 @@ export async function skipPatchNotes(page: Page) {
 export async function goToMatchTab(page: Page) {
   await page.getByRole('tab', { name: '매칭' }).click()
   await expect(page.getByRole('tablist', { name: '매칭 종류 선택' })).toBeVisible()
+}
+
+/** Holders of whatever rank is asked, in the backend's order: lowest on the
+ * leaderboard first. u003 (TagComboKing) is in a rank-match room in rooms.json. */
+export const CURRENT_RANK_HOLDERS = {
+  rank: 20,
+  rank_name: 'Berserker',
+  total: 3,
+  entries: [
+    { username: 'np_002', saved_at: '2026-09-15T12:00:00Z', account_rank: 20, chars: [{ id: 2, character: 'Lei' }] },
+    { username: 'np_001', saved_at: '2026-09-14T12:00:00Z', account_rank: 22, chars: [{ id: 0, character: 'Paul' }] },
+    { username: 'u003', saved_at: '2026-09-13T12:00:00Z', account_rank: 24, chars: [{ id: 3, character: 'King' }, { id: 4, character: 'Jun' }] },
+  ],
 }
 
 /** A save with two characters played and one slot never used. */
@@ -523,6 +538,14 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const full = overrides?.currentRankLeaderboard ?? currentRankLeaderboardData
     const recent = new URL(route.request().url()).searchParams.has('days')
     return asJson(route, recent ? overrides?.recentCurrentRankLeaderboard ?? full : full)
+  })
+
+  // The match tab's 같은 계급 상대 찾기, under the room list.
+  await page.route('**/api/saves/current-rank-holders**', async (route) => {
+    if (failing.has('currentRankHolders')) {
+      return route.fulfill({ status: 500, body: 'Internal Server Error' })
+    }
+    return asJson(route, overrides?.currentRankHolders ?? CURRENT_RANK_HOLDERS)
   })
 
   // One player's TTT2 save, which the history panel reads on its own.

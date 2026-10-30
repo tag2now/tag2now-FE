@@ -26,6 +26,7 @@
 @import "./shared/styles/saves.css" layer(components.app);
 @import "./admin/admin.css" layer(components.app);
 @import "./chat/chat.css" layer(components.app);
+@import "./install/install.css" layer(components.app);
 @import "./auth/auth.css" layer(components.app);
 @import "./community/community.css" layer(components.app);
 @import "./reservation/reservation.css" layer(components.app);

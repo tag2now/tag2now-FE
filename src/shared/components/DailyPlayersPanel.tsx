@@ -1,7 +1,7 @@
 import { useId } from 'react'
 import DailyChart from '@/shared/components/DailyChart'
 import { completedDays } from '@/shared/util/completedDays'
-import type { DailySummary } from '@/stat/types'
+import type { DailySummary } from '@/shared/activityTypes'
 
 /** The daily player chart, with its heading and its exclusion.
  *

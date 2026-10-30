@@ -3,6 +3,7 @@ import { formatTimeAgo } from '@/shared/util/timeFormat'
 import useMediaQuery from '@/shared/hooks/useMediaQuery'
 import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
 import Select from '@/shared/components/Select'
+import ToggleGroup from '@/shared/components/ToggleGroup'
 import PostTypeBadge from './PostTypeBadge'
 import type { LeaderboardEntry} from "@/shared/types";
 import { MAX_POST_CHARACTERS, POST_TYPES } from "@/community/types";
@@ -11,7 +12,7 @@ import AuthorBadge from './AuthorBadge'
 import { ChevronDown, ChevronLeft, ChevronRight, MessageSquare, MessagesSquare, PenLine, RefreshCw, SlidersHorizontal, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
 
 /** Wider than a phone (the 760px breakpoint every sheet uses): the categories
- * are buttons. A phone gets them as a select. */
+ * are radio choices. A phone gets them as a select. */
 export const WIDE_QUERY = '(min-width: 761px)'
 
 /** `''` is 전체 — the value the feed's filter already uses for "no category". */
@@ -94,19 +95,7 @@ export default function PostList({
         </div>
         <div className="section-controls">
           {wide ? (
-            <div className="segmented-control" role="group" aria-label="게시글 분류">
-              {POST_TYPE_OPTIONS.map(({ value, label }) => (
-                <button
-                  type="button"
-                  key={value}
-                  onClick={() => onPostTypeChange(value)}
-                  aria-pressed={postType === value}
-                  className={`cursor-pointer transition-colors ${postType === value ? 'active' : ''}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            <ToggleGroup label="게시글 분류" value={postType} options={POST_TYPE_OPTIONS} onChange={onPostTypeChange} />
           ) : (
             <Select label="게시글 분류" value={postType} options={POST_TYPE_OPTIONS} onChange={onPostTypeChange} />
           )}

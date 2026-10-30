@@ -12,30 +12,30 @@ export type ApiComment = { id: number; reservation_id: number; author: string; a
 
 // The window is the server's to decide — now until the next 06:00 KST — so the
 // client no longer names a date. A session that runs past midnight stays on one list.
-export const fetchReservations = (): Promise<ApiReservation[]> => GET(API.reservations().path)
+export const fetchReservations = (): Promise<ApiReservation[]> => GET<ApiReservation[]>(API.reservations().path)
 
 export const createReservation = (data: CreateReservationInput): Promise<ApiReservation> =>
-  POST(API.reservations().path, data)
+  POST<ApiReservation>(API.reservations().path, data)
 
 export const joinReservation = (id: number): Promise<ApiReservation> =>
-  POST(API.reservationParticipants(id).path, { ranks: [] })
+  POST<ApiReservation>(API.reservationParticipants(id).path, { ranks: [] })
 
 export const cancelParticipation = (id: number): Promise<ApiReservation> =>
-  DELETE(API.ownParticipation(id).path)
+  DELETE<ApiReservation>(API.ownParticipation(id).path)
 
 export type UpdateReservationInput = Partial<CreateReservationInput>
 
 export const updateReservation = (id: number, patch: UpdateReservationInput): Promise<ApiReservation> =>
-  PATCH(API.reservation(id).path, patch)
+  PATCH<ApiReservation>(API.reservation(id).path, patch)
 
 export async function cancelReservation(id: number): Promise<void> {
   await DELETE(API.reservation(id).path)
 }
 
-export const fetchComments = (id: number): Promise<ApiComment[]> => GET(API.reservationComments(id).path)
+export const fetchComments = (id: number): Promise<ApiComment[]> => GET<ApiComment[]>(API.reservationComments(id).path)
 
 export const createComment = (id: number, body: string): Promise<ApiComment> =>
-  POST(API.reservationComments(id).path, { body })
+  POST<ApiComment>(API.reservationComments(id).path, { body })
 
 export async function deleteComment(reservationId: number, commentId: number): Promise<void> {
   await DELETE(API.reservationComment(reservationId, commentId).path)

@@ -3,6 +3,10 @@ import { render, screen } from '@testing-library/react'
 import {RankMatchTable} from "@/match/component";
 import type {RankMatchRoom, RoomUser} from "@/match/types";
 
+const user = (online_name: string, overrides: Partial<RoomUser> = {}): RoomUser => ({
+  np_id: online_name, online_name, avatar_url: '', ...overrides,
+})
+
 describe('RankMatchTable', () => {
   it('renders grouped by tier with User 1 / User 2 columns', () => {
     const rooms: RankMatchRoom[] = [
@@ -11,9 +15,9 @@ describe('RankMatchTable', () => {
         owner_online_name: 'Longuring',
         rank_info: { id: 1, name: '1st 나무단', tier: '나무단' },
         users: [
-          { online_name: 'Longuring', np_id: 'Longuring' },
-          { online_name: 'DuelMan', np_id: 'DuelMan' },
-        ] as RoomUser[],
+          user('Longuring'),
+          user('DuelMan'),
+        ],
       },
     ]
     render(<RankMatchTable rooms={rooms} />)
@@ -35,7 +39,7 @@ describe('RankMatchTable', () => {
         room_id: 3382,
         owner_online_name: 'SoloPlayer',
         rank_info: { id: 2, name: '2nd 나무단', tier: '나무단' },
-        users: [{ online_name: 'SoloPlayer', np_id: 'SoloPlayer' }] as RoomUser[],
+        users: [user('SoloPlayer')],
       },
     ]
     render(<RankMatchTable rooms={rooms} />)
@@ -49,17 +53,17 @@ describe('RankMatchTable', () => {
       {
         room_id: 1,
         rank_info: { id: 20, name: '2nd 돌단', tier: '돌단' },
-        users: [{ online_name: 'C' }, { online_name: 'D' }] as RoomUser[],
+        users: [user('C'), user('D')],
       },
       {
         room_id: 2,
         rank_info: { id: 5, name: '1st 나무단', tier: '나무단' },
-        users: [{ online_name: 'A' }, { online_name: 'B' }] as RoomUser[],
+        users: [user('A'), user('B')],
       },
       {
         room_id: 3,
         rank_info: { id: 10, name: '2nd 나무단', tier: '나무단' },
-        users: [{ online_name: 'E' }, { online_name: 'F' }] as RoomUser[],
+        users: [user('E'), user('F')],
       },
     ]
     render(<RankMatchTable rooms={rooms} />)
@@ -80,12 +84,12 @@ describe('RankMatchTable', () => {
       {
         room_id: 1,
         rank_info: { id: 1, name: '1st 나무단', tier: '나무단' },
-        users: [{ online_name: 'Live', np_id: 'live', stream }, { online_name: 'Quiet', np_id: 'quiet', stream: null }] as RoomUser[],
+        users: [user('Live', { np_id: 'live', stream }), user('Quiet', { np_id: 'quiet', stream: null })],
       },
       {
         room_id: 2,
         rank_info: { id: 2, name: '2nd 나무단', tier: '나무단' },
-        users: [{ online_name: 'Waiting', np_id: 'waiting', stream }] as RoomUser[],
+        users: [user('Waiting', { np_id: 'waiting', stream })],
       },
     ]
     render(<RankMatchTable rooms={rooms} />)
@@ -101,7 +105,7 @@ describe('RankMatchTable', () => {
     const rooms: RankMatchRoom[] = [{
       room_id: 1,
       rank_info: { id: 1, name: '1st 나무단', tier: '나무단' },
-      users: [{ online_name: 'Quiet', np_id: 'quiet', stream: null }, { online_name: 'Live', np_id: 'live', stream }] as RoomUser[],
+      users: [user('Quiet', { np_id: 'quiet', stream: null }), user('Live', { np_id: 'live', stream })],
     }]
     render(<RankMatchTable rooms={rooms} />)
 

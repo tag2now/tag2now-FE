@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { fetchPosts, fetchPostDetail} from "@/community/communityApi";
 import type { PostSummary, PostDetail} from "@/community/types";
+import { errorMessage } from '@/shared/util/errorMessage'
 
 const PAGE_SIZE = 20
 
@@ -32,8 +33,8 @@ export default function useCommunity() {
     try {
       const res = await fetchPosts(page, PAGE_SIZE, postType, characters)
       setState((s) => ({ ...s, posts: res.posts, total: res.total, page: res.page, loading: false }))
-    } catch (e: any) {
-      setState((s) => ({ ...s, loading: false, error: e.message }))
+    } catch (e: unknown) {
+      setState((s) => ({ ...s, loading: false, error: errorMessage(e) }))
     }
   }, [])
 
@@ -42,8 +43,8 @@ export default function useCommunity() {
     try {
       const detail = await fetchPostDetail(id)
       setState((s) => ({ ...s, selectedPost: detail, detailLoading: false }))
-    } catch (e: any) {
-      setState((s) => ({ ...s, detailLoading: false, detailError: e.message }))
+    } catch (e: unknown) {
+      setState((s) => ({ ...s, detailLoading: false, detailError: errorMessage(e) }))
     }
   }, [])
 

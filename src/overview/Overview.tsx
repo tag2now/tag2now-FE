@@ -8,7 +8,7 @@ import { KpiCard, NoticeBanner, OpenReservations, OverviewSection, RecentPosts }
 import RankList, { type RankRow } from '@/shared/components/RankList'
 import type { LeaderboardEntry } from '@/shared/types'
 import type { RoomsData } from '@/match/types'
-import type { WeeklyTopPlayer } from '@/stat/types'
+import type { WeeklyTopPlayer } from '@/shared/activityTypes'
 import { formatGroupName, GROUP_ORDER } from '@/config/tabConfig'
 import { pathOf } from '@/config/routes'
 import { totals } from '@/shared/util/leaderboardFilter'

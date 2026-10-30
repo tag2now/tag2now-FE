@@ -1,4 +1,4 @@
-import type { DailySummary } from '@/stat/types'
+import type { DailySummary } from '@/shared/activityTypes'
 
 /** The hour the backend's statistics day begins, in KST.
  *

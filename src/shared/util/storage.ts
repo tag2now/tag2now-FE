@@ -15,6 +15,8 @@ export const STORAGE_KEYS = {
   seenPatchVersion: 'ttt2-patch-dismissed',
   /** The signed-in RPCN account: access token, its expiry, and the user. */
   session: 'ttt2-session',
+  /** Set once the app-install sheet is closed or used; it does not return. */
+  installSheetDismissed: 'ttt2-install-dismissed',
 } as const
 
 /** Keys earlier builds wrote and nothing reads any more: the typed-in display

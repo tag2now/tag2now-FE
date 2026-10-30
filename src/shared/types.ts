@@ -27,3 +27,8 @@ export interface LeaderboardData {
   total_records: number
   entries: LeaderboardEntry[]
 }
+
+/** The adapter supplies list place when the response omits a rank. */
+export type LeaderboardResponse = Omit<LeaderboardData, 'entries'> & {
+  entries?: (Omit<LeaderboardEntry, 'rank'> & { rank?: number })[]
+}

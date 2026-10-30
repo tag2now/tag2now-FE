@@ -18,6 +18,19 @@ const rowNames = () =>
   Array.from(document.querySelectorAll('.player-btn')).map((b) => b.textContent)
 
 describe('Leaderboard', () => {
+  it('marks only the supplied reader and removes the marker when the prop is cleared', () => {
+    const data = boardOf([entry(1, 'One'), entry(2, 'Two')])
+    const view = render(<Leaderboard data={data} loading={false} error={null} viewerNpid="p2" />)
+
+    expect(document.querySelectorAll('.rank-row.is-me')).toHaveLength(1)
+    expect(document.querySelector('.rank-row.is-me')).toHaveTextContent('Two')
+    expect(screen.getByText('나')).toBeInTheDocument()
+
+    view.rerender(<Leaderboard data={data} loading={false} error={null} viewerNpid={null} />)
+    expect(document.querySelector('.rank-row.is-me')).toBeNull()
+    expect(screen.queryByText('나')).not.toBeInTheDocument()
+  })
+
   it('announces the first load and reserves the table height', () => {
     render(<Leaderboard loading={true} data={null} error={null} />)
     expect(screen.getByRole('status')).toHaveTextContent('랭킹을 불러오는 중')

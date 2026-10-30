@@ -1,0 +1,16 @@
+{
+  "name": "tag2now",
+  "short_name": "tag2now",
+  "description": "지금 열려 있는 방, 리더보드 랭킹, 플레이어 활동 통계, 예약 매치를 한눈에.",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0c0c0e",
+  "theme_color": "#0c0c0e",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

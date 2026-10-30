@@ -63,11 +63,11 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('columnheader', { name: 'Player' })).toBeVisible()
   })
 
-  test('clicking community tab shows post list', async ({ page }) => {
+  test('clicking community tab shows post list', async ({ page, isMobile }) => {
     await page.getByRole('tab', { name: '커뮤니티' }).click()
 
-    // Community has its category filter: buttons on desktop, a select on a phone
-    await expect(page.getByLabel('게시글 분류')).toBeVisible()
+    // The category is a radio group on desktop and a select on a phone.
+    await expect(page.getByRole(isMobile ? 'combobox' : 'group', { name: '게시글 분류' })).toBeVisible()
     await expect(page.getByRole('button', { name: '글쓰기' })).toBeVisible()
   })
 
@@ -117,6 +117,28 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-selected', 'false')
   })
 
+  // Navigation extraction regression check in a real browser at both widths.
+  test('arrow navigation moves focus and URL, and back restores the room group', async ({ page }) => {
+    const home = page.getByRole('tab', { name: '홈' })
+    await home.focus()
+    await home.press('ArrowRight')
+
+    const match = page.getByRole('tab', { name: /^매칭/ })
+    await expect(page).toHaveURL(/\/match\/rank_match$/)
+    await expect(match).toBeFocused()
+    await expect(match).toHaveAttribute('tabindex', '0')
+    await expect(home).toHaveAttribute('tabindex', '-1')
+
+    await page.getByRole('tab', { name: /^플매/ }).click()
+    await expect(page).toHaveURL(/\/match\/player_match$/)
+    await expect(page.locator('#tabpanel-player_match')).toHaveAttribute('aria-labelledby', 'tab-player_match')
+
+    await page.goBack()
+    await expect(page).toHaveURL(/\/match\/rank_match$/)
+    await expect(page.getByRole('tab', { name: /^랭매/ })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.locator('#tabpanel-rank_match')).toHaveAttribute('aria-labelledby', 'tab-rank_match')
+  })
+
   // Every width: the header is where a login is looked for, so the account
   // lives there on a desktop too. The sidebar card is the profile, and goes
   // with it.
@@ -132,6 +154,23 @@ test.describe('Navigation', () => {
     await page.getByRole('alertdialog', { name: '로그아웃할까요?' }).getByRole('button', { name: '로그아웃' }).click()
     await expect(headerProfile.getByRole('button', { name: '로그인' })).toBeVisible()
     await expect(page.getByRole('region', { name: '내 파이터 정보' })).toHaveCount(0)
+  })
+
+  test('the account menu focuses its first action and closes on Escape or an outside press', async ({ page }) => {
+    await signInAs(page, 'np_002', 'KingOfIronFist')
+    await page.reload()
+    const header = page.locator('#headerProfileSlot')
+    const toggle = header.getByRole('button', { name: 'KingOfIronFist 계정 메뉴' })
+
+    await toggle.click()
+    await expect(header.getByRole('menuitem', { name: '내 정보 보기' })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(header.getByRole('menu')).toHaveCount(0)
+    await expect(toggle).toBeFocused()
+
+    await toggle.click()
+    await page.getByRole('heading', { name: 'Tag 2 Now' }).click()
+    await expect(header.getByRole('menu')).toHaveCount(0)
   })
 
   // Below 760px the sidebar card, and its 내 정보 보기, is hidden; the header

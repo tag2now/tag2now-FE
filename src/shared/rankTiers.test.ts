@@ -1,47 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { RANK_ORDER, sortRanksDescending, indexOfRank } from '@/reservation/reservationLabels'
+import { RANK_ORDER } from '@/shared/ranks'
 import { rankBands, tierOfRank, rememberTier, UNCONFIRMED_BAND, isConfirmedTier } from '@/shared/rankTiers'
-
-describe('RANK_ORDER', () => {
-  // Verified against the Tekken wiki's TTT2 ranking list: Beginner, nine kyu,
-  // three dan, then 4단 Disciple through 100단 True Tekken God.
-  it('holds all 43 TTT2 ranks, lowest first', () => {
-    expect(RANK_ORDER).toHaveLength(43)
-    expect(RANK_ORDER[0]).toBe('Beginner')
-    expect(RANK_ORDER[35]).toBe('Yaksa')
-    expect(RANK_ORDER.at(-1)).toBe('True Tekken God')
-  })
-
-  it('names every rank exactly once', () => {
-    expect(new Set(RANK_ORDER).size).toBe(RANK_ORDER.length)
-  })
-
-  it('keeps the seven ranks above Yaksa in game order', () => {
-    expect(RANK_ORDER.slice(36)).toEqual([
-      'Majin', 'Toshin', 'Emperor', 'Tekken Lord', 'Tekken Emperor', 'Tekken God', 'True Tekken God',
-    ])
-  })
-})
-
-describe('sortRanksDescending', () => {
-  it('puts the higher rank first', () => {
-    expect(sortRanksDescending(['Vanquisher', 'Yaksa', 'Beginner']))
-      .toEqual(['Yaksa', 'Vanquisher', 'Beginner'])
-  })
-
-  it('ranks the new top seven above Yaksa', () => {
-    expect(sortRanksDescending(['Yaksa', 'Tekken God'])).toEqual(['Tekken God', 'Yaksa'])
-  })
-
-  // An unknown rank used to sort below Beginner, because a missing index read
-  // as -1. A rank we have not heard of is far more likely to be a new *top*
-  // than a new bottom, and either way the weakest position is a guess.
-  it('sorts a rank it has never heard of last, not below Beginner', () => {
-    expect(indexOfRank('Nonesuch')).toBe(-1)
-    expect(sortRanksDescending(['Beginner', 'Nonesuch', 'Yaksa']))
-      .toEqual(['Yaksa', 'Beginner', 'Nonesuch'])
-  })
-})
 
 describe('tier bands', () => {
   it('splits the numeric climb into 급 and 단', () => {

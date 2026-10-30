@@ -1,0 +1,20 @@
+/* A card in the bottom-right corner on a desktop, clear of the chat launcher
+   on the left. Where the chat is docked as the right-hand column instead, the
+   corner is the chat's composer on a short screen, and the left one is free:
+   the sidebar ends well above it. On a phone, a strip above the bottom tab
+   bar: 80px clears it, the same offset chat.css gives the chat launcher, which
+   the strip covers until it is closed. The 760px boundary is the tab bar's,
+   from responsive.css, not Tailwind's md. */
+.install-sheet {
+  position: fixed; right: 16px; bottom: 16px; z-index: 56;
+  width: min(360px, calc(100% - 32px));
+}
+
+.app-shell:has(.chat-docked) .install-sheet { right: auto; left: 16px; }
+
+@media (max-width: 760px) {
+  .install-sheet {
+    left: 8px; right: 8px; width: auto;
+    bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}

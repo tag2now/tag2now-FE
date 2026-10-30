@@ -1,6 +1,6 @@
 ---
 name: test
-description: Run tag2now-FE's whole test suite before offering a commit — this repository's checks in CI's order — and report every step with its counts and the name of every failure. Use whenever a change here is ready to commit, or when asked to run the tests, the E2E suite, or "everything".
+description: Run tag2now-FE's whole test suite before offering a commit — this repository's checks in CI's order — and report every step with its counts and the name of every failure. Use whenever a code change here is ready to commit, or when asked to run the tests, the E2E suite, or "everything". Not for a data- or docs-only change (a manifest field, a patch-notes entry, markdown) — that gets only the check that reads it.
 ---
 
 # test — the whole frontend suite
@@ -54,12 +54,33 @@ that run.
 This repository only. A change that also touched tag2now-BE is tested by that
 repository's own `test` skill, in its own checkout.
 
-**E2E (step 4) always runs when this repository changed.** It is the only suite
-that exercises routing, the tab strip and the modals as a browser sees them.
+**E2E (step 5) runs whenever code changed** — anything under `src/` or `e2e/`,
+a stylesheet, a config. It is the only suite that exercises routing, the tab
+strip and the modals as a browser sees them.
+
+**A data- or docs-only change does not run this skill.** A manifest field, a
+patch-notes entry, a markdown file: run the one check that reads it — a JSON
+parse, `npx vitest run src/config/patchNotes.test.ts` for the line budget — or
+nothing, when no test reads it. A `v*` tag runs the whole suite in the deploy
+workflow before anything ships, so a local full run there buys only minutes.
 
 ## Steps
 
-### 1. Unit and component tests
+### 1. Import boundaries and project policy tests
+
+```bash
+npm run test:architecture > test-results/architecture-tests.log 2>&1; echo "exit=$?"
+npm run lint:architecture > test-results/architecture.log 2>&1; echo "exit=$?"
+```
+
+The first command uses Node's test runner with dependency-cruiser's public API
+and CLI against temporary TypeScript projects; report its count separately from
+Vitest. It checks project policy, including the real transport/session exception.
+The second invokes dependency-cruiser's native CLI with `.dependency-cruiser.mjs`
+and reports forbidden/unresolved references and unused transport integration.
+These commands also run in CI. They enforce dependencies, not component reuse.
+
+### 2. Unit and component tests
 
 ```bash
 npm test > test-results/unit.log 2>&1; echo "exit=$?"
@@ -70,30 +91,30 @@ npm test > test-results/unit.log 2>&1; echo "exit=$?"
 Before calling a drop a regression, compare per-file counts with
 `--reporter=json`.
 
-### 2. Typecheck — both projects
+### 3. Typecheck — both projects
 
 ```bash
 npm run typecheck > test-results/typecheck.log 2>&1; echo "exit=$?"
-npx tsc --noEmit -p e2e/tsconfig.json > test-results/typecheck-e2e.log 2>&1; echo "exit=$?"
+npm run typecheck:e2e > test-results/typecheck-e2e.log 2>&1; echo "exit=$?"
 ```
 
-The second is not in CI: the root `tsconfig.json` includes `src` only, so a type
-error in `e2e/` passes CI and every other check here.
+Both run in CI. The root `tsconfig.json` includes `src` only, so the separate
+E2E TypeScript project must also be checked.
 
-### 3. Stylesheet lint
+### 4. Stylesheet lint
 
 ```bash
 npm run lint:css > test-results/lint-css.log 2>&1; echo "exit=$?"
 ```
 
-Not in CI either. It enforces the token contract — no raw hex or `rgb()` in a
-colour, no `font-size` or `font-weight` outside its `var(--…)` scale. It fails
-**open**: with stylelint missing from `node_modules` the script dies with
+Also in CI. It enforces the token contract — no raw hex or `rgb()` in a
+colour, no `font-size` or `font-weight` outside its `var(--…)` scale. With
+stylelint missing from `node_modules` the script dies with
 "'stylelint' is not recognized" instead of reporting, which reads like a broken
 script rather than a skipped check. `npm install` fixes it; a check that did not
 actually run is not a pass.
 
-### 4. E2E
+### 5. E2E
 
 ```bash
 npx playwright test > test-results/e2e.log 2>&1; echo "exit=$?"

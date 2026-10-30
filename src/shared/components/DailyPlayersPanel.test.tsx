@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
 import DailyPlayersPanel from '@/shared/components/DailyPlayersPanel'
 import { statDayOf } from '@/shared/util/completedDays'
-import type { DailySummary } from '@/stat/types'
+import type { DailySummary } from '@/shared/activityTypes'
 
 vi.mock('@/shared/components/DailyChart', () => ({
   default: ({ data }: { data: DailySummary[] }) => <span data-testid="daily-chart">{data.map((row) => row.date).join(',')}</span>,

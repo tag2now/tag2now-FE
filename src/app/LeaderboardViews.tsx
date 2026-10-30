@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import useAuth from '@/auth/useAuth'
 import Leaderboard from '@/shared/Leaderboard'
 import { toLeaderboardData, type CurrentRankLeaderboard } from '@/shared/currentRankLeaderboard'
 import { RECENT_DAYS, useRecentCurrentRankLeaderboard } from '@/shared/hooks/useCurrentRankLeaderboard'
@@ -25,6 +26,7 @@ interface Props {
  * or by the highest they reached. The view is the URL (`leaderboardPath`), so
  * the back button and a shared link land on the same board. */
 export default function LeaderboardViews({ current, best }: Props) {
+  const viewerNpid = useAuth().user?.username ?? null
   const view: LeaderboardView = useParams().view === 'best' ? 'best' : 'current'
   const [recent, setRecent] = useState(false)
   const recentBoard = useRecentCurrentRankLeaderboard(recent)
@@ -45,6 +47,7 @@ export default function LeaderboardViews({ current, best }: Props) {
           refreshing={board.refreshing}
           error={board.error}
           onRefresh={board.refresh}
+          viewerNpid={viewerNpid}
           controls={(
             <>
               <ViewTabs value={view} />
