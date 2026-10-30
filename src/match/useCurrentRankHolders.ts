@@ -10,7 +10,7 @@ import type { CurrentRankHolders } from '@/match/types'
 export const MIN_HOLDER_RANK = 10
 
 export const fetchCurrentRankHolders = (rank: number): Promise<CurrentRankHolders> =>
-  GET(API.currentRankHolders().path, { rank })
+  GET<CurrentRankHolders>(API.currentRankHolders().path, { rank })
 
 export type HoldersState =
   | { kind: 'idle' }

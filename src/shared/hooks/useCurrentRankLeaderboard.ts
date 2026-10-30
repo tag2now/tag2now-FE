@@ -10,10 +10,10 @@ const TOP = 1000
 /** The window of the 최근 30일 option, which the backend filters and ranks within. */
 export const RECENT_DAYS = 30
 
-export const fetchCurrentRankLeaderboard = (): Promise<CurrentRankLeaderboard> => GET(API.currentRankLeaderboard().path, { top: TOP })
+export const fetchCurrentRankLeaderboard = (): Promise<CurrentRankLeaderboard> => GET<CurrentRankLeaderboard>(API.currentRankLeaderboard().path, { top: TOP })
 
 export const fetchRecentCurrentRankLeaderboard = (): Promise<CurrentRankLeaderboard> =>
-  GET(API.currentRankLeaderboard().path, { top: TOP, days: RECENT_DAYS })
+  GET<CurrentRankLeaderboard>(API.currentRankLeaderboard().path, { top: TOP, days: RECENT_DAYS })
 
 export default function useCurrentRankLeaderboard(): PolledState<CurrentRankLeaderboard> {
   return usePolledData(fetchCurrentRankLeaderboard, POLL.currentRankLeaderboard)

@@ -7,7 +7,7 @@ import type { ChatMessage } from '@/chat/types'
 export const streamUrl = (): string => apiUrl(API.chatStream().path)
 
 export const postMessage = (body: string): Promise<ChatMessage> =>
-  POST(API.chatMessages().path, { body })
+  POST<ChatMessage>(API.chatMessages().path, { body })
 
 export const deleteMessage = (id: number): Promise<void> =>
   DELETE(API.chatMessage(id).path)

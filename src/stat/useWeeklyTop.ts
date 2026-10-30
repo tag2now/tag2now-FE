@@ -23,10 +23,10 @@ export default function useWeeklyTop(): WeeklyTopState {
     let cancelled = false
     setLoading(true)
     setError(null)
-    GET(API.weeklyTop().path, { limit })
+    GET<WeeklyTopPlayer[]>(API.weeklyTop().path, { limit })
       .then((res) => {
         if (cancelled) return
-        setData(res as WeeklyTopPlayer[])
+        setData(res)
         setLoading(false)
       })
       .catch((e: unknown) => {

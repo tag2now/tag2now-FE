@@ -29,7 +29,7 @@ describe('edit post', () => {
     expect(updatePost).not.toHaveBeenCalled()
   })
   it('saves edited fields and removes the video', async () => {
-    vi.mocked(updatePost).mockResolvedValue({})
+    vi.mocked(updatePost).mockResolvedValue({ ...post, title: '새 제목', youtube_video_id: null, comment_count: 0 })
     const refresh = setup()
     fireEvent.click(screen.getByRole('button', { name: '수정' }))
     fireEvent.change(screen.getByLabelText('게시글 제목'), { target: { value: '새 제목' } })

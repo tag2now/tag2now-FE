@@ -7,7 +7,7 @@ import type { AccountStatus, BanResult } from '@/admin/types'
  * never ends the session. */
 
 export const lookupAccount = (username: string, password: string): Promise<AccountStatus> =>
-  POST(API.adminLookup().path, { username, password })
+  POST<AccountStatus>(API.adminLookup().path, { username, password })
 
 export const banAccount = (username: string, password: string): Promise<BanResult> =>
-  POST(API.adminBan().path, { username, password })
+  POST<BanResult>(API.adminBan().path, { username, password })

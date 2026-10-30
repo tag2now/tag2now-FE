@@ -5,6 +5,7 @@ import { POLL } from '@/config/polling'
 import { fetchNotices, fetchPosts } from '@/community/communityApi'
 import { fetchReservations } from '@/reservation/reservationApi'
 import type { OverviewData } from '@/overview/types'
+import type { DailySummary, WeeklyTopPlayer } from '@/shared/activityTypes'
 import { DEFAULT_STATS_DAYS } from '@/stat/useStats'
 
 /** The stats tab's default period: the home screen draws that tab's daily
@@ -27,8 +28,8 @@ export const OVERVIEW_NOTICES = 2
  */
 export const fetchOverview = async (): Promise<OverviewData> => {
   const [daily, weeklyTop, posts, notices, reservations] = await Promise.allSettled([
-    GET(API.dailyStats().path, { days: OVERVIEW_DAYS }),
-    GET(API.weeklyTop().path, { limit: OVERVIEW_TOP_N }),
+    GET<DailySummary[]>(API.dailyStats().path, { days: OVERVIEW_DAYS }),
+    GET<WeeklyTopPlayer[]>(API.weeklyTop().path, { limit: OVERVIEW_TOP_N }),
     fetchPosts(1, OVERVIEW_POSTS),
     fetchNotices(OVERVIEW_NOTICES),
     fetchReservations(),
@@ -37,14 +38,14 @@ export const fetchOverview = async (): Promise<OverviewData> => {
   return {
     daily: settledOr(daily, []),
     weeklyTop: settledOr(weeklyTop, []),
-    posts: settledOr(posts, { posts: [] }).posts ?? [],
+    posts: posts.status === 'fulfilled' ? posts.value.posts ?? [] : [],
     notices: settledOr(notices, []),
     reservations: settledOr(reservations, []),
   }
 }
 
-function settledOr<T>(result: PromiseSettledResult<unknown>, fallback: T): T {
-  return result.status === 'fulfilled' ? (result.value as T) : fallback
+function settledOr<T>(result: PromiseSettledResult<T>, fallback: T): T {
+  return result.status === 'fulfilled' ? result.value : fallback
 }
 
 /** No interval: the overview is a snapshot, fetched each time its route mounts,

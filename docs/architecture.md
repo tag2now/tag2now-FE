@@ -64,6 +64,14 @@ Backend HTTP calls use [shared/util/api.ts](../src/shared/util/api.ts).
 request that carried a token ends the session and requests login with the server's
 reason. Paths come from [config/endpoints.ts](../src/config/endpoints.ts).
 
+JSON helpers default to `unknown`; feature API calls declare their response type
+and reuse domain input types. Query records contain scalar strings, numbers or
+booleans; repeated keys use `URLSearchParams`. Write bodies contain JSON values,
+with undefined object fields omitted by the existing JSON serialization.
+DELETE defaults to a no-content contract; endpoints returning JSON declare its
+type explicitly. These types describe backend contracts without validating payloads
+at runtime. Server shapes that differ from UI models are mapped at the API boundary.
+
 The build-update hook separately fetches `/version.json`; chat uses `EventSource`
 with a URL from `chat/chatApi.ts`. Do not route either through JSON API helpers
 merely to make every transport look alike.

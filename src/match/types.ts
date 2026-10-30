@@ -40,6 +40,11 @@ export interface RoomsData {
   totalUsers: number
 }
 
+/** The room endpoint uses RPCN's npid; the UI uses np_id. */
+export type ApiRoomUser = Omit<RoomUser, 'np_id'> & { npid: string }
+export type ApiRoom = Omit<Room, 'users'> & { users: ApiRoomUser[] }
+export type RoomsResponse = Record<string, ApiRoom[]>
+
 /** A player to play now at a rank, from tag2now-BE's `GET /saves/current-rank-holders`. */
 export interface CurrentRankHolder {
   username: string
