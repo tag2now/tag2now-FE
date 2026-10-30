@@ -16,6 +16,12 @@ restore with `vi.useRealTimers()` in `afterEach` even if a test fails.
 
 **E2E — Playwright**, in `e2e/`, against two projects: `chromium` (Desktop Chrome) and `mobile` (Pixel 5). The config starts `npm run dev` automatically and reuses a running server outside CI.
 
+The E2E CI job explicitly uses Ubuntu 26.04 with Node 24. Playwright added support
+for that OS in 1.61; keep the package and lockfile on a supported version when
+changing the runner. After updating Playwright locally, run
+`npx playwright install chromium` to install its matching browser. CI installs
+both Chromium and its OS dependencies with `npx playwright install --with-deps chromium`.
+
 - `e2e/helpers/mock-api.ts` — route interception; E2E does not hit a real backend.
   `mockAllApis` must route every endpoint the landing tab calls, the overview's
   history/community/reservation reads included; anything unrouted reaches

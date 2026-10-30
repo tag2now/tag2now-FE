@@ -25,7 +25,8 @@ jobs:
       - run: npm run lint:css
 
   e2e-test:
-    runs-on: ubuntu-latest
+    # Match the supported Playwright platform explicitly; latest can change OS.
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

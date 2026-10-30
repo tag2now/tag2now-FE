@@ -9,7 +9,7 @@ export default defineConfig({
   // One worker was the Playwright template's default, not a response to any
   // observed problem, and it serialised a suite that has no reason to be.
   //
-  // 4 is deliberate oversubscription: ubuntu-latest is a 2-core runner, and
+  // 4 is deliberate oversubscription for the CI runner allocation, and
   // these specs spend most of their wall time waiting — on navigation, on
   // `expect` polling, on the browser — not burning CPU. Every backend call is
   // intercepted and the dev server only serves static files, so nothing here
