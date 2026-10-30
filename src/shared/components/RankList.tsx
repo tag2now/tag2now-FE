@@ -39,6 +39,9 @@ interface RankListProps {
   emptyMsg?: string
   /** Opens the player history panel. */
   onSelect: (npid: string) => void
+  /** What the two character cells show, for a list where they are not a
+   * player's main and sub. */
+  charColumns?: { main: string; sub: string }
 }
 
 /** The one ranking list.
@@ -57,7 +60,7 @@ interface RankListProps {
  * replaces gave: the summary lists were <ol>s whose cells had to name
  * themselves in sr-only text.
  */
-export default function RankList({ rows, detailLabel, label, emptyMsg = '데이터 없음', onSelect }: RankListProps) {
+export default function RankList({ rows, detailLabel, label, emptyMsg = '데이터 없음', onSelect, charColumns }: RankListProps) {
   if (rows.length === 0) return <p className="state-msg">{emptyMsg}</p>
 
   return (
@@ -66,8 +69,8 @@ export default function RankList({ rows, detailLabel, label, emptyMsg = '데이�
         <span role="columnheader">#</span>
         <span role="columnheader">Player</span>
         {detailLabel && <span role="columnheader">{detailLabel}</span>}
-        <span role="columnheader">Main</span>
-        <span role="columnheader">Sub</span>
+        <span role="columnheader">{charColumns?.main ?? 'Main'}</span>
+        <span role="columnheader">{charColumns?.sub ?? 'Sub'}</span>
       </div>
       {rows.map((row, i) => {
         const place = row.rank ?? i + 1
@@ -106,8 +109,8 @@ export default function RankList({ rows, detailLabel, label, emptyMsg = '데이�
                   : <><strong>{row.detail ?? '—'}</strong>{row.detailSub && <span>{row.detailSub}</span>}</>}
               </span>
             )}
-            <MiniCharCell role="cell" char={row.mainChar} label="메인" />
-            <MiniCharCell role="cell" char={row.subChar} label="서브" />
+            <MiniCharCell role="cell" char={row.mainChar} label={charColumns?.main ?? '메인'} />
+            <MiniCharCell role="cell" char={row.subChar} label={charColumns?.sub ?? '서브'} />
           </div>
         )
       })}

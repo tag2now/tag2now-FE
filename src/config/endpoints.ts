@@ -42,6 +42,9 @@ export const API = {
   playerSave: (npid: string) => endpoint(`saves/players/${npid}`),
   currentRankLeaderboard: () => endpoint('saves/leaderboard'),
 
+  event: () => endpoint('event'),
+  eventPlayer: (npid: string) => endpoint(`event/players/${encodeURIComponent(npid)}`),
+
   posts: () => endpoint('community/posts'),
   post: (postId: number) => endpoint(`community/posts/${postId}`),
   postComments: (postId: number) => endpoint(`community/posts/${postId}/comments`),

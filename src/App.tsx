@@ -25,6 +25,8 @@ import type { Room } from "@/match/types";
 import Reservation from "@/reservation/Reservation";
 import Overview from "@/overview/Overview";
 import Admin from "@/admin/Admin";
+import EventPage from "@/event/Event";
+import { EventFloatingLink, EventSidebarCard } from "@/event/component";
 import {
   BarChart3,
   LayoutDashboard,
@@ -224,6 +226,7 @@ export default function App() {
             ))}
           </nav>
           </div>
+          <EventSidebarCard />
           <PlayerProfileCard leaderboardEntries={lb.data?.entries} roomUsers={roomUsers} />
         </aside>
 
@@ -252,7 +255,7 @@ export default function App() {
               </div>
             </nav>
           )}
-          <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={panelLabel} aria-label={panelLabel ? undefined : '계정 관리'} tabIndex={0}>
+          <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={panelLabel} aria-label={panelLabel ? undefined : activeTab === 'event' ? '이벤트' : '계정 관리'} tabIndex={0}>
             <Routes>
               {/* The overview owns "/" so a bare link opens the landing panel,
                   and the catch-all sends an unknown path to that same screen —
@@ -266,11 +269,13 @@ export default function App() {
               <Route path="/community" element={<Community leaderboardEntries={lb.data?.entries} />} />
               <Route path="/community/:postId" element={<Community leaderboardEntries={lb.data?.entries} />} />
               <Route path="/stats" element={<Stats leaderboardEntries={lb.data?.entries} />} />
+              <Route path="/event" element={<EventPage />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={overviewPanel} />
             </Routes>
           </div>
         </main>
+        <EventFloatingLink />
         {/* The third column on a wide screen; narrower, a launcher fixed to
             the viewport. Here rather than per tab, so the stream lasts the
             whole visit. */}

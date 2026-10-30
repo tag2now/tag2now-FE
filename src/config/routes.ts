@@ -3,7 +3,7 @@ import { GROUP_ORDER } from '@/config/tabConfig'
 /** Tab keys that address a fixed panel. Room groups are the open-ended rest:
  * a group the API adds later is a room tab without this file changing.
  * `admin` is a panel with no nav tab: the account menu is the way in. */
-export const FIXED_TABS = ['overview', 'reservation', 'leaderboard', 'community', 'stats', 'admin'] as const
+export const FIXED_TABS = ['overview', 'reservation', 'leaderboard', 'community', 'stats', 'event', 'admin'] as const
 
 export type FixedTab = typeof FIXED_TABS[number]
 
@@ -17,6 +17,7 @@ const TAB_PATHS: Record<FixedTab, string> = {
   leaderboard: '/leaderboard',
   community: '/community',
   stats: '/stats',
+  event: '/event',
   admin: '/admin',
 }
 

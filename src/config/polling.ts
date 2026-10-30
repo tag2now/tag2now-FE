@@ -39,4 +39,7 @@ export const POLL = {
   /** The overview is a snapshot with a manual refresh: the only live number on
    * it is the room count, which arrives as a prop from App's own rooms poll. */
   overview: null,
+
+  /** Read on opening and on the refresh button; the backend caches saves for five minutes. */
+  event: null,
 } as const
