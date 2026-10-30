@@ -17,8 +17,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run test:architecture
+      - run: npm run lint:architecture
       - run: npm test
       - run: npm run typecheck
+      - run: npm run typecheck:e2e
+      - run: npm run lint:css
 
   e2e-test:
     runs-on: ubuntu-latest

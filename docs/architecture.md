@@ -56,10 +56,52 @@ subfolder where needed. Not every feature needs every file or a barrel export.
   room and character response types. Feature-owned payload fields remain in
   their models rather than becoming dependencies of the shared image component.
 - The API helper reads `auth/session.ts` for bearer tokens and session expiry.
-  This coupling is current behavior, not an import-boundary rule already enforced.
+  This transport integration is the explicit import-boundary exception; it does
+  not permit other shared code to depend on authentication.
 
 The feature-folder layout remains in place. Application composition is separated
-under `app/`; automated import-boundary enforcement is still pending work.
+under `app/`; production import boundaries are enforced locally and in CI.
+
+## Import boundaries
+
+Run `npm run lint:architecture`. [dependency-cruiser](https://github.com/sverweij/dependency-cruiser)
+owns parsing, module resolution and dependency validation. The project maintains
+the [boundary configuration](../.dependency-cruiser.mjs), not its own analyzer.
+`tsConfig` reads the project's aliases and `tsPreCompilationDeps` includes type-only
+references. Package exports use browser/import resolution. The command starts at
+the `src/` directory rather than relying on the TypeScript project's include list.
+
+| Source | Allowed local targets |
+|--------|-----------------------|
+| `app/` and application entry modules directly under `src/` | Any production layer |
+| `shared/`, `config/` | `shared/`, `config/` |
+| Feature folders | Feature folders, `shared/`, `config/` |
+
+Any other folder under `src/` is a feature automatically. New components and
+features need no registry entry. This gate does not restrict references between
+features or detect copied UI; source-based reuse review still applies.
+
+Statically resolved imports, type imports, re-exports, literal dynamic imports,
+import type expressions and require forms follow the same rules. Unresolved
+production imports fail. Local TypeScript/JavaScript code outside `src/` cannot
+serve as a bridge; external packages remain allowed. Arbitrary computed paths
+such as `import(variable)` are outside static dependency analysis; use literal
+paths for architectural dependencies and inspect computed loaders during review.
+Syntax and type correctness are checked separately by TypeScript.
+
+Test/spec files, compile-only `.test-d.ts` files, `__tests__/` and `__mocks__/`
+folders, and the test setup entry are exempt as dependency sources. Production
+imports of those test-only files fail. The setup entry's fixed path is a test-harness
+boundary, not a list to update when a component is added.
+
+The transport/session exception lives in the configuration as an exact resolved
+source/target pair with a reason. It does not permit a whole feature or directory.
+A native `required` rule fails if the transport stops depending on the session;
+the policy test also verifies the real edge exists if the source itself is removed.
+Remove the exception, required rule and that policy assertion together when the
+integration is removed. `npm run test:architecture` checks project rules against
+temporary projects using dependency-cruiser's public API and native CLI, including
+type-only references, re-export paths and a nonzero exit on violations.
 
 ## Data flow
 

@@ -75,6 +75,7 @@ diff. In the change summary, name the candidates inspected, what was reused or
 extended, and why any new implementation was needed. This records the reasoning
 for that change without creating a permanent consumer list to synchronize.
 
-Verification follows the [testing guide](testing.md). Reuse review is currently
-manual; the existing typecheck and CI do not detect copied controls or enforce
-import boundaries.
+Verification follows the [testing guide](testing.md). `npm run lint:architecture`
+enforces the [folder import boundaries](architecture.md#import-boundaries), also
+in CI. It does not detect copied controls or determine whether a component was
+the right reuse candidate; that review still requires searching and reading source.

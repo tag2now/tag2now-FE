@@ -16,8 +16,10 @@ npm run build        # production build → dist/
 npm test             # vitest run (unit/component, once)
 npm run test:watch   # vitest watch mode
 npm run test:coverage  # v8 coverage
+npm run test:architecture  # project boundary-policy tests
+npm run lint:architecture  # dependency-cruiser import boundaries
 npm run typecheck    # tsc --noEmit
-npx tsc --noEmit -p e2e/tsconfig.json  # E2E TypeScript project
+npm run typecheck:e2e  # E2E TypeScript project
 npm run lint:css     # stylesheet token rules
 npm run test:e2e     # playwright (auto-starts the dev server)
 npm run test:e2e:ui  # playwright UI mode

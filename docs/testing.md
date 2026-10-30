@@ -4,7 +4,7 @@
 
 Paths and commands in prose are relative to the FE repository root unless linked otherwise.
 
-Two independent suites.
+Application behavior uses two independent suites.
 
 **Unit / component — Vitest + Testing Library.** Tests sit beside the code they cover (`src/**/*.test.tsx`), jsdom environment, globals enabled, `src/config/test-setup.ts` imports `@testing-library/jest-dom`. `vitest.config.ts` merges `vite.config.ts`, so the `@` alias works in tests.
 
@@ -75,9 +75,14 @@ For Markdown-only changes, validate local links, referenced paths and descriptio
 against the source. Do not run the full app suite when no test consumes the changed
 documents. Data files use the specific parser or test that reads them.
 
-The [current CI workflow](../.github/workflows/test.yml) runs unit/component tests,
-the `src` TypeScript project and Playwright's desktop/mobile projects. The E2E
-TypeScript project and stylesheet lint belong to the local full workflow but are
-not CI steps yet. There is no automated component-reuse or import-boundary check.
-Adding those gates is later implementation work; this documentation does not
-claim they already exist.
+The [current CI workflow](../.github/workflows/test.yml) runs the boundary-policy
+tests (`npm run test:architecture`), dependency-cruiser import boundaries
+(`npm run lint:architecture`), unit/component tests, both TypeScript projects
+(`npm run typecheck` and `npm run typecheck:e2e`), CSS lint and Playwright's
+desktop/mobile projects. Policy tests use Node's built-in test runner, temporary
+TypeScript projects and dependency-cruiser's public API/CLI. They protect the
+project configuration and are separate from the application Vitest count.
+
+The [boundary rules](architecture.md#import-boundaries) check resolved references,
+including type-only dependencies and re-exports. They do not identify duplicate
+components or automatically prove that an existing component was reused.
