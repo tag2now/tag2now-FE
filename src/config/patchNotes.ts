@@ -14,6 +14,12 @@ export type PatchNote = {
  */
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: '2.15',
+    items: [
+      '데스활성화 이벤트 페이지 추가 (달성 여부와 달성자 순위 확인)',
+    ],
+  },
+  {
     version: '2.14',
     items: [
       '매칭 탭에서 같은 계급 상대 찾기 (방에 있는 유저 먼저)',
