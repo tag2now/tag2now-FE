@@ -391,6 +391,13 @@ offered for what the server would refuse: an online player, a floor that reads
 as demotions, or a preview that changes nothing. The server stays the
 authority; those are 409s too.
 
+The save screen owns lookup, request state, confirmation and the preview/edit
+snapshot used for applying a change. Its feature-local form owns input state and
+validation; the preview and result sections render data and call back for actions.
+They reuse shared controls and the save-character table without fetching again.
+An apply refresh keeps the form mounted for the same username; an explicit lookup
+clears the old result and preview, so the next result starts with fresh form state.
+
 `user.admin` only decides whether the form is shown; RPCN re-checks the role
 each time. A wrong admin password comes back **400**, not 401, because a 401 on
 a signed-in request ends the session in `api.ts`.

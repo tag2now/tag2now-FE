@@ -1,32 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
-import { ChevronDown, Eye, Gamepad2, Loader2, RotateCcw, Search, Users } from 'lucide-react'
-import CharacterGridPicker from '@/shared/components/CharacterGridPicker'
+import { Gamepad2, Loader2, Search } from 'lucide-react'
 import ConfirmDialog from '@/shared/components/ConfirmDialog'
-import SaveCharTable, { SavePortrait as Portrait, SaveRank as Rank } from '@/shared/components/SaveCharTable'
-import type { SelectOption } from '@/shared/components/Select'
-import ToggleGroup from '@/shared/components/ToggleGroup'
-import { charImageUrl } from '@/shared/characterImage'
-import { isUsed, signed } from '@/shared/saveChars'
-import RankField, { RankCode } from '@/shared/components/RankField'
-import usePopover from '@/shared/hooks/usePopover'
 import useConfirm from '@/shared/hooks/useConfirm'
-import { errorText, formatInstant, warnEmpty } from '@/admin/adminText'
+import { errorText, warnEmpty } from '@/admin/adminText'
 import { editSave, fetchSave, fetchSaveBackups, fetchSaveLog } from '@/admin/saveApi'
-import type { SaveAuditRecord, SaveBackup, SaveChar, SaveEdit, SaveInfo, SaveWriteResult, SlotState } from '@/admin/types'
-
-
-
-
-/** Floor ranks need floor points, which start at 9th kyu. */
-const FLOOR_RANK_FROM = 1
+import SaveEditForm from '@/admin/SaveEditForm'
+import SavePreviewCard from '@/admin/SavePreviewCard'
+import { SaveSummary, SaveCharacters, BackupList, AuditLog } from '@/admin/SaveDetails'
+import type { SaveAuditRecord, SaveBackup, SaveEdit, SaveInfo, SavePreview, SaveWriteResult } from '@/admin/types'
 
 type Loaded = { save: SaveInfo, backups: SaveBackup[], log: SaveAuditRecord[] }
-
-/** A preview, and the edit that produced it --- applying sends that edit, not
- * whatever the form says by then. */
-type Preview = { edit: SaveEdit, answer: SaveWriteResult }
 
 /** A player's TTT2 save: look it up, preview an edit, apply it.
  *
@@ -41,7 +26,7 @@ export default function SaveAdmin({ password, onMissingPassword }: {
   const [target, setTarget] = useState('')
   const targetField = useRef<HTMLInputElement>(null)
   const [loaded, setLoaded] = useState<Loaded | null>(null)
-  const [preview, setPreview] = useState<Preview | null>(null)
+  const [preview, setPreview] = useState<SavePreview | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const { confirm, request: confirmRequest, onConfirm, onCancel } = useConfirm()
@@ -83,7 +68,7 @@ export default function SaveAdmin({ password, onMissingPassword }: {
     run(async () => setPreview({ edit, answer: await editSave(save.username, password, edit, null) }))
   }
 
-  const apply = async ({ edit, answer }: Preview) => {
+  const apply = async ({ edit, answer }: SavePreview) => {
     if (!password) return onMissingPassword()
     const agreed = await confirm({
       title: `${answer.username} 세이브에 적용할까요?`,
@@ -136,7 +121,7 @@ export default function SaveAdmin({ password, onMissingPassword }: {
         <>
           <SaveSummary save={loaded.save} />
           <SaveCharacters chars={loaded.save.chars} />
-          <EditForm
+          <SaveEditForm
             key={loaded.save.username}
             chars={loaded.save.chars}
             busy={busy}
@@ -144,7 +129,7 @@ export default function SaveAdmin({ password, onMissingPassword }: {
             onPreview={(edit) => previewEdit(loaded.save, edit)}
           />
           {preview && (
-            <PreviewCard
+            <SavePreviewCard
               preview={preview}
               chars={loaded.save.chars}
               busy={busy}
@@ -175,380 +160,4 @@ function reportWrite(done: SaveWriteResult) {
     return
   }
   toast.success(`적용했습니다. 이전 세이브는 ${done.result.backup} 백업에 있습니다.`)
-}
-
-function onlineText(online: boolean | null): string {
-  if (online === null) return '확인할 수 없음'
-  return online ? '접속 중 (수정할 수 없음)' : '오프라인'
-}
-
-function SaveSummary({ save }: { save: SaveInfo }) {
-  return (
-    <section className="admin-account" aria-label="조회한 세이브">
-      <h3>{save.username} <small>data_id {save.data_id}</small></h3>
-      <dl>
-        <dt>계정 계급</dt><dd className="save-inline"><RankCode code={save.account_rank} /> {save.progress}/11</dd>
-        <dt>전적</dt><dd>{save.total}판 {save.wins}승 {save.losses}패</dd>
-        <dt>마지막 저장</dt><dd>{formatInstant(save.saved_at)}</dd>
-        <dt>RPCS3 접속</dt><dd className={save.online ? 'is-banned' : undefined}>{onlineText(save.online)}</dd>
-        <dt>체크섬</dt><dd className={save.checksum_ok ? undefined : 'is-banned'}>{save.checksum_ok ? '정상' : '불일치'}</dd>
-      </dl>
-    </section>
-  )
-}
-
-function SaveCharacters({ chars }: { chars: SaveChar[] }) {
-  const [showAll, setShowAll] = useState(false)
-  const shown = showAll ? chars : chars.filter(isUsed)
-
-  return (
-    <section className="save-section" aria-label="캐릭터 목록">
-      <div className="save-section-head">
-        <h3>캐릭터</h3>
-        <label className="save-check">
-          <input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} />
-          전체 {chars.length}칸 보기
-        </label>
-      </div>
-      {shown.length === 0
-        ? <p className="admin-notice">계급이 있거나 대전한 캐릭터가 없습니다.</p>
-        : (
-          <SaveCharTable chars={shown} />
-        )}
-    </section>
-  )
-}
-
-type Mode = Exclude<SaveEdit['action'], 'restore'>
-
-const MODES: SelectOption<Mode>[] = [
-  { value: 'set-rank', label: '캐릭터 계급' },
-  { value: 'set-account-rank', label: '계정 계급' },
-  { value: 'floor', label: 'floor (최저 계급 올리기)' },
-]
-
-const ALL = 'all'
-
-/** Points field: blank keeps them, otherwise a whole number the save can hold. */
-const parsePoints = (text: string): number | null | undefined => {
-  if (text.trim() === '') return undefined
-  const n = Number(text)
-  return Number.isInteger(n) && n >= 0 && n <= 65535 ? n : null
-}
-
-function EditForm({ chars, busy, onChange, onPreview }: {
-  chars: SaveChar[]
-  busy: boolean
-  onChange: () => void
-  onPreview: (edit: SaveEdit) => void
-}) {
-  const [mode, setMode] = useState<Mode>('set-rank')
-  const [char, setChar] = useState<number | typeof ALL>(chars.find(isUsed)?.id ?? 0)
-  const [rank, setRank] = useState(10)
-  const [points, setPoints] = useState('')
-  // null: the floor rule picks it
-  const [floorRank, setFloorRank] = useState<number | null>(null)
-  const [fixPoints, setFixPoints] = useState(false)
-  const [refloor, setRefloor] = useState(false)
-
-  // Any change makes the shown preview stale.
-  const changed = <T,>(set: (value: T) => void) => (value: T) => {
-    set(value)
-    onChange()
-  }
-
-  const everyone = mode === 'set-rank' && char === ALL
-  const parsed = parsePoints(points)
-  // "all" sets floor points itself and needs a rank that has them.
-  const rankFrom = everyone ? FLOOR_RANK_FROM : 0
-  const chosenRank = Math.max(rank, rankFrom)
-
-  const edit = (): SaveEdit => {
-    if (mode === 'set-account-rank') return { action: mode, rank: chosenRank }
-    if (mode === 'floor') return { action: mode, fix_points: fixPoints, refloor, ...(floorRank === null ? {} : { rank: floorRank }) }
-    if (char === ALL) return { action: mode, char, rank: chosenRank }
-    return { action: mode, char, rank: chosenRank, ...(parsed === undefined ? {} : { points: parsed as number }) }
-  }
-
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault()
-    if (busy || parsed === null) return
-    onPreview(edit())
-  }
-
-  return (
-    <form className="save-section save-edit" onSubmit={submit} aria-label="세이브 수정">
-      <h3>수정</h3>
-      <ToggleGroup label="수정 종류" value={mode} options={MODES} onChange={changed(setMode)} className="save-modes" />
-      <div className="save-edit-fields">
-        {mode === 'set-rank' && <CharacterField value={char} chars={chars} onChange={changed(setChar)} />}
-        {mode !== 'floor' && (
-          <RankField label="계급" value={chosenRank} from={rankFrom} onChange={changed((code: number | null) => setRank(code ?? 0))} />
-        )}
-        {mode === 'set-rank' && !everyone && (
-          <label className="admin-field save-points">
-            <span className="field-label">점수 (비우면 그대로)</span>
-            <input
-              className="input-base"
-              inputMode="numeric"
-              value={points}
-              aria-invalid={parsed === null}
-              onChange={(event) => changed(setPoints)(event.target.value)}
-            />
-          </label>
-        )}
-        {mode === 'floor' && (
-          <RankField
-            label="floor 계급"
-            value={floorRank}
-            from={FLOOR_RANK_FROM}
-            onChange={changed(setFloorRank)}
-            autoLabel="자동 (도달 계급의 두 단계 아래)"
-          />
-        )}
-      </div>
-      {mode === 'floor' && (
-        <div className="save-checks">
-          <label className="save-check">
-            <input type="checkbox" checked={fixPoints} onChange={(event) => changed(setFixPoints)(event.target.checked)} />
-            floor 계급에 있는 캐릭터의 점수도 채우기
-          </label>
-          <label className="save-check">
-            <input type="checkbox" checked={refloor} onChange={(event) => changed(setRefloor)(event.target.checked)} />
-            강등으로 보이는 캐릭터도 올리기
-          </label>
-        </div>
-      )}
-      {everyone && <p className="admin-hint">모든 캐릭터와 계정 계급을 이 계급의 floor 점수, 연승 0으로 맞춥니다.</p>}
-      {parsed === null && <p className="admin-error">점수는 0에서 65535 사이의 정수여야 합니다.</p>}
-      <button type="submit" className="btn-ghost" disabled={busy || parsed === null}>
-        <Eye size={14} aria-hidden="true" /> 미리보기
-      </button>
-    </form>
-  )
-}
-
-/** The leaderboard's character filter, as a single choice: a button showing
- * the pick that opens the game-layout grid, with 전체 캐릭터 beside it. */
-function CharacterField({ value, chars, onChange }: {
-  value: number | typeof ALL
-  chars: SaveChar[]
-  onChange: (value: number | typeof ALL) => void
-}) {
-  const [open, setOpen, rootRef] = usePopover()
-  const face = value === ALL ? null : faceOfSlot(value, chars)
-  const portrait = face ? charImageUrl(face) : null
-
-  const pick = (name: string) => {
-    const slot = slotOfFace(name, chars)
-    if (slot === undefined) return
-    onChange(slot)
-    setOpen(false)
-  }
-
-  const pickEveryone = () => {
-    onChange(ALL)
-    setOpen(false)
-  }
-
-  return (
-    <div ref={rootRef} className="save-picker-field">
-      <span className="field-label">캐릭터</span>
-      <div className="save-picker-row">
-        <button
-          type="button"
-          className={`lb-char-toggle${face ? ' is-active' : ''}`}
-          aria-expanded={open}
-          aria-controls="save-character-picker"
-          aria-label={`캐릭터: ${face ?? '전체 캐릭터'}`}
-          onClick={() => setOpen((current) => !current)}
-        >
-          {portrait ? <img src={portrait} alt="" className="char-art lb-char-toggle-portrait" /> : <Users size={14} aria-hidden="true" />}
-          <span>{face ?? '캐릭터 고르기'}</span>
-          <ChevronDown size={14} aria-hidden="true" className={open ? 'is-open' : undefined} />
-        </button>
-        <button
-          type="button"
-          className={`lb-char-toggle${value === ALL ? ' is-active' : ''}`}
-          aria-pressed={value === ALL}
-          onClick={pickEveryone}
-        >
-          전체 캐릭터
-        </button>
-      </div>
-      {open && (
-        <div id="save-character-picker" className="lb-picker save-character-picker">
-          {/* A pick replaces the current one, so no tile is ever capped:
-              the leaderboard's max of 1 would leave every other face dead. */}
-          <CharacterGridPicker selected={face ? [face] : []} onToggle={pick} max={Infinity} label="수정할 캐릭터" />
-        </div>
-      )}
-    </div>
-  )
-}
-
-const faceOfSlot = (slot: number, chars: SaveChar[]) => {
-  const char = chars.find((c) => c.id === slot)
-  return char ? char.character : `캐릭터 ${slot}`
-}
-
-const slotOfFace = (face: string, chars: SaveChar[]) => chars.find((c) => c.character === face)?.id
-
-/** What is being changed: who, then the rank they go to. */
-function EditTarget({ edit, chars }: { edit: SaveEdit, chars: SaveChar[] }) {
-  switch (edit.action) {
-    case 'set-rank':
-      return edit.char === ALL
-        ? <>전체 캐릭터 → <RankCode code={edit.rank} /></>
-        : <><Portrait name={faceOfSlot(edit.char, chars)} /> → <RankCode code={edit.rank} /></>
-    case 'set-account-rank':
-      return <>계정 계급 → <RankCode code={edit.rank} /></>
-    case 'floor':
-      return edit.rank === undefined ? <>floor (자동)</> : <>floor → <RankCode code={edit.rank} /></>
-    case 'restore':
-      return <>{edit.label} 백업으로 복원</>
-  }
-}
-
-function Slot({ slot }: { slot: SlotState }) {
-  return <span className="save-inline"><Rank name={slot.rank_name} /> {slot.points}점 · {signed(slot.streak)}</span>
-}
-
-/** Why the server would refuse this write, so the button is not offered for it. */
-function blocker(answer: SaveWriteResult): string | null {
-  if (answer.online) return '게임에 접속 중인 계정은 수정할 수 없습니다. 접속을 끊은 뒤 다시 미리보기 하세요.'
-  if (answer.floor?.likely_demoted) return '이전 floor 뒤에 강등된 캐릭터로 보입니다. 그래도 올리려면 "강등으로 보이는 캐릭터도 올리기"를 선택하세요.'
-  return null
-}
-
-function PreviewCard({ preview: { edit, answer }, chars, busy, onApply, onDiscard }: {
-  preview: Preview
-  chars: SaveChar[]
-  busy: boolean
-  onApply: () => void
-  onDiscard: () => void
-}) {
-  const { changes } = answer
-  const nothing = !changes.account_rank && changes.chars.length === 0
-  const refused = blocker(answer)
-
-  return (
-    <section className="save-section save-preview" aria-label="미리보기">
-      <h3>미리보기 <small className="save-inline"><EditTarget edit={edit} chars={chars} /></small></h3>
-      {answer.floor && (
-        <p className="admin-notice save-inline">
-          도달 <RankCode code={answer.floor.reached} /> → floor <RankCode code={answer.floor.floor} />, {answer.floor.raised}칸 올림
-          {answer.floor.points_fixed > 0 && `, ${answer.floor.points_fixed}칸 점수 보정`}
-        </p>
-      )}
-      {answer.online === null && <p className="save-warning">접속 여부를 확인하지 못했습니다. 적용하면 거부될 수 있습니다.</p>}
-      {refused && <p className="save-warning">{refused}</p>}
-      {nothing
-        ? <p className="admin-notice">바뀌는 것이 없습니다.</p>
-        : (
-          <div className="save-table-wrap">
-            <table className="save-table">
-              <thead><tr><th scope="col">대상</th><th scope="col">지금</th><th scope="col">바뀐 뒤</th></tr></thead>
-              <tbody>
-                {changes.account_rank && (
-                  <tr>
-                    <td>계정 계급</td>
-                    <td><RankCode code={changes.account_rank.before} /></td>
-                    <td><RankCode code={changes.account_rank.after} /></td>
-                  </tr>
-                )}
-                {changes.chars.map((change) => (
-                  <tr key={change.id}>
-                    <td><Portrait name={change.character} /></td>
-                    <td><Slot slot={change.before} /></td>
-                    <td><Slot slot={change.after} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      <div className="save-actions">
-        <button type="button" className="btn-danger" onClick={onApply} disabled={busy || nothing || refused !== null}>적용</button>
-        <button type="button" className="btn-ghost" onClick={onDiscard} disabled={busy}>닫기</button>
-      </div>
-    </section>
-  )
-}
-
-function BackupList({ backups, busy, onRestore }: {
-  backups: SaveBackup[]
-  busy: boolean
-  onRestore: (label: string) => void
-}) {
-  // Labels are timestamps or names given on the command line; newest first
-  // reads best for the automatic ones, which are most of them.
-  const newestFirst = [...backups].reverse()
-
-  return (
-    <section className="save-section" aria-label="백업">
-      <h3>백업 <small>{backups.length}개</small></h3>
-      {newestFirst.length === 0
-        ? <p className="admin-notice">백업이 없습니다. 수정할 때마다 하나씩 생깁니다.</p>
-        : (
-          <ul className="save-backups">
-            {newestFirst.map((backup) => (
-              <li key={backup.label}>
-                <span className="save-backup-label">{backup.label}</span>
-                <span className="save-backup-meta save-inline">
-                  {backup.total === null
-                    ? '크기가 맞지 않는 파일'
-                    : <>{backup.total}판 · 계정 <RankCode code={backup.account_rank ?? 0} /></>}
-                </span>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => onRestore(backup.label)}
-                  disabled={busy || backup.total === null}
-                  aria-label={`${backup.label} 복원 미리보기`}
-                >
-                  <RotateCcw size={14} aria-hidden="true" /> 복원 미리보기
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-    </section>
-  )
-}
-
-// Integrity fields every write records; they say nothing an admin acts on.
-const QUIET_DETAILS = new Set(['data_id', 'md5_before', 'md5_after', 'checksum', 'verified'])
-
-const detailText = (details: Record<string, unknown>) =>
-  Object.entries(details)
-    .filter(([key, value]) => !QUIET_DETAILS.has(key) && value !== null)
-    .map(([key, value]) => `${key}=${typeof value === 'object' ? JSON.stringify(value) : String(value)}`)
-    .join(' ')
-
-function AuditLog({ records }: { records: SaveAuditRecord[] }) {
-  return (
-    <section className="save-section" aria-label="수정 기록">
-      <h3>수정 기록 <small>최근 {records.length}건</small></h3>
-      {records.length === 0
-        ? <p className="admin-notice">기록이 없습니다.</p>
-        : (
-          <div className="save-table-wrap">
-            <table className="save-table">
-              <thead><tr><th scope="col">시각</th><th scope="col">누가</th><th scope="col">작업</th><th scope="col">내용</th></tr></thead>
-              <tbody>
-                {[...records].reverse().map((record, index) => (
-                  <tr key={`${record.ts}-${index}`}>
-                    <td>{record.ts.replace('T', ' ')}</td>
-                    <td>{record.user}</td>
-                    <td>{record.action}</td>
-                    <td className="save-detail">{detailText(record.details)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-    </section>
-  )
 }

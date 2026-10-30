@@ -93,3 +93,7 @@ export type SaveEdit =
   | { action: 'set-account-rank', rank: number }
   | { action: 'floor', rank?: number, fix_points: boolean, refloor: boolean }
   | { action: 'restore', label: string }
+
+/** A preview, and the edit that produced it --- applying sends that edit, not
+ * whatever the form says by then. */
+export type SavePreview = { edit: SaveEdit, answer: SaveWriteResult }

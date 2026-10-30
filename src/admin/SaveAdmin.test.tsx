@@ -145,6 +145,57 @@ describe('Save admin', () => {
     // the save is read again after the write, and the preview is gone
     await waitFor(() => expect(fetchSave).toHaveBeenCalledTimes(2))
     expect(screen.queryByRole('region', { name: '미리보기' })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('button', { name: /^계급:/ })).getByRole('img', { name: 'Genbu' })).toBeInTheDocument()
+  })
+
+  // Pre-refactor safety net for confirmation, write conflicts and form lifetime.
+  // Failures after extraction indicate changes to the public save-edit workflow.
+  it('keeps the preview and sends no write when confirmation is cancelled', async () => {
+    await loaded()
+    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    const card = await screen.findByRole('region', { name: '미리보기' })
+    fireEvent.click(within(card).getByRole('button', { name: '적용' }))
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '취소' }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(editSave).toHaveBeenCalledTimes(1)
+    expect(fetchSave).toHaveBeenCalledTimes(1)
+    expect(within(card).getByRole('button', { name: '적용' })).toBeEnabled()
+  })
+
+  it('shows a SHA conflict and keeps the loaded save and preview available', async () => {
+    await loaded()
+    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    const card = await screen.findByRole('region', { name: '미리보기' })
+    vi.mocked(editSave).mockRejectedValueOnce(new AppError('세이브가 변경되었습니다. 다시 조회해 주세요.', 409))
+    fireEvent.click(within(card).getByRole('button', { name: '적용' }))
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '적용' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('세이브가 변경되었습니다. 다시 조회해 주세요.')
+    expect(editSave).toHaveBeenLastCalledWith('Alice', 'pw', { action: 'set-rank', char: 0, rank: 10 }, preview.sha256)
+    expect(fetchSave).toHaveBeenCalledTimes(1)
+    expect(within(card).getByRole('button', { name: '적용' })).toBeEnabled()
+    expect(section('조회한 세이브').getByRole('heading')).toHaveTextContent('Alice')
+  })
+
+  it('resets the form, character filter and preview when another save is looked up', async () => {
+    await loaded()
+    pickRank('계급', 'Genbu')
+    fireEvent.change(screen.getByLabelText('점수 (비우면 그대로)'), { target: { value: '3000' } })
+    fireEvent.click(section('캐릭터 목록').getByRole('checkbox'))
+    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    await screen.findByRole('region', { name: '미리보기' })
+
+    vi.mocked(fetchSave).mockResolvedValueOnce({ ...save, username: 'Bob', chars: [char(5, 'Law', 20, 1)] })
+    lookUp('bob')
+    await waitFor(() => expect(section('조회한 세이브').getByRole('heading')).toHaveTextContent('Bob'))
+
+    expect(screen.queryByRole('region', { name: '미리보기' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('점수 (비우면 그대로)')).toHaveValue('')
+    expect(section('캐릭터 목록').getByRole('checkbox')).not.toBeChecked()
+    expect(screen.getByRole('button', { name: '캐릭터: Law' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '미리보기' }))
+    await waitFor(() => expect(editSave).toHaveBeenLastCalledWith('Bob', 'pw', { action: 'set-rank', char: 5, rank: 10 }, null))
   })
 
   it('drops the preview when the form changes', async () => {

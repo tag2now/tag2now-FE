@@ -1,7 +1,13 @@
 import toast from 'react-hot-toast'
 import { AppError } from '@/shared/util/AppError'
+import type { SaveChar } from '@/shared/saveChars'
 
 const kstDateTime = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'short' })
+
+export const faceOfSlot = (slot: number, chars: SaveChar[]) => {
+  const char = chars.find((c) => c.id === slot)
+  return char ? char.character : `캐릭터 ${slot}`
+}
 
 export const formatInstant = (iso: string | null) => (iso ? kstDateTime.format(new Date(iso)) : '기록 없음')
 
