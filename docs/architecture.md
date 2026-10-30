@@ -293,6 +293,7 @@ so a nav click, the back button, and a cold deep link all arrive the same way.
 | `/reservation`, `/reservation/:id` | reservations, optionally opened on one |
 | `/community`, `/community/:postId` | the board, optionally opened on one post |
 | `/admin` | account moderation and TTT2 saves; no nav tab, reached from the account menu |
+| `/event` | the rank event; no nav tab, reached from a sidebar card or, on a phone, a floating link |
 | anything else | overview, via the catch-all route |
 
 `config/routes.ts` is the single answer to "what URL is this tab?" — `pathOf`,
@@ -402,8 +403,8 @@ clears the old result and preview, so the next result starts with fresh form sta
 each time. A wrong admin password comes back **400**, not 401, because a 401 on
 a signed-in request ends the session in `api.ts`.
 
-It is the one fixed panel with no nav tab. `admin` is in `FIXED_TABS` so it is
-not handed the rooms panel, and App then selects no tab, gives the roving
+It and `/event` are the fixed panels with no nav tab. Both are in `FIXED_TABS` so
+they are not handed the rooms panel, and App then selects no tab, gives the roving
 tabindex to the first one, and names the tabpanel itself.
 
 ## Save ranks on a profile
