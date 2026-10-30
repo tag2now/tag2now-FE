@@ -156,6 +156,23 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('region', { name: '내 파이터 정보' })).toHaveCount(0)
   })
 
+  test('the account menu focuses its first action and closes on Escape or an outside press', async ({ page }) => {
+    await signInAs(page, 'np_002', 'KingOfIronFist')
+    await page.reload()
+    const header = page.locator('#headerProfileSlot')
+    const toggle = header.getByRole('button', { name: 'KingOfIronFist 계정 메뉴' })
+
+    await toggle.click()
+    await expect(header.getByRole('menuitem', { name: '내 정보 보기' })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(header.getByRole('menu')).toHaveCount(0)
+    await expect(toggle).toBeFocused()
+
+    await toggle.click()
+    await page.getByRole('heading', { name: 'Tag 2 Now' }).click()
+    await expect(header.getByRole('menu')).toHaveCount(0)
+  })
+
   // Below 760px the sidebar card, and its 내 정보 보기, is hidden; the header
   // carries the way into your own record instead.
   test('the mobile header opens your own record', async ({ page, isMobile }) => {

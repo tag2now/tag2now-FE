@@ -1,11 +1,11 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
-import PlayerProfileCard from './PlayerProfileCard'
+import AccountProfile from '@/app/AccountProfile'
 import { dismissLoginRequest, endSession, getLoginRequest, getSession, startSession } from '@/auth/session'
 import type { LeaderboardEntry } from '@/shared/types'
 
-function renderProfile(leaderboardEntries: LeaderboardEntry[] = [], roomUsers: Parameters<typeof PlayerProfileCard>[0]['roomUsers'] = []) {
-  return render(<PlayerProfileCard leaderboardEntries={leaderboardEntries} roomUsers={roomUsers} />, { wrapper: MemoryRouter })
+function renderProfile(leaderboardEntries: LeaderboardEntry[] = [], roomUsers: Parameters<typeof AccountProfile>[0]['roomUsers'] = []) {
+  return render(<AccountProfile leaderboardEntries={leaderboardEntries} roomUsers={roomUsers} />, { wrapper: MemoryRouter })
 }
 
 /** RPCN usernames are the leaderboard's np_id; the online name is what shows. */
@@ -156,7 +156,7 @@ describe('Player profile', () => {
     const header = mountHeaderSlot()
     render(
       <MemoryRouter>
-        <PlayerProfileCard />
+        <AccountProfile />
         <Routes><Route path="*" element={<CurrentPath />} /></Routes>
       </MemoryRouter>,
     )
@@ -176,6 +176,54 @@ describe('Player profile', () => {
     fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
 
     expect(header.queryByRole('menuitem', { name: '계정 관리' })).not.toBeInTheDocument()
+  })
+
+  // Pre-refactor safety net for account composition. These public interactions
+  // must survive splitting header controls from the profile card.
+  it.each([false, true])('focuses the first enabled account action (ranked: %s)', (hasRecord) => {
+    signInAs()
+    const header = mountHeaderSlot()
+    renderProfile(hasRecord ? [ranked] : [])
+
+    fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
+
+    expect(header.getByRole('menuitem', { name: hasRecord ? '내 정보 보기' : '방송 채널' })).toHaveFocus()
+  })
+
+  it('keeps the menu open on an inside press and closes it on an outside press', () => {
+    signInAs()
+    const header = mountHeaderSlot()
+    renderProfile()
+    fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
+
+    fireEvent.pointerDown(header.getByRole('menu'))
+    expect(header.getByRole('menu')).toBeInTheDocument()
+    fireEvent.pointerDown(document.body)
+    expect(header.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('removes an open menu and the profile when the session ends', () => {
+    signInAs()
+    const header = mountHeaderSlot()
+    renderProfile([ranked])
+    fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
+
+    act(() => { endSession() })
+
+    expect(header.queryByRole('menu')).not.toBeInTheDocument()
+    expect(header.getByRole('button', { name: '로그인' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: '내 파이터 정보' })).not.toBeInTheDocument()
+  })
+
+  it('shows the higher character rank in the header with the account name', () => {
+    signInAs()
+    const header = mountHeaderSlot()
+    renderProfile([ranked])
+
+    expect(header.getByRole('img', { name: 'Destroyer' })).toBeInTheDocument()
+    expect(header.queryByRole('img', { name: 'Vanquisher' })).not.toBeInTheDocument()
+    expect(header.getByText('#1')).toBeInTheDocument()
+    expect(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' })).toBeInTheDocument()
   })
 
   it('closes the account menu on Escape', () => {
@@ -200,7 +248,7 @@ describe('Player profile', () => {
 
     expect(header.getByRole('button', { name: '내 정보' })).toBeDisabled()
 
-    rerender(<PlayerProfileCard leaderboardEntries={[{ np_id: 'p1', rank: 1, online_name: 'TestPlayer', player_info: null }]} />)
+    rerender(<AccountProfile leaderboardEntries={[{ np_id: 'p1', rank: 1, online_name: 'TestPlayer', player_info: null }]} />)
     expect(header.getByRole('button', { name: '내 정보' })).toBeEnabled()
   })
 })

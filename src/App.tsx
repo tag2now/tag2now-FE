@@ -4,7 +4,7 @@ import AppRoutes from '@/app/AppRoutes'
 import PrimaryNavigation from '@/app/PrimaryNavigation'
 import RoomTabs from '@/app/RoomTabs'
 import LiveBadge from '@/shared/components/LiveBadge'
-import PlayerProfileCard from '@/shared/components/PlayerProfileCard'
+import AccountProfile from '@/app/AccountProfile'
 import Chat from '@/chat/Chat'
 import { GROUP_ORDER } from '@/config/tabConfig'
 import { isRoomTab as isRoomTabKey } from '@/config/routes'
@@ -81,8 +81,7 @@ export default function App() {
             recentPosts={recentPosts}
             recentPostsCapped={recentPostsCapped}
           />
-          {/* One card also portals the account into the header slot. */}
-          <PlayerProfileCard leaderboardEntries={lb.data?.entries} roomUsers={roomUsers} />
+          <AccountProfile leaderboardEntries={lb.data?.entries} roomUsers={roomUsers} />
         </>
       )}
       chat={<Chat leaderboardEntries={lb.data?.entries} />}

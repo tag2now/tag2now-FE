@@ -7,7 +7,7 @@
  * line read once belongs; Live went above the nav, with the rest of "what is
  * true right now" — the tab you are on, the room count, the reservation count.
  *
- * `#headerProfileSlot` is where PlayerProfileCard portals the account --- the
+ * `#headerProfileSlot` is where the app portals the account control --- the
  * login, or the name and its menu --- at every width, top right, where a login
  * is looked for. The sidebar card beside it holds the profile, not the account.
  */

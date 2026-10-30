@@ -12,7 +12,7 @@ find current implementations before adding an equivalent.
 ```
 src/
   App.tsx              visit-wide data subscriptions and application composition
-  app/                 application layout, route table and navigation
+  app/                 application layout, routes, navigation and account composition
   main.tsx             root render, Toaster, global unhandledrejection handler
   index.css            the stylesheet import list; its order is the cascade
   config/              routes, endpoints, polling, tabConfig, patchNotes, test-setup
@@ -46,9 +46,10 @@ subfolder where needed. Not every feature needs every file or a barrel export.
 - Activity summaries and player-history contracts used across features belong to
   shared domain models. Shared charts and helpers consume those models directly;
   types used only by a feature remain in that feature.
-- `PlayerProfileCard` composes authentication, navigation, player history and the
-  stream settings dialog. `LeaderboardViews` is a routed screen. These are not
-  generic UI simply because they currently live under `shared/`.
+- Account composition belongs to `app/`: it connects authentication, the header
+  portal, player history and stream settings. The shared profile card receives
+  display data and a history callback without owning those application behaviors.
+- `LeaderboardViews` is still a routed screen under `shared/`, not generic UI.
 - The API helper reads `auth/session.ts` for bearer tokens and session expiry.
   This coupling is current behavior, not an import-boundary rule already enforced.
 
