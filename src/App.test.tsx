@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, act, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import App from "@/App";
+import FakeEventSource from '@/chat/fakeEventSource'
 
 // Create stable mock functions accessible inside vi.mock factories
 const { mockedFetchLeaderboard, mockedFetchCurrentRankLeaderboard, mockedFetchRoomsAll, mockedFetchReservations, mockedFetchPosts } = vi.hoisted(() => ({
@@ -261,6 +262,28 @@ describe('App', () => {
     // rate, but that is a retime of the same timer, not a fourth one.
     expect(clearIntervalSpy).toHaveBeenCalledTimes(3)
     clearIntervalSpy.mockRestore()
+  })
+
+  // Pre-refactor safety net for layout lifetime. Moving routes must retain
+  // the open chat and its connection; a post-refactor red means that changed.
+  it('keeps the chat open and its stream connected while moving between routes', async () => {
+    await renderApp()
+    const connection = FakeEventSource.latest()
+    const connectionCount = FakeEventSource.instances.length
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^채팅 열기/ }))
+    })
+
+    for (const name of ['리더보드', /^매칭/]) {
+      await act(async () => { fireEvent.click(screen.getByRole('tab', { name })) })
+      expect(screen.getByRole('region', { name: '채팅' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^채팅 열기/ })).not.toBeInTheDocument()
+      expect(FakeEventSource.open()).toEqual([connection])
+      expect(FakeEventSource.instances).toHaveLength(connectionCount)
+    }
+    expect(mockedFetchRoomsAll).toHaveBeenCalledOnce()
+    expect(mockedFetchLeaderboard).toHaveBeenCalledOnce()
+    expect(mockedFetchCurrentRankLeaderboard).toHaveBeenCalledOnce()
   })
 
   it('renders app title and online user count', async () => {

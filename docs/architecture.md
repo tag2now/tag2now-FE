@@ -11,8 +11,8 @@ find current implementations before adding an equivalent.
 
 ```
 src/
-  App.tsx              route table, application layout and visit-wide data subscriptions
-  app/                 application navigation composed by App
+  App.tsx              visit-wide data subscriptions and application composition
+  app/                 application layout, route table and navigation
   main.tsx             root render, Toaster, global unhandledrejection handler
   index.css            the stylesheet import list; its order is the cascade
   config/              routes, endpoints, polling, tabConfig, patchNotes, test-setup
@@ -37,8 +37,9 @@ subfolder where needed. Not every feature needs every file or a barrel export.
 - Keep feature-specific rules in the feature. Generic UI and transport helpers
   must not acquire unrelated feature behavior as part of a small UI change.
 - Compose cross-feature screens at the application boundary. `App.tsx` currently
-  owns the route table, data subscriptions and layout. Application navigation lives
-  in `app/` and receives data from App instead of starting its own subscriptions.
+  owns visit-wide data subscriptions and passes data into application composition
+  under `app/`. The layout arranges the sidebar, routed content and persistent chat;
+  the route table connects feature screens to that data without new subscriptions.
 - Rank order, code/name conversion and sorting belong to the shared game domain,
   independent of React and feature folders. Feature screens and rank presentation
   consume that model directly; UI modules do not re-export domain functions.
@@ -51,8 +52,8 @@ subfolder where needed. Not every feature needs every file or a barrel export.
 - The API helper reads `auth/session.ts` for bearer tokens and session expiry.
   This coupling is current behavior, not an import-boundary rule already enforced.
 
-The feature-folder layout remains in place. Extracting the route table and layout
-from App and enforcing import boundaries are pending work.
+The feature-folder layout remains in place. Application composition is separated
+under `app/`; automated import-boundary enforcement is still pending work.
 
 ## Data flow
 
