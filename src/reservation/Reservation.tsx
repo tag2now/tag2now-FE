@@ -286,7 +286,7 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
                             <strong>{entry ? `#${entry.rank}` : '—'}</strong>
                           </span>
                           <div className="reservation-roster-inline">
-                            <span className="reservation-roster-best-rank" aria-label={`최고 계급 ${highestName ?? '정보 없음'}`}>
+                            <span className="reservation-roster-best-rank" aria-label={`현재 계급 ${highestName ?? '정보 없음'}`}>
                               <RankImage rankInfo={highestRank} className="reservation-roster-rank-image" />
                             </span>
                             <strong className="reservation-roster-name" title={participant.display_name}>{participant.display_name}</strong>

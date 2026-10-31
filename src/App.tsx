@@ -48,13 +48,13 @@ function roomCountLabel(rooms: Room[] | undefined, loaded: boolean): string {
 export default function App() {
   const navigate = useNavigate()
   const activeTab = useActiveTab()
-  const lb = useLeaderboard()
-  // The leaderboard tab opens on it and the home page summarises it. A save
-  // knows only the RPCN id, so the names come from the score board.
+  // The score board: the 최고 계급 view, and the online names a save lacks.
+  const best = useLeaderboard()
+  // Every place and rank shown outside 최고 계급 comes from this board.
   const currentRankRaw = useCurrentRankLeaderboard()
   const currentRankData = useMemo(
-    () => currentRankRaw.data && toLeaderboardData(currentRankRaw.data, lb.data?.entries),
-    [currentRankRaw.data, lb.data],
+    () => currentRankRaw.data && toLeaderboardData(currentRankRaw.data, best.data?.entries),
+    [currentRankRaw.data, best.data],
   )
   const currentRank = { ...currentRankRaw, data: currentRankData }
   const rooms = useRooms()
@@ -145,7 +145,6 @@ export default function App() {
     <Overview
       rooms={rooms.data}
       roomsLoading={rooms.loading}
-      leaderboardEntries={lb.data?.entries}
       currentRankEntries={currentRank.data?.entries}
       currentRankTotal={currentRank.data?.total_records}
     />
@@ -160,7 +159,7 @@ export default function App() {
       onRefresh={rooms.refresh}
       groupKey={activeTab}
       lastUpdated={rooms.lastUpdated}
-      leaderboardEntries={lb.data?.entries}
+      leaderboardEntries={currentRank.data?.entries}
     />
   )
 
@@ -227,7 +226,7 @@ export default function App() {
           </nav>
           </div>
           <EventSidebarCard />
-          <PlayerProfileCard leaderboardEntries={lb.data?.entries} roomUsers={roomUsers} />
+          <PlayerProfileCard leaderboardEntries={currentRank.data?.entries} roomUsers={roomUsers} />
         </aside>
 
         <main id="mainContent" className="app-main">
@@ -263,12 +262,12 @@ export default function App() {
                   rather than at a 404 page. */}
               <Route path="/" element={overviewPanel} />
               <Route path="/match/:group" element={roomsPanel} />
-              <Route path="/leaderboard/:view?" element={<LeaderboardViews current={currentRankRaw} best={lb} />} />
-              <Route path="/reservation" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
-              <Route path="/reservation/:id" element={<Reservation leaderboardEntries={lb.data?.entries} />} />
-              <Route path="/community" element={<Community leaderboardEntries={lb.data?.entries} />} />
-              <Route path="/community/:postId" element={<Community leaderboardEntries={lb.data?.entries} />} />
-              <Route path="/stats" element={<Stats leaderboardEntries={lb.data?.entries} />} />
+              <Route path="/leaderboard/:view?" element={<LeaderboardViews current={currentRankRaw} best={best} />} />
+              <Route path="/reservation" element={<Reservation leaderboardEntries={currentRank.data?.entries} />} />
+              <Route path="/reservation/:id" element={<Reservation leaderboardEntries={currentRank.data?.entries} />} />
+              <Route path="/community" element={<Community leaderboardEntries={currentRank.data?.entries} />} />
+              <Route path="/community/:postId" element={<Community leaderboardEntries={currentRank.data?.entries} />} />
+              <Route path="/stats" element={<Stats leaderboardEntries={currentRank.data?.entries} />} />
               <Route path="/event" element={<EventPage />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={overviewPanel} />
@@ -279,7 +278,7 @@ export default function App() {
         {/* The third column on a wide screen; narrower, a launcher fixed to
             the viewport. Here rather than per tab, so the stream lasts the
             whole visit. */}
-        <Chat leaderboardEntries={lb.data?.entries} />
+        <Chat leaderboardEntries={currentRank.data?.entries} />
       </div>
       <Footer />
     </div>

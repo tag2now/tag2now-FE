@@ -1,5 +1,5 @@
 {
-  "total": 4,
+  "total": 5,
   "entries": [
     {
       "rank": 1, "username": "np_002", "saved_at": "2026-10-16T01:00:00Z", "account_rank": 30,
@@ -26,6 +26,13 @@
       "rank": 4, "username": "np_004", "saved_at": "2026-10-16T01:00:00Z", "account_rank": 18,
       "chars": [
         {"id": 11, "character": "Kuma", "rank": 18, "rank_name": "Marauder", "tier": "녹단", "points": 500, "streak": 0, "wins": 80, "losses": 140}
+      ]
+    },
+    {
+      "rank": 5, "username": "np_003", "saved_at": "2026-10-16T01:00:00Z", "account_rank": 14,
+      "chars": [
+        {"id": 38, "character": "Lars", "rank": 14, "rank_name": "Warrior", "tier": "노랑단", "points": 300, "streak": 1, "wins": 150, "losses": 120},
+        {"id": 41, "character": "Alisa", "rank": 12, "rank_name": "Brawler", "tier": "녹단", "points": 0, "streak": 0, "wins": 100, "losses": 90}
       ]
     }
   ]

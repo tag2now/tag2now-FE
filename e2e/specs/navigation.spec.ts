@@ -58,8 +58,8 @@ test.describe('Navigation', () => {
   test('clicking leaderboard tab shows leaderboard content', async ({ page }) => {
     await page.getByRole('tab', { name: '리더보드' }).click()
 
-    // It opens on current ranks; the fixture has four.
-    await expect(page.getByText('Total records: 4')).toBeAttached()
+    // It opens on current ranks; the fixture has five.
+    await expect(page.getByText('Total records: 5')).toBeAttached()
     await expect(page.getByRole('columnheader', { name: 'Player' })).toBeVisible()
   })
 
@@ -73,7 +73,7 @@ test.describe('Navigation', () => {
 
   test('switching back to room tab shows rooms again', async ({ page }) => {
     await page.getByRole('tab', { name: '리더보드' }).click()
-    await expect(page.getByText('Total records: 4')).toBeAttached()
+    await expect(page.getByText('Total records: 5')).toBeAttached()
 
     await page.getByRole('tab', { name: '매칭' }).click()
     await expect(page.getByRole('columnheader', { name: '랭크' })).toBeVisible()
@@ -194,7 +194,7 @@ test.describe('Navigation', () => {
     headingBoxes.forEach(box => expect(box).not.toBeNull())
     expect(headingBoxes[0]!.x + headingBoxes[0]!.width).toBeLessThan(headingBoxes[1]!.x)
     await expect(rows).toHaveCount(2)
-    await expect(card.locator('.char-cell-record')).toHaveText([/76%250W 80L/, /75%180W 60L/])
+    await expect(card.locator('.char-cell-record')).toHaveText([/76%260W 82L/, /57%40W 30L/])
 
     for (let index = 0; index < 2; index += 1) {
       const rank = rows.nth(index).locator('.char-cell-rank')
