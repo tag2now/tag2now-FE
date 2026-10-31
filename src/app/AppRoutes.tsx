@@ -62,7 +62,7 @@ export default function AppRoutes({
   )
 
   return (
-    <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={panelLabel} aria-label={panelLabel ? undefined : activeTab === 'event' ? '이벤트' : '계정 관리'} tabIndex={0}>
+    <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={panelLabel} aria-label={panelLabel ? undefined : activeTab === 'event' ? '이벤트' : '관리자 메뉴'} tabIndex={0}>
       <Routes>
         {/* Unknown paths share the landing screen, as before extraction. */}
         <Route path="/" element={overviewPanel} />
@@ -74,7 +74,7 @@ export default function AppRoutes({
         <Route path="/community/:postId" element={<Community leaderboardEntries={leaderboardEntries} />} />
         <Route path="/stats" element={<Stats leaderboardEntries={leaderboardEntries} />} />
         <Route path="/event" element={<EventPage />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/:section?" element={<Admin />} />
         <Route path="*" element={overviewPanel} />
       </Routes>
     </div>

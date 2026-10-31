@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import Header from '@/shared/components/Header'
 import Footer from '@/shared/components/Footer'
-import PatchNotes from '@/shared/components/PatchNotes'
+import StartupDialogs from '@/app/StartupDialogs'
 import { LoginDialog } from '@/auth/component'
 import InstallSheet from '@/install/InstallSheet'
 
@@ -15,7 +15,7 @@ export default function AppLayout({ sidebar, chat, children }: AppLayoutProps) {
   return (
     <div className="app-shell">
       <a className="skip-link" href="#mainContent">본문으로 건너뛰기</a>
-      <PatchNotes />
+      <StartupDialogs />
       {/* One instance serves every feature through requestLogin. */}
       <LoginDialog />
       <Header />

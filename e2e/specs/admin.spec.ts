@@ -13,7 +13,7 @@ test.describe('Account management', () => {
 
     const header = page.locator('#headerProfileSlot')
     await header.getByRole('button', { name: '운영자 계정 메뉴' }).click()
-    await header.getByRole('menuitem', { name: '계정 관리' }).click()
+    await header.getByRole('menuitem', { name: '관리자 메뉴' }).click()
 
     await expect(page).toHaveURL(/\/admin$/)
     // The page has no nav tab, so none is selected.
@@ -49,7 +49,7 @@ test.describe('Account management', () => {
 
   test('an admin previews a rank change on a save, applies it, and sees it land', async ({ page }) => {
     await signInAs(page, 'root', '운영자', true)
-    await page.goto('/admin')
+    await page.goto('/admin/saves')
 
     await page.getByLabel('내 비밀번호 (확인용)').fill('pw')
     await page.getByLabel('플레이어 아이디').fill('player1')
@@ -73,6 +73,25 @@ test.describe('Account management', () => {
     await expect(page.getByText('적용했습니다. 이전 세이브는 20261001-120000-000001 백업에 있습니다.')).toBeVisible()
     await expect(characters.getByRole('img', { name: 'Genbu' })).toBeVisible()
     await expect(preview).toHaveCount(0)
+  })
+
+  test('an admin moves between the sections and a reload stays on one', async ({ page }) => {
+    await signInAs(page, 'root', '운영자', true)
+    await page.goto('/admin')
+
+    await expect(page.getByLabel('대상 RPCN 아이디')).toBeVisible()
+    await page.getByRole('tab', { name: '팝업' }).click()
+
+    await expect(page).toHaveURL(/\/admin\/popups$/)
+    await expect(page.getByRole('form', { name: '새 팝업' })).toBeVisible()
+    await expect(page.getByLabel('대상 RPCN 아이디')).toBeHidden()
+    await expect(page.getByLabel('내 비밀번호 (확인용)')).toHaveCount(0)
+
+    await page.reload()
+    await expect(page.getByRole('tab', { name: '팝업' })).toHaveAttribute('aria-selected', 'true')
+
+    const width = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth])
+    expect(width[0]).toBeLessThanOrEqual(width[1])
   })
 
   test('a non-admin who opens the address sees no form', async ({ page }) => {

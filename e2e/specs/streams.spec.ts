@@ -80,7 +80,7 @@ test.describe('Live on Chzzk', () => {
       }],
     })
     await signInAs(page, 'root', '운영자', true)
-    await page.goto('/admin')
+    await page.goto('/admin/streams')
 
     const list = page.getByRole('list', { name: '연결된 방송 채널' })
     await expect(list.getByRole('link', { name: '남의 채널' })).toBeVisible()

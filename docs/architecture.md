@@ -25,6 +25,7 @@ src/
   stat/                statistics — useStats, useWeeklyTop, Stats
   chat/                lobby chat — chatStream (SSE store), Chat, launcher/panel components
   streaming/           a player's registered broadcast channel and its edit dialog
+  popup/               site popups — SitePopups, popupApi, popupDismissal
   install/             install eligibility, captured browser prompt and install sheet
   shared/              api util, Leaderboard, hooks, components, colors, formatters
 ```
@@ -292,7 +293,7 @@ so a nav click, the back button, and a cold deep link all arrive the same way.
 | `/stats` | that tab |
 | `/reservation`, `/reservation/:id` | reservations, optionally opened on one |
 | `/community`, `/community/:postId` | the board, optionally opened on one post |
-| `/admin` | account moderation and TTT2 saves; no nav tab, reached from the account menu |
+| `/admin`, `/admin/saves`, `/admin/streams`, `/admin/popups` | the admin page's sections; no nav tab, reached from the account menu |
 | `/event` | the rank event; no nav tab, reached from a sidebar card or, on a phone, a floating link |
 | anything else | overview, via the catch-all route |
 
@@ -356,7 +357,7 @@ not lost. Dismissing the dialog drops it, and closing the dialog aborts a login
 still in flight — a cancelled login must never sign anyone in.
 
 The account lives in the header at every width: a login button while signed
-out, otherwise the name, which opens an account menu (내 정보 보기, 계정 관리
+out, otherwise the name, which opens an account menu (내 정보 보기, 관리자 메뉴
 for admins, 로그아웃) rather than signing out. Signing out always goes through
 a confirmation. The sidebar card is the profile — characters, ranks, the record — and renders only
 while someone is signed in; a phone hides it.
@@ -371,18 +372,23 @@ login have a null username and belong to nobody.
 
 ## Account moderation
 
+The admin page has four sections behind inner tabs, each with its own URL:
+accounts, saves, stream channels and popups. Every section stays mounted while
+hidden, so a switch keeps a lookup's result and a half-written form.
+
 `/admin` looks an RPCN account up and bans it, through `POST /admin/users/lookup`
 and `/admin/users/ban`. rpcn-narco wants the admin's password on **every**
-call and the backend keeps none, so the page asks for it once --- one field at
-the top, shared by both sections --- and holds it in component state only ---
-never in `session.ts` or storage --- until the page is left. A ban goes to the
-account that was looked up, not whatever the id field says by then.
+call and the backend keeps none, so the page asks for it once --- one field
+above the account and save sections, shared by both --- and holds it in
+component state only --- never in `session.ts` or storage --- until the page is
+left. A ban goes to the account that was looked up, not whatever the id field
+says by then.
 
 The lookup buttons are **not** disabled for an empty password or id: pressing
 one, or Enter, warns in a toast and puts the cursor in the empty field
 (`warnEmpty`). A dimmed button that does nothing explains nothing.
 
-The second section, `SaveAdmin`, edits a player's TTT2 save through
+The save section, `SaveAdmin`, edits a player's TTT2 save through
 `/admin/saves/*` (tag2now-BE spec `09-save-admin.md`). **An edit is two
 requests**: the preview (`dry_run`) answers the changes and the save's
 `sha256`, and 적용 sends the *previewed* edit back with that sha256 as
@@ -474,6 +480,38 @@ nginx needs nothing for the stream: the backend's `X-Accel-Buffering: no`
 turns proxy buffering off for that response, and its 15 s ping keeps the
 connection inside `proxy_read_timeout`. Both were checked through
 `nginx.conf.template` in a container.
+
+## Site popups
+
+Admins write popups under `/admin/popups` (`admin/PopupAdmin`) and every visitor, signed
+in or not, sees the active ones on opening the site, from the public
+`GET /popups/active`. The contract is in the
+[popup specification](../../tag2now-BE/docs/spec/11-popup.md).
+
+`app/StartupDialogs` keeps it to one dialog at a time: the patch notes first, then
+`popup/SitePopups`, which reads the list only once they have closed and shows the
+popups newest first, one by one. A failed read shows nothing and says nothing.
+
+Each popup says which of 하루 동안 보지 않기 and 다시 보지 않기 it offers. Either
+one writes to `dismissedPopups` in this browser (`popupDismissal`): 'forever', or
+the moment 24 hours from the click. X, the backdrop and Escape write nothing, so
+those popups return on the next load, as the patch notes do. Nothing is kept on
+the server, since a signed-out visitor has no account to keep it on, so another
+browser asks again. Editing a popup does not bring it back; a new popup does.
+
+The body is plain text with its line breaks kept, never HTML. Images go through
+the API, whose URL carries the content's hash, so the backend can tell browsers to
+keep them for good.
+
+Uploads are multipart through `request()`, which leaves the `Content-Type` to the
+browser. nginx allows 6 MB on `/api/`, room for the backend's 5 MB image and the
+form around it; `PopupAdmin` checks the size first, because past nginx's limit the
+answer is an HTML page rather than a sentence to show.
+
+The install sheet is not held back for a popup, which loads after it. It sits
+under the popup's backdrop until the popup closes.
+
+In E2E, `mockAllApis` answers an empty list unless a spec passes `popups`.
 
 ## Install sheet
 

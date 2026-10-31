@@ -17,6 +17,8 @@ export const STORAGE_KEYS = {
   session: 'ttt2-session',
   /** Set once the app-install sheet is closed or used; it does not return. */
   installSheetDismissed: 'ttt2-install-dismissed',
+  /** Which site popups this browser hid, and until when. */
+  dismissedPopups: 'ttt2-popups-dismissed',
 } as const
 
 /** Keys earlier builds wrote and nothing reads any more: the typed-in display

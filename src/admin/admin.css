@@ -1,4 +1,4 @@
-/* The account-moderation page (/admin): a lookup form, and the account it found. */
+/* The admin page (/admin): section tabs, the account lookup, and the account it found. */
 
 .admin-notice { margin: 0 0 12px; color: var(--color-txt-dim); font-size: var(--text-sm); }
 
@@ -19,13 +19,13 @@
 .admin-account dd.is-banned { color: var(--color-error); font-weight: var(--weight-strong); }
 .admin-hint { margin: 8px 0 0; color: var(--color-txt-faint); font-size: var(--text-xs); }
 
-/* The admin page stacks three panels: the shared password, account
-   moderation, and the save section. */
-.admin-page { display: grid; gap: 16px; }
-/* .panel's minimum height is for a tab filling the screen; stacked here it
-   only left the short panels mostly empty. Not clipped either: the save form's
-   pickers drop over what follows them, and the tables scroll in their own wraps. */
-.admin-page > .panel { min-height: 0; overflow: visible; }
+/* minmax(0, …): an auto column grows to a list's longest truncated line and
+   pushes the whole page past a phone's width. */
+.admin-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.admin-tabs { display: flex; }
+.admin-tabs button { flex: 1; font-size: var(--text-sm); }
+/* Short panels need no tab-filling height, and the save form's pickers drop past the panel's edge. */
+.admin-page .panel { min-height: 0; overflow: visible; }
 .admin-auth .admin-field { max-width: 360px; }
 
 /* Save admin: a summary card, then sections that each carry a small heading. */
@@ -60,3 +60,9 @@
 .save-backups li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 12px; border: 1px solid var(--color-border-light); border-radius: 8px; background: var(--color-bg-row); font-size: var(--text-sm); }
 .save-backup-label { color: var(--color-txt); font-weight: var(--weight-strong); overflow-wrap: anywhere; }
 .save-backup-meta { flex: 1 1 auto; color: var(--color-txt-dim); }
+
+/* The popup form: each field on its own line. */
+.popup-form { display: grid; gap: 12px; margin-top: 12px; }
+.popup-form .admin-hint { margin: 0; }
+.popup-form .save-checks, .popup-form .save-actions { margin: 0; }
+.popup-form-preview { max-width: 240px; max-height: 180px; border: 1px solid var(--color-border-light); border-radius: 6px; object-fit: contain; }

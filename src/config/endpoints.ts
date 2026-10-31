@@ -30,6 +30,8 @@ export const API = {
   adminSaveRestore: () => endpoint('admin/saves/restore'),
   adminStreams: () => endpoint('admin/streams'),
   adminStream: (username: string) => endpoint(`admin/streams/${encodeURIComponent(username)}`),
+  adminPopups: () => endpoint('admin/popups'),
+  adminPopup: (id: number) => endpoint(`admin/popups/${id}`),
 
   rooms: () => endpoint('rooms/all'),
   myStream: () => endpoint('streams/me'),
@@ -45,6 +47,8 @@ export const API = {
 
   event: () => endpoint('event'),
   eventPlayer: (npid: string) => endpoint(`event/players/${encodeURIComponent(npid)}`),
+
+  activePopups: () => endpoint('popups/active'),
 
   posts: () => endpoint('community/posts'),
   post: (postId: number) => endpoint(`community/posts/${postId}`),

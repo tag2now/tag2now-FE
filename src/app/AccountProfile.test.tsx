@@ -162,20 +162,20 @@ describe('Player profile', () => {
     )
 
     fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
-    fireEvent.click(header.getByRole('menuitem', { name: '계정 관리' }))
+    fireEvent.click(header.getByRole('menuitem', { name: '관리자 메뉴' }))
 
     expect(screen.getByTestId('path')).toHaveTextContent('/admin')
     expect(header.queryByRole('menu')).not.toBeInTheDocument()
   })
 
-  it('offers account management to admins only', () => {
+  it('offers the admin menu to admins only', () => {
     signInAs()
     const header = mountHeaderSlot()
     renderProfile()
 
     fireEvent.click(header.getByRole('button', { name: 'TestPlayer 계정 메뉴' }))
 
-    expect(header.queryByRole('menuitem', { name: '계정 관리' })).not.toBeInTheDocument()
+    expect(header.queryByRole('menuitem', { name: '관리자 메뉴' })).not.toBeInTheDocument()
   })
 
   // Pre-refactor safety net for account composition. These public interactions

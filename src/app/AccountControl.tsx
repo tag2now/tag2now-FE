@@ -90,7 +90,7 @@ export default function AccountControl({
             </button>
             {user.admin && (
               <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); navigate(pathOf('admin')) }}>
-                <ShieldBan size={14} aria-hidden="true" /> 계정 관리
+                <ShieldBan size={14} aria-hidden="true" /> 관리자 메뉴
               </button>
             )}
             <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onLogout() }}>

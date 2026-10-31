@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Loader2, Search, ShieldBan } from 'lucide-react'
 import useAuth from '@/auth/useAuth'
@@ -8,9 +9,20 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog'
 import useConfirm from '@/shared/hooks/useConfirm'
 import { banAccount, lookupAccount } from '@/admin/adminApi'
 import { errorText, formatInstant, warnEmpty } from '@/admin/adminText'
+import PopupAdmin from '@/admin/PopupAdmin'
 import SaveAdmin from '@/admin/SaveAdmin'
 import StreamChannelAdmin from '@/admin/StreamChannelAdmin'
+import { adminPath, type AdminSection } from '@/config/routes'
 import type { AccountStatus } from '@/admin/types'
+
+const SECTIONS: { value: AdminSection; label: string }[] = [
+  { value: 'accounts', label: '계정' },
+  { value: 'saves', label: '세이브' },
+  { value: 'streams', label: '방송 채널' },
+  { value: 'popups', label: '팝업' },
+]
+
+const ARROW_STEP: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 }
 
 /** RPCN usernames are unique regardless of case, as the backend compares them. */
 const isSameAccount = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
@@ -51,38 +63,101 @@ export default function Admin() {
   return <AdminConsole self={user.username} />
 }
 
-/** One password for the whole page: both sections send it with every request.
+/** One password for the account and save sections: both send it with every request.
  *
  * It is held in this component's state only --- never in storage --- and goes
  * when the page does. Every request carries it because RPCN re-checks it on
- * every action. */
+ * every action. The section is the URL (`adminPath`), so a reload stays on it. */
 function AdminConsole({ self }: { self: string }) {
+  const { section: requested } = useParams()
+  const section = SECTIONS.find((option) => option.value === requested)?.value ?? 'accounts'
   const [password, setPassword] = useState('')
   const passwordField = useRef<HTMLInputElement>(null)
   const missingPassword = () => warnEmpty(passwordField.current, '내 비밀번호 (확인용)를 먼저 입력하세요.')
 
   return (
     <div className="admin-page">
-      <div className="panel admin-auth">
-        <label className="admin-field">
-          <span className="field-label">내 비밀번호 (확인용)</span>
-          <input
-            ref={passwordField}
-            type="password"
-            className="input-base"
-            autoComplete="current-password"
-            maxLength={128}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
-        <p className="admin-hint">조회와 수정마다 RPCN이 다시 확인합니다. 이 페이지를 떠나면 지워집니다.</p>
-      </div>
-      <AdminPanel>
-        <AccountModeration self={self} password={password} onMissingPassword={missingPassword} />
-      </AdminPanel>
-      <SaveAdmin password={password} onMissingPassword={missingPassword} />
-      <StreamChannelAdmin />
+      <SectionTabs value={section} />
+      {(section === 'accounts' || section === 'saves') && (
+        <div className="panel admin-auth">
+          <label className="admin-field">
+            <span className="field-label">내 비밀번호 (확인용)</span>
+            <input
+              ref={passwordField}
+              type="password"
+              className="input-base"
+              autoComplete="current-password"
+              maxLength={128}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          <p className="admin-hint">조회와 수정마다 RPCN이 다시 확인합니다. 이 페이지를 떠나면 지워집니다.</p>
+        </div>
+      )}
+      <SectionPanel value="accounts" active={section}>
+        <AdminPanel>
+          <AccountModeration self={self} password={password} onMissingPassword={missingPassword} />
+        </AdminPanel>
+      </SectionPanel>
+      <SectionPanel value="saves" active={section}>
+        <SaveAdmin password={password} onMissingPassword={missingPassword} />
+      </SectionPanel>
+      <SectionPanel value="streams" active={section}>
+        <StreamChannelAdmin />
+      </SectionPanel>
+      <SectionPanel value="popups" active={section}>
+        <PopupAdmin />
+      </SectionPanel>
+    </div>
+  )
+}
+
+function SectionTabs({ value }: { value: AdminSection }) {
+  const navigate = useNavigate()
+  const buttons = useRef<Partial<Record<AdminSection, HTMLButtonElement | null>>>({})
+
+  const step = (event: React.KeyboardEvent, index: number) => {
+    const delta = ARROW_STEP[event.key]
+    if (!delta) return
+    event.preventDefault()
+    const next = SECTIONS[(index + delta + SECTIONS.length) % SECTIONS.length].value
+    navigate(adminPath(next))
+    buttons.current[next]?.focus()
+  }
+
+  return (
+    <div className="segmented-control admin-tabs" role="tablist" aria-label="관리자 메뉴">
+      {SECTIONS.map((option, index) => (
+        <button
+          key={option.value}
+          ref={(button) => { buttons.current[option.value] = button }}
+          type="button"
+          role="tab"
+          id={`admin-tab-${option.value}`}
+          aria-controls={`admin-section-${option.value}`}
+          aria-selected={value === option.value}
+          tabIndex={value === option.value ? 0 : -1}
+          className={value === option.value ? 'active' : ''}
+          onClick={() => navigate(adminPath(option.value))}
+          onKeyDown={(event) => step(event, index)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Stays mounted while hidden, so a switch keeps a lookup's result and a half-written popup. */
+function SectionPanel({ value, active, children }: {
+  value: AdminSection
+  active: AdminSection
+  children: React.ReactNode
+}) {
+  return (
+    <div role="tabpanel" id={`admin-section-${value}`} aria-labelledby={`admin-tab-${value}`} hidden={value !== active}>
+      {children}
     </div>
   )
 }

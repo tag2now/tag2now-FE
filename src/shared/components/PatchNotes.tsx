@@ -12,11 +12,11 @@ export function hasUnseenPatchNotes(): boolean {
   return readItem(LS_KEY) !== LATEST_PATCH_VERSION
 }
 
-export default function PatchNotes() {
+export default function PatchNotes({ onClose }: { onClose?: () => void }) {
   const [visible, setVisible] = useState(hasUnseenPatchNotes)
 
   if (!visible) return null
-  return <PatchNotesDialog onClose={() => setVisible(false)} />
+  return <PatchNotesDialog onClose={() => { setVisible(false); onClose?.() }} />
 }
 
 const RECENT_NOTES = recentPatchNotes()

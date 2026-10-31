@@ -43,5 +43,17 @@ const LEADERBOARD_VIEW_PATHS: Record<LeaderboardView, string> = {
 
 export const leaderboardPath = (view: LeaderboardView): string => LEADERBOARD_VIEW_PATHS[view]
 
+/** The admin page's sections. Accounts own the page's own path, so it opens on them. */
+export type AdminSection = 'accounts' | 'saves' | 'streams' | 'popups'
+
+const ADMIN_SECTION_PATHS: Record<AdminSection, string> = {
+  accounts: '/admin',
+  saves: '/admin/saves',
+  streams: '/admin/streams',
+  popups: '/admin/popups',
+}
+
+export const adminPath = (section: AdminSection): string => ADMIN_SECTION_PATHS[section]
+
 export const postPath = (id: number): string => `/community/${id}`
 export const reservationPath = (id: number): string => `/reservation/${id}`

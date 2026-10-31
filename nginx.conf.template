@@ -22,6 +22,8 @@ server {
 
     # Proxy API calls to the backend service
     location /api/ {
+        # Popup images: tag2now-BE allows 5 MB, and the form around one needs room.
+        client_max_body_size 6m;
         proxy_pass ${BACKEND_URL}/;
         proxy_set_header Host $proxy_host;
         proxy_set_header X-Real-IP $remote_addr;

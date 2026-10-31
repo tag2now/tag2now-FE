@@ -50,7 +50,22 @@ export interface ApiStreamChannel {
   registered_at: string
 }
 
+export interface ApiPopup {
+  id: number
+  title: string
+  body: string
+  image_path: string | null
+  allow_dismiss_forever: boolean
+  allow_dismiss_day: boolean
+  active: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
 interface MockOverrides {
+  /** Site popups, active or not; none by default, so no spec opens behind one. */
+  popups?: ApiPopup[]
   /** Today's chat, as the stream's opening snapshot carries it; none by default. */
   chat?: ApiChatMessage[]
   leaderboard?: unknown
@@ -346,6 +361,51 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     if (route.request().method() === 'GET') return json(route, 200, { channels: [...streamChannels.values()] })
     const username = decodeURIComponent(route.request().url().split('/').pop() ?? '')
     if (!streamChannels.delete(username)) return json(route, 404, { detail: '연결된 방송 채널이 없습니다.' })
+    return route.fulfill({ status: 204 })
+  })
+
+  /* The backend's popup table. A spec's upload is a form, so its fields are read
+   * out of the multipart text; a file's bytes are not kept, only that it came. */
+  const popups = new Map((overrides?.popups ?? []).map((item) => [item.id, { ...item }]))
+  const popupField = (form: string, name: string) =>
+    form.match(new RegExp(`name="${name}"\\r\\n\\r\\n([\\s\\S]*?)\\r\\n--`))?.[1] ?? ''
+  const savePopup = (route: Route, id: number, stored?: ApiPopup) => {
+    const form = route.request().postData() ?? ''
+    const now = '2026-10-31T00:00:00Z'
+    const saved = {
+      id,
+      title: popupField(form, 'title'),
+      body: popupField(form, 'body'),
+      image_path: form.includes('name="image"') ? `popups/${id}/image?v=e2e` : stored?.image_path ?? null,
+      allow_dismiss_forever: popupField(form, 'allow_dismiss_forever') === 'true',
+      allow_dismiss_day: popupField(form, 'allow_dismiss_day') === 'true',
+      active: popupField(form, 'active') === 'true',
+      created_by: stored?.created_by ?? requester(route) ?? '',
+      created_at: stored?.created_at ?? now,
+      updated_at: now,
+    }
+    popups.set(id, saved)
+    return json(route, stored ? 200 : 201, saved)
+  }
+  const newestPopups = () => [...popups.values()].sort((a, b) => b.id - a.id)
+  await page.route('**/api/popups/active**', (route) => json(route, 200, {
+    popups: newestPopups().filter((item) => item.active),
+  }))
+  await page.route('**/api/popups/*/image**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'image/svg+xml',
+    body: '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"/>',
+  }))
+  await page.route('**/api/admin/popups**', async (route) => {
+    if (requester(route) === null) return signedOut(route)
+    const method = route.request().method()
+    const id = Number(route.request().url().match(/\/popups\/(\d+)/)?.[1])
+    if (method === 'GET') return json(route, 200, { popups: newestPopups() })
+    if (method === 'POST') return savePopup(route, Math.max(0, ...popups.keys()) + 1)
+    const stored = popups.get(id)
+    if (!stored) return json(route, 404, { detail: '팝업을 찾을 수 없습니다.' })
+    if (method === 'PUT') return savePopup(route, id, stored)
+    popups.delete(id)
     return route.fulfill({ status: 204 })
   })
 

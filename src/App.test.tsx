@@ -481,7 +481,7 @@ describe('App', () => {
       expect(navigation.queryAllByRole('tab', { selected: true })).toHaveLength(0)
       expect(navigation.getByRole('tab', { name: '홈' })).toHaveAttribute('tabindex', '0')
       expect(navigation.getAllByRole('tab').filter(tab => tab.tabIndex === 0)).toHaveLength(1)
-      expect(screen.getByRole('tabpanel', { name: '계정 관리' })).not.toHaveAttribute('aria-labelledby')
+      expect(screen.getByRole('tabpanel', { name: '관리자 메뉴' })).not.toHaveAttribute('aria-labelledby')
       expect(screen.queryByRole('tablist', { name: '매칭 종류 선택' })).not.toBeInTheDocument()
     })
 
