@@ -426,13 +426,18 @@ admin page draws; its rules live in `shared/styles/saves.css`, not `admin/admin.
 Finished rank matches, from tag2now-BE's `GET /records/matches` (spec 11): who
 played whom, the result, and each character with the rank it **went into the
 match at**. Two screens draw the same row, `shared/components/MatchRecordRow`:
+1P on the left and 2P on the right as the game seated them (the backend reads
+the room's slot order), the result beside the VS --- WIN VS LOSE or LOSE VS WIN
+--- and the winner's half tinted. On both sides the higher rank sits by the VS,
+since a match pairs players by their best character.
 
-- **`/records`** --- everyone's matches, winner on the left, searchable by name
-  (`q`, asked once typing pauses). Fetched once and refreshed by hand, like the
-  leaderboards; a name opens the profile.
-- **The profile's 전적 tab** --- the same list with `npid`, theirs on the left
-  with the result first. Read only when the tab opens; an opponent's name opens
-  them in the same panel, as 자주 함께한 플레이어 does. The 통산 line above it
+- **`/records`** --- everyone's matches, searchable by name (`q`, asked once
+  typing pauses). Fetched once and refreshed by hand, like the leaderboards; a
+  name opens the profile.
+- **The profile's 전적 tab** --- the same list with `npid`, seated the same way,
+  so the player may be 2P; only their own name is not a link. Read only when
+  the tab opens; an opponent's name opens them in the same panel, as 자주 함께한
+  플레이어 does. The 통산 line above it
   is the save's lifetime record (`GET /saves/players/{npid}`), not a count of
   the list: the backend keeps no per-player totals, and the list starts only
   when tag2now began recording. No save, or a failed read, drops just that line.
@@ -442,7 +447,7 @@ matches keep arriving at the top, so page 2 by number would repeat rows.
 
 A match is found in the saves and its opponent in the rooms, so a row can lack
 either: "캐릭터 미확인" when that side's save was not seen, "상대 미확인" when
-no room was, and the id when no name was. Matches recorded before ranks were
+no room was (the side seen is then 1P), and the id when no name was. Matches recorded before ranks were
 kept have `rank: null` and show portraits alone. The row, its API and the hook
 live in `shared/` because the profile panel there uses them; the import
 boundary forbids `shared/` reaching into `records/`.

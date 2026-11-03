@@ -14,11 +14,12 @@ vi.mock('@/shared/util/api', async () => {
   return { ...actual, GET: vi.fn() }
 })
 
-const side = (npid: string, online_name: string | null): RecordSide =>
-  ({ npid, online_name, chars: [{ name: 'Jin', rank: { name: 'Yaksa', tier: '파랑단' } }] })
+const side = (npid: string, online_name: string | null, result: RecordSide['result']): RecordSide =>
+  ({ npid, online_name, result, chars: [{ name: 'Jin', rank: { name: 'Yaksa', tier: '파랑단' } }] })
 
-const match = (id: number, winner: RecordSide | null, loser: RecordSide | null): MatchRecord =>
-  ({ id, played_at: new Date().toISOString(), winner, loser })
+/** 1P, then 2P. */
+const match = (id: number, p1: RecordSide, p2: RecordSide | null): MatchRecord =>
+  ({ id, played_at: new Date().toISOString(), p1, p2 })
 
 const page = (matches: MatchRecord[], next_before: number | null = null): MatchRecordPage => ({ matches, next_before })
 
@@ -27,8 +28,8 @@ const search = () => screen.getByLabelText('플레이어 검색')
 
 beforeEach(() => {
   vi.mocked(fetchMatchRecords).mockReset().mockResolvedValue(page([
-    match(2, side('alice', 'Alice'), side('bob', 'Bob')),
-    match(1, side('carol', null), side('alice', 'Alice')),
+    match(2, side('alice', 'Alice', 'win'), side('bob', 'Bob', 'loss')),
+    match(1, side('carol', null, 'loss'), side('alice', 'Alice', 'win')),
   ]))
   vi.mocked(fetchPlayerSave).mockReset().mockRejectedValue(new AppError('none', 404))
   vi.mocked(GET).mockReset().mockResolvedValue({
@@ -38,13 +39,13 @@ beforeEach(() => {
 })
 
 describe('Records', () => {
-  it('lists everyone\'s matches, winner first, a missing name shown as the id', async () => {
+  it('lists everyone\'s matches 1P first, the result beside the VS, a missing name shown as the id', async () => {
     render(<Records />)
 
     const rows = await within(await screen.findByRole('list', { name: '전체 전적' })).findAllByRole('listitem')
-    expect(rows.map((row) => within(row).getAllByRole('button').map((b) => b.textContent))).toEqual([
-      ['Alice', 'Bob'],
-      ['carol', 'Alice'],
+    expect(rows.map((row) => within(row).getAllByText(/^(Alice|Bob|carol|WIN|LOSE)$/).map((node) => node.textContent))).toEqual([
+      ['Alice', 'WIN', 'LOSE', 'Bob'],
+      ['carol', 'LOSE', 'WIN', 'Alice'],
     ])
     expect(fetchMatchRecords).toHaveBeenCalledWith({ q: '' }, null)
   })
@@ -70,8 +71,8 @@ describe('Records', () => {
 
   it('loads the next page under the first', async () => {
     vi.mocked(fetchMatchRecords)
-      .mockResolvedValueOnce(page([match(9, side('alice', 'Alice'), side('bob', 'Bob'))], 9))
-      .mockResolvedValueOnce(page([match(3, side('bob', 'Bob'), side('alice', 'Alice'))]))
+      .mockResolvedValueOnce(page([match(9, side('alice', 'Alice', 'win'), side('bob', 'Bob', 'loss'))], 9))
+      .mockResolvedValueOnce(page([match(3, side('bob', 'Bob', 'win'), side('alice', 'Alice', 'loss'))]))
     render(<Records />)
 
     fireEvent.click(await screen.findByRole('button', { name: '더 보기' }))

@@ -248,8 +248,8 @@ export const CURRENT_RANK_HOLDERS = {
 }
 
 type MockRecordChar = { name: string, rank: { name: string, tier: string } | null }
-type MockRecordSide = { npid: string, online_name: string | null, chars: MockRecordChar[] | null }
-export type MockMatchRecord = { id: number, played_at: string, winner: MockRecordSide | null, loser: MockRecordSide | null }
+type MockRecordSide = { npid: string, online_name: string | null, result: 'win' | 'loss', chars: MockRecordChar[] | null }
+export type MockMatchRecord = { id: number, played_at: string, p1: MockRecordSide, p2: MockRecordSide | null }
 
 /** Smaller than the backend's, so the fixture spans two pages and 더 보기 has something to load. */
 const RECORD_PAGE_SIZE = 6
@@ -261,7 +261,7 @@ function recordPage(records: MockMatchRecord[], url: URL) {
   return { matches, next_before: rest.length > RECORD_PAGE_SIZE ? matches[matches.length - 1].id : null }
 }
 
-const sides = (r: MockMatchRecord) => [r.winner, r.loser].filter((s): s is MockRecordSide => s != null)
+const sides = (record: MockMatchRecord) => [record.p1, record.p2].filter((side): side is MockRecordSide => side != null)
 
 /** A save with two characters played and one slot never used. */
 export const PLAYER_SAVE = {

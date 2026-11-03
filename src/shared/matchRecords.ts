@@ -14,6 +14,7 @@ export type RecordSide = {
   npid: string
   /** From the room the match was played in; null when no room was found. */
   online_name: string | null
+  result: 'win' | 'loss'
   /** In tag order when known; null when that side's save was not seen. */
   chars: RecordChar[] | null
 }
@@ -23,8 +24,10 @@ export type MatchRecord = {
   id: number
   /** ISO 8601, UTC: when the result was saved. */
   played_at: string
-  winner: RecordSide | null
-  loser: RecordSide | null
+  /** 1P and 2P as the game seated them. */
+  p1: RecordSide
+  /** Null when no room named the opponent. */
+  p2: RecordSide | null
 }
 
 /** `GET /records/matches`. `next_before` is null on the last page. */

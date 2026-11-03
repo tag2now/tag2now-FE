@@ -21,6 +21,10 @@ test.describe('Records', () => {
     await expect(first.getByRole('button')).toHaveText(['TTT2_Master', 'KingOfIronFist'])
     await expect(first.getByRole('img', { name: 'Yaksa' })).toBeVisible()
     await expect(first.getByRole('img', { name: 'Vanquisher' })).toBeVisible()
+    // 1P is on the left whoever won, so the result in the middle changes from match to match.
+    await expect(first.locator('.record-vs')).toHaveText('WINVSLOSE')
+    await expect(rows(page).nth(1).locator('.record-vs')).toHaveText('LOSEVSWIN')
+    await expect(rows(page).nth(1).getByRole('button')).toHaveText(['TTT2_Master', 'KingOfIronFist'])
 
     await page.getByRole('button', { name: '더 보기' }).click()
     await expect(rows(page)).toHaveCount(10)
@@ -56,7 +60,7 @@ test.describe('Records', () => {
     // The lifetime record is the save's (PLAYER_SAVE answers for anyone).
     await expect(records).toContainText('통산15판 10승 5패')
     await expect(records.getByRole('listitem')).toHaveCount(5)
-    await expect(records.getByRole('listitem').first().locator('.record-result')).toHaveText('승')
+    await expect(records.getByRole('listitem').first().locator('.record-vs')).toHaveText('WINVSLOSE')
 
     await records.getByRole('button', { name: 'KingOfIronFist 기록 보기' }).first().click()
     await expect(page.getByRole('heading', { name: 'np_002' })).toBeVisible()

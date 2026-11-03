@@ -3,57 +3,56 @@
 
 /* A container query, not a media query: the same row sits in an 860px dialog
    and in a full-width page, and a phone narrows both. */
-.record-list { display: grid; gap: 4px; list-style: none; container-type: inline-size; }
-.record-row { display: grid; min-height: 52px; grid-template-columns: minmax(0,1fr) 28px minmax(0,1fr) 76px; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 2%, transparent); }
-.record-row.has-result { grid-template-columns: 30px minmax(0,1fr) 28px minmax(0,1fr) 76px; }
+.record-list { display: grid; gap: 6px; list-style: none; container-type: inline-size; }
+.record-row { overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 2%, transparent); }
 
-.record-result { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 6px; font-size: var(--text-xs); font-weight: var(--weight-max); }
-.record-result.is-win { background: color-mix(in srgb, var(--color-accent) 14%, transparent); color: var(--color-accent); }
-.record-result.is-loss { background: color-mix(in srgb, var(--color-primary) 14%, transparent); color: var(--color-primary-text); }
+.record-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 12px; border-bottom: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-shade) 18%, transparent); color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-label); font-variant-numeric: tabular-nums; }
 
-/* Name over characters; the right-hand side mirrors the left, so both face the VS. */
-.record-side { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 4px; }
-.record-side.is-mirrored { align-items: flex-end; text-align: right; }
-.record-side.is-mirrored .record-side-copy { flex-direction: row-reverse; }
-.record-side.is-unknown { color: var(--color-txt-faint); font-size: var(--text-2xs); font-weight: var(--weight-label); }
+/* Two halves facing each other: the name at the outer edge, the characters by the VS. */
+.record-body { display: grid; min-height: 64px; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: stretch; }
+.record-side { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; }
+.record-side.is-mirrored { flex-direction: row-reverse; text-align: right; }
+.record-side.is-win { background: linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 85%); }
+.record-side.is-mirrored.is-win { background: linear-gradient(270deg, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 85%); }
+.record-side.is-unknown { justify-content: center; color: var(--color-txt-faint); font-size: var(--text-2xs); font-weight: var(--weight-label); }
 
-/* The rank each character went in at is what a record is read for, so it
-   sits beside the portrait at the leaderboard's banner size. */
-/* Never mirrored: tag order and banner-after-portrait read the same on both
-   sides, or a banner sits between two portraits and belongs to neither. */
-.record-chars { display: flex; flex: 0 0 auto; gap: 8px; }
-.record-chars.is-unknown { color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-label); white-space: nowrap; }
-.record-char { display: flex; align-items: center; gap: 4px; }
-.record-portrait { height: 38px; border-radius: 4px; }
-.record-rank { width: var(--rank-art-w); height: var(--rank-art-h); flex: 0 0 auto; object-fit: cover; }
-.record-char-name { color: var(--color-txt-dim); font-size: var(--text-4xs); }
-
-.record-side-copy { display: flex; min-width: 0; max-width: 100%; align-items: baseline; gap: 6px; }
-.record-name { max-width: 100%; overflow: hidden; padding: 0; border: 0; background: transparent; color: var(--color-txt); font: inherit; font-size: var(--text-xs); font-weight: var(--weight-row); text-align: inherit; text-overflow: ellipsis; white-space: nowrap; }
+.record-outcome { width: 34px; font-size: var(--text-2xs); font-style: normal; font-weight: var(--weight-max); letter-spacing: .1em; }
+.record-outcome:first-child { text-align: right; }
+.record-outcome.is-win { color: var(--color-accent); }
+.record-outcome.is-loss { color: var(--color-primary-text); }
+.record-name { min-width: 0; max-width: 100%; overflow: hidden; padding: 0; border: 0; background: transparent; color: var(--color-txt); font: inherit; font-size: var(--text-sm); font-weight: var(--weight-display); text-align: inherit; text-overflow: ellipsis; white-space: nowrap; }
 button.record-name { cursor: pointer; }
 button.record-name:hover { color: var(--color-primary-text); text-decoration: underline; }
 button.record-name:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 2px; }
-.record-outcome { font-size: var(--text-4xs); font-weight: var(--weight-max); letter-spacing: .08em; }
-.record-outcome.is-win { color: var(--color-accent); }
-.record-outcome.is-loss { color: var(--color-primary-text); }
 
-.record-vs { color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-max); letter-spacing: .1em; text-align: center; }
+/* Each banner sits on its portrait's outer side, so it is beside its own
+   character and no other. The higher rank is put by the VS in the markup. */
+.record-chars { display: flex; flex: 0 0 auto; gap: 12px; }
+.record-chars.is-unknown { color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-label); white-space: nowrap; }
+.record-char { display: flex; align-items: center; gap: 4px; }
+.record-side:not(.is-mirrored) .record-char { flex-direction: row-reverse; }
+.record-portrait { height: 48px; border-radius: 4px; }
+.record-rank { width: var(--rank-art-w); height: var(--rank-art-h); flex: 0 0 auto; object-fit: cover; }
+.record-char-name { color: var(--color-txt-dim); font-size: var(--text-4xs); }
 
-.record-time { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-label); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.record-time small { color: var(--color-txt-faint); font-size: var(--text-4xs); }
+.record-vs { display: flex; align-items: center; gap: 8px; padding: 0 4px; color: var(--color-txt); font-size: var(--text-lg); font-style: italic; font-weight: var(--weight-max); letter-spacing: .04em; }
 
 .record-more { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; color: var(--color-txt-dim); font-size: var(--text-2xs); }
 
 .history-records .history-empty { min-height: 120px; }
 
-/* Too narrow for a banner beside each portrait: it goes above it, smaller. */
-@container (width < 560px) {
-  .record-row { grid-template-columns: minmax(0,1fr) 18px minmax(0,1fr) 44px; gap: 6px; padding: 6px 8px; }
-  .record-row.has-result { grid-template-columns: 26px minmax(0,1fr) 18px minmax(0,1fr) 44px; }
-  .record-result { width: 26px; height: 26px; }
+/* Too narrow for a banner beside each portrait: the name tops each half and
+   every banner sits above its portrait. */
+@container (width < 640px) {
+  .record-head { padding: 3px 8px; font-size: var(--text-3xs); }
+  .record-vs { gap: 3px; padding: 0; }
+  .record-outcome { width: 26px; font-size: var(--text-4xs); letter-spacing: .04em; }
+  .record-side, .record-side.is-mirrored { flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; padding: 6px 8px; }
+  .record-side.is-mirrored { align-items: flex-end; }
+  .record-name { font-size: var(--text-xs); }
   .record-chars { gap: 4px; }
-  .record-char { flex-direction: column-reverse; gap: 2px; }
-  .record-portrait { height: 32px; }
+  .record-char, .record-side:not(.is-mirrored) .record-char { flex-direction: column-reverse; gap: 2px; }
+  .record-portrait { height: 34px; }
   .record-rank { width: auto; max-width: 44px; height: auto; max-height: 20px; object-fit: contain; }
-  .record-time small { display: none; }
+  .record-vs { font-size: var(--text-xs); }
 }

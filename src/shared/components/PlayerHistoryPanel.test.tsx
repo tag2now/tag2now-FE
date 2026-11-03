@@ -20,8 +20,8 @@ const RECORDS: MatchRecordPage = {
   next_before: null,
   matches: [{
     id: 1, played_at: '2026-09-01T00:00:00Z',
-    winner: { npid: 'p1', online_name: 'P1', chars: null },
-    loser: { npid: 'p2', online_name: 'Rival', chars: null },
+    p1: { npid: 'p1', online_name: 'P1', result: 'win', chars: null },
+    p2: { npid: 'p2', online_name: 'Rival', result: 'loss', chars: null },
   }],
 }
 
