@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   CalendarDays,
   ChevronRight,
+  History,
   MessageSquareText,
   Swords,
   Trophy,
@@ -38,6 +39,7 @@ export default function PrimaryNavigation({
     },
     { key: 'leaderboard', label: '리더보드', icon: Trophy },
     { key: 'stats', label: '통계', icon: BarChart3 },
+    { key: 'records', label: '전적', icon: History },
   ], [roomCount, openReservations, recentPosts, recentPostsCapped])
   const activePrimary = isRoomTab ? 'match' : activeTab
   // Admin has no menu tab; keep the strip reachable through its first tab.

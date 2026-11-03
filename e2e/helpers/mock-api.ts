@@ -7,6 +7,7 @@ import communityPostDetailData from '../fixtures/community-post-detail.json' wit
 import { LATEST_PATCH_VERSION } from '../../src/config/patchNotes'
 import dailyStatsData from '../fixtures/history-daily.json' with { type: 'json' }
 import weeklyTopData from '../fixtures/history-weekly-top.json' with { type: 'json' }
+import matchRecordsData from '../fixtures/match-records.json' with { type: 'json' }
 
 interface ApiReservationLike {
   id: number
@@ -73,6 +74,8 @@ interface MockOverrides {
   currentRankHolders?: unknown
   /** Keyed by npid; null answers "no save" (404). Anyone else gets PLAYER_SAVE. */
   playerSave?: Record<string, unknown | null>
+  /** Every recorded match, newest first; the fixture by default. `failEndpoints: ['matchRecords']` fails both record routes. */
+  matchRecords?: MockMatchRecord[]
   /** Connected Chzzk channels, one per account; none by default. */
   streamChannels?: ApiStreamChannel[]
   failEndpoints?: string[]
@@ -243,6 +246,22 @@ export const CURRENT_RANK_HOLDERS = {
     { username: 'u003', saved_at: '2026-09-13T12:00:00Z', account_rank: 24, chars: [{ id: 3, character: 'King' }, { id: 4, character: 'Jun' }] },
   ],
 }
+
+type MockRecordChar = { name: string, rank: { name: string, tier: string } | null }
+type MockRecordSide = { npid: string, online_name: string | null, chars: MockRecordChar[] | null }
+export type MockMatchRecord = { id: number, played_at: string, winner: MockRecordSide | null, loser: MockRecordSide | null }
+
+/** Smaller than the backend's, so the fixture spans two pages and 더 보기 has something to load. */
+const RECORD_PAGE_SIZE = 6
+
+function recordPage(records: MockMatchRecord[], url: URL) {
+  const before = url.searchParams.get('before')
+  const rest = before == null ? records : records.filter((r) => r.id < Number(before))
+  const matches = rest.slice(0, RECORD_PAGE_SIZE)
+  return { matches, next_before: rest.length > RECORD_PAGE_SIZE ? matches[matches.length - 1].id : null }
+}
+
+const sides = (r: MockMatchRecord) => [r.winner, r.loser].filter((s): s is MockRecordSide => s != null)
 
 /** A save with two characters played and one slot never used. */
 export const PLAYER_SAVE = {
@@ -554,6 +573,28 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const save = overrides?.playerSave?.[npid]
     if (save === null) return asJson(route, { detail: '이 플레이어의 TTT2 세이브가 없습니다.' }, 404)
     return asJson(route, save ?? { ...PLAYER_SAVE, username: npid })
+  })
+
+  // Everyone's matches, then one player's. `q` matches a name or id, case aside.
+  const records = overrides?.matchRecords ?? (matchRecordsData as MockMatchRecord[])
+  await page.route('**/api/records/matches**', async (route) => {
+    if (failing.has('matchRecords')) return route.fulfill({ status: 500, body: 'Internal Server Error' })
+    const url = new URL(route.request().url())
+    const q = (url.searchParams.get('q') ?? '').toLowerCase()
+    const found = q ? records.filter((r) => sides(r).some((s) => `${s.npid} ${s.online_name ?? ''}`.toLowerCase().includes(q))) : records
+    return asJson(route, recordPage(found, url))
+  })
+  await page.route('**/api/records/players/**', async (route) => {
+    if (failing.has('matchRecords')) return route.fulfill({ status: 500, body: 'Internal Server Error' })
+    const url = new URL(route.request().url())
+    const npid = decodeURIComponent(url.pathname.split('/').pop() ?? '')
+    const theirs = records.filter((r) => sides(r).some((s) => s.npid === npid))
+    return asJson(route, {
+      npid,
+      wins: theirs.filter((r) => r.winner?.npid === npid).length,
+      losses: theirs.filter((r) => r.loser?.npid === npid).length,
+      ...recordPage(theirs, url),
+    })
   })
 
   // Single handler for all community API calls

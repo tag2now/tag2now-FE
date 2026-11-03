@@ -7,6 +7,7 @@ import LeaderboardViews from '@/app/LeaderboardViews'
 import Reservation from '@/reservation/Reservation'
 import Community from '@/community/Community'
 import Stats from '@/stat/Stats'
+import Records from '@/records/Records'
 import EventPage from '@/event/Event'
 import Admin from '@/admin/Admin'
 import type { RoomsData, RoomUser } from '@/match/types'
@@ -73,6 +74,7 @@ export default function AppRoutes({
         <Route path="/community" element={<Community leaderboardEntries={leaderboardEntries} />} />
         <Route path="/community/:postId" element={<Community leaderboardEntries={leaderboardEntries} />} />
         <Route path="/stats" element={<Stats leaderboardEntries={leaderboardEntries} />} />
+        <Route path="/records" element={<Records leaderboardEntries={leaderboardEntries} />} />
         <Route path="/event" element={<EventPage />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={overviewPanel} />

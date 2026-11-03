@@ -43,6 +43,9 @@ export const API = {
   currentRankLeaderboard: () => endpoint('saves/leaderboard'),
   currentRankHolders: () => endpoint('saves/current-rank-holders'),
 
+  matchRecords: () => endpoint('records/matches'),
+  playerRecords: (npid: string) => endpoint(`records/players/${encodeURIComponent(npid)}`),
+
   event: () => endpoint('event'),
   eventPlayer: (npid: string) => endpoint(`event/players/${encodeURIComponent(npid)}`),
 

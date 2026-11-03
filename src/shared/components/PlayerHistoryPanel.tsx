@@ -16,17 +16,19 @@ import useModalDialog from '@/shared/hooks/useModalDialog'
 import CharCell from '@/shared/components/CharCell'
 import ActiveHoursClock from '@/shared/components/ActiveHoursClock'
 import PlayerSaveSection from '@/shared/components/PlayerSaveSection'
+import PlayerRecordsSection from '@/shared/components/PlayerRecordsSection'
 import type { LeaderboardEntry } from '@/shared/types'
 import type { PlayerHistory } from '@/shared/playerHistoryTypes'
 
 type Days = 7 | 30 | 90
 
-/** The panel's two views. The play history is the default; the save is read
- * only once its tab is opened. */
-type Tab = 'history' | 'save'
+/** The panel's views. The play history is the default; the others are read
+ * only once their tab is opened. */
+type Tab = 'history' | 'records' | 'save'
 
 const TABS: { value: Tab; label: string }[] = [
   { value: 'history', label: '플레이 기록' },
+  { value: 'records', label: '전적' },
   { value: 'save', label: '캐릭터별 계급' },
 ]
 
@@ -75,9 +77,10 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
    * player's history. */
   const [trail, setTrail] = useState<string[]>([npid])
   const [tab, setTab] = useState<Tab>('history')
-  // A partner is only reachable from the history tab, so the tab needs no
-  // trail of its own; a different player from the caller starts on the default.
+  // A partner or opponent opens on the tab they were found from, so the tab
+  // needs no trail of its own; a different player from the caller starts on the default.
   useEffect(() => { setTrail([npid]); setTab('history') }, [npid])
+  const openPlayer = (player: string) => setTrail((t) => [...t, player])
   const viewing = trail[trail.length - 1]
   const cameFrom = trail.length > 1 ? trail[trail.length - 2] : null
 
@@ -189,9 +192,9 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
             )}
           </div>
 
-          {tab === 'history'
-            ? <HistoryView loading={loading} error={error} data={data} onOpen={(partner) => setTrail((t) => [...t, partner])} />
-            : <div className="history-body"><PlayerSaveSection npid={viewing} /></div>}
+          {tab === 'history' && <HistoryView loading={loading} error={error} data={data} onOpen={openPlayer} />}
+          {tab === 'records' && <div className="history-body"><PlayerRecordsSection npid={viewing} onOpen={openPlayer} /></div>}
+          {tab === 'save' && <div className="history-body"><PlayerSaveSection npid={viewing} /></div>}
         </div>
       </div>
     </div>

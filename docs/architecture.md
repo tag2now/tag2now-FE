@@ -23,6 +23,7 @@ src/
   reservation/         appointments — Reservation, reservationApi, reservationLabels
   community/           board — useCommunity, communityApi, post/comment components
   stat/                statistics — useStats, useWeeklyTop, Stats
+  records/             everyone's rank matches — useMatchRecords, Records
   chat/                lobby chat — chatStream (SSE store), Chat, launcher/panel components
   streaming/           a player's registered broadcast channel and its edit dialog
   install/             install eligibility, captured browser prompt and install sheet
@@ -290,6 +291,7 @@ so a nav click, the back button, and a cold deep link all arrive the same way.
 | `/match/:group` | rooms for that group |
 | `/leaderboard`, `/leaderboard/best` | the leaderboard: current ranks, or the highest each player reached |
 | `/stats` | that tab |
+| `/records` | everyone's recorded rank matches |
 | `/reservation`, `/reservation/:id` | reservations, optionally opened on one |
 | `/community`, `/community/:postId` | the board, optionally opened on one post |
 | `/admin` | account moderation and TTT2 saves; no nav tab, reached from the account menu |
@@ -316,8 +318,8 @@ somewhere sensible.
 
 Navigation has two levels in `app/`, composed by `App.tsx`:
 
-- The primary navigation is fixed: home, match, reservation, community, leaderboard
-  and stats. Match opens the first room group; admin is reached through the account menu.
+- The primary navigation is fixed: home, match, reservation, community, leaderboard,
+  stats and records — seven, which is also the phone tab bar's column count. Match opens the first room group; admin is reached through the account menu.
 - Room-group tabs appear only on a match route. Their keys start with `GROUP_ORDER`
   from `config/tabConfig.ts`, followed by any unknown groups returned by the API.
   Known groups remain present during the initial load or a failed request.
@@ -410,13 +412,39 @@ tabindex to the first one, and names the tabpanel itself.
 ## Save ranks on a profile
 
 `PlayerHistoryPanel` --- the profile every player name opens, 내 정보 보기
-included --- has two ARIA tabs: 플레이 기록 (the default) and 캐릭터별 계급,
-anyone's TTT2 save from the public `GET /saves/players/{npid}`. The save is
+included --- has three ARIA tabs: 플레이 기록 (the default), 전적 (see
+**Match records** below) and 캐릭터별 계급, anyone's TTT2 save from the public
+`GET /saves/players/{npid}`. The save is
 read only when its tab is opened, and fails on its own: a 404 is "no save", any
 other error stays inside the tab. The backend caches it for ten minutes.
 
 The character table is `shared/components/SaveCharTable`, the same one the
 admin page draws; its rules live in `shared/styles/saves.css`, not `admin/admin.css`.
+
+## Match records
+
+Finished rank matches, from tag2now-BE's `/records` routes (spec 11): who
+played whom, the result, and each character with the rank it **went into the
+match at**. Two screens draw the same row, `shared/components/MatchRecordRow`:
+
+- **`/records`** --- everyone's matches, winner on the left, searchable by name
+  (`q`, asked once typing pauses). Fetched once and refreshed by hand, like the
+  leaderboards; a name opens the profile.
+- **The profile's 전적 tab** --- one player's, theirs on the left with the
+  result first, and the totals. Read only when the tab opens; an opponent's
+  name opens them in the same panel, as 자주 함께한 플레이어 does.
+
+Both page by **`before`, not page numbers** (`shared/hooks/useRecordPages`):
+matches keep arriving at the top, so page 2 by number would repeat rows. The
+totals count only matches tag2now recorded, so they differ from the save's
+lifetime record on 캐릭터별 계급, and the tab says so.
+
+A match is found in the saves and its opponent in the rooms, so a row can lack
+either: "캐릭터 미확인" when that side's save was not seen, "상대 미확인" when
+no room was, and the id when no name was. Matches recorded before ranks were
+kept have `rank: null` and show portraits alone. The row, its API and the hook
+live in `shared/` because the profile panel there uses them; the import
+boundary forbids `shared/` reaching into `records/`.
 
 ## Reservation ownership
 
