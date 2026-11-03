@@ -37,20 +37,20 @@ export default function MatchRecordRow({ record, viewer, onOpen }: Props) {
         <span>랭크 매치</span>
       </div>
       <div className="record-body">
-        <SideCell side={p1} outcome={leftOutcome} onOpen={linkFor(p1)} />
+        <PlayerHalf side={p1} outcome={leftOutcome} onOpen={linkFor(p1)} />
         {/* The result reads as one phrase in the middle: WIN VS LOSE. */}
         <span className="record-vs">
           <small className={`record-outcome is-${leftOutcome}`}>{OUTCOME_LABEL[leftOutcome]}</small>
           <span aria-hidden="true">VS</span>
           <small className={`record-outcome is-${rightOutcome}`}>{OUTCOME_LABEL[rightOutcome]}</small>
         </span>
-        <SideCell side={p2} outcome={rightOutcome} onOpen={linkFor(p2)} mirrored />
+        <PlayerHalf side={p2} outcome={rightOutcome} onOpen={linkFor(p2)} mirrored />
       </div>
     </li>
   )
 }
 
-function SideCell({ side, outcome, onOpen, mirrored = false }: {
+function PlayerHalf({ side, outcome, onOpen, mirrored = false }: {
   side: RecordSide | null
   outcome: Outcome
   onOpen?: (npid: string) => void
