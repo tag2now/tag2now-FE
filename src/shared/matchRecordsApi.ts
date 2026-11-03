@@ -1,18 +1,15 @@
 import { GET } from '@/shared/util/api'
 import { API } from '@/config/endpoints'
-import type { MatchRecordPage, PlayerRecordPage } from '@/shared/matchRecords'
+import type { MatchRecordPage } from '@/shared/matchRecords'
 
-/** The first page asks no `before`; an empty `q` is no filter. */
-function recordQuery(before: number | null, q = ''): Record<string, string | number> {
+/** Whose matches: one player's by id, or everyone's whose name contains `q`. */
+export type MatchRecordFilter = { npid?: string; q?: string }
+
+/** Matches newest first. The first page asks no `before`; an empty filter value is no filter. */
+export function fetchMatchRecords(filter: MatchRecordFilter, before: number | null): Promise<MatchRecordPage> {
   const query: Record<string, string | number> = {}
+  if (filter.npid) query.npid = filter.npid
+  if (filter.q) query.q = filter.q
   if (before != null) query.before = before
-  if (q) query.q = q
-  return query
+  return GET<MatchRecordPage>(API.matchRecords().path, query)
 }
-
-/** Everyone's matches, newest first; `q` keeps those with a player whose name contains it. */
-export const fetchMatchRecords = (q: string, before: number | null): Promise<MatchRecordPage> =>
-  GET<MatchRecordPage>(API.matchRecords().path, recordQuery(before, q))
-
-export const fetchPlayerRecords = (npid: string, before: number | null): Promise<PlayerRecordPage> =>
-  GET<PlayerRecordPage>(API.playerRecords(npid).path, recordQuery(before))

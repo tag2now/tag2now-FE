@@ -74,7 +74,7 @@ interface MockOverrides {
   currentRankHolders?: unknown
   /** Keyed by npid; null answers "no save" (404). Anyone else gets PLAYER_SAVE. */
   playerSave?: Record<string, unknown | null>
-  /** Every recorded match, newest first; the fixture by default. `failEndpoints: ['matchRecords']` fails both record routes. */
+  /** Every recorded match, newest first; the fixture by default. `failEndpoints: ['matchRecords']` fails the list. */
   matchRecords?: MockMatchRecord[]
   /** Connected Chzzk channels, one per account; none by default. */
   streamChannels?: ApiStreamChannel[]
@@ -575,26 +575,17 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     return asJson(route, save ?? { ...PLAYER_SAVE, username: npid })
   })
 
-  // Everyone's matches, then one player's. `q` matches a name or id, case aside.
+  // Matches newest first: `npid` keeps one player's, `q` those with a name or id containing it.
   const records = overrides?.matchRecords ?? (matchRecordsData as MockMatchRecord[])
   await page.route('**/api/records/matches**', async (route) => {
     if (failing.has('matchRecords')) return route.fulfill({ status: 500, body: 'Internal Server Error' })
     const url = new URL(route.request().url())
+    const npid = url.searchParams.get('npid')
     const q = (url.searchParams.get('q') ?? '').toLowerCase()
-    const found = q ? records.filter((r) => sides(r).some((s) => `${s.npid} ${s.online_name ?? ''}`.toLowerCase().includes(q))) : records
+    const found = records
+      .filter((record) => !npid || sides(record).some((side) => side.npid === npid))
+      .filter((record) => !q || sides(record).some((side) => `${side.npid} ${side.online_name ?? ''}`.toLowerCase().includes(q)))
     return asJson(route, recordPage(found, url))
-  })
-  await page.route('**/api/records/players/**', async (route) => {
-    if (failing.has('matchRecords')) return route.fulfill({ status: 500, body: 'Internal Server Error' })
-    const url = new URL(route.request().url())
-    const npid = decodeURIComponent(url.pathname.split('/').pop() ?? '')
-    const theirs = records.filter((r) => sides(r).some((s) => s.npid === npid))
-    return asJson(route, {
-      npid,
-      wins: theirs.filter((r) => r.winner?.npid === npid).length,
-      losses: theirs.filter((r) => r.loser?.npid === npid).length,
-      ...recordPage(theirs, url),
-    })
   })
 
   // Single handler for all community API calls

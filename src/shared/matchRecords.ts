@@ -33,11 +33,4 @@ export type MatchRecordPage = {
   next_before: number | null
 }
 
-/** `GET /records/players/{npid}`: their matches, and the totals since collection began. */
-export type PlayerRecordPage = MatchRecordPage & {
-  npid: string
-  wins: number
-  losses: number
-}
-
 export const sideName = (side: RecordSide) => side.online_name ?? side.npid

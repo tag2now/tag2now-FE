@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import Records from '@/records/Records'
-import { fetchMatchRecords, fetchPlayerRecords } from '@/shared/matchRecordsApi'
+import { fetchMatchRecords } from '@/shared/matchRecordsApi'
+import { fetchPlayerSave } from '@/shared/playerSaveApi'
 import { GET } from '@/shared/util/api'
 import { AppError } from '@/shared/util/AppError'
 import type { MatchRecord, MatchRecordPage, RecordSide } from '@/shared/matchRecords'
 
-vi.mock('@/shared/matchRecordsApi', () => ({ fetchMatchRecords: vi.fn(), fetchPlayerRecords: vi.fn() }))
+vi.mock('@/shared/matchRecordsApi', () => ({ fetchMatchRecords: vi.fn() }))
+vi.mock('@/shared/playerSaveApi', () => ({ fetchPlayerSave: vi.fn() }))
 vi.mock('@/shared/util/api', async () => {
   const actual = await vi.importActual<typeof import('@/shared/util/api')>('@/shared/util/api')
   return { ...actual, GET: vi.fn() }
@@ -28,7 +30,7 @@ beforeEach(() => {
     match(2, side('alice', 'Alice'), side('bob', 'Bob')),
     match(1, side('carol', null), side('alice', 'Alice')),
   ]))
-  vi.mocked(fetchPlayerRecords).mockReset().mockResolvedValue({ npid: 'bob', wins: 0, losses: 1, ...page([]) })
+  vi.mocked(fetchPlayerSave).mockReset().mockRejectedValue(new AppError('none', 404))
   vi.mocked(GET).mockReset().mockResolvedValue({
     npid: 'bob', days_active: 1, times_seen: 1, first_seen: null, last_seen: null,
     room_type_counts: {}, top_played_with: [], active_hours: [],
@@ -44,7 +46,7 @@ describe('Records', () => {
       ['Alice', 'Bob'],
       ['carol', 'Alice'],
     ])
-    expect(fetchMatchRecords).toHaveBeenCalledWith('', null)
+    expect(fetchMatchRecords).toHaveBeenCalledWith({ q: '' }, null)
   })
 
   it('asks for a name once the reader stops typing, not on every letter', async () => {
@@ -53,8 +55,8 @@ describe('Records', () => {
 
     fireEvent.change(search(), { target: { value: 'b' } })
     fireEvent.change(search(), { target: { value: 'bo' } })
-    await waitFor(() => expect(fetchMatchRecords).toHaveBeenLastCalledWith('bo', null))
-    expect(fetchMatchRecords).not.toHaveBeenCalledWith('b', null)
+    await waitFor(() => expect(fetchMatchRecords).toHaveBeenLastCalledWith({ q: 'bo' }, null))
+    expect(fetchMatchRecords).not.toHaveBeenCalledWith({ q: 'b' }, null)
   })
 
   it('says whose matches it could not find', async () => {
@@ -74,7 +76,7 @@ describe('Records', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: '더 보기' }))
     await waitFor(() => expect(within(list()).getAllByRole('listitem')).toHaveLength(2))
-    expect(fetchMatchRecords).toHaveBeenLastCalledWith('', 9)
+    expect(fetchMatchRecords).toHaveBeenLastCalledWith({ q: '' }, 9)
   })
 
   it('offers a retry when the list fails, keeping the search field', async () => {

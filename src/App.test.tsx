@@ -52,7 +52,6 @@ vi.mock('@/community/communityApi', async (importOriginal) => ({
 // The records tab reads its own list; the wraparound test lands on it.
 vi.mock('@/shared/matchRecordsApi', () => ({
   fetchMatchRecords: vi.fn().mockResolvedValue({ matches: [], next_before: null }),
-  fetchPlayerRecords: vi.fn(),
 }))
 
 // The leaderboard tab opens on current ranks, which it reads itself. The board

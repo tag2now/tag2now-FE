@@ -15,6 +15,6 @@ export default function useMatchRecords(query: string) {
     return () => clearTimeout(timer)
   }, [query])
 
-  const fetchPage = useCallback((before: number | null) => fetchMatchRecords(searched, before), [searched])
+  const fetchPage = useCallback((before: number | null) => fetchMatchRecords({ q: searched }, before), [searched])
   return { searched, pages: useRecordPages(fetchPage) }
 }

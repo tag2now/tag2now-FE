@@ -1,32 +1,38 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Swords } from 'lucide-react'
 import MatchRecordRow from '@/shared/components/MatchRecordRow'
 import RecordMoreButton from '@/shared/components/RecordMoreButton'
 import useRecordPages from '@/shared/hooks/useRecordPages'
-import { fetchPlayerRecords } from '@/shared/matchRecordsApi'
+import { fetchMatchRecords } from '@/shared/matchRecordsApi'
+import { fetchPlayerSave } from '@/shared/playerSaveApi'
+import type { PlayerSave } from '@/shared/saveChars'
 
 /** A player's rank matches on their profile, newest first, each with the
- * opponent and both sides' characters. Only matches tag2now recorded count, so
- * the totals are not the save's lifetime record on the next tab. */
+ * opponent and both sides' characters. The totals above them are the save's
+ * lifetime record, so they count matches from before tag2now recorded any. */
 export default function PlayerRecordsSection({ npid, onOpen }: { npid: string; onOpen: (npid: string) => void }) {
-  const fetchPage = useCallback((before: number | null) => fetchPlayerRecords(npid, before), [npid])
+  const fetchPage = useCallback((before: number | null) => fetchMatchRecords({ npid }, before), [npid])
   const pages = useRecordPages(fetchPage)
-  const totals = pages.first
+  const save = useLifetimeRecord(npid)
 
   return (
     <section className="history-section history-records" aria-label="전적">
       <div className="history-section-heading">
         <div><Swords size={17} aria-hidden="true" /><h3>랭크 매치 전적</h3></div>
-        <span>tag2now 기록</span>
+        <span>최신순</span>
       </div>
+
+      {save && (
+        <p className="history-save-summary">
+          <span className="history-save-label">통산</span>
+          <span className="history-save-record">{save.total}판 {save.wins}승 {save.losses}패</span>
+        </p>
+      )}
 
       {pages.loading && <p className="history-empty" role="status">전적을 불러오는 중입니다.</p>}
       {!pages.loading && pages.error && <p className="history-empty" role="alert">전적을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.</p>}
-      {!pages.loading && !pages.error && totals && (
+      {!pages.loading && !pages.error && (
         <>
-          <p className="history-save-summary">
-            <span className="history-save-record">{totals.wins + totals.losses}판 {totals.wins}승 {totals.losses}패</span>
-          </p>
           {pages.matches.length > 0 ? (
             <ol className="record-list" aria-label={`${npid}의 전적`}>
               {pages.matches.map((record) => (
@@ -39,4 +45,19 @@ export default function PlayerRecordsSection({ npid, onOpen }: { npid: string; o
       )}
     </section>
   )
+}
+
+/** The save's record, or null while it loads and when there is none or it fails:
+ * the totals are a heading over the list, not worth an error of their own. */
+function useLifetimeRecord(npid: string): PlayerSave | null {
+  const [save, setSave] = useState<PlayerSave | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    setSave(null)
+    fetchPlayerSave(npid)
+      .then((found) => { if (!cancelled) setSave(found) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [npid])
+  return save
 }

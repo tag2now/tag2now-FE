@@ -423,21 +423,22 @@ admin page draws; its rules live in `shared/styles/saves.css`, not `admin/admin.
 
 ## Match records
 
-Finished rank matches, from tag2now-BE's `/records` routes (spec 11): who
+Finished rank matches, from tag2now-BE's `GET /records/matches` (spec 11): who
 played whom, the result, and each character with the rank it **went into the
 match at**. Two screens draw the same row, `shared/components/MatchRecordRow`:
 
 - **`/records`** --- everyone's matches, winner on the left, searchable by name
   (`q`, asked once typing pauses). Fetched once and refreshed by hand, like the
   leaderboards; a name opens the profile.
-- **The profile's 전적 tab** --- one player's, theirs on the left with the
-  result first, and the totals. Read only when the tab opens; an opponent's
-  name opens them in the same panel, as 자주 함께한 플레이어 does.
+- **The profile's 전적 tab** --- the same list with `npid`, theirs on the left
+  with the result first. Read only when the tab opens; an opponent's name opens
+  them in the same panel, as 자주 함께한 플레이어 does. The 통산 line above it
+  is the save's lifetime record (`GET /saves/players/{npid}`), not a count of
+  the list: the backend keeps no per-player totals, and the list starts only
+  when tag2now began recording. No save, or a failed read, drops just that line.
 
 Both page by **`before`, not page numbers** (`shared/hooks/useRecordPages`):
-matches keep arriving at the top, so page 2 by number would repeat rows. The
-totals count only matches tag2now recorded, so they differ from the save's
-lifetime record on 캐릭터별 계급, and the tab says so.
+matches keep arriving at the top, so page 2 by number would repeat rows.
 
 A match is found in the saves and its opponent in the rooms, so a row can lack
 either: "캐릭터 미확인" when that side's save was not seen, "상대 미확인" when

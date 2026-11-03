@@ -53,13 +53,15 @@ test.describe('Records', () => {
 
     await profileTab(page, '전적').click()
     const records = page.getByRole('region', { name: '전적' })
-    await expect(records).toContainText('5판 2승 3패')
+    // The lifetime record is the save's (PLAYER_SAVE answers for anyone).
+    await expect(records).toContainText('통산15판 10승 5패')
+    await expect(records.getByRole('listitem')).toHaveCount(5)
     await expect(records.getByRole('listitem').first().locator('.record-result')).toHaveText('승')
 
     await records.getByRole('button', { name: 'KingOfIronFist 기록 보기' }).first().click()
     await expect(page.getByRole('heading', { name: 'np_002' })).toBeVisible()
     await expect(profileTab(page, '전적')).toHaveAttribute('aria-selected', 'true')
-    await expect(records).toContainText('4판 3승 1패')
+    await expect(records.getByRole('listitem')).toHaveCount(4)
 
     await page.getByRole('button', { name: 'np_001' }).click()
     await expect(page.getByRole('heading', { name: 'np_001' })).toBeVisible()
