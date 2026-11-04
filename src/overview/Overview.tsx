@@ -11,7 +11,7 @@ import type { RoomsData } from '@/match/types'
 import { weeklyTopRows } from '@/shared/weeklyTop'
 import { formatGroupName, GROUP_ORDER } from '@/config/tabConfig'
 import { pathOf } from '@/config/routes'
-import { totals } from '@/shared/util/leaderboardFilter'
+import { higherRankRecord } from '@/shared/util/leaderboardFilter'
 import { CardGridSkeleton, ListSkeleton } from '@/shared/components/Skeleton'
 
 interface OverviewProps {
@@ -92,10 +92,8 @@ const charsOf = (entry?: LeaderboardEntry) => ({
  * than left to the row position: players who stand equal share one. */
 const leaderboardRows = (entries: LeaderboardEntry[]): RankRow[] =>
   entries.slice(0, OVERVIEW_TOP_N).map((e) => {
-    // Across both characters, which is what the leaderboard itself sorts by —
-    // the per-character rates sit in the two cells to the right, and neither
-    // of them answers "how does this player do".
-    const { winRate, matches } = totals(e)
+    // The same figure the leaderboard itself shows and sorts by.
+    const { winRate, matches } = higherRankRecord(e)
     return {
       key: e.np_id,
       npid: e.np_id,

@@ -1,5 +1,6 @@
-import type { LeaderboardEntry } from '@/shared/types'
+import type { CharInfo, LeaderboardEntry } from '@/shared/types'
 import { TIER_HEX } from '@/shared/tierColors'
+import { indexOfRank } from '@/shared/ranks'
 
 /** Rows left when the user collapses the board. */
 export const COLLAPSED_VISIBLE = 100
@@ -42,11 +43,16 @@ export function tiersPresent(entries: LeaderboardEntry[]): string[] {
   return [...known, ...unknown]
 }
 
-/** Totals across both characters — the figures the sorts compare. */
-export function totals(entry: LeaderboardEntry): { wins: number, losses: number, matches: number, winRate: number | null } {
-  const chars = [entry.player_info?.main_char_info, entry.player_info?.sub_char_info]
-  const wins = chars.reduce((sum, c) => sum + (c?.wins ?? 0), 0)
-  const losses = chars.reduce((sum, c) => sum + (c?.losses ?? 0), 0)
+const rankOf = (char: CharInfo | null | undefined): number => indexOfRank(char?.rank_info?.name ?? '')
+
+/** The higher-ranked character's record, which the sorts compare. A tag match counts for both
+ * characters, so adding them counts it twice; neither board carries the account's own record. */
+export function higherRankRecord(entry: LeaderboardEntry): { wins: number, losses: number, matches: number, winRate: number | null } {
+  const main = entry.player_info?.main_char_info
+  const sub = entry.player_info?.sub_char_info
+  const char = rankOf(sub) > rankOf(main) ? sub : main ?? sub
+  const wins = char?.wins ?? 0
+  const losses = char?.losses ?? 0
   const matches = wins + losses
   return { wins, losses, matches, winRate: matches > 0 ? wins / matches : null }
 }
@@ -60,8 +66,8 @@ export function totals(entry: LeaderboardEntry): { wins: number, losses: number,
  */
 function compare(a: LeaderboardEntry, b: LeaderboardEntry, sort: SortKey): number {
   if (sort === 'rank') return a.rank - b.rank
-  const left = totals(a)
-  const right = totals(b)
+  const left = higherRankRecord(a)
+  const right = higherRankRecord(b)
   if (sort === 'matches') return (right.matches - left.matches) || (a.rank - b.rank)
   if (left.winRate === null || right.winRate === null) {
     if (left.winRate === right.winRate) return a.rank - b.rank

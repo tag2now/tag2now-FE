@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filterEntries, tiersPresent, totals, COLLAPSED_VISIBLE } from '@/shared/util/leaderboardFilter'
+import { filterEntries, tiersPresent, higherRankRecord, COLLAPSED_VISIBLE } from '@/shared/util/leaderboardFilter'
 import type { LeaderboardEntry } from '@/shared/types'
 
 type CharSpec = { name: string, tier?: string, wins?: number, losses?: number }
@@ -93,7 +93,7 @@ describe('sorting', () => {
       .toEqual(['topRank', 'bestRate', 'mostGames', 'unplayed'])
   })
 
-  it('orders by win rate across both characters', () => {
+  it('orders by win rate', () => {
     expect(filterEntries(rows, { ...noFilter, sort: 'winRate' })[0].online_name).toBe('bestRate')
   })
 
@@ -152,13 +152,28 @@ describe('tier filtering', () => {
   })
 })
 
-describe('totals', () => {
-  it('adds both characters together', () => {
-    const e = entry(1, 'x', { name: 'Jin', wins: 3, losses: 1 }, { name: 'Lili', wins: 1, losses: 5 })
-    expect(totals(e)).toMatchObject({ wins: 4, losses: 6, matches: 10, winRate: 0.4 })
+describe('higherRankRecord', () => {
+  const ranked = (name: string, rank: string, wins: number, losses: number) =>
+    ({ name, rank_info: { name: rank, tier: '' }, wins, losses })
+  const withChars = (main: ReturnType<typeof ranked>, sub?: ReturnType<typeof ranked>): LeaderboardEntry =>
+    ({ np_id: 'p1', rank: 1, online_name: 'x', player_info: { main_char_info: main, sub_char_info: sub ?? null } })
+
+  // A tag match counts for both characters, so the two added together count it twice.
+  it("takes the higher-ranked character's record rather than adding both", () => {
+    const e = withChars(ranked('Jin', 'Brawler', 3, 1), ranked('Lili', 'Vanquisher', 1, 5))
+    expect(higherRankRecord(e)).toMatchObject({ wins: 1, losses: 5, matches: 6 })
+  })
+
+  it('takes the main character when both stand at the same rank', () => {
+    const e = withChars(ranked('Jin', 'Brawler', 3, 1), ranked('Lili', 'Brawler', 1, 5))
+    expect(higherRankRecord(e)).toMatchObject({ wins: 3, losses: 1, matches: 4, winRate: 0.75 })
+  })
+
+  it('takes the only character a player has', () => {
+    expect(higherRankRecord(withChars(ranked('Jin', '1st dan', 2, 2)))).toMatchObject({ matches: 4, winRate: 0.5 })
   })
 
   it('reports no win rate rather than 0% when nothing has been played', () => {
-    expect(totals(entry(1, 'x', 'Jin')).winRate).toBeNull()
+    expect(higherRankRecord(entry(1, 'x', 'Jin')).winRate).toBeNull()
   })
 })

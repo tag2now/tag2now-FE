@@ -4,7 +4,7 @@ import RankList from "@/shared/components/RankList";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import LeaderboardControls from "@/shared/components/LeaderboardControls";
 import {statusBody} from "@/shared/util/panelStatus";
-import {filterEntries, tiersPresent, totals, COLLAPSED_VISIBLE, type SortKey} from "@/shared/util/leaderboardFilter";
+import {filterEntries, tiersPresent, higherRankRecord, COLLAPSED_VISIBLE, type SortKey} from "@/shared/util/leaderboardFilter";
 import {LeaderboardData} from "@/shared/types";
 import { RefreshCw, Trophy } from 'lucide-react'
 import { TableSkeleton } from '@/shared/components/Skeleton'
@@ -98,7 +98,7 @@ export default function Leaderboard({ data, loading, refreshing, error, onRefres
           the same players. The home row is the one they all take. */}
       <RankList
         rows={visible.map((e) => {
-          const total = totals(e)
+          const total = higherRankRecord(e)
           return {
             key: e.np_id,
             npid: e.np_id,
