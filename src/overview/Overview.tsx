@@ -167,13 +167,13 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
         </OverviewSection>
       </div>
 
-      {/* Above the chart, side by side: 주간 철악귀 is what people come to
+      {/* Above the chart, side by side: 주간 철찌 is what people come to
           this page to check, and below the 400px chart it started past the
           fold of a 900px screen. Half a desktop each, the lists take their
           narrow two-line rows (ranking.css), which still leave a name ~145px.
           Weekly first, on the left, for the same reason. */}
       <div className="overview-grid is-rankings">
-        <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
+        <OverviewSection icon={Crown} title="주간 철찌" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
           <RankList rows={weeklyTopRows(data?.weeklyTop ?? [], leaderboardEntries)} label="주간 상위 5명" detailLabel="판수" emptyMsg="주간 기록 없음" onSelect={setSelectedNpid} />
         </OverviewSection>
 

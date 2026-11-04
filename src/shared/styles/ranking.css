@@ -76,7 +76,7 @@
 .mini-char-name { max-width: 100%; overflow: hidden; color: var(--color-txt-dim); font-size: var(--text-4xs); text-overflow: ellipsis; white-space: nowrap; }
 /* Opens the same history panel the leaderboard does, so it takes the same
    .player-btn affordance. The name column is the tightest on the page --- 61px
-   in 주간 철악귀 --- so the inline padding .player-btn normally carries is
+   in 주간 철찌 --- so the inline padding .player-btn normally carries is
    dropped and the hover surface is inset instead of widening the cell. */
 /* No underline. A red dashed rule under every name read as a spell-checker
    marking it wrong, and it sat under all five rows at once — the row's own

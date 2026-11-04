@@ -212,7 +212,7 @@ the name, which table layout cannot express. Five tracks hold 386px before the
 name gets any, so a list under 540px runs four columns and two lines instead.
 That is a **container query on `.rank-list`**, not a media query: a phone
 lands there, and so do the home page's two rankings, which sit side by side —
-주간 철악귀 left, above the chart — at half a desktop each. The cells are
+주간 철찌 left, above the chart — at half a desktop each. The cells are
 placed by **`:nth-child`, never `:nth-of-type`**: every child of a row is a
 `<span>`, so by type they all count as one and a `:nth-of-type` rule silently
 selects the position cell instead.

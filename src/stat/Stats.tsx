@@ -31,7 +31,7 @@ function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; 
   return (
     <RankList
       rows={weeklyTopRows(data, entries)}
-      label="주간 철악귀"
+      label="주간 철찌"
       detailLabel="판수"
       emptyMsg="데이터 없음"
       onSelect={onSelect}
@@ -94,7 +94,7 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
 
       {/* The rule above divides the two sections where a sub-tab bar used to. */}
       <div className="section-toolbar compact-toolbar mt-6 border-t border-t-border-light pt-5">
-        <div className="section-title"><span className="section-icon"><Crown size={15} /></span><div><h3>주간 철악귀</h3><p>최근 7일 매치 참여 순위</p></div></div>
+        <div className="section-title"><span className="section-icon"><Crown size={15} /></span><div><h3>주간 철찌</h3><p>최근 7일 매치 참여 순위</p></div></div>
         <ToggleGroup options={LIMIT_OPTIONS} value={wt.limit} onChange={wt.setLimit} label="주간 순위 표시 개수" />
       </div>
       {statusBody(wt.loading, wt.error, {
