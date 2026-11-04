@@ -14,7 +14,7 @@ vi.mock('@/shared/util/api', async () => {
 vi.mock('@/shared/playerSaveApi', () => ({ fetchPlayerSave: vi.fn() }))
 vi.mock('@/shared/matchRecordsApi', () => ({ fetchMatchRecords: vi.fn() }))
 
-const HISTORY = { npid: 'p1', days_active: 3, times_seen: 12, first_seen: '2026-08-01', last_seen: '2026-09-01', room_type_counts: {}, top_played_with: [], active_hours: [] }
+const HISTORY = { npid: 'p1', days_active: 3, times_seen: 12, first_seen: '2026-08-01', last_seen: '2026-09-01', room_type_counts: {}, active_hours: [] }
 const SAVE: PlayerSave = { username: 'p1', saved_at: '2026-09-01T00:00:00Z', account_rank: 20, total: 3, wins: 2, losses: 1, chars: [] }
 const RECORDS: MatchRecordPage = {
   next_before: null,
@@ -26,7 +26,7 @@ const RECORDS: MatchRecordPage = {
 }
 
 beforeEach(() => {
-  vi.mocked(GET).mockReset().mockResolvedValue(HISTORY)
+  vi.mocked(GET).mockReset().mockImplementation(async (path) => (path === 'records/opponents' ? [] : HISTORY))
   vi.mocked(fetchPlayerSave).mockReset().mockResolvedValue(SAVE)
   vi.mocked(fetchMatchRecords).mockReset().mockResolvedValue(RECORDS)
 })

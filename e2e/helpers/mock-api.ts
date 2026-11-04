@@ -539,14 +539,18 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       first_seen: '2026-08-01',
       last_seen: '2026-09-15',
       room_type_counts: { rank_match: 80, player_match: 40 },
-      // Everyone played with the next two people on the board, so a spec can
-      // open a partner and land on a player the leaderboard fixture knows.
-      top_played_with: [
-        { npid: 'np_002', online_name: 'KingOfIronFist', times_together: 30 },
-        { npid: 'np_003', online_name: 'TagComboKing', times_together: 21 },
-      ].filter((partner) => partner.npid !== npid),
       active_hours: [20, 21, 22, 23],
     })
+  })
+
+  // Everyone met the next two people on the board most, so a spec can open an
+  // opponent and land on a player the leaderboard fixture knows.
+  await page.route('**/api/records/opponents**', async (route) => {
+    const npid = new URL(route.request().url()).searchParams.get('npid')
+    return asJson(route, [
+      { npid: 'np_002', online_name: 'KingOfIronFist', match_count: 30, wins: 18, losses: 12 },
+      { npid: 'np_003', online_name: 'TagComboKing', match_count: 21, wins: 7, losses: 14 },
+    ].filter((opponent) => opponent.npid !== npid))
   })
 
   // The current-rank board, which the leaderboard tab opens on.

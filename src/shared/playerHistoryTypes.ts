@@ -1,7 +1,10 @@
-export interface PlayerHistoryCoPlayer {
+/** One opponent of a player, with that player's record against them. */
+export interface OpponentRecord {
   npid: string
   online_name: string
-  times_together: number
+  match_count: number
+  wins: number
+  losses: number
 }
 
 export interface PlayerHistory {
@@ -11,6 +14,5 @@ export interface PlayerHistory {
   first_seen: string | null
   last_seen: string | null
   room_type_counts: Record<string, number>
-  top_played_with: PlayerHistoryCoPlayer[]
   active_hours: number[]
 }

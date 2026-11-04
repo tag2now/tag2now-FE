@@ -39,6 +39,7 @@ export const API = {
   dailyStats: () => endpoint('history/stats/daily'),
   weeklyTop: () => endpoint('records/weekly-top'),
   playerHistory: (npid: string) => endpoint(`history/players/${npid}`),
+  playerOpponents: () => endpoint('records/opponents'),
   playerSave: (npid: string) => endpoint(`saves/players/${npid}`),
   currentRankLeaderboard: () => endpoint('saves/leaderboard'),
   currentRankHolders: () => endpoint('saves/current-rank-holders'),

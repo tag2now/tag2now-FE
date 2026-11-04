@@ -76,8 +76,7 @@ test.describe('Rooms', () => {
    * still showing around it, and scroll its own body instead. */
   test('the player record stays a popup inside the phone screen', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Desktop has the height; the cramped case is the phone.')
-    // Routed here: mockAllApis leaves player history to whatever the dev
-    // server proxies to, which is production.
+    // Routed here so the panel holds four opponents, its tallest content.
     await page.route('**/api/history/players/**', (route) => route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({
@@ -87,14 +86,17 @@ test.describe('Rooms', () => {
         first_seen: '2026-08-16T00:00:00Z',
         last_seen: '2026-09-14T00:00:00Z',
         room_type_counts: {},
-        top_played_with: [
-          { npid: 'u002', online_name: 'KingOfIronFist', times_together: 126 },
-          { npid: 'u003', online_name: 'TagComboKing', times_together: 117 },
-          { npid: 'u004', online_name: 'BearPunchPro', times_together: 64 },
-          { npid: 'u005', online_name: 'NewChallenger', times_together: 53 },
-        ],
         active_hours: [0, 1, 22, 23],
       }),
+    }))
+    await page.route('**/api/records/opponents**', (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([
+        { npid: 'u002', online_name: 'KingOfIronFist', match_count: 126, wins: 70, losses: 56 },
+        { npid: 'u003', online_name: 'TagComboKing', match_count: 117, wins: 60, losses: 57 },
+        { npid: 'u004', online_name: 'BearPunchPro', match_count: 64, wins: 30, losses: 34 },
+        { npid: 'u005', online_name: 'NewChallenger', match_count: 53, wins: 40, losses: 13 },
+      ]),
     }))
 
     await page.getByRole('button', { name: 'TTT2_Master' }).click()

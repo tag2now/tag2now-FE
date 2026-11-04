@@ -8,7 +8,6 @@ import {
   Eye,
   Trophy,
   UserRound,
-  UsersRound,
   X,
 } from 'lucide-react'
 import { GET } from '@/shared/util/api'
@@ -17,6 +16,7 @@ import CharCell from '@/shared/components/CharCell'
 import ActiveHoursClock from '@/shared/components/ActiveHoursClock'
 import PlayerSaveSection from '@/shared/components/PlayerSaveSection'
 import PlayerRecordsSection from '@/shared/components/PlayerRecordsSection'
+import PlayerOpponentsSection from '@/shared/components/PlayerOpponentsSection'
 import type { LeaderboardEntry } from '@/shared/types'
 import type { PlayerHistory } from '@/shared/playerHistoryTypes'
 
@@ -192,7 +192,9 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
             )}
           </div>
 
-          {tab === 'history' && <HistoryView loading={loading} error={error} data={data} onOpen={openPlayer} />}
+          {tab === 'history' && (
+            <HistoryView npid={viewing} days={days} loading={loading} error={error} data={data} onOpen={openPlayer} />
+          )}
           {tab === 'records' && <div className="history-body"><PlayerRecordsSection npid={viewing} onOpen={openPlayer} /></div>}
           {tab === 'save' && <div className="history-body"><PlayerSaveSection npid={viewing} /></div>}
         </div>
@@ -201,9 +203,10 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
   )
 }
 
-/** The play history tab: the summary, frequent partners and active hours.
- * A partner's row opens that player in the same panel. */
-function HistoryView({ loading, error, data, onOpen }: {
+/** The play history tab: the summary, frequent opponents and active hours. */
+function HistoryView({ npid, days, loading, error, data, onOpen }: {
+  npid: string
+  days: Days
   loading: boolean
   error: string | null
   data: PlayerHistory | null
@@ -233,32 +236,7 @@ function HistoryView({ loading, error, data, onOpen }: {
           </section>
 
           <div className="history-content-grid">
-            <section className="history-section">
-              <div className="history-section-heading">
-                <div><UsersRound size={17} aria-hidden="true" /><h3>자주 함께한 플레이어</h3></div>
-                <span>TOP 4</span>
-              </div>
-              {data.top_played_with.length > 0 ? (
-                <ol className="history-partner-list">
-                  {data.top_played_with.slice(0, 4).map((player, index) => (
-                    <li key={player.npid}>
-                      {/* The whole row opens that player — the position and
-                          the count describe the same person the name does. */}
-                      <button
-                        type="button"
-                        className="history-partner-row"
-                        onClick={() => onOpen(player.npid)}
-                        aria-label={`${player.online_name} 기록 보기`}
-                      >
-                        <span className="history-partner-rank">{index + 1}</span>
-                        <span className="history-partner-name">{player.online_name}</span>
-                        <strong>{player.times_together}<small>회</small></strong>
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-              ) : <p className="history-empty">함께 플레이한 기록이 아직 없습니다.</p>}
-            </section>
+            <PlayerOpponentsSection npid={npid} days={days} onOpen={onOpen} />
 
             <section className="history-section history-activity">
               <div className="history-section-heading">

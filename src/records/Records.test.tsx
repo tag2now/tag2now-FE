@@ -34,7 +34,7 @@ beforeEach(() => {
   vi.mocked(fetchPlayerSave).mockReset().mockRejectedValue(new AppError('none', 404))
   vi.mocked(GET).mockReset().mockResolvedValue({
     npid: 'bob', days_active: 1, times_seen: 1, first_seen: null, last_seen: null,
-    room_type_counts: {}, top_played_with: [], active_hours: [],
+    room_type_counts: {}, active_hours: [],
   })
 })
 

@@ -120,7 +120,7 @@ function renderOverview(props: Partial<React.ComponentProps<typeof Overview>> = 
 
 beforeEach(() => {
   mockedUseOverview.mockReturnValue(polled(OVERVIEW_DATA))
-  mockedGet.mockResolvedValue({ npid: 'p1', days_active: 3, times_seen: 12, first_seen: '2026-08-01', last_seen: '2026-09-01', room_type_counts: {}, top_played_with: [], active_hours: [] })
+  mockedGet.mockResolvedValue({ npid: 'p1', days_active: 3, times_seen: 12, first_seen: '2026-08-01', last_seen: '2026-09-01', room_type_counts: {}, active_hours: [] })
 })
 
 afterEach(() => {
