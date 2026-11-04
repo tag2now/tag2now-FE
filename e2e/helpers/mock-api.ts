@@ -6,7 +6,8 @@ import communityPostsData from '../fixtures/community-posts.json' with { type: '
 import communityPostDetailData from '../fixtures/community-post-detail.json' with { type: 'json' }
 import { LATEST_PATCH_VERSION } from '../../src/config/patchNotes'
 import dailyStatsData from '../fixtures/history-daily.json' with { type: 'json' }
-import weeklyTopData from '../fixtures/history-weekly-top.json' with { type: 'json' }
+import weeklyTopData from '../fixtures/records-weekly-top.json' with { type: 'json' }
+import matchRecordsData from '../fixtures/match-records.json' with { type: 'json' }
 
 interface ApiReservationLike {
   id: number
@@ -80,6 +81,7 @@ interface MockOverrides {
   postDetail?: unknown
   reservations?: ApiReservationLike[]
   daily?: unknown
+  /** The weekly ranking; the fixture by default. `failEndpoints: ['weeklyTop']` fails it. */
   weeklyTop?: unknown
   hourly?: unknown
   /** Keyed by npid. A player the map does not name still gets a response. */
@@ -88,6 +90,8 @@ interface MockOverrides {
   currentRankHolders?: unknown
   /** Keyed by npid; null answers "no save" (404). Anyone else gets PLAYER_SAVE. */
   playerSave?: Record<string, unknown | null>
+  /** Every recorded match, newest first; the fixture by default. `failEndpoints: ['matchRecords']` fails the list. */
+  matchRecords?: MockMatchRecord[]
   /** Connected Chzzk channels, one per account; none by default. */
   streamChannels?: ApiStreamChannel[]
   failEndpoints?: string[]
@@ -258,6 +262,22 @@ export const CURRENT_RANK_HOLDERS = {
     { username: 'u003', saved_at: '2026-09-13T12:00:00Z', account_rank: 24, chars: [{ id: 3, character: 'King' }, { id: 4, character: 'Jun' }] },
   ],
 }
+
+type MockRecordChar = { name: string, rank: { name: string, tier: string } | null }
+type MockRecordPlayer = { npid: string, online_name: string | null, result: 'win' | 'loss', chars: MockRecordChar[] | null }
+export type MockMatchRecord = { id: number, played_at: string, p1: MockRecordPlayer, p2: MockRecordPlayer | null }
+
+/** Smaller than the backend's, so the fixture spans two pages and 더 보기 has something to load. */
+const RECORD_PAGE_SIZE = 6
+
+function recordPage(records: MockMatchRecord[], url: URL) {
+  const before = url.searchParams.get('before')
+  const rest = before == null ? records : records.filter((r) => r.id < Number(before))
+  const matches = rest.slice(0, RECORD_PAGE_SIZE)
+  return { matches, next_before: rest.length > RECORD_PAGE_SIZE ? matches[matches.length - 1].id : null }
+}
+
+const players = (record: MockMatchRecord) => [record.p1, record.p2].filter((player): player is MockRecordPlayer => player != null)
 
 /** A save with two characters played and one slot never used. */
 export const PLAYER_SAVE = {
@@ -562,7 +582,6 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       return route.fulfill({ status: 500, body: 'Internal Server Error' })
     }
     const url = route.request().url()
-    if (url.includes('/weekly-top')) return asJson(route, overrides?.weeklyTop ?? weeklyTopData)
     if (url.includes('/daily')) return asJson(route, overrides?.daily ?? dailyStatsData)
     return asJson(route, overrides?.hourly ?? [])
   })
@@ -580,14 +599,18 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       first_seen: '2026-08-01',
       last_seen: '2026-09-15',
       room_type_counts: { rank_match: 80, player_match: 40 },
-      // Everyone played with the next two people on the board, so a spec can
-      // open a partner and land on a player the leaderboard fixture knows.
-      top_played_with: [
-        { npid: 'np_002', online_name: 'KingOfIronFist', times_together: 30 },
-        { npid: 'np_003', online_name: 'TagComboKing', times_together: 21 },
-      ].filter((partner) => partner.npid !== npid),
       active_hours: [20, 21, 22, 23],
     })
+  })
+
+  // Everyone met the next two people on the board most, so a spec can open an
+  // opponent and land on a player the leaderboard fixture knows.
+  await page.route('**/api/records/opponents**', async (route) => {
+    const npid = new URL(route.request().url()).searchParams.get('npid')
+    return asJson(route, [
+      { npid: 'np_002', online_name: 'KingOfIronFist', match_count: 30, wins: 18, losses: 12 },
+      { npid: 'np_003', online_name: 'TagComboKing', match_count: 21, wins: 7, losses: 14 },
+    ].filter((opponent) => opponent.npid !== npid))
   })
 
   // The current-rank board, which the leaderboard tab opens on.
@@ -614,6 +637,24 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const save = overrides?.playerSave?.[npid]
     if (save === null) return asJson(route, { detail: '이 플레이어의 TTT2 세이브가 없습니다.' }, 404)
     return asJson(route, save ?? { ...PLAYER_SAVE, username: npid })
+  })
+
+  await page.route('**/api/records/weekly-top**', async (route) => {
+    if (failing.has('weeklyTop')) return route.fulfill({ status: 500, body: 'Internal Server Error' })
+    return asJson(route, overrides?.weeklyTop ?? weeklyTopData)
+  })
+
+  // Matches newest first: `npid` keeps one player's, `q` those with a name or id containing it.
+  const records = overrides?.matchRecords ?? (matchRecordsData as MockMatchRecord[])
+  await page.route('**/api/records/matches**', async (route) => {
+    if (failing.has('matchRecords')) return route.fulfill({ status: 500, body: 'Internal Server Error' })
+    const url = new URL(route.request().url())
+    const npid = url.searchParams.get('npid')
+    const q = (url.searchParams.get('q') ?? '').toLowerCase()
+    const found = records
+      .filter((record) => !npid || players(record).some((player) => player.npid === npid))
+      .filter((record) => !q || players(record).some((player) => `${player.npid} ${player.online_name ?? ''}`.toLowerCase().includes(q)))
+    return asJson(route, recordPage(found, url))
   })
 
   // Single handler for all community API calls

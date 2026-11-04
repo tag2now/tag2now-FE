@@ -1,0 +1,58 @@
+/* A list of finished rank matches: the profile's 전적 tab and the 전적 page
+   draw the same rows. Green is a win and red a loss, as everywhere else. */
+
+/* A container query, not a media query: the same row sits in an 860px dialog
+   and in a full-width page, and a phone narrows both. */
+.record-list { display: grid; gap: 6px; list-style: none; container-type: inline-size; }
+.record-row { overflow: hidden; border: 1px solid var(--color-border-light); border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 2%, transparent); }
+
+.record-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 12px; border-bottom: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-shade) 18%, transparent); color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-label); font-variant-numeric: tabular-nums; }
+
+/* Two halves facing each other: the name at the outer edge, the characters by the VS. */
+.record-body { display: grid; min-height: 64px; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: stretch; }
+.record-player { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; }
+.record-player.is-mirrored { flex-direction: row-reverse; text-align: right; }
+.record-player.is-win { background: linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 85%); }
+.record-player.is-mirrored.is-win { background: linear-gradient(270deg, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 85%); }
+.record-player.is-unknown { justify-content: center; color: var(--color-txt-faint); font-size: var(--text-2xs); font-weight: var(--weight-label); }
+
+.record-outcome { width: 34px; font-size: var(--text-2xs); font-style: normal; font-weight: var(--weight-max); letter-spacing: .1em; }
+.record-outcome:first-child { text-align: right; }
+.record-outcome.is-win { color: var(--color-accent); }
+.record-outcome.is-loss { color: var(--color-primary-text); }
+.record-name { min-width: 0; max-width: 100%; overflow: hidden; padding: 0; border: 0; background: transparent; color: var(--color-txt); font: inherit; font-size: var(--text-sm); font-weight: var(--weight-display); text-align: inherit; text-overflow: ellipsis; white-space: nowrap; }
+button.record-name { cursor: pointer; }
+button.record-name:hover { color: var(--color-primary-text); text-decoration: underline; }
+button.record-name:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 2px; }
+
+/* Each banner sits on its portrait's outer side, so it is beside its own
+   character and no other. The higher rank is put by the VS in the markup. */
+.record-chars { display: flex; flex: 0 0 auto; gap: 12px; }
+.record-chars.is-unknown { color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-label); white-space: nowrap; }
+.record-char { display: flex; align-items: center; gap: 4px; }
+.record-player:not(.is-mirrored) .record-char { flex-direction: row-reverse; }
+.record-portrait { height: 48px; border-radius: 4px; }
+.record-rank { width: var(--rank-art-w); height: var(--rank-art-h); flex: 0 0 auto; object-fit: cover; }
+.record-char-name { color: var(--color-txt-dim); font-size: var(--text-4xs); }
+
+.record-vs { display: flex; align-items: center; gap: 8px; padding: 0 4px; color: var(--color-txt); font-size: var(--text-lg); font-style: italic; font-weight: var(--weight-max); letter-spacing: .04em; }
+
+.record-more { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; color: var(--color-txt-dim); font-size: var(--text-2xs); }
+
+.history-records .history-empty { min-height: 120px; }
+
+/* Too narrow for a banner beside each portrait: the name tops each half and
+   every banner sits above its portrait. */
+@container (width < 640px) {
+  .record-head { padding: 3px 8px; font-size: var(--text-3xs); }
+  .record-vs { gap: 3px; padding: 0; }
+  .record-outcome { width: 26px; font-size: var(--text-4xs); letter-spacing: .04em; }
+  .record-player, .record-player.is-mirrored { flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; padding: 6px 8px; }
+  .record-player.is-mirrored { align-items: flex-end; }
+  .record-name { font-size: var(--text-xs); }
+  .record-chars { gap: 4px; }
+  .record-char, .record-player:not(.is-mirrored) .record-char { flex-direction: column-reverse; gap: 2px; }
+  .record-portrait { height: 34px; }
+  .record-rank { width: auto; max-width: 44px; height: auto; max-height: 20px; object-fit: contain; }
+  .record-vs { font-size: var(--text-xs); }
+}

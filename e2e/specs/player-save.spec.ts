@@ -12,7 +12,7 @@ test.describe('Save ranks on a profile', () => {
   })
 
   test("the save tab shows the player's ranks, highest first, and a partner without a save says so", async ({ page }) => {
-    await page.getByRole('region', { name: '주간 철악귀' }).getByRole('button', { name: 'TTT2_Master' }).click()
+    await page.getByRole('region', { name: '주간 철찌' }).getByRole('button', { name: 'TTT2_Master' }).click()
     const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: '플레이어 기록 닫기' }) })
     const historyTab = dialog.getByRole('tab', { name: '플레이 기록' })
     const saveTab = dialog.getByRole('tab', { name: '캐릭터별 계급' })
@@ -48,7 +48,7 @@ test.describe('Save ranks on a profile', () => {
         chars: Array.from({ length: 59 }, (_, id) => ({ ...PLAYER_SAVE.chars[0], id })),
       }),
     }))
-    await page.getByRole('region', { name: '주간 철악귀' }).getByRole('button', { name: 'TTT2_Master' }).click()
+    await page.getByRole('region', { name: '주간 철찌' }).getByRole('button', { name: 'TTT2_Master' }).click()
     const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: '플레이어 기록 닫기' }) })
     const historyTab = dialog.getByRole('tab', { name: '플레이 기록' })
     const saveTab = dialog.getByRole('tab', { name: '캐릭터별 계급' })

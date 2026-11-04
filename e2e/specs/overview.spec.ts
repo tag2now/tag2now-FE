@@ -39,11 +39,12 @@ test.describe('Overview', () => {
 
   test('summarises each feature from its own endpoint', async ({ page }) => {
     await expect(page.getByText('132판')).toBeVisible()
+    await expect(page.getByText('70승 62패')).toBeVisible()
     await expect(page.getByText('모집중호스트')).toBeVisible()
   })
 
   test('joins weekly players to their leaderboard characters', async ({ page }) => {
-    const weekly = page.getByRole('region', { name: '주간 철악귀' })
+    const weekly = page.getByRole('region', { name: '주간 철찌' })
 
     // TagComboKing tops the weekly fixture and plays Lars/Alisa on the
     // leaderboard; the portraits have to come from that join, not the weekly
@@ -59,7 +60,7 @@ test.describe('Overview', () => {
 
   test('sets the two rankings side by side above the chart, weekly first', async ({ page, isMobile }) => {
     test.skip(isMobile, 'A phone has room for one card per row.')
-    const weekly = (await page.getByRole('region', { name: '주간 철악귀' }).boundingBox())!
+    const weekly = (await page.getByRole('region', { name: '주간 철찌' }).boundingBox())!
     const leaderboard = (await page.getByRole('region', { name: '리더보드 TOP 5' }).boundingBox())!
     const chart = (await page.getByRole('region', { name: '접속자 흐름' }).boundingBox())!
 
@@ -72,7 +73,7 @@ test.describe('Overview', () => {
 
   test('puts the weekly figure under the name in the half-width card', async ({ page, isMobile }) => {
     test.skip(isMobile, 'Covered by the side-by-side case; a phone row is the same layout.')
-    const top = page.getByRole('region', { name: '주간 철악귀' }).locator('.rank-row').first()
+    const top = page.getByRole('region', { name: '주간 철찌' }).locator('.rank-row').first()
     const nameLabel = top.locator('.rank-btn-label')
     const nameBox = (await top.locator('.rank-name').boundingBox())!
     const detailBox = (await top.locator('.rank-detail').boundingBox())!
@@ -145,7 +146,7 @@ test.describe('Overview', () => {
   })
 
   test('each section links to the tab it summarises', async ({ page }) => {
-    const section = page.getByRole('region', { name: '주간 철악귀' })
+    const section = page.getByRole('region', { name: '주간 철찌' })
     // A real link, not a button: middle-click opens it in a tab and the back
     // button undoes the jump, neither of which a click handler would give.
     await section.getByRole('link', { name: '통계' }).click()
@@ -184,7 +185,7 @@ test.describe('Overview', () => {
   // out at the row's edge opens anything is a hit test, and the unit suite has
   // no layout engine to answer it.
   test('a top-five row opens the player from anywhere along it', async ({ page }) => {
-    const top = page.getByRole('region', { name: '주간 철악귀' }).locator('.rank-row').first()
+    const top = page.getByRole('region', { name: '주간 철찌' }).locator('.rank-row').first()
 
     // Bottom-left of the row: the position number's column, nowhere near the
     // name. Measured rather than fixed, so it stays inside the row in both the
@@ -206,7 +207,7 @@ test.describe('Overview', () => {
   // The far edge is the part a decoration reaches last, so that is where this
   // clicks.
   test('a podium row opens the player from its far edge', async ({ page }) => {
-    const medal = page.getByRole('region', { name: '주간 철악귀' }).locator('.rank-row.is-podium').first()
+    const medal = page.getByRole('region', { name: '주간 철찌' }).locator('.rank-row.is-podium').first()
     const box = (await medal.boundingBox())!
 
     await medal.click({ position: { x: box.width - 20, y: box.height / 2 } })
@@ -236,12 +237,12 @@ test.describe('Overview', () => {
 
   test('a failing source costs only its own card', async ({ page }) => {
     await page.unrouteAll({ behavior: 'ignoreErrors' })
-    await mockAllApis(page, { failEndpoints: ['history'] })
+    await mockAllApis(page, { failEndpoints: ['history', 'weeklyTop'] })
     await page.goto('/')
 
-    // The history endpoints are down, but rooms still are not: the KPI row and
+    // The statistics endpoints are down, but rooms still are not: the KPI row and
     // the reservation card have to survive their neighbour failing.
     await expect(page.getByRole('region', { name: '모집 중인 예약' })).toBeVisible()
-    await expect(page.getByRole('region', { name: '주간 철악귀' })).toContainText('주간 기록 없음')
+    await expect(page.getByRole('region', { name: '주간 철찌' })).toContainText('주간 기록 없음')
   })
 })

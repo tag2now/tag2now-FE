@@ -24,6 +24,7 @@
 @import "./shared/styles/history.css" layer(components.app);
 @import "./shared/styles/leaderboard.css" layer(components.app);
 @import "./shared/styles/saves.css" layer(components.app);
+@import "./shared/styles/records.css" layer(components.app);
 @import "./admin/admin.css" layer(components.app);
 @import "./chat/chat.css" layer(components.app);
 @import "./install/install.css" layer(components.app);
@@ -32,4 +33,5 @@
 @import "./reservation/reservation.css" layer(components.app);
 @import "./match/match.css" layer(components.app);
 @import "./event/event.css" layer(components.app);
+@import "./records/records.css" layer(components.app);
 @import "./styles/responsive.css" layer(components.app);

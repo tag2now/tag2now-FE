@@ -23,6 +23,7 @@ src/
   reservation/         appointments — Reservation, reservationApi, reservationLabels
   community/           board — useCommunity, communityApi, post/comment components
   stat/                statistics — useStats, useWeeklyTop, Stats
+  records/             everyone's rank matches — useMatchRecords, Records
   chat/                lobby chat — chatStream (SSE store), Chat, launcher/panel components
   streaming/           a player's registered broadcast channel and its edit dialog
   popup/               site popups — SitePopups, popupApi, popupDismissal
@@ -185,8 +186,9 @@ has not yet been migrated to a shared snapshot.
 
 **Two joins worth knowing:**
 
-- The weekly-top endpoint reports match counts, not characters. Portraits are
-  joined in from the leaderboard by npid, the same pairing the stats tab makes;
+- The weekly-top endpoint (`/records/weekly-top`) reports match counts with
+  wins and losses, not characters. Portraits are joined in from the leaderboard
+  by npid in `shared/weeklyTop.ts`, which both the stats tab and this card use;
   a player outside the leaderboard renders dashes rather than dropping columns.
 - `fetchRoomsAll` deliberately shuffles group order, so the "활성 방" hint reads
   the groups back in `GROUP_ORDER`. Without that the KPI reorders itself on
@@ -211,7 +213,7 @@ the name, which table layout cannot express. Five tracks hold 386px before the
 name gets any, so a list under 540px runs four columns and two lines instead.
 That is a **container query on `.rank-list`**, not a media query: a phone
 lands there, and so do the home page's two rankings, which sit side by side —
-주간 철악귀 left, above the chart — at half a desktop each. The cells are
+주간 철찌 left, above the chart — at half a desktop each. The cells are
 placed by **`:nth-child`, never `:nth-of-type`**: every child of a row is a
 `<span>`, so by type they all count as one and a `:nth-of-type` rule silently
 selects the position cell instead.
@@ -291,6 +293,7 @@ so a nav click, the back button, and a cold deep link all arrive the same way.
 | `/match/:group` | rooms for that group |
 | `/leaderboard`, `/leaderboard/best` | the leaderboard: current ranks, or the highest each player reached |
 | `/stats` | that tab |
+| `/records` | everyone's recorded rank matches |
 | `/reservation`, `/reservation/:id` | reservations, optionally opened on one |
 | `/community`, `/community/:postId` | the board, optionally opened on one post |
 | `/admin`, `/admin/saves`, `/admin/streams`, `/admin/popups` | the admin page's sections; no nav tab, reached from the account menu |
@@ -317,8 +320,8 @@ somewhere sensible.
 
 Navigation has two levels in `app/`, composed by `App.tsx`:
 
-- The primary navigation is fixed: home, match, reservation, community, leaderboard
-  and stats. Match opens the first room group; admin is reached through the account menu.
+- The primary navigation is fixed: home, match, reservation, community, leaderboard,
+  stats and records — seven, which is also the phone tab bar's column count. Match opens the first room group; admin is reached through the account menu.
 - Room-group tabs appear only on a match route. Their keys start with `GROUP_ORDER`
   from `config/tabConfig.ts`, followed by any unknown groups returned by the API.
   Known groups remain present during the initial load or a failed request.
@@ -370,6 +373,11 @@ profile card and the leaderboard's own-row mark find the record by `np_id` for
 the same reason; two players can share an online name. Rows written before
 login have a null username and belong to nobody.
 
+A comment — on the board or on a reservation — is also any admin's to delete;
+`isAuthorOrAdmin` in `auth/types.ts` offers the button, and the backend decides.
+A deleted board comment with replies still standing comes back as `deleted`
+with an empty body and is shown as "삭제된 댓글입니다.".
+
 ## Account moderation
 
 The admin page has four sections behind inner tabs, each with its own URL:
@@ -416,13 +424,49 @@ tabindex to the first one, and names the tabpanel itself.
 ## Save ranks on a profile
 
 `PlayerHistoryPanel` --- the profile every player name opens, 내 정보 보기
-included --- has two ARIA tabs: 플레이 기록 (the default) and 캐릭터별 계급,
-anyone's TTT2 save from the public `GET /saves/players/{npid}`. The save is
+included --- has three ARIA tabs: 플레이 기록 (the default), 전적 (see
+**Match records** below) and 캐릭터별 계급, anyone's TTT2 save from the public
+`GET /saves/players/{npid}`. The save is
 read only when its tab is opened, and fails on its own: a 404 is "no save", any
 other error stays inside the tab. The backend caches it for ten minutes.
 
+The play history tab shows activity in KST from noon to the following noon.
+Adjacent active hours share one band across midnight. Inactive hours separate
+bands, and the total counts distinct active hour slots in the selected period.
+
 The character table is `shared/components/SaveCharTable`, the same one the
 admin page draws; its rules live in `shared/styles/saves.css`, not `admin/admin.css`.
+
+## Match records
+
+Finished rank matches, from tag2now-BE's `GET /records/matches` (spec 11): who
+played whom, the result, and each character with the rank it **went into the
+match at**. Two screens draw the same row, `shared/components/MatchRecordRow`:
+1P on the left and 2P on the right as the game seated them (the backend reads
+the room's slot order), the result beside the VS --- WIN VS LOSE or LOSE VS WIN
+--- and the winner's half tinted. On both sides the higher rank sits by the VS,
+since a match pairs players by their best character.
+
+- **`/records`** --- everyone's matches, searchable by name (`q`, asked once
+  typing pauses). Fetched once and refreshed by hand, like the leaderboards; a
+  name opens the profile.
+- **The profile's 전적 tab** --- the same list with `npid`, seated the same way,
+  so the player may be 2P; only their own name is not a link. Read only when
+  the tab opens; an opponent's name opens them in the same panel, as 자주 함께한
+  플레이어 does. The 통산 line above it
+  is the save's lifetime record (`GET /saves/players/{npid}`), not a count of
+  the list: the backend keeps no per-player totals, and the list starts only
+  when tag2now began recording. No save, or a failed read, drops just that line.
+
+Both page by **`before`, not page numbers** (`shared/hooks/useRecordPages`):
+matches keep arriving at the top, so page 2 by number would repeat rows.
+
+A match is found in the saves and its opponent in the rooms, so a row can lack
+either: "캐릭터 미확인" when that side's save was not seen, "상대 미확인" when
+no room was (the side seen is then 1P), and the id when no name was. Matches recorded before ranks were
+kept have `rank: null` and show portraits alone. The row, its API and the hook
+live in `shared/` because the profile panel there uses them; the import
+boundary forbids `shared/` reaching into `records/`.
 
 ## Reservation ownership
 

@@ -5,6 +5,7 @@ import useStats, { type StatsDays} from "@/stat/useStats";
 import useWeeklyTop, { type WeeklyTopLimit} from "@/stat/useWeeklyTop";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import type { WeeklyTopPlayer } from '@/shared/activityTypes'
+import { weeklyTopRows } from '@/shared/weeklyTop'
 import HourlyChart from '@/stat/HourlyChart'
 import DailyPlayersPanel from '@/shared/components/DailyPlayersPanel'
 import { DAY_START_HOUR, hourLabel } from '@/shared/dayBoundary'
@@ -27,27 +28,10 @@ const LIMIT_OPTIONS: { value: WeeklyTopLimit; label: string }[] = [
 ]
 
 function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; entries: LeaderboardEntry[]; onSelect: (npid: string) => void }) {
-  const entryByNpid = new Map(entries.map((e) => [e.np_id, e]))
-  // The home page's ranking row, the same one the leaderboard tab runs at full
-  // length. This was a six-column table --- 매치 and 랭킹 on tracks of their
-  // own --- which made it the one ranking on the site with a shape nothing
-  // else used. The pair share a cell now: what they did this week, with where
-  // they stand overall behind it.
   return (
     <RankList
-      rows={data.map((p) => {
-        const lb = entryByNpid.get(p.npid)
-        return {
-          key: p.npid,
-          npid: p.npid,
-          name: p.online_name,
-          detail: `${p.match_count}판`,
-          detailSub: lb ? `#${lb.rank}` : undefined,
-          mainChar: lb?.player_info?.main_char_info,
-          subChar: lb?.player_info?.sub_char_info,
-        }
-      })}
-      label="주간 철악귀"
+      rows={weeklyTopRows(data, entries)}
+      label="주간 철찌"
       detailLabel="판수"
       emptyMsg="데이터 없음"
       onSelect={onSelect}
@@ -110,7 +94,7 @@ export default function Stats({ leaderboardEntries = [] }: StatsProps) {
 
       {/* The rule above divides the two sections where a sub-tab bar used to. */}
       <div className="section-toolbar compact-toolbar mt-6 border-t border-t-border-light pt-5">
-        <div className="section-title"><span className="section-icon"><Crown size={15} /></span><div><h3>주간 철악귀</h3><p>최근 7일 매치 참여 순위</p></div></div>
+        <div className="section-title"><span className="section-icon"><Crown size={15} /></span><div><h3>주간 철찌</h3><p>최근 7일 매치 참여 순위</p></div></div>
         <ToggleGroup options={LIMIT_OPTIONS} value={wt.limit} onChange={wt.setLimit} label="주간 순위 표시 개수" />
       </div>
       {statusBody(wt.loading, wt.error, {

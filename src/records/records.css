@@ -1,0 +1,7 @@
+/* The 전적 page: the search above the shared record list. */
+.records-search { display: flex; margin-bottom: 10px; }
+.records-search input { flex: 1 1 auto; max-width: 360px; padding-block: 4px; font-size: var(--text-xs); }
+
+@media (max-width: 760px) {
+  .records-search input { max-width: none; }
+}

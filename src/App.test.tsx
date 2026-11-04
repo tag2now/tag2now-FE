@@ -49,6 +49,11 @@ vi.mock('@/community/communityApi', async (importOriginal) => ({
   fetchPosts: mockedFetchPosts,
 }))
 
+// The records tab reads its own list; the wraparound test lands on it.
+vi.mock('@/shared/matchRecordsApi', () => ({
+  fetchMatchRecords: vi.fn().mockResolvedValue({ matches: [], next_before: null }),
+}))
+
 // The leaderboard tab opens on current ranks, which it reads itself. The board
 // names the score board's player, so the tab still shows 'TestPlayer'.
 vi.mock('@/shared/hooks/useCurrentRankLeaderboard', async (importOriginal) => ({
@@ -465,11 +470,11 @@ describe('App', () => {
       home.focus()
 
       await act(async () => { fireEvent.keyDown(home, { key: 'ArrowLeft' }) })
-      const stats = screen.getByRole('tab', { name: '통계' })
-      expect(stats).toHaveFocus()
-      expect(stats).toHaveAttribute('aria-selected', 'true')
+      const records = screen.getByRole('tab', { name: '전적' })
+      expect(records).toHaveFocus()
+      expect(records).toHaveAttribute('aria-selected', 'true')
 
-      await act(async () => { fireEvent.keyDown(stats, { key: 'ArrowRight' }) })
+      await act(async () => { fireEvent.keyDown(records, { key: 'ArrowRight' }) })
       expect(home).toHaveFocus()
       expect(home).toHaveAttribute('aria-selected', 'true')
     })

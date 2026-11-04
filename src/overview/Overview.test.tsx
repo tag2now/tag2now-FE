@@ -40,8 +40,8 @@ const OVERVIEW_DATA: OverviewData = {
     { date: '2026-09-01', peak_players: 55, avg_players: 30, unique_players: 172 },
   ],
   weeklyTop: [
-    { npid: 'w1', online_name: 'WeeklyOne', match_count: 120 },
-    { npid: 'w2', online_name: 'WeeklyTwo', match_count: 80 },
+    { npid: 'w1', online_name: 'WeeklyOne', match_count: 120, wins: 70, losses: 50 },
+    { npid: 'w2', online_name: 'WeeklyTwo', match_count: 80, wins: 30, losses: 50 },
   ],
   posts: [
     { id: 1, author: 'PostAuthor', title: '첫 게시글', body: '', post_type: 'free', characters: [], thumbs_up: 3, thumbs_down: 0, created_at: new Date().toISOString(), comment_count: 2 },
@@ -120,7 +120,7 @@ function renderOverview(props: Partial<React.ComponentProps<typeof Overview>> = 
 
 beforeEach(() => {
   mockedUseOverview.mockReturnValue(polled(OVERVIEW_DATA))
-  mockedGet.mockResolvedValue({ npid: 'p1', days_active: 3, times_seen: 12, first_seen: '2026-08-01', last_seen: '2026-09-01', room_type_counts: {}, top_played_with: [], active_hours: [] })
+  mockedGet.mockResolvedValue({ npid: 'p1', days_active: 3, times_seen: 12, first_seen: '2026-08-01', last_seen: '2026-09-01', room_type_counts: {}, active_hours: [] })
 })
 
 afterEach(() => {
@@ -317,7 +317,7 @@ describe('Overview', () => {
   it('joins weekly players to their leaderboard characters by npid', () => {
     mockedUseOverview.mockReturnValue(polled({
       ...OVERVIEW_DATA,
-      weeklyTop: [{ npid: 'p1', online_name: 'TopPlayer', match_count: 42 }],
+      weeklyTop: [{ npid: 'p1', online_name: 'TopPlayer', match_count: 42, wins: 25, losses: 17 }],
     }))
     renderOverview()
 
@@ -325,10 +325,11 @@ describe('Overview', () => {
     expect(row?.querySelector('img[alt="Jin"]')).toBeInTheDocument()
   })
 
-  it('lists weekly top players with their match counts', () => {
+  it('lists weekly top players with their match counts and records', () => {
     renderOverview()
-    expect(screen.getByText('WeeklyOne')).toBeInTheDocument()
-    expect(screen.getByText('120판')).toBeInTheDocument()
+    const row = screen.getByText('WeeklyOne').closest('.rank-row')
+    expect(row).toHaveTextContent('120판')
+    expect(row).toHaveTextContent('70승 50패')
   })
 
   it('omits a reservation that is already full', () => {

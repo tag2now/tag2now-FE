@@ -31,7 +31,7 @@ test.describe('Navigation', () => {
   test('all expected tabs are visible', async ({ page }) => {
     const mainTabs = page.getByRole('tablist', { name: 'Main navigation' }).getByRole('tab')
     // 매칭 and 예약 trail a count badge, so match the label, not the whole text.
-    await expect(mainTabs).toHaveText([/^홈/, /^매칭/, /^예약/, /^커뮤니티/, /^리더보드/, /^통계/])
+    await expect(mainTabs).toHaveText([/^홈/, /^매칭/, /^예약/, /^커뮤니티/, /^리더보드/, /^통계/, /^전적/])
 
     await goToMatchTab(page)
     const roomTabs = page.getByRole('tablist', { name: '매칭 종류 선택' }).getByRole('tab')

@@ -39,11 +39,14 @@ export const API = {
 
   stats: () => endpoint('history/stats'),
   dailyStats: () => endpoint('history/stats/daily'),
-  weeklyTop: () => endpoint('history/stats/weekly-top'),
+  weeklyTop: () => endpoint('records/weekly-top'),
   playerHistory: (npid: string) => endpoint(`history/players/${npid}`),
+  playerOpponents: () => endpoint('records/opponents'),
   playerSave: (npid: string) => endpoint(`saves/players/${npid}`),
   currentRankLeaderboard: () => endpoint('saves/leaderboard'),
   currentRankHolders: () => endpoint('saves/current-rank-holders'),
+
+  matchRecords: () => endpoint('records/matches'),
 
   event: () => endpoint('event'),
   eventPlayer: (npid: string) => endpoint(`event/players/${encodeURIComponent(npid)}`),
@@ -53,6 +56,7 @@ export const API = {
   posts: () => endpoint('community/posts'),
   post: (postId: number) => endpoint(`community/posts/${postId}`),
   postComments: (postId: number) => endpoint(`community/posts/${postId}/comments`),
+  postComment: (postId: number, commentId: number) => endpoint(`community/posts/${postId}/comments/${commentId}`),
   postThumb: (postId: number) => endpoint(`community/posts/${postId}/thumb`),
 
   reservations: () => endpoint('reservations'),

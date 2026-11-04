@@ -810,6 +810,14 @@ describe('the comment thread on a reservation', () => {
     expect(within(thread).queryByRole('button', { name: '남님의 댓글 삭제' })).toBeNull()
   })
 
+  it('offers an admin a delete button on every comment', async () => {
+    startSession('token', 3600, { username: ME, online_name: '나', avatar_url: '', admin: true })
+    const thread = await openThread([comment(), comment({ id: 2, author: '남', author_username: null, body: '저는 못 가요' })])
+
+    expect(await within(thread).findByRole('button', { name: '상대님의 댓글 삭제' })).toBeInTheDocument()
+    expect(within(thread).getByRole('button', { name: '남님의 댓글 삭제' })).toBeInTheDocument()
+  })
+
   it('deletes a comment and reloads the thread', async () => {
     vi.mocked(deleteComment).mockResolvedValue(undefined)
     const thread = await openThread([comment({ author_username: ME })])

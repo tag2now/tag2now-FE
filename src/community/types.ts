@@ -29,6 +29,8 @@ export interface CommentOut {
   author: string
   body: string
   created_at: string
+  /** Kept, with an empty body, only as the head of replies still standing. */
+  deleted?: boolean
   replies: CommentOut[]
 }
 

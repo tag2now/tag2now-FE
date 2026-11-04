@@ -3,6 +3,7 @@ import { LogIn, MessageSquare, Send, Trash2 } from 'lucide-react'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
 import { createComment, deleteComment, fetchComments, type ApiComment } from '@/reservation/reservationApi'
 import useAuth from '@/auth/useAuth'
+import { isAuthorOrAdmin } from '@/auth/types'
 
 const MAX_BODY = 500
 
@@ -79,7 +80,7 @@ export default function CommentList({ reservationId, onError }: Props) {
               <strong className="truncate text-txt">{comment.author}</strong>
               <span className="flex shrink-0 items-baseline gap-2 text-[11px]">
                 <span className="text-txt-faint">{formatTimeAgo(comment.created_at)}</span>
-                {user && comment.author_username === user.username && (
+                {isAuthorOrAdmin(comment.author_username, user) && (
                   <button
                     type="button"
                     aria-label={`${comment.author}님의 댓글 삭제`}
