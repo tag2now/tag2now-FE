@@ -1,0 +1,7 @@
+[
+  { "npid": "np_003", "online_name": "TagComboKing", "match_count": 132, "wins": 70, "losses": 62 },
+  { "npid": "np_001", "online_name": "TTT2_Master", "match_count": 98, "wins": 51, "losses": 47 },
+  { "npid": "np_005", "online_name": "NewChallenger", "match_count": 71, "wins": 40, "losses": 31 },
+  { "npid": "np_002", "online_name": "KingOfIronFist", "match_count": 55, "wins": 24, "losses": 31 },
+  { "npid": "unranked_x", "online_name": "UnrankedPlayer", "match_count": 40, "wins": 22, "losses": 18 }
+]

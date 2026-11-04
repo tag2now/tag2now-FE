@@ -36,7 +36,7 @@ test('keyboard player-count selection leaves the chart period unchanged', async 
   await limit.getByRole('radio', { name: '25', exact: true }).focus()
   const weekly = page.waitForRequest((request) => {
     const url = new URL(request.url())
-    return url.pathname === '/api/history/stats/weekly-top' && url.searchParams.get('limit') === '50'
+    return url.pathname === '/api/records/weekly-top' && url.searchParams.get('limit') === '50'
   })
   await page.keyboard.press('ArrowRight')
   await weekly

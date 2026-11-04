@@ -111,7 +111,7 @@
 /* The same pairing the leaderboard tab uses for the same fact: the figure at
    reading size with what it was taken over riding behind it. Right-aligned in
    its own track, so the column can be read down without reading the rows. */
-.rank-detail { display: inline-flex; align-items: baseline; justify-content: center; gap: 5px; font-variant-numeric: tabular-nums; }
+.rank-detail { display: inline-flex; align-items: baseline; justify-content: center; gap: 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .rank-detail strong { color: var(--color-txt); font-size: var(--text-sm); font-weight: var(--weight-display); }
 .rank-detail > span:not(.sr-only) { color: var(--color-txt-faint); font-size: var(--text-3xs); font-weight: var(--weight-label); }
 

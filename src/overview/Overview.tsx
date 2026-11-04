@@ -8,7 +8,7 @@ import { KpiCard, NoticeBanner, OpenReservations, OverviewSection, RecentPosts }
 import RankList, { type RankRow } from '@/shared/components/RankList'
 import type { LeaderboardEntry } from '@/shared/types'
 import type { RoomsData } from '@/match/types'
-import type { WeeklyTopPlayer } from '@/shared/activityTypes'
+import { weeklyTopRows } from '@/shared/weeklyTop'
 import { formatGroupName, GROUP_ORDER } from '@/config/tabConfig'
 import { pathOf } from '@/config/routes'
 import { totals } from '@/shared/util/leaderboardFilter'
@@ -107,27 +107,6 @@ const leaderboardRows = (entries: LeaderboardEntry[]): RankRow[] =>
     }
   })
 
-/** The weekly endpoint knows match counts, not characters, so the portraits are
- * joined in from the leaderboard by npid — the same pairing the stats tab makes.
- * A player outside the leaderboard simply has no character to show. */
-const weeklyRows = (players: WeeklyTopPlayer[], entries: LeaderboardEntry[]): RankRow[] => {
-  const byNpid = new Map(entries.map((e) => [e.np_id, e]))
-  return players.map((p) => {
-    const entry = byNpid.get(p.npid)
-    return {
-      key: p.npid,
-      npid: p.npid,
-      name: p.online_name,
-      detail: `${p.match_count}판`,
-      // Where they stand overall, behind what they did this week --- the same
-      // pair the stats tab's table sets, so the summary and the full list read
-      // the same way.
-      detailSub: entry ? `#${entry.rank}` : undefined,
-      ...charsOf(entry),
-    }
-  })
-}
-
 export default function Overview({ rooms, roomsLoading, leaderboardEntries = [], currentRankEntries = [], currentRankTotal }: OverviewProps) {
   const { data, loading, error, refresh } = useOverview()
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
@@ -195,7 +174,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
           Weekly first, on the left, for the same reason. */}
       <div className="overview-grid is-rankings">
         <OverviewSection icon={Crown} title="주간 철악귀" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
-          <RankList rows={weeklyRows(data?.weeklyTop ?? [], leaderboardEntries)} label="주간 상위 5명" detailLabel="판수" emptyMsg="주간 기록 없음" onSelect={setSelectedNpid} />
+          <RankList rows={weeklyTopRows(data?.weeklyTop ?? [], leaderboardEntries)} label="주간 상위 5명" detailLabel="판수" emptyMsg="주간 기록 없음" onSelect={setSelectedNpid} />
         </OverviewSection>
 
         <OverviewSection icon={Trophy} title="리더보드 TOP 5" linkLabel="리더보드" to={pathOf('leaderboard')}>

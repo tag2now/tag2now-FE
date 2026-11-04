@@ -185,8 +185,9 @@ has not yet been migrated to a shared snapshot.
 
 **Two joins worth knowing:**
 
-- The weekly-top endpoint reports match counts, not characters. Portraits are
-  joined in from the leaderboard by npid, the same pairing the stats tab makes;
+- The weekly-top endpoint (`/records/weekly-top`) reports match counts with
+  wins and losses, not characters. Portraits are joined in from the leaderboard
+  by npid in `shared/weeklyTop.ts`, which both the stats tab and this card use;
   a player outside the leaderboard renders dashes rather than dropping columns.
 - `fetchRoomsAll` deliberately shuffles group order, so the "활성 방" hint reads
   the groups back in `GROUP_ORDER`. Without that the KPI reorders itself on

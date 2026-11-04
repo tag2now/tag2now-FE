@@ -48,6 +48,18 @@ describe('statistics selections', () => {
     expect(vi.mocked(GET).mock.calls.filter(([path]) => path === API.dailyStats().path)).toHaveLength(1)
   })
 
+  it('shows each weekly player with their match count, wins and losses', async () => {
+    vi.mocked(GET).mockImplementation(async (path) =>
+      path === API.weeklyTop().path
+        ? [{ npid: 'alice', online_name: 'Alice', match_count: 42, wins: 25, losses: 17 }]
+        : [])
+    render(<Stats />)
+
+    const row = (await screen.findByText('Alice')).closest('.rank-row')
+    expect(row).toHaveTextContent('42판')
+    expect(row).toHaveTextContent('25승 17패')
+  })
+
   it('keeps the chart period usable when the weekly ranking fails', async () => {
     vi.mocked(GET).mockImplementation(async (path) => {
       if (path === API.weeklyTop().path) throw new Error('주간 순위를 불러오지 못했습니다.')

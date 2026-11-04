@@ -6,7 +6,7 @@ import communityPostsData from '../fixtures/community-posts.json' with { type: '
 import communityPostDetailData from '../fixtures/community-post-detail.json' with { type: 'json' }
 import { LATEST_PATCH_VERSION } from '../../src/config/patchNotes'
 import dailyStatsData from '../fixtures/history-daily.json' with { type: 'json' }
-import weeklyTopData from '../fixtures/history-weekly-top.json' with { type: 'json' }
+import weeklyTopData from '../fixtures/records-weekly-top.json' with { type: 'json' }
 import matchRecordsData from '../fixtures/match-records.json' with { type: 'json' }
 
 interface ApiReservationLike {
@@ -66,6 +66,7 @@ interface MockOverrides {
   postDetail?: unknown
   reservations?: ApiReservationLike[]
   daily?: unknown
+  /** The weekly ranking; the fixture by default. `failEndpoints: ['weeklyTop']` fails it. */
   weeklyTop?: unknown
   hourly?: unknown
   /** Keyed by npid. A player the map does not name still gets a response. */
@@ -521,7 +522,6 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
       return route.fulfill({ status: 500, body: 'Internal Server Error' })
     }
     const url = route.request().url()
-    if (url.includes('/weekly-top')) return asJson(route, overrides?.weeklyTop ?? weeklyTopData)
     if (url.includes('/daily')) return asJson(route, overrides?.daily ?? dailyStatsData)
     return asJson(route, overrides?.hourly ?? [])
   })
@@ -573,6 +573,11 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const save = overrides?.playerSave?.[npid]
     if (save === null) return asJson(route, { detail: '이 플레이어의 TTT2 세이브가 없습니다.' }, 404)
     return asJson(route, save ?? { ...PLAYER_SAVE, username: npid })
+  })
+
+  await page.route('**/api/records/weekly-top**', async (route) => {
+    if (failing.has('weeklyTop')) return route.fulfill({ status: 500, body: 'Internal Server Error' })
+    return asJson(route, overrides?.weeklyTop ?? weeklyTopData)
   })
 
   // Matches newest first: `npid` keeps one player's, `q` those with a name or id containing it.

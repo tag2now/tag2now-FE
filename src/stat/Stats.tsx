@@ -5,6 +5,7 @@ import useStats, { type StatsDays} from "@/stat/useStats";
 import useWeeklyTop, { type WeeklyTopLimit} from "@/stat/useWeeklyTop";
 import PlayerHistoryPanel from "@/shared/components/PlayerHistoryPanel";
 import type { WeeklyTopPlayer } from '@/shared/activityTypes'
+import { weeklyTopRows } from '@/shared/weeklyTop'
 import HourlyChart from '@/stat/HourlyChart'
 import DailyPlayersPanel from '@/shared/components/DailyPlayersPanel'
 import { DAY_START_HOUR, hourLabel } from '@/shared/dayBoundary'
@@ -27,26 +28,9 @@ const LIMIT_OPTIONS: { value: WeeklyTopLimit; label: string }[] = [
 ]
 
 function WeeklyTopTable({ data, entries, onSelect }: { data: WeeklyTopPlayer[]; entries: LeaderboardEntry[]; onSelect: (npid: string) => void }) {
-  const entryByNpid = new Map(entries.map((e) => [e.np_id, e]))
-  // The home page's ranking row, the same one the leaderboard tab runs at full
-  // length. This was a six-column table --- 매치 and 랭킹 on tracks of their
-  // own --- which made it the one ranking on the site with a shape nothing
-  // else used. The pair share a cell now: what they did this week, with where
-  // they stand overall behind it.
   return (
     <RankList
-      rows={data.map((p) => {
-        const lb = entryByNpid.get(p.npid)
-        return {
-          key: p.npid,
-          npid: p.npid,
-          name: p.online_name,
-          detail: `${p.match_count}판`,
-          detailSub: lb ? `#${lb.rank}` : undefined,
-          mainChar: lb?.player_info?.main_char_info,
-          subChar: lb?.player_info?.sub_char_info,
-        }
-      })}
+      rows={weeklyTopRows(data, entries)}
       label="주간 철악귀"
       detailLabel="판수"
       emptyMsg="데이터 없음"

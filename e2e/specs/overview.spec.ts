@@ -39,6 +39,7 @@ test.describe('Overview', () => {
 
   test('summarises each feature from its own endpoint', async ({ page }) => {
     await expect(page.getByText('132판')).toBeVisible()
+    await expect(page.getByText('70승 62패')).toBeVisible()
     await expect(page.getByText('모집중호스트')).toBeVisible()
   })
 
@@ -236,10 +237,10 @@ test.describe('Overview', () => {
 
   test('a failing source costs only its own card', async ({ page }) => {
     await page.unrouteAll({ behavior: 'ignoreErrors' })
-    await mockAllApis(page, { failEndpoints: ['history'] })
+    await mockAllApis(page, { failEndpoints: ['history', 'weeklyTop'] })
     await page.goto('/')
 
-    // The history endpoints are down, but rooms still are not: the KPI row and
+    // The statistics endpoints are down, but rooms still are not: the KPI row and
     // the reservation card have to survive their neighbour failing.
     await expect(page.getByRole('region', { name: '모집 중인 예약' })).toBeVisible()
     await expect(page.getByRole('region', { name: '주간 철악귀' })).toContainText('주간 기록 없음')

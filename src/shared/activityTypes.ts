@@ -10,5 +10,8 @@ export interface DailySummary {
 export interface WeeklyTopPlayer {
   npid: string
   online_name: string
+  /** Only matches both players' saves confirmed. */
   match_count: number
+  wins: number
+  losses: number
 }
