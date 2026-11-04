@@ -372,6 +372,11 @@ profile card and the leaderboard's own-row mark find the record by `np_id` for
 the same reason; two players can share an online name. Rows written before
 login have a null username and belong to nobody.
 
+A comment — on the board or on a reservation — is also any admin's to delete;
+`isAuthorOrAdmin` in `auth/types.ts` offers the button, and the backend decides.
+A deleted board comment with replies still standing comes back as `deleted`
+with an empty body and is shown as "삭제된 댓글입니다.".
+
 ## Account moderation
 
 `/admin` looks an RPCN account up and bans it, through `POST /admin/users/lookup`

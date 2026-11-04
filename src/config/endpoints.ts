@@ -51,6 +51,7 @@ export const API = {
   posts: () => endpoint('community/posts'),
   post: (postId: number) => endpoint(`community/posts/${postId}`),
   postComments: (postId: number) => endpoint(`community/posts/${postId}/comments`),
+  postComment: (postId: number, commentId: number) => endpoint(`community/posts/${postId}/comments/${commentId}`),
   postThumb: (postId: number) => endpoint(`community/posts/${postId}/thumb`),
 
   reservations: () => endpoint('reservations'),

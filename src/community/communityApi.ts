@@ -56,5 +56,8 @@ export const deletePost = (postId: number): Promise<void> =>
 export const createComment = (postId: number, body: string, parentId?: number): Promise<CreatedComment> =>
   POST<CreatedComment>(API.postComments(postId).path, { body, ...(parentId != null && { parent_id: parentId }) })
 
+export const deleteComment = (postId: number, commentId: number): Promise<void> =>
+  DELETE(API.postComment(postId, commentId).path)
+
 export const thumbPost = (postId: number, direction: 'up' | 'down'): Promise<ThumbResult> =>
   POST<ThumbResult>(API.postThumb(postId).path, { direction })

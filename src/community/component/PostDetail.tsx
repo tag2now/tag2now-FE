@@ -5,11 +5,11 @@ import YouTubeVideo from './YouTubeVideo'
 import LinkifiedText from './LinkifiedText'
 import CreatePostForm from './CreatePostForm'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
-import { thumbPost, createComment, deletePost, updatePost, type PostInput } from '@/community/communityApi'
+import { thumbPost, createComment, deleteComment, deletePost, updatePost, type PostInput } from '@/community/communityApi'
 import PostTypeBadge from './PostTypeBadge'
 import CommentTree from './CommentTree'
 import type { LeaderboardEntry } from "@/shared/types";
-import { canManagePost, type PostDetail } from '@/community/types'
+import { canManagePost, type CommentOut, type PostDetail } from '@/community/types'
 import type { AuthUser } from '@/auth/types'
 import AuthorBadge from './AuthorBadge'
 import { ArrowLeft, FilePenLine, Send, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react'
@@ -65,6 +65,19 @@ export default function PostDetail({ post, user, onBack, onRefresh, requireUser,
   const handleReply = async (parentId: number, body: string) => {
     if (!requireUser('로그인하면 답글을 남길 수 있습니다.', () => handleReply(parentId, body))) return
     await createComment(post.id, body, parentId)
+    onRefresh()
+  }
+
+  const handleDeleteComment = async (comment: CommentOut) => {
+    const agreed = await confirm({
+      title: '댓글을 삭제할까요?',
+      body: comment.replies.length > 0
+        ? '삭제한 댓글은 되돌릴 수 없습니다. 답글은 남고, 이 자리에는 "삭제된 댓글입니다."가 표시됩니다.'
+        : '삭제한 댓글은 되돌릴 수 없습니다.',
+      confirmLabel: '삭제',
+    })
+    if (!agreed) return
+    await deleteComment(post.id, comment.id)
     onRefresh()
   }
 
@@ -148,11 +161,11 @@ export default function PostDetail({ post, user, onBack, onRefresh, requireUser,
       </div>
 
       <h3 className="comment-heading">
-        댓글 ({post.comments.length})
+        댓글 ({post.comments.filter((c) => !c.deleted).length})
       </h3>
 
       {post.comments.length > 0 && (
-        <CommentTree comments={post.comments} onReply={handleReply} leaderboardEntries={leaderboardEntries} />
+        <CommentTree comments={post.comments} user={user} onReply={handleReply} onDelete={handleDeleteComment} leaderboardEntries={leaderboardEntries} />
       )}
 
       <div className="comment-composer">

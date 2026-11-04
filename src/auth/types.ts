@@ -11,6 +11,11 @@ export type AuthUser = {
   admin: boolean
 }
 
+/** Whether `user` may delete what `author` wrote: its author, or any admin.
+ * Mirrors the backend's comment-deletion rules, which are the authority. */
+export const isAuthorOrAdmin = (author: string | null, user: AuthUser | null): boolean =>
+  user != null && (author === user.username || user.admin)
+
 export type LoginResponse = {
   access_token: string
   token_type: 'bearer'
