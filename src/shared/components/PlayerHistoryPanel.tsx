@@ -13,7 +13,7 @@ import {
 import { GET } from '@/shared/util/api'
 import useModalDialog from '@/shared/hooks/useModalDialog'
 import CharCell from '@/shared/components/CharCell'
-import ActiveHoursClock from '@/shared/components/ActiveHoursClock'
+import ActiveHoursTimeline from '@/shared/components/ActiveHoursTimeline'
 import PlayerSaveSection from '@/shared/components/PlayerSaveSection'
 import PlayerRecordsSection from '@/shared/components/PlayerRecordsSection'
 import PlayerOpponentsSection from '@/shared/components/PlayerOpponentsSection'
@@ -240,12 +240,10 @@ function HistoryView({ npid, days, loading, error, data, onOpen }: {
 
             <section className="history-section history-activity">
               <div className="history-section-heading">
-                <div><Clock3 size={17} aria-hidden="true" /><h3>주요 활동 시간</h3></div>
-                <span>KST · 24H</span>
+                <div><Clock3 size={17} aria-hidden="true" /><h3>주요 활동 시간대</h3></div>
+                <span>최근 {days}일 · 한국 시간</span>
               </div>
-              {data.active_hours.length > 0 ? (
-                <div className="history-clock"><ActiveHoursClock hours={data.active_hours} /></div>
-              ) : <p className="history-empty">활동 시간 데이터가 아직 없습니다.</p>}
+              <ActiveHoursTimeline hours={data.active_hours} />
             </section>
           </div>
         </div>

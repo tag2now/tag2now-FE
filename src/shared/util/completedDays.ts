@@ -2,11 +2,8 @@ import type { DailySummary } from '@/shared/activityTypes'
 
 /** The hour the backend's statistics day begins, in KST.
  *
- * Not `DAY_START_HOUR` from shared/dayBoundary: that one is where a *player's*
- * day begins (08:00), and the frontend picks it because it re-orders
- * hour-bucketed rows itself. These rows arrive already grouped by the
- * backend's own boundary, so this constant mirrors the server rather than
- * choosing anything. It exists to answer one question — which row is today's.
+ * Daily rows arrive already grouped by the backend. This boundary identifies
+ * today's row independently of the stats tab's hourly chart.
  */
 const STAT_DAY_START_HOUR = 6
 

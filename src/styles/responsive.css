@@ -154,18 +154,11 @@
   .history-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .history-content-grid { grid-template-columns: 1fr; }
   .history-section { min-height: 0; }
-  .history-clock { min-height: 220px; flex: none; }
-  .activity-insight { grid-template-columns: minmax(148px,.85fr) minmax(138px,1fr); }
   .history-empty { min-height: 100px; }
 }/* The narrowest phones drop the button's label for its icon. */
 @media (max-width: 400px) {
   .profile-history { width: 30px; justify-content: center; padding: 0; }
   .profile-history-label { display: none; }
-}@media (max-width: 420px) {
-  .history-clock { min-height: 330px; }
-  .activity-insight { grid-template-columns: 1fr; gap: 2px; }
-  .activity-ring-wrap { width: 166px; }
-  .activity-summary { padding: 12px 4px 2px; border-top: 1px solid var(--color-border); border-left: 0; }
 }@media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

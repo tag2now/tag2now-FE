@@ -424,6 +424,10 @@ included --- has three ARIA tabs: 플레이 기록 (the default), 전적 (see
 read only when its tab is opened, and fails on its own: a 404 is "no save", any
 other error stays inside the tab. The backend caches it for ten minutes.
 
+The play history tab shows activity in KST from noon to the following noon.
+Adjacent active hours share one band across midnight. Inactive hours separate
+bands, and the total counts distinct active hour slots in the selected period.
+
 The character table is `shared/components/SaveCharTable`, the same one the
 admin page draws; its rules live in `shared/styles/saves.css`, not `admin/admin.css`.
 

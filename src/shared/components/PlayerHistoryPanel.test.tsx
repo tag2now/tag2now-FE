@@ -39,12 +39,22 @@ describe('PlayerHistoryPanel tabs', () => {
 
     expect(tab('플레이 기록')).toHaveAttribute('aria-selected', 'true')
     expect(await screen.findByText('12회')).toBeInTheDocument()
+    expect(screen.getByText('최근 30일 · 한국 시간')).toBeVisible()
+    expect(screen.getByText('활동 시간 데이터가 아직 없습니다.')).toBeVisible()
     expect(fetchPlayerSave).not.toHaveBeenCalled()
 
     fireEvent.click(tab('캐릭터별 계급'))
     expect(await screen.findByText('3판 2승 1패')).toBeInTheDocument()
     expect(fetchPlayerSave).toHaveBeenCalledWith('p1')
     expect(screen.queryByRole('group', { name: '조회 기간' })).not.toBeInTheDocument()
+  })
+
+  it('updates the activity period when the history filter changes', async () => {
+    render(<PlayerHistoryPanel npid="p1" onClose={() => {}} />)
+    await screen.findByText('최근 30일 · 한국 시간')
+
+    fireEvent.click(screen.getByRole('button', { name: '7일' }))
+    expect(await screen.findByText('최근 7일 · 한국 시간')).toBeVisible()
   })
 
   it('moves between the tabs with the arrow keys, as one stop in the tab order', async () => {

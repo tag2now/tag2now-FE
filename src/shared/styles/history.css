@@ -1,5 +1,5 @@
 /* The player history dialog: its header, metrics, partner list and the
-   activity ring/timeline. Opened from any table that shows a player name. */
+   activity timeline. Opened from any table that shows a player name. */
 
 .history-backdrop { padding: 16px; }
 /* Keep the frame at the play history's usual height across tabs and loading
@@ -68,32 +68,24 @@
 .history-partner-list strong { color: var(--color-txt); font-size: var(--text-13); font-variant-numeric: tabular-nums; text-align: right; }
 .history-partner-list strong small { margin-left: 2px; color: var(--color-txt-dim); font-size: var(--text-4xs); }
 .history-activity { display: flex; flex-direction: column; }
-.history-clock { min-height: 0; flex: 1; }
-.activity-insight { display: grid; height: 100%; grid-template-columns: minmax(150px,.82fr) minmax(140px,1fr); align-items: center; gap: 8px; }
-.activity-ring-wrap { position: relative; width: min(100%,178px); aspect-ratio: 1; margin-inline: auto; }
-.activity-ring-wrap svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.activity-ring-inner { fill: color-mix(in srgb, var(--color-shade) 10%, transparent); stroke: color-mix(in srgb, var(--color-surface-tint) 5.5%, transparent); stroke-width: 1; }
-.activity-segment { fill: color-mix(in srgb, var(--color-surface-tint) 4.5%, transparent); stroke: transparent; transition: fill 150ms ease; }
-.activity-segment.is-active { fill: var(--color-primary); }
-.activity-segment.is-active:hover { fill: var(--color-primary-bright); }
-.activity-hour-label { fill: var(--color-txt-faint); font-family: var(--font-sans); font-size: var(--text-4xs); font-weight: var(--weight-strong); }
-.activity-ring-center { position: absolute; inset: 50% auto auto 50%; display: flex; width: 82px; transform: translate(-50%,-50%); align-items: center; flex-direction: column; text-align: center; pointer-events: none; }
-.activity-ring-center small { color: var(--color-txt-dim); font-size: var(--text-5xs); font-weight: var(--weight-row); letter-spacing: .04em; }
-.activity-ring-center strong { margin-top: 2px; color: var(--color-txt); font-size: var(--text-2xs); font-weight: var(--weight-display); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.activity-ring-center span { margin-top: 2px; color: var(--color-txt-faint); font-size: var(--text-4xs); }
-.activity-summary { display: flex; min-width: 0; flex-direction: column; gap: 12px; padding: 12px 8px 8px 12px; border-left: 1px solid var(--color-border); }
-.activity-summary-copy { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
-.activity-summary-copy > span { display: flex; align-items: center; gap: 4px; color: var(--color-txt-dim); font-size: var(--text-5xs); font-weight: var(--weight-display); letter-spacing: .08em; }
-.activity-summary-copy i { width: 6px; height: 6px; border-radius: 6px; background: var(--color-primary); }
-.activity-summary-copy strong { color: var(--color-txt); font-size: var(--text-md); font-weight: var(--weight-display); line-height: 1; font-variant-numeric: tabular-nums; }
-.activity-summary-copy strong small { color: var(--color-txt-dim); font-size: var(--text-5xs); font-weight: var(--weight-label); }
-.activity-timeline { min-width: 0; }
-.activity-timeline-cells { display: grid; grid-template-columns: repeat(24,minmax(2px,1fr)); gap: 2px; height: 42px; align-items: end; padding: 6px 6px; border: 1px solid var(--color-border); border-radius: 6px; background: color-mix(in srgb, var(--color-shade) 10%, transparent); }
-.activity-timeline-cells span { height: 8px; border-radius: 6px; background: color-mix(in srgb, var(--color-surface-tint) 6%, transparent); }
-.activity-timeline-cells span.is-active { height: 26px; background: var(--color-primary); }
-/* The strip runs from the day boundary, not from 00:00, so midnight falls
-   inside it rather than at an edge --- without a mark the cells after it
-   read as the same day. */
+.history-activity .history-section-heading > span { letter-spacing: normal; }
+.activity-timeline { display: grid; flex: 1; align-content: center; gap: 12px; padding: 12px 0; }
+.activity-timeline-chart { min-width: 0; margin-inline: 2px; }
+.activity-timeline-icons { display: grid; grid-template-columns: 1fr 1fr; justify-items: center; margin-bottom: 14px; }
+.activity-timeline-icons svg:first-child { color: var(--color-medal-gold); }
+.activity-timeline-icons svg:last-child { color: var(--color-chat-name-7); }
+.activity-timeline-track { position: relative; height: 12px; border-radius: 999px; background: color-mix(in srgb, var(--color-surface-tint) 14%, transparent); }
+.activity-timeline-range { position: absolute; inset-block: 0; border-radius: inherit; background: var(--color-primary); }
+.activity-timeline-tick, .activity-timeline-midnight { position: absolute; width: 1px; transform: translateX(-50%); }
+.activity-timeline-tick { top: 100%; height: 5px; background: var(--color-txt-faint); }
+.activity-timeline-midnight { inset-block: -5px; background: var(--color-txt); }
+.activity-timeline-labels { position: relative; margin-top: 8px; color: var(--color-txt-dim); font-size: var(--text-2xs); line-height: 1.4; }
+.activity-timeline-labels span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.activity-timeline-labels [data-edge="start"] { transform: none; }
+.activity-timeline-labels [data-edge="end"] { transform: translateX(-100%); }
+.activity-timeline-endpoint { color: var(--color-txt); font-weight: var(--weight-strong); }
+.activity-timeline-caption { display: flex; align-items: center; gap: 6px; color: var(--color-txt-dim); font-size: var(--text-2xs); }
+.activity-timeline-caption::before { width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary); content: ''; }
 .activity-timeline-cells span.starts-next-day { position: relative; }
 .activity-timeline-cells span.starts-next-day::before { content: ''; position: absolute; left: -2px; top: -6px; bottom: -6px; width: 1px; background: var(--color-border); }
 .activity-timeline-labels { display: flex; justify-content: space-between; margin-top: 4px; color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-row); font-variant-numeric: tabular-nums; }
