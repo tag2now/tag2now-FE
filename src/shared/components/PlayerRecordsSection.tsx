@@ -8,7 +8,7 @@ import { fetchPlayerSave } from '@/shared/playerSaveApi'
 import type { PlayerSave } from '@/shared/saveChars'
 
 /** A player's rank matches on their profile, newest first, each with the
- * opponent and both sides' characters. The totals above them are the save's
+ * opponent and both players' characters. The totals above them are the save's
  * lifetime record, so they count matches from before tag2now recorded any. */
 export default function PlayerRecordsSection({ npid, onOpen }: { npid: string; onOpen: (npid: string) => void }) {
   const fetchPage = useCallback((before: number | null) => fetchMatchRecords({ npid }, before), [npid])

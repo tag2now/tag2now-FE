@@ -249,8 +249,8 @@ export const CURRENT_RANK_HOLDERS = {
 }
 
 type MockRecordChar = { name: string, rank: { name: string, tier: string } | null }
-type MockRecordSide = { npid: string, online_name: string | null, result: 'win' | 'loss', chars: MockRecordChar[] | null }
-export type MockMatchRecord = { id: number, played_at: string, p1: MockRecordSide, p2: MockRecordSide | null }
+type MockRecordPlayer = { npid: string, online_name: string | null, result: 'win' | 'loss', chars: MockRecordChar[] | null }
+export type MockMatchRecord = { id: number, played_at: string, p1: MockRecordPlayer, p2: MockRecordPlayer | null }
 
 /** Smaller than the backend's, so the fixture spans two pages and 더 보기 has something to load. */
 const RECORD_PAGE_SIZE = 6
@@ -262,7 +262,7 @@ function recordPage(records: MockMatchRecord[], url: URL) {
   return { matches, next_before: rest.length > RECORD_PAGE_SIZE ? matches[matches.length - 1].id : null }
 }
 
-const sides = (record: MockMatchRecord) => [record.p1, record.p2].filter((side): side is MockRecordSide => side != null)
+const players = (record: MockMatchRecord) => [record.p1, record.p2].filter((player): player is MockRecordPlayer => player != null)
 
 /** A save with two characters played and one slot never used. */
 export const PLAYER_SAVE = {
@@ -592,8 +592,8 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const npid = url.searchParams.get('npid')
     const q = (url.searchParams.get('q') ?? '').toLowerCase()
     const found = records
-      .filter((record) => !npid || sides(record).some((side) => side.npid === npid))
-      .filter((record) => !q || sides(record).some((side) => `${side.npid} ${side.online_name ?? ''}`.toLowerCase().includes(q)))
+      .filter((record) => !npid || players(record).some((player) => player.npid === npid))
+      .filter((record) => !q || players(record).some((player) => `${player.npid} ${player.online_name ?? ''}`.toLowerCase().includes(q)))
     return asJson(route, recordPage(found, url))
   })
 

@@ -5,7 +5,7 @@ import { fetchMatchRecords } from '@/shared/matchRecordsApi'
 import { fetchPlayerSave } from '@/shared/playerSaveApi'
 import { GET } from '@/shared/util/api'
 import { AppError } from '@/shared/util/AppError'
-import type { MatchRecord, MatchRecordPage, RecordSide } from '@/shared/matchRecords'
+import type { MatchRecord, MatchRecordPage, RecordPlayer } from '@/shared/matchRecords'
 
 vi.mock('@/shared/matchRecordsApi', () => ({ fetchMatchRecords: vi.fn() }))
 vi.mock('@/shared/playerSaveApi', () => ({ fetchPlayerSave: vi.fn() }))
@@ -14,11 +14,11 @@ vi.mock('@/shared/util/api', async () => {
   return { ...actual, GET: vi.fn() }
 })
 
-const side = (npid: string, online_name: string | null, result: RecordSide['result']): RecordSide =>
+const player = (npid: string, online_name: string | null, result: RecordPlayer['result']): RecordPlayer =>
   ({ npid, online_name, result, chars: [{ name: 'Jin', rank: { name: 'Yaksa', tier: '파랑단' } }] })
 
 /** 1P, then 2P. */
-const match = (id: number, p1: RecordSide, p2: RecordSide | null): MatchRecord =>
+const match = (id: number, p1: RecordPlayer, p2: RecordPlayer | null): MatchRecord =>
   ({ id, played_at: new Date().toISOString(), p1, p2 })
 
 const page = (matches: MatchRecord[], next_before: number | null = null): MatchRecordPage => ({ matches, next_before })
@@ -28,8 +28,8 @@ const search = () => screen.getByLabelText('플레이어 검색')
 
 beforeEach(() => {
   vi.mocked(fetchMatchRecords).mockReset().mockResolvedValue(page([
-    match(2, side('alice', 'Alice', 'win'), side('bob', 'Bob', 'loss')),
-    match(1, side('carol', null, 'loss'), side('alice', 'Alice', 'win')),
+    match(2, player('alice', 'Alice', 'win'), player('bob', 'Bob', 'loss')),
+    match(1, player('carol', null, 'loss'), player('alice', 'Alice', 'win')),
   ]))
   vi.mocked(fetchPlayerSave).mockReset().mockRejectedValue(new AppError('none', 404))
   vi.mocked(GET).mockReset().mockResolvedValue({
@@ -71,8 +71,8 @@ describe('Records', () => {
 
   it('loads the next page under the first', async () => {
     vi.mocked(fetchMatchRecords)
-      .mockResolvedValueOnce(page([match(9, side('alice', 'Alice', 'win'), side('bob', 'Bob', 'loss'))], 9))
-      .mockResolvedValueOnce(page([match(3, side('bob', 'Bob', 'win'), side('alice', 'Alice', 'loss'))]))
+      .mockResolvedValueOnce(page([match(9, player('alice', 'Alice', 'win'), player('bob', 'Bob', 'loss'))], 9))
+      .mockResolvedValueOnce(page([match(3, player('bob', 'Bob', 'win'), player('alice', 'Alice', 'loss'))]))
     render(<Records />)
 
     fireEvent.click(await screen.findByRole('button', { name: '더 보기' }))

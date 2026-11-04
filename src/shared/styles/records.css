@@ -10,11 +10,11 @@
 
 /* Two halves facing each other: the name at the outer edge, the characters by the VS. */
 .record-body { display: grid; min-height: 64px; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: stretch; }
-.record-side { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; }
-.record-side.is-mirrored { flex-direction: row-reverse; text-align: right; }
-.record-side.is-win { background: linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 85%); }
-.record-side.is-mirrored.is-win { background: linear-gradient(270deg, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 85%); }
-.record-side.is-unknown { justify-content: center; color: var(--color-txt-faint); font-size: var(--text-2xs); font-weight: var(--weight-label); }
+.record-player { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; }
+.record-player.is-mirrored { flex-direction: row-reverse; text-align: right; }
+.record-player.is-win { background: linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 85%); }
+.record-player.is-mirrored.is-win { background: linear-gradient(270deg, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 85%); }
+.record-player.is-unknown { justify-content: center; color: var(--color-txt-faint); font-size: var(--text-2xs); font-weight: var(--weight-label); }
 
 .record-outcome { width: 34px; font-size: var(--text-2xs); font-style: normal; font-weight: var(--weight-max); letter-spacing: .1em; }
 .record-outcome:first-child { text-align: right; }
@@ -30,7 +30,7 @@ button.record-name:focus-visible { outline: 2px solid var(--color-primary); outl
 .record-chars { display: flex; flex: 0 0 auto; gap: 12px; }
 .record-chars.is-unknown { color: var(--color-txt-faint); font-size: var(--text-4xs); font-weight: var(--weight-label); white-space: nowrap; }
 .record-char { display: flex; align-items: center; gap: 4px; }
-.record-side:not(.is-mirrored) .record-char { flex-direction: row-reverse; }
+.record-player:not(.is-mirrored) .record-char { flex-direction: row-reverse; }
 .record-portrait { height: 48px; border-radius: 4px; }
 .record-rank { width: var(--rank-art-w); height: var(--rank-art-h); flex: 0 0 auto; object-fit: cover; }
 .record-char-name { color: var(--color-txt-dim); font-size: var(--text-4xs); }
@@ -47,11 +47,11 @@ button.record-name:focus-visible { outline: 2px solid var(--color-primary); outl
   .record-head { padding: 3px 8px; font-size: var(--text-3xs); }
   .record-vs { gap: 3px; padding: 0; }
   .record-outcome { width: 26px; font-size: var(--text-4xs); letter-spacing: .04em; }
-  .record-side, .record-side.is-mirrored { flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; padding: 6px 8px; }
-  .record-side.is-mirrored { align-items: flex-end; }
+  .record-player, .record-player.is-mirrored { flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; padding: 6px 8px; }
+  .record-player.is-mirrored { align-items: flex-end; }
   .record-name { font-size: var(--text-xs); }
   .record-chars { gap: 4px; }
-  .record-char, .record-side:not(.is-mirrored) .record-char { flex-direction: column-reverse; gap: 2px; }
+  .record-char, .record-player:not(.is-mirrored) .record-char { flex-direction: column-reverse; gap: 2px; }
   .record-portrait { height: 34px; }
   .record-rank { width: auto; max-width: 44px; height: auto; max-height: 20px; object-fit: contain; }
   .record-vs { font-size: var(--text-xs); }

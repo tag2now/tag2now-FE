@@ -4,20 +4,20 @@ import PlayerRecordsSection from '@/shared/components/PlayerRecordsSection'
 import { fetchMatchRecords } from '@/shared/matchRecordsApi'
 import { fetchPlayerSave } from '@/shared/playerSaveApi'
 import { AppError } from '@/shared/util/AppError'
-import type { MatchRecord, MatchRecordPage, RecordSide } from '@/shared/matchRecords'
+import type { MatchRecord, MatchRecordPage, RecordPlayer } from '@/shared/matchRecords'
 import type { PlayerSave } from '@/shared/saveChars'
 
 vi.mock('@/shared/matchRecordsApi', () => ({ fetchMatchRecords: vi.fn() }))
 vi.mock('@/shared/playerSaveApi', () => ({ fetchPlayerSave: vi.fn() }))
 
 const ranked = (name: string, rank: string) => ({ name, rank: { name: rank, tier: '파랑단' } })
-const ALICE: RecordSide = { npid: 'alice', online_name: 'Alice', result: 'win', chars: [ranked('Jin', 'Yaksa'), ranked('Devil Jin', 'Raijin')] }
-const BOB: RecordSide = { npid: 'bob', online_name: 'Bob', result: 'loss', chars: [ranked('Kazuya', 'Vanquisher'), ranked('Heihachi', 'Destroyer')] }
-const lost = (side: RecordSide): RecordSide => ({ ...side, result: 'loss' })
-const won = (side: RecordSide): RecordSide => ({ ...side, result: 'win' })
+const ALICE: RecordPlayer = { npid: 'alice', online_name: 'Alice', result: 'win', chars: [ranked('Jin', 'Yaksa'), ranked('Devil Jin', 'Raijin')] }
+const BOB: RecordPlayer = { npid: 'bob', online_name: 'Bob', result: 'loss', chars: [ranked('Kazuya', 'Vanquisher'), ranked('Heihachi', 'Destroyer')] }
+const lost = (player: RecordPlayer): RecordPlayer => ({ ...player, result: 'loss' })
+const won = (player: RecordPlayer): RecordPlayer => ({ ...player, result: 'win' })
 
 /** 1P, then 2P. */
-const match = (id: number, p1: RecordSide, p2: RecordSide | null): MatchRecord =>
+const match = (id: number, p1: RecordPlayer, p2: RecordPlayer | null): MatchRecord =>
   ({ id, played_at: new Date(Date.now() - 5 * 60_000).toISOString(), p1, p2 })
 
 const page = (matches: MatchRecord[], next_before: number | null = null): MatchRecordPage => ({ matches, next_before })
@@ -33,7 +33,7 @@ beforeEach(() => {
 })
 
 describe('PlayerRecordsSection', () => {
-  it("shows the save's lifetime record and each match as the game seated it, the result beside the VS", async () => {
+  it("shows the save's lifetime record and each match by side, the result beside the VS", async () => {
     vi.mocked(fetchMatchRecords).mockResolvedValue(page([match(2, ALICE, BOB), match(1, lost(BOB), won(ALICE))]))
     render(<PlayerRecordsSection npid="alice" onOpen={() => {}} />)
 
@@ -57,7 +57,7 @@ describe('PlayerRecordsSection', () => {
   })
 
   it('shows portraits alone for a match recorded before ranks were kept', async () => {
-    const unranked: RecordSide = { ...BOB, chars: [{ name: 'Kazuya', rank: null }, { name: 'Heihachi', rank: null }] }
+    const unranked: RecordPlayer = { ...BOB, chars: [{ name: 'Kazuya', rank: null }, { name: 'Heihachi', rank: null }] }
     vi.mocked(fetchMatchRecords).mockResolvedValue(page([match(1, ALICE, unranked)]))
     render(<PlayerRecordsSection npid="alice" onOpen={() => {}} />)
 
@@ -74,7 +74,7 @@ describe('PlayerRecordsSection', () => {
     expect(within(rows()[1]).getByText('상대 미확인')).toBeInTheDocument()
   })
 
-  it("opens the opponent, never the player already on screen, whichever seat they had", async () => {
+  it("opens the opponent, never the player already on screen, whichever side they were on", async () => {
     const onOpen = vi.fn()
     vi.mocked(fetchMatchRecords).mockResolvedValue(page([match(2, ALICE, BOB), match(1, lost(BOB), won(ALICE))]))
     render(<PlayerRecordsSection npid="alice" onOpen={onOpen} />)
