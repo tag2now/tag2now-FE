@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { setReading } from '@/chat/chatStream'
 import useChatStream from '@/chat/useChatStream'
 import { ChatLauncher, ChatPanel } from '@/chat/component'
 import useMediaQuery from '@/shared/hooks/useMediaQuery'
+import PlayerHistoryPanel from '@/shared/components/PlayerHistoryPanel'
 import type { LeaderboardEntry } from '@/shared/types'
 
 /** Wide enough for the chat to stand as a third column beside the main one.
@@ -27,6 +29,7 @@ export default function Chat({ leaderboardEntries }: { leaderboardEntries?: Lead
   const [open, setOpen] = useState(false)
   const launcherRef = useRef<HTMLButtonElement>(null)
   const closedByReader = useRef(false)
+  const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
 
   useEffect(() => {
     setReading(docked || open)
@@ -41,7 +44,23 @@ export default function Chat({ leaderboardEntries }: { leaderboardEntries?: Lead
     setOpen(false)
   }
 
-  if (docked) return <ChatPanel chat={chat} leaderboardEntries={leaderboardEntries} />
-  if (open) return <ChatPanel chat={chat} leaderboardEntries={leaderboardEntries} onClose={close} />
-  return <ChatLauncher ref={launcherRef} unread={chat.unread} onOpen={() => setOpen(true)} />
+  // Beside the panel, not in it: React bubbles a portal's events through its
+  // owner, and the floating panel closes on any Escape that reaches it.
+  const playerPanel = selectedNpid && createPortal(
+    <PlayerHistoryPanel
+      npid={selectedNpid}
+      leaderboardEntry={leaderboardEntries?.find((entry) => entry.np_id === selectedNpid)}
+      leaderboardEntries={leaderboardEntries}
+      onClose={() => setSelectedNpid(null)}
+    />,
+    document.body,
+  )
+
+  if (!docked && !open) return <ChatLauncher ref={launcherRef} unread={chat.unread} onOpen={() => setOpen(true)} />
+  return (
+    <>
+      <ChatPanel chat={chat} leaderboardEntries={leaderboardEntries} onClose={docked ? undefined : close} onSelectPlayer={setSelectedNpid} />
+      {playerPanel}
+    </>
+  )
 }

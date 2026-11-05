@@ -14,6 +14,8 @@ type Props = {
   /** Authors are RPCN ids, which the leaderboard calls np_id. */
   leaderboardEntries?: LeaderboardEntry[]
   onDelete: (id: number) => void
+  /** Opens the author's player panel, by RPCN id. */
+  onSelect: (npid: string) => void
 }
 
 /** How far above the bottom still counts as reading the newest line, in px. */
@@ -25,7 +27,7 @@ const TOP_RANKS = 10
 /** Today's messages, oldest first, following new ones only while the reader
  * is at the bottom: someone scrolled up to read is not yanked back down by
  * every arrival. Their own message is the exception — they just sent it. */
-export default function MessageList({ messages, loading, user, leaderboardEntries, onDelete }: Props) {
+export default function MessageList({ messages, loading, user, leaderboardEntries, onDelete, onSelect }: Props) {
   const logRef = useRef<HTMLDivElement>(null)
   const atBottom = useRef(true)
   const isMine = (message?: ChatMessage) => !!user && message?.author_username === user.username
@@ -61,9 +63,13 @@ export default function MessageList({ messages, loading, user, leaderboardEntrie
                   <span className="sr-only">관리자</span>
                 </span>
               )}
-              <strong className={`chat-name-${nameTone(message.author_username)}`}>
+              <button
+                type="button"
+                className={`player-btn chat-name chat-name-${nameTone(message.author_username)}`}
+                onClick={() => onSelect(message.author_username)}
+              >
                 {message.author_online_name}
-              </strong>
+              </button>
               {rankOf.has(message.author_username) && (
                 <span className={rankOf.get(message.author_username)! <= TOP_RANKS ? 'chat-rank is-top' : 'chat-rank'}>
                   #{rankOf.get(message.author_username)}

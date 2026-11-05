@@ -9,12 +9,19 @@ import FakeEventSource from '@/chat/fakeEventSource'
 import type { ChatMessage } from '@/chat/types'
 import { AppError } from '@/shared/util/AppError'
 
+const { mockedGet } = vi.hoisted(() => ({ mockedGet: vi.fn() }))
+
 vi.mock('@/chat/chatApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/chat/chatApi')>()),
   postMessage: vi.fn(),
   deleteMessage: vi.fn(),
 }))
 vi.mock('react-hot-toast', () => ({ default: { error: vi.fn() } }))
+// The player panel fetches on open; without this its request escapes the test.
+vi.mock('@/shared/util/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/util/api')>()),
+  GET: mockedGet,
+}))
 
 const line = (id: number, author = 'rival', body = `메시지 ${id}`): ChatMessage => ({
   id,
@@ -92,9 +99,26 @@ describe('the lobby chat', () => {
     server('snapshot', [line(1, 'rival'), line(2, 'other'), line(3, 'rival')])
     openChat()
 
-    const names = within(chatLog()).getAllByText(/-name$/)
-    expect(names[0].className).toMatch(/^chat-name-\d+$/)
-    expect(names[2].className).toBe(names[0].className)
+    const tones = within(chatLog()).getAllByText(/-name$/).map((name) => name.className.match(/chat-name-\d+/)?.[0])
+    expect(tones[0]).toBeDefined()
+    expect(tones[2]).toBe(tones[0])
+  })
+
+  it("opens an author's player panel from their name, and closing it leaves the chat open", async () => {
+    mockedGet.mockResolvedValue({ npid: 'rival', days_active: 3, times_seen: 12, first_seen: '2026-08-01', last_seen: '2026-09-01', room_type_counts: {}, active_hours: [] })
+    render(<Chat leaderboardEntries={[{ np_id: 'rival', rank: 7, online_name: 'rival-name' }]} />)
+    server('snapshot', [line(1, 'rival')])
+    openChat()
+
+    fireEvent.click(within(chatLog()).getByRole('button', { name: 'rival-name' }))
+    const panel = await screen.findByRole('dialog')
+    expect(mockedGet).toHaveBeenCalledWith('history/players/rival', expect.anything())
+    expect(within(panel).getByText('#7')).toBeInTheDocument()
+
+    // The floating chat closes on Escape too; this one must close the panel only.
+    fireEvent.keyDown(panel, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(chatLog()).toBeInTheDocument()
   })
 
   it('puts a sword before an admin name, and nothing before anyone else', () => {

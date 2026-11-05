@@ -116,3 +116,35 @@ test('opens from above the tab bar as a full-screen sheet on a phone', async ({ 
   await panel(page).getByRole('button', { name: '채팅 닫기' }).click()
   await expect(page.getByRole('tablist', { name: 'Main navigation' })).toBeVisible()
 })
+
+const playerPanel = (page: Page) =>
+  page.getByRole('dialog').filter({ has: page.getByRole('button', { name: '플레이어 기록 닫기' }) })
+
+test("an author's name opens their player panel beside the docked column", async ({ page, isMobile }) => {
+  test.skip(isMobile, 'A phone keeps the chat behind a launcher.')
+  await page.setViewportSize({ width: 1350, height: 800 })
+  await page.goto('/')
+
+  await log(page).getByRole('button', { name: 'rival-name' }).click()
+  await expect(playerPanel(page).getByRole('heading', { name: 'rival' })).toBeVisible()
+  await page.screenshot({ path: test.info().outputPath('chat-player-docked.png') })
+  await playerPanel(page).getByRole('button', { name: '플레이어 기록 닫기' }).click()
+  await expect(playerPanel(page)).toHaveCount(0)
+  await expect(panel(page)).toBeVisible()
+})
+
+test("on a phone the player panel opens over the chat sheet, and Escape closes only the panel", async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'The docked column has a test of its own.')
+  await page.goto('/')
+  await showChat(page)
+
+  await log(page).getByRole('button', { name: 'rival-name' }).click()
+  const dialog = (await playerPanel(page).boundingBox())!
+  // On top of the full-screen sheet, not behind it.
+  const onTop = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('[role="dialog"]'), [dialog.x + dialog.width / 2, dialog.y + 40])
+  expect(onTop).toBe(true)
+  await page.screenshot({ path: test.info().outputPath('chat-player-sheet.png') })
+  await page.keyboard.press('Escape')
+  await expect(playerPanel(page)).toHaveCount(0)
+  await expect(panel(page)).toBeVisible()
+})

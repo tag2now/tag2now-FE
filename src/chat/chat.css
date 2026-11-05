@@ -85,7 +85,8 @@
 .chat-line { padding: 4px 12px; }
 .chat-line:hover { background: color-mix(in srgb, var(--color-surface-tint) 3%, transparent); }
 .chat-line-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
-.chat-line-head strong {
+.chat-line-head .chat-name {
+  min-width: 0; padding: 0; border-radius: 3px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--color-txt-dim); font-size: var(--text-xs); font-weight: var(--weight-strong);
 }

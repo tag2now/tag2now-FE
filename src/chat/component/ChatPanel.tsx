@@ -15,6 +15,7 @@ type Props = {
   /** Given when the reader opened the panel from the launcher, and can close
    * it again. Without it the panel is the docked column, always open. */
   onClose?: () => void
+  onSelectPlayer: (npid: string) => void
 }
 
 /** The open chat, docked as a column or floating over the page. Never a
@@ -23,7 +24,7 @@ type Props = {
  * A floating panel takes focus when it opens and closes on Escape from
  * anywhere inside. The docked column does neither — it is on screen from the
  * moment the page loads, and taking focus then would pull it off the page. */
-export default function ChatPanel({ chat, leaderboardEntries, onClose }: Props) {
+export default function ChatPanel({ chat, leaderboardEntries, onClose, onSelectPlayer }: Props) {
   const { user, requireUser } = useAuth()
   const panelRef = useRef<HTMLElement>(null)
   const floating = onClose !== undefined
@@ -69,7 +70,7 @@ export default function ChatPanel({ chat, leaderboardEntries, onClose }: Props) 
       <p className="chat-status" aria-live="polite">
         {chat.connection === 'retrying' ? '연결이 끊겼습니다. 다시 연결하는 중…' : ''}
       </p>
-      <MessageList messages={chat.messages} loading={chat.connection === 'connecting'} user={user} leaderboardEntries={leaderboardEntries} onDelete={remove} />
+      <MessageList messages={chat.messages} loading={chat.connection === 'connecting'} user={user} leaderboardEntries={leaderboardEntries} onDelete={remove} onSelect={onSelectPlayer} />
       {/* Signed out, the composer would be a field with nothing behind it;
           the button that fixes that stands in its place, as on the
           reservation comments. */}
