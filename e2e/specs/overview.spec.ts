@@ -32,7 +32,7 @@ test.describe('Overview', () => {
   // by time and free seats, so the card was the weaker copy of it.
   test('heads the row with the registered total, not a second reservation count', async ({ page }) => {
     const registered = page.locator('.kpi-card', { hasText: '등록 플레이어' })
-    await expect(registered.locator('.kpi-card-value')).toHaveText('4')  // current-rank fixture
+    await expect(registered.locator('.kpi-card-value')).toHaveText('5')  // current-rank fixture
     await expect(registered).toHaveAttribute('href', '/leaderboard')
     await expect(page.locator('.kpi-grid')).not.toContainText('모집 중인 예약')
   })
@@ -47,7 +47,7 @@ test.describe('Overview', () => {
     const weekly = page.getByRole('region', { name: '주간 철찌' })
 
     // TagComboKing tops the weekly fixture and plays Lars/Alisa on the
-    // leaderboard; the portraits have to come from that join, not the weekly
+    // current-rank board; the portraits have to come from that join, not the weekly
     // endpoint, which knows only match counts.
     const top = weekly.locator('.rank-row').first()
     await expect(top.locator('img[alt="Lars"]')).toBeVisible()

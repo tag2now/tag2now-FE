@@ -19,14 +19,14 @@ test.describe('Leaderboard current ranks', () => {
   test('opens on current ranks', async ({ page }) => {
     await expect(page).toHaveURL(/\/leaderboard$/)
     await expect(page.getByRole('tab', { name: '현재 계급' })).toHaveAttribute('aria-selected', 'true')
-    await expect(page.getByText('Total records: 4')).toBeAttached()
+    await expect(page.getByText('Total records: 5')).toBeAttached()
   })
 
   // Names come from the score board; a save the score board does not know
   // shows its RPCN id. Equal standings share a place.
   test('lists players by current rank, sharing a place on a tie', async ({ page }) => {
     const rows = page.locator('.rank-row')
-    await expect(rows.locator('button.player-btn')).toHaveText(['KingOfIronFist', 'TTT2_Master', 'np_new', 'BearPunchPro'])
+    await expect(rows.locator('button.player-btn')).toHaveText(['KingOfIronFist', 'TTT2_Master', 'np_new', 'BearPunchPro', 'TagComboKing'])
     await expect(rows.nth(1).getByRole('cell').first()).toContainText('2')
     await expect(rows.nth(2).getByRole('cell').first()).toContainText('2')
     await expect(rows.nth(3).getByRole('cell').first()).toContainText('4')

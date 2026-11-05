@@ -22,13 +22,13 @@ import useCommunityFeed, { countRecent, isRecentCountCapped } from '@/community/
 export default function App() {
   const activeTab = useActiveTab()
   useAppUpdate()
-  const lb = useLeaderboard()
-  // The leaderboard tab opens on it and the home page summarises it. A save
-  // knows only the RPCN id, so the names come from the score board.
+  // The score board: the 최고 계급 view, and the online names a save lacks.
+  const best = useLeaderboard()
+  // Every place and rank shown outside 최고 계급 comes from this board.
   const currentRankRaw = useCurrentRankLeaderboard()
   const currentRankData = useMemo(
-    () => currentRankRaw.data && toLeaderboardData(currentRankRaw.data, lb.data?.entries),
-    [currentRankRaw.data, lb.data],
+    () => currentRankRaw.data && toLeaderboardData(currentRankRaw.data, best.data?.entries),
+    [currentRankRaw.data, best.data],
   )
   const rooms = useRooms()
   // One reservation poll for the whole app, shared with the panel. The rate
@@ -83,13 +83,13 @@ export default function App() {
             recentPostsCapped={recentPostsCapped}
           />
           <EventSidebarCard />
-          <AccountProfile leaderboardEntries={lb.data?.entries} roomUsers={roomUsers} />
+          <AccountProfile leaderboardEntries={currentRankData?.entries} roomUsers={roomUsers} />
         </>
       )}
       chat={(
         <>
           <EventFloatingLink />
-          <Chat leaderboardEntries={lb.data?.entries} />
+          <Chat leaderboardEntries={currentRankData?.entries} />
         </>
       )}
     >
@@ -99,7 +99,7 @@ export default function App() {
       <AppRoutes
         activeTab={activeTab}
         rooms={rooms}
-        bestLeaderboard={lb}
+        bestLeaderboard={best}
         currentRank={currentRankRaw}
         currentRankData={currentRankData}
         roomUsers={roomUsers}

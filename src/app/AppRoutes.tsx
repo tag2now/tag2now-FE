@@ -27,7 +27,9 @@ interface AppRoutesProps {
 export default function AppRoutes({
   activeTab, rooms, bestLeaderboard, currentRank, currentRankData, roomUsers,
 }: AppRoutesProps) {
-  const leaderboardEntries = bestLeaderboard.data?.entries
+  // Every place and rank below reads the current-rank board. The score board
+  // is left to 최고 계급 and to the names a save lacks.
+  const leaderboardEntries = currentRankData?.entries
   // Admin and the event have no navigation tab; their panels supply their own accessible name.
   const hasTab = activeTab !== 'admin' && activeTab !== 'event'
   const panelLabel = !hasTab ? undefined : isRoomTab(activeTab) ? `tab-${activeTab}` : `primary-tab-${activeTab}`
@@ -36,8 +38,7 @@ export default function AppRoutes({
     <Overview
       rooms={rooms.data}
       roomsLoading={rooms.loading}
-      leaderboardEntries={leaderboardEntries}
-      currentRankEntries={currentRankData?.entries}
+      currentRankEntries={leaderboardEntries}
       currentRankTotal={currentRankData?.total_records}
     />
   )
@@ -55,8 +56,8 @@ export default function AppRoutes({
       actions={(
         <CurrentRankHoldersButton
           roomUsers={roomUsers}
-          leaderboardEntries={leaderboardEntries}
-          currentRankEntries={currentRankData?.entries}
+          leaderboardEntries={bestLeaderboard.data?.entries}
+          currentRankEntries={leaderboardEntries}
         />
       )}
     />

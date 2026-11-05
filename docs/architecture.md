@@ -187,8 +187,8 @@ has not yet been migrated to a shared snapshot.
 **Two joins worth knowing:**
 
 - The weekly-top endpoint (`/records/weekly-top`) reports match counts with
-  wins and losses, not characters. Portraits are joined in from the leaderboard
-  by npid in `shared/weeklyTop.ts`, which both the stats tab and this card use;
+  wins and losses, not characters. Portraits are joined in from the current-rank
+  board by npid in `shared/weeklyTop.ts`, which both the stats tab and this card use;
   a player outside the leaderboard renders dashes rather than dropping columns.
 - `fetchRoomsAll` deliberately shuffles group order, so the "활성 방" hint reads
   the groups back in `GROUP_ORDER`. Without that the KPI reorders itself on
@@ -248,9 +248,14 @@ in from the score board, and a player missing there shows their id. Players who
 stand equal share a place (1, 2, 2, 4), so pass `rank` through. **최근 30일**
 asks the backend for `?days=30`, which filters and re-ranks there; the request
 is made only while the option is on, and one `Leaderboard` serves every board so
-a search survives a switch. The home page's
-registered count and TOP 5 summarise this board too; the weekly card still takes
-its portraits from the score board.
+a search survives a switch.
+
+**Every other place and rank comes from the current-rank board.** App and
+`app/AppRoutes` hand `currentRankData?.entries` to the home page, rooms, the
+profile card, reservations, the board, 통계, 전적 and the chat, so a `#N` reads
+the same on every tab. The score board (`best` in App) feeds only
+`/leaderboard/best` and the online names a save lacks --- which is why
+같은 계급 상대 찾기 still takes it beside the current-rank entries.
 
 ## 같은 계급 상대 찾기 (the match tab)
 

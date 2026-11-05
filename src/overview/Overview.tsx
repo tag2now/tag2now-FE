@@ -17,10 +17,8 @@ import { CardGridSkeleton, ListSkeleton } from '@/shared/components/Skeleton'
 interface OverviewProps {
   rooms: RoomsData | null
   roomsLoading: boolean
-  /** The score board; the weekly card takes its portraits and places from it. */
-  leaderboardEntries?: LeaderboardEntry[]
-  /** The current-rank board, which the leaderboard tab opens on and the
-   * registered count and TOP 5 summarise. */
+  /** The current-rank board: the registered count and TOP 5 summarise it, and
+   * the weekly card takes its portraits and places from it. */
   currentRankEntries?: LeaderboardEntry[]
   currentRankTotal?: number
 }
@@ -105,15 +103,13 @@ const leaderboardRows = (entries: LeaderboardEntry[]): RankRow[] =>
     }
   })
 
-export default function Overview({ rooms, roomsLoading, leaderboardEntries = [], currentRankEntries = [], currentRankTotal }: OverviewProps) {
+export default function Overview({ rooms, roomsLoading, currentRankEntries = [], currentRankTotal }: OverviewProps) {
   const { data, loading, error, refresh } = useOverview()
   const [selectedNpid, setSelectedNpid] = useState<string | null>(null)
 
-  // The panel wants the player's board row when there is one: the current-rank
-  // row the TOP 5 drew, else the score board's. A weekly-top player on neither
-  // simply opens without it, as it does on the stats tab.
+  // A weekly-top player off the board opens without a row, as on the stats tab.
   const selectedEntry = selectedNpid
-    ? currentRankEntries.find((e) => e.np_id === selectedNpid) ?? leaderboardEntries.find((e) => e.np_id === selectedNpid)
+    ? currentRankEntries.find((e) => e.np_id === selectedNpid)
     : undefined
 
   // "불러오는 중", not "로딩 중": the KPI hint below already says the first and
@@ -172,7 +168,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
           Weekly first, on the left, for the same reason. */}
       <div className="overview-grid is-rankings">
         <OverviewSection icon={Crown} title="주간 철찌" subtitle="최근 7일 매치 참여" linkLabel="통계" to={pathOf('stats')}>
-          <RankList rows={weeklyTopRows(data?.weeklyTop ?? [], leaderboardEntries)} label="주간 상위 5명" detailLabel="판수" emptyMsg="주간 기록 없음" onSelect={setSelectedNpid} />
+          <RankList rows={weeklyTopRows(data?.weeklyTop ?? [], currentRankEntries)} label="주간 상위 5명" detailLabel="판수" emptyMsg="주간 기록 없음" onSelect={setSelectedNpid} />
         </OverviewSection>
 
         <OverviewSection icon={Trophy} title="리더보드 TOP 5" linkLabel="리더보드" to={pathOf('leaderboard')}>
@@ -195,7 +191,7 @@ export default function Overview({ rooms, roomsLoading, leaderboardEntries = [],
         <PlayerHistoryPanel
           npid={selectedNpid}
           leaderboardEntry={selectedEntry}
-          leaderboardEntries={leaderboardEntries}
+          leaderboardEntries={currentRankEntries}
           onClose={() => setSelectedNpid(null)}
         />
       )}

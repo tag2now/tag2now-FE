@@ -109,7 +109,6 @@ function renderOverview(props: Partial<React.ComponentProps<typeof Overview>> = 
       <Overview
         rooms={ROOMS}
         roomsLoading={false}
-        leaderboardEntries={ENTRIES}
         currentRankEntries={ENTRIES}
         currentRankTotal={512}
         {...props}
