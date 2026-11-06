@@ -141,22 +141,22 @@ export default function PostDetail({ post, user, onBack, onRefresh, requireUser,
       <div className="post-detail-body"><LinkifiedText text={post.body} /></div>
       {post.youtube_video_id && <YouTubeVideo videoId={post.youtube_video_id} />}
 
-      <div className="flex gap-2 mt-2 mb-2">
+      <div className="post-thumbs">
         <button
           onClick={() => handleThumb('up')}
           disabled={thumbing}
           aria-label={`추천 ${post.thumbs_up}`}
-          className="btn-ghost flex items-center gap-1 disabled:opacity-50"
+          className="btn-primary post-thumb"
         >
-          <ThumbsUp size={14} aria-hidden="true" /> {post.thumbs_up}
+          <ThumbsUp size={18} aria-hidden="true" /> 추천 <span className="post-thumb-count">{post.thumbs_up}</span>
         </button>
         <button
           onClick={() => handleThumb('down')}
           disabled={thumbing}
           aria-label={`비추천 ${post.thumbs_down}`}
-          className="flex items-center gap-1 bg-transparent border border-border-light text-txt-dim px-3 py-1 rounded cursor-pointer text-sm font-bold hover:border-error hover:text-error disabled:opacity-50"
+          className="btn-ghost post-thumb is-down"
         >
-          <ThumbsDown size={14} aria-hidden="true" /> {post.thumbs_down}
+          <ThumbsDown size={18} aria-hidden="true" /> 비추천 <span className="post-thumb-count">{post.thumbs_down}</span>
         </button>
       </div>
 

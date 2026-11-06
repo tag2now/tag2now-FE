@@ -60,6 +60,12 @@
 .post-detail-time::before { content: '·'; margin-right: 8px; color: var(--color-txt-faint); }
 .post-detail-body { min-height: 150px; padding: 16px 4px; border-bottom: 1px solid var(--color-border-light); }
 .post-detail-body p { margin: 0; color: var(--color-txt); font-size: var(--text-13); line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Centred and sized like a call to action: a vote is final, so the buttons
+   should be found before the comments, not after scanning for a small icon. */
+.post-thumbs { display: flex; justify-content: center; gap: 12px; padding: 20px 0; border-bottom: 1px solid var(--color-border-light); }
+.post-thumb { min-height: 44px; min-width: 120px; padding-inline: 20px; border-radius: 999px; font-size: var(--text-sm); }
+.post-thumb-count { font-variant-numeric: tabular-nums; }
+.post-thumb.is-down:not(:disabled):hover { border-color: var(--color-error); color: var(--color-error); }
 .comment-heading { margin: 16px 0 8px; color: var(--color-txt-dim); font-size: var(--text-2xs); font-weight: var(--weight-strong); }
 .comment-node { padding: 8px 8px 8px 12px; border-left: 2px solid var(--color-border-light); border-bottom: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface-tint) 1.2%, transparent); }
 .comment-node > button { display: inline-flex; min-height: 28px; align-items: center; gap: 4px; }
