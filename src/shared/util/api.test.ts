@@ -47,9 +47,19 @@ describe('api request contracts', () => {
     respondWith(200, {})
     const controller = new AbortController()
 
-    await POST('auth/login', { username: 'p1', password: 'password' }, controller.signal)
+    await POST('auth/login', { username: 'p1', password: 'password' }, { signal: controller.signal })
 
     expect(vi.mocked(fetch).mock.calls[0][1]?.signal).toBe(controller.signal)
+  })
+
+  it('sends an idempotency key only when one is given', async () => {
+    respondWith(201, {})
+    await POST('community/posts', {}, { idempotencyKey: 'key-1' })
+    await POST('auth/login', {})
+
+    const [keyed, plain] = vi.mocked(fetch).mock.calls.map(([, options]) => new Headers(options?.headers))
+    expect(keyed.get('Idempotency-Key')).toBe('key-1')
+    expect(plain.has('Idempotency-Key')).toBe(false)
   })
 
   it('does not parse JSON for a DELETE 204 response', async () => {

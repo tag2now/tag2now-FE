@@ -320,6 +320,13 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     status: 401, contentType: 'application/json', body: JSON.stringify({ detail: '로그인이 필요합니다.' }),
   })
 
+  /** Creating a post, comment or reservation needs an Idempotency-Key, as on the
+   * backend, so every spec that creates one also proves the key is sent. */
+  const keyless = (route: Route) => !route.request().headers()['idempotency-key']
+  const missingKey = (route: Route) => route.fulfill({
+    status: 422, contentType: 'application/json', body: JSON.stringify({ detail: '요청 키를 입력해 주세요.' }),
+  })
+
   /* rpcn-narco's answers, as the backend relays them. Password `wrong` is the
    * refusal; account `ghost` does not exist. Any other account is found, online
    * and not banned, under the id it was asked for. */
@@ -506,6 +513,7 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
 
     if (method === 'POST' && !id) {
       if (!me) return signedOut(route)
+      if (keyless(route)) return missingKey(route)
       const body = route.request().postDataJSON()
       const created = reservationAt(Number(body.start_time.slice(0, 2)), {
         ...body,
@@ -663,6 +671,8 @@ export async function mockAllApis(page: Page, overrides?: MockOverrides) {
     const method = route.request().method()
 
     if (method !== 'GET' && !requester(route)) return signedOut(route)
+    const creating = method === 'POST' && /\/posts(\/\d+\/comments)?$/.test(new URL(url).pathname)
+    if (creating && keyless(route)) return missingKey(route)
 
     // Post actions: thumb, comments
     if (url.match(/\/posts\/\d+\/(thumb|comments)/)) {

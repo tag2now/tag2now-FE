@@ -9,6 +9,7 @@ import { PostList, PostDetail, CreatePostForm } from "@/community/component";
 import useAuth from "@/auth/useAuth";
 import { statusBody } from "@/shared/util/panelStatus";
 import { ListSkeleton } from "@/shared/components/Skeleton";
+import useIdempotencyKey from "@/shared/hooks/useIdempotencyKey";
 
 /** 'detail' is not in this union: which post is open is the URL's answer, not
  * a second copy of it here. 'create' is a genuinely local mode — there is
@@ -25,6 +26,7 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
   const navigate = useNavigate()
   const { postId } = useParams()
   const { user, requireUser } = useAuth()
+  const postKey = useIdempotencyKey()
   const [view, setView] = useState<View>('list')
   const [postType, setPostType] = useState('')
   const [characters, setCharacters] = useState<string[]>([])
@@ -83,7 +85,8 @@ export default function Community({ leaderboardEntries }: CommunityProps) {
   }
 
   const handleCreatePost = async (input: PostInput) => {
-    await createPost(input)
+    await createPost(input, postKey.keyFor(input))
+    postKey.reset()
     setView('list')
     reloadAll(1)
   }

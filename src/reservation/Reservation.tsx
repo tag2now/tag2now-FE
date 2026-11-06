@@ -12,6 +12,7 @@ import { statusBody } from '@/shared/util/panelStatus'
 import { ListSkeleton } from '@/shared/components/Skeleton'
 import ConfirmDialog from '@/shared/components/ConfirmDialog'
 import useConfirm from '@/shared/hooks/useConfirm'
+import useIdempotencyKey from '@/shared/hooks/useIdempotencyKey'
 import { CalendarPlus, Check, ChevronLeft, Filter, LogIn, Pencil, Plus, Trash2, UserMinus, X } from 'lucide-react'
 import ToggleGroup from '@/shared/components/ToggleGroup'
 import { reservationPath } from '@/config/routes'
@@ -46,6 +47,8 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
   const selectedId = selectedParam ? Number(selectedParam) : null
   const setSelectedId = (id: number) => navigate(reservationPath(id))
   const formApi = useReservationForm()
+  const reservationKey = useIdempotencyKey()
+  const [submitting, setSubmitting] = useState(false)
   const [notice, setNotice] = useState<{ text: string; tone: 'info' | 'error' }>({ text: '', tone: 'info' })
   const showNotice = (text: string) => setNotice({ text, tone: 'info' })
   // Stable across renders: CommentList takes this as a prop and reloads when its
@@ -135,17 +138,25 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
     event.preventDefault()
     const { editingId, conditions } = formApi
     const creating = editingId === null
-    if (!requireUser(`로그인하면 예약을 ${creating ? '만들' : '수정할'} 수 있습니다.`, () => handleSubmit(event))) return
+    if (submitting || !requireUser(`로그인하면 예약을 ${creating ? '만들' : '수정할'} 수 있습니다.`, () => handleSubmit(event))) return
 
     clearNotice()
+    setSubmitting(true)
     try {
-      if (creating) await createReservation(conditions())
-      else await updateReservation(editingId, conditions())
+      if (creating) {
+        const input = conditions()
+        await createReservation(input, reservationKey.keyFor(input))
+        reservationKey.reset()
+      } else await updateReservation(editingId, conditions())
       await refresh()
       closeForm()
       showNotice(creating ? '예약을 만들었습니다. 참여자를 기다려 보세요!' : '예약을 수정했습니다.')
       formApi.setForm(blankForm())
-    } catch (error) { showError(error, creating ? '예약 생성에 실패했습니다.' : '예약 수정에 실패했습니다.') }
+    } catch (error) {
+      showError(error, creating ? '예약 생성에 실패했습니다.' : '예약 수정에 실패했습니다.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   // Scoped to the list, never the whole panel. The same rule the tab strip
@@ -186,6 +197,7 @@ export default function Reservation({ leaderboardEntries = [] }: { leaderboardEn
             formApi={formApi}
             onClose={closeForm}
             onSubmit={handleSubmit}
+            submitting={submitting}
             notice={noticeBanner}
           />
         )}

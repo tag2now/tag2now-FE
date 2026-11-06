@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import PostDetail from './PostDetail'
 import type { CommentOut, PostDetail as Post } from '@/community/types'
 import { deleteComment, updatePost } from '@/community/communityApi'
@@ -145,6 +145,61 @@ describe('deleting a comment', () => {
     expect(screen.queryByRole('button', { name: 'alice님의 댓글 삭제' })).not.toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /답글/ })).toHaveLength(1)
     expect(screen.getByRole('heading', { name: '댓글 (0)' })).toBeInTheDocument()
+  })
+})
+
+describe('sending a comment', () => {
+  afterEach(async () => {
+    const { createComment } = await import('@/community/communityApi')
+    vi.mocked(createComment).mockReset()
+  })
+
+  it('sends a key with each comment, and a new one once the last was written', async () => {
+    const { createComment } = await import('@/community/communityApi')
+    vi.mocked(createComment).mockReset().mockResolvedValue({} as never)
+    setup()
+    const input = screen.getByLabelText('댓글 입력')
+
+    fireEvent.change(input, { target: { value: 'ㅋㅋ' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    await waitFor(() => expect(input).toHaveValue(''))
+    fireEvent.change(input, { target: { value: 'ㅋㅋ' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    await waitFor(() => expect(createComment).toHaveBeenCalledTimes(2))
+
+    const [first, second] = vi.mocked(createComment).mock.calls
+    expect(first[2]).toEqual(expect.any(String))
+    expect(second[2]).not.toBe(first[2])
+  })
+
+  it('ignores the Enter that ends a Hangul composition', async () => {
+    const { createComment } = await import('@/community/communityApi')
+    vi.mocked(createComment).mockReset()
+    setup()
+    const input = screen.getByLabelText('댓글 입력')
+    fireEvent.change(input, { target: { value: '좋은 그' } })
+
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true })
+    fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 })
+
+    expect(createComment).not.toHaveBeenCalled()
+  })
+
+  it('sends once when Enter is pressed again while the first is in flight', async () => {
+    const { createComment } = await import('@/community/communityApi')
+    let settle = () => {}
+    vi.mocked(createComment).mockReset().mockImplementation(() => new Promise((resolve) => { settle = () => resolve({} as never) }))
+    setup()
+    const input = screen.getByLabelText('댓글 입력')
+    fireEvent.change(input, { target: { value: '좋은 글' } })
+
+    fireEvent.keyDown(input, { key: 'Enter' })
+    await waitFor(() => expect(screen.getByRole('button', { name: '작성 중' })).toBeDisabled())
+    fireEvent.keyDown(input, { key: 'Enter' })
+    settle()
+
+    await waitFor(() => expect(screen.getByLabelText('댓글 입력')).toHaveValue(''))
+    expect(createComment).toHaveBeenCalledTimes(1)
   })
 })
 

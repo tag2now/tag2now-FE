@@ -113,6 +113,15 @@ Backend HTTP calls use [shared/util/api.ts](../src/shared/util/api.ts).
 request that carried a token ends the session and requests login with the server's
 reason. Paths come from [config/endpoints.ts](../src/config/endpoints.ts).
 
+Creating a post, a comment or a reservation sends an `Idempotency-Key`, which the
+backend requires: a retry with the same key gets the first answer instead of a
+second row ([BE spec](../../tag2now-BE/docs/spec/06-cross-cutting.md)). The key
+comes from [useIdempotencyKey](../src/shared/hooks/useIdempotencyKey.ts) --- the same
+key while the content is unchanged, a new one after success or an edit. Enter-to-send
+inputs use [isSubmitEnter](../src/shared/util/keyboard.ts), which ignores the Enter
+that ends a Hangul composition; that Enter would otherwise send the text without its
+last syllable, and then send it again.
+
 JSON helpers default to `unknown`; feature API calls declare their response type
 and reuse domain input types. Query records contain scalar strings, numbers or
 booleans; repeated keys use `URLSearchParams`. Write bodies contain JSON values,

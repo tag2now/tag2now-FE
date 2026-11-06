@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { LogIn, MessageSquare, Send, Trash2 } from 'lucide-react'
 import { formatTimeAgo } from '@/shared/util/timeFormat'
+import { isSubmitEnter } from '@/shared/util/keyboard'
 import { createComment, deleteComment, fetchComments, type ApiComment } from '@/reservation/reservationApi'
 import useAuth from '@/auth/useAuth'
 import { isAuthorOrAdmin } from '@/auth/types'
@@ -127,9 +128,7 @@ export default function CommentList({ reservationId, onError }: Props) {
           disabled={submitting}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key !== 'Enter' || event.shiftKey) return
-            // Some IMEs report composition-ending Enter with keyCode 229.
-            if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return
+            if (!isSubmitEnter(event)) return
             event.preventDefault()
             event.currentTarget.form?.requestSubmit()
           }}

@@ -36,11 +36,11 @@ type CreatedPost = Omit<PostSummary, 'comment_count'>
 type CreatedComment = Omit<CommentOut, 'replies'>
 type ThumbResult = Pick<PostSummary, 'thumbs_up' | 'thumbs_down'>
 
-export const createPost = ({ title, body, postType, characters, youtubeVideoId }: PostInput): Promise<CreatedPost> =>
+export const createPost = ({ title, body, postType, characters, youtubeVideoId }: PostInput, idempotencyKey: string): Promise<CreatedPost> =>
   POST<CreatedPost>(API.posts().path, {
     title, body, post_type: postType, characters,
     ...(youtubeVideoId && { youtube_video_id: youtubeVideoId }),
-  } satisfies PostWriteRequest)
+  } satisfies PostWriteRequest, { idempotencyKey })
 
 /** PATCH requires every field, so an omitted one is not "leave it alone" — it
  * is a 422. Both nullable fields are therefore always sent. */
@@ -53,8 +53,8 @@ export const updatePost = (postId: number, { title, body, postType, characters, 
 export const deletePost = (postId: number): Promise<void> =>
   DELETE(API.post(postId).path)
 
-export const createComment = (postId: number, body: string, parentId?: number): Promise<CreatedComment> =>
-  POST<CreatedComment>(API.postComments(postId).path, { body, ...(parentId != null && { parent_id: parentId }) })
+export const createComment = (postId: number, body: string, idempotencyKey: string, parentId?: number): Promise<CreatedComment> =>
+  POST<CreatedComment>(API.postComments(postId).path, { body, ...(parentId != null && { parent_id: parentId }) }, { idempotencyKey })
 
 export const deleteComment = (postId: number, commentId: number): Promise<void> =>
   DELETE(API.postComment(postId, commentId).path)

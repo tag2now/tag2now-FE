@@ -59,10 +59,17 @@ export const GET = async <T = unknown>(path: string, params?: QueryParams): Prom
     return await request<T>(`${path}?${queries}`, { method: 'GET'})
 }
 
-export const POST = async <T = unknown>(path: string, data: JsonValue, signal?: AbortSignal): Promise<T> => {
+export type PostOptions = {
+    signal?: AbortSignal
+    /** Creating routes require one; a retry with the same key is answered with
+     * the first result instead of creating a second row. */
+    idempotencyKey?: string
+}
+
+export const POST = async <T = unknown>(path: string, data: JsonValue, { signal, idempotencyKey }: PostOptions = {}): Promise<T> => {
     return await request<T>(path, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(idempotencyKey && { 'Idempotency-Key': idempotencyKey }) },
         body: JSON.stringify(data),
         signal,
     })

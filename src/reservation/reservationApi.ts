@@ -14,8 +14,8 @@ export type ApiComment = { id: number; reservation_id: number; author: string; a
 // client no longer names a date. A session that runs past midnight stays on one list.
 export const fetchReservations = (): Promise<ApiReservation[]> => GET<ApiReservation[]>(API.reservations().path)
 
-export const createReservation = (data: CreateReservationInput): Promise<ApiReservation> =>
-  POST<ApiReservation>(API.reservations().path, data)
+export const createReservation = (data: CreateReservationInput, idempotencyKey: string): Promise<ApiReservation> =>
+  POST<ApiReservation>(API.reservations().path, data, { idempotencyKey })
 
 export const joinReservation = (id: number): Promise<ApiReservation> =>
   POST<ApiReservation>(API.reservationParticipants(id).path, { ranks: [] })

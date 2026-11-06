@@ -350,7 +350,7 @@ describe('Reservation', () => {
       match_type: 'rank_match',
       capacity: 1,
       memo: '가볍게 한 판',
-    }))
+    }, expect.any(String)))
   })
 
   it('keeps the modal open and shows the reason when creation fails', async () => {
@@ -365,6 +365,32 @@ describe('Reservation', () => {
     expect(screen.getByRole('dialog', { name: '예약 추가' })).toContainElement(alert)
   })
 
+  it('retries a failed creation with the same key, so the server can replay it', async () => {
+    vi.mocked(createReservation).mockRejectedValueOnce(new Error('network'))
+    await openReservationModal()
+    selectRanks('Vanquisher')
+
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+    await screen.findByRole('alert')
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+    await waitFor(() => expect(createReservation).toHaveBeenCalledTimes(2))
+
+    const [first, retry] = vi.mocked(createReservation).mock.calls
+    expect(retry[1]).toBe(first[1])
+  })
+
+  it('holds the submit button while the creation is in flight', async () => {
+    vi.mocked(createReservation).mockImplementationOnce(() => new Promise(() => {}))
+    await openReservationModal()
+    selectRanks('Vanquisher')
+
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: '예약 등록' })).toBeDisabled())
+    fireEvent.click(screen.getByRole('button', { name: '예약 등록' }))
+    expect(createReservation).toHaveBeenCalledTimes(1)
+  })
+
   it('sends a player match without ranks and with the chosen capacity', async () => {
     await openReservationModal()
     fireEvent.click(matchTypeControl().getByRole('radio', { name: '플레이어 매치' }))
@@ -373,6 +399,7 @@ describe('Reservation', () => {
 
     await waitFor(() => expect(createReservation).toHaveBeenCalledWith(
       expect.objectContaining({ match_type: 'player_match', ranks: [], capacity: 3 }),
+      expect.any(String),
     ))
   })
 
@@ -387,6 +414,7 @@ describe('Reservation', () => {
 
     await waitFor(() => expect(createReservation).toHaveBeenCalledWith(
       expect.objectContaining({ match_type: 'any', ranks: ['Vanquisher'], capacity: 2 }),
+      expect.any(String),
     ))
   })
 
@@ -399,6 +427,7 @@ describe('Reservation', () => {
 
     await waitFor(() => expect(createReservation).toHaveBeenCalledWith(
       expect.objectContaining({ match_type: 'any', ranks: [] }),
+      expect.any(String),
     ))
   })
 

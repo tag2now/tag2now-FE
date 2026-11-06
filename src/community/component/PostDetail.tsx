@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import ConfirmDialog from '@/shared/components/ConfirmDialog'
 import useConfirm from '@/shared/hooks/useConfirm'
+import useIdempotencyKey from '@/shared/hooks/useIdempotencyKey'
+import { isSubmitEnter } from '@/shared/util/keyboard'
 import YouTubeVideo from './YouTubeVideo'
 import LinkifiedText from './LinkifiedText'
 import CreatePostForm from './CreatePostForm'
@@ -31,6 +33,7 @@ export default function PostDetail({ post, user, onBack, onRefresh, requireUser,
   const [submitting, setSubmitting] = useState(false)
   const [thumbing, setThumbing] = useState(false)
   const [editing, setEditing] = useState(false)
+  const commentKey = useIdempotencyKey()
   const { confirm, ...confirmDialog } = useConfirm()
 
   const handleUpdate = async (input: PostInput) => {
@@ -50,13 +53,19 @@ export default function PostDetail({ post, user, onBack, onRefresh, requireUser,
     }
   }
 
+  // One key per comment being written; a reply is told apart by its parent.
+  const sendComment = async (body: string, parentId?: number) => {
+    await createComment(post.id, body, commentKey.keyFor({ body, parentId }), parentId)
+    commentKey.reset()
+    onRefresh()
+  }
+
   const handleComment = async () => {
-    if (!commentText.trim() || !requireUser('로그인하면 댓글을 남길 수 있습니다.', handleComment)) return
+    if (submitting || !commentText.trim() || !requireUser('로그인하면 댓글을 남길 수 있습니다.', handleComment)) return
     setSubmitting(true)
     try {
-      await createComment(post.id, commentText.trim())
+      await sendComment(commentText.trim())
       setCommentText('')
-      onRefresh()
     } finally {
       setSubmitting(false)
     }
@@ -64,8 +73,7 @@ export default function PostDetail({ post, user, onBack, onRefresh, requireUser,
 
   const handleReply = async (parentId: number, body: string) => {
     if (!requireUser('로그인하면 답글을 남길 수 있습니다.', () => handleReply(parentId, body))) return
-    await createComment(post.id, body, parentId)
-    onRefresh()
+    await sendComment(body, parentId)
   }
 
   const handleDeleteComment = async (comment: CommentOut) => {
@@ -178,7 +186,7 @@ export default function PostDetail({ post, user, onBack, onRefresh, requireUser,
           placeholder="댓글을 입력하세요..."
           aria-label="댓글 입력"
           className="input-base flex-1 px-3 py-2 text-sm"
-          onKeyDown={(e) => e.key === 'Enter' && handleComment()}
+          onKeyDown={(e) => isSubmitEnter(e) && handleComment()}
         />
         <button
           onClick={handleComment}

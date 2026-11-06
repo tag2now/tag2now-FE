@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { formatTimeAgo } from "@/shared/util/timeFormat";
+import { isSubmitEnter } from '@/shared/util/keyboard'
 import AuthorBadge from './AuthorBadge'
 import LinkifiedText from './LinkifiedText'
 import type { LeaderboardEntry} from "@/shared/types";
@@ -27,7 +28,7 @@ function CommentNode({ comment, user, onReply, onDelete, depth, leaderboardEntri
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmitReply = async () => {
-    if (!replyText.trim()) return
+    if (submitting || !replyText.trim()) return
     setSubmitting(true)
     try {
       await onReply(comment.id, replyText.trim())
@@ -77,7 +78,7 @@ function CommentNode({ comment, user, onReply, onDelete, depth, leaderboardEntri
             placeholder="답글을 입력하세요..."
             aria-label="답글 입력"
             className="input-base flex-1 px-2 py-1 text-sm"
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmitReply()}
+            onKeyDown={(e) => isSubmitEnter(e) && handleSubmitReply()}
           />
           <button
             onClick={handleSubmitReply}

@@ -39,10 +39,12 @@ function ReservationFormDialog({ onClose, onSubmit, children }: {
   )
 }
 
-export default function ReservationForm({ formApi, onClose, onSubmit, notice }: {
+export default function ReservationForm({ formApi, onClose, onSubmit, submitting = false, notice }: {
   formApi: FormApi
   onClose: () => void
   onSubmit: (event: React.FormEvent) => void
+  /** While the request is in flight, so a second click cannot send it again. */
+  submitting?: boolean
   /** The submit failure, rendered inside the dialog. A form error belongs in
    * the form: the dialog stays open on rejection, so a toast behind it would
    * be reporting on something the user cannot see. */
@@ -164,7 +166,7 @@ export default function ReservationForm({ formApi, onClose, onSubmit, notice }: 
           <input className="input-base block w-full" maxLength={140} placeholder="예: 부담 없이 1시간 랭매" value={form.memo} onChange={(event) => setForm({ ...form, memo: event.target.value })} />
         </label>
         {notice && <div className="col-span-full">{notice}</div>}
-        <div className="reservation-modal-actions col-span-full"><button className="btn-ghost" type="button" onClick={onClose}>취소</button><button className="btn-primary" type="submit" disabled={incomplete}><CalendarPlus size={14} /> {isCreate ? '예약 등록' : '예약 수정'}</button></div>
+        <div className="reservation-modal-actions col-span-full"><button className="btn-ghost" type="button" onClick={onClose}>취소</button><button className="btn-primary" type="submit" disabled={incomplete || submitting}><CalendarPlus size={14} /> {isCreate ? '예약 등록' : '예약 수정'}</button></div>
       </ReservationFormDialog>
   )
 }
