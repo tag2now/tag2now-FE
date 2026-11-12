@@ -135,13 +135,21 @@ describe('tier filtering', () => {
     entry(3, 'mixed', { name: 'Jin', tier: '녹단' }, { name: 'Lili', tier: '파랑단' }),
   ]
 
-  it('keeps a player whose either character is in the band', () => {
+  it("matches the band against the main character only, not the partner's", () => {
     expect(filterEntries(rows, { ...noFilter, tier: '파랑단' }).map((e) => e.online_name))
-      .toEqual(['blue', 'mixed'])
+      .toEqual(['blue'])
+    expect(filterEntries(rows, { ...noFilter, tier: '녹단' }).map((e) => e.online_name))
+      .toEqual(['mixed'])
   })
 
   it('reports only the bands actually on the board, in promotion order', () => {
     expect(tiersPresent(rows)).toEqual(['녹단', '빨강단', '파랑단'])
+  })
+
+  // A band only a partner holds would be an option that always filters to nothing.
+  it("does not offer a band held only by a partner character", () => {
+    const partnerOnly = [entry(1, 'mixed', { name: 'Jin', tier: '녹단' }, { name: 'Lili', tier: '파랑단' })]
+    expect(tiersPresent(partnerOnly)).toEqual(['녹단'])
   })
 
   // A filtered view is a complete answer about the whole board, so collapsing
