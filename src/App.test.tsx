@@ -9,9 +9,10 @@ import type { ApiReservation } from '@/reservation/reservationApi'
 import type { PostListResponse, PostSummary } from '@/community/types'
 
 // Create stable mock functions accessible inside vi.mock factories
-const { mockedFetchLeaderboard, mockedFetchCurrentRankLeaderboard, mockedFetchRoomsAll, mockedFetchReservations, mockedFetchPosts } = vi.hoisted(() => ({
+const { mockedFetchLeaderboard, mockedFetchCurrentRankLeaderboard, mockedFetchRecentCurrentRankLeaderboard, mockedFetchRoomsAll, mockedFetchReservations, mockedFetchPosts } = vi.hoisted(() => ({
   mockedFetchLeaderboard: vi.fn<typeof import('@/shared/hooks/useLeaderboard').fetchLeaderboard>(),
   mockedFetchCurrentRankLeaderboard: vi.fn<typeof import('@/shared/hooks/useCurrentRankLeaderboard').fetchCurrentRankLeaderboard>(),
+  mockedFetchRecentCurrentRankLeaderboard: vi.fn<typeof import('@/shared/hooks/useCurrentRankLeaderboard').fetchRecentCurrentRankLeaderboard>(),
   mockedFetchRoomsAll: vi.fn<typeof import('@/match/useRooms').fetchRoomsAll>(),
   mockedFetchReservations: vi.fn<typeof import('@/reservation/reservationApi').fetchReservations>(),
   mockedFetchPosts: vi.fn<typeof import('@/community/communityApi').fetchPosts>(),
@@ -54,12 +55,13 @@ vi.mock('@/shared/matchRecordsApi', () => ({
   fetchMatchRecords: vi.fn().mockResolvedValue({ matches: [], next_before: null }),
 }))
 
-// The leaderboard tab opens on current ranks, which it reads itself. The board
+// The leaderboard tab opens on the 최근 30일 current ranks, which it reads itself. The board
 // names the score board's player, so the tab still shows 'TestPlayer'.
 vi.mock('@/shared/hooks/useCurrentRankLeaderboard', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/hooks/useCurrentRankLeaderboard')>()),
   fetchCurrentRankLeaderboard: mockedFetchCurrentRankLeaderboard,
   default: () => usePolledData(mockedFetchCurrentRankLeaderboard, null),
+  useRecentCurrentRankLeaderboard: () => usePolledData(mockedFetchRecentCurrentRankLeaderboard, null),
 }))
 
 vi.mock('@/match/useRooms', async () => {
@@ -146,10 +148,12 @@ const postList = (posts: PostSummary[]): PostListResponse =>
 
 beforeEach(() => {
   mockedFetchLeaderboard.mockResolvedValue(LEADERBOARD_DATA)
-  mockedFetchCurrentRankLeaderboard.mockResolvedValue({
+  const currentRanks = {
     total: 1,
     entries: [{ rank: 1, username: 'p1', saved_at: '2026-10-16T01:02:03Z', account_rank: 25, chars: [] }],
-  })
+  }
+  mockedFetchCurrentRankLeaderboard.mockResolvedValue(currentRanks)
+  mockedFetchRecentCurrentRankLeaderboard.mockResolvedValue(currentRanks)
   mockedFetchRoomsAll.mockResolvedValue(ROOMS_DATA)
   mockedFetchReservations.mockResolvedValue([reservation()])
   mockedFetchPosts.mockResolvedValue(postList([]))

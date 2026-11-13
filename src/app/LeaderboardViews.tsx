@@ -28,7 +28,7 @@ interface Props {
 export default function LeaderboardViews({ current, best }: Props) {
   const viewerNpid = useAuth().user?.username ?? null
   const view: LeaderboardView = useParams().view === 'best' ? 'best' : 'current'
-  const [recent, setRecent] = useState(false)
+  const [recent, setRecent] = useState(true)
   const recentBoard = useRecentCurrentRankLeaderboard(recent)
   const currentSource = recent ? recentBoard : current
   const currentData = useMemo(

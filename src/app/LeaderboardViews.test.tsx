@@ -60,6 +60,8 @@ const places = () => Array.from(document.querySelectorAll('.rank-row')).map((r) 
 describe('LeaderboardViews', () => {
   beforeEach(() => {
     mockedGet.mockReset()
+    // The tab opens on 최근 30일, so every render fetches that board first.
+    mockedGet.mockResolvedValue(currentBoard([['np_now', 1, 0]]))
     endSession()
   })
   afterEach(() => { act(() => endSession()) })
@@ -117,26 +119,32 @@ describe('LeaderboardViews', () => {
     expect(screen.getByRole('tab', { name: '최고 계급' })).toHaveFocus()
   })
 
-  it('keeps a failure of the current board inside it', async () => {
-    await renderAt('/leaderboard', polled<CurrentRankLeaderboard>(null, 'Current rank fetch failed: 502'))
+  it('keeps a failure of the recent board inside it', async () => {
+    mockedGet.mockRejectedValue(new Error('Current rank fetch failed: 502'))
+    await renderAt('/leaderboard')
     expect(screen.getByText('Current rank fetch failed: 502')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: '최고 계급' })).toBeInTheDocument()
   })
 
-  it('최근 30일 asks the backend for recent players and shows its ranking as is', async () => {
+  it('opens on 최근 30일, showing the ranking the backend gives for recent players as is', async () => {
     mockedGet.mockResolvedValue(currentBoard([['a', 1, 3], ['b', 1, 29], ['c', 3, 0]]))
     await renderAt('/leaderboard', polled(currentBoard([['old', 1, 40], ['a', 2, 3], ['b', 2, 29], ['c', 4, 0]])))
-    expect(mockedGet).not.toHaveBeenCalled()
-    expect(places()).toEqual(['1', '2', '2', '4'])
+    expect(screen.getByRole('button', { name: '최근 30일' })).toHaveAttribute('aria-pressed', 'true')
+    expect(mockedGet).toHaveBeenCalledExactlyOnceWith('saves/leaderboard', { top: 1000, days: 30 })
+    expect(names()).toEqual(['a', 'b', 'c'])
+    expect(places()).toEqual(['1', '1', '3'])
+  })
 
+  it('turning 최근 30일 off shows every player on the current board', async () => {
+    mockedGet.mockResolvedValue(currentBoard([['a', 1, 3]]))
+    await renderAt('/leaderboard', polled(currentBoard([['old', 1, 40], ['a', 2, 3], ['b', 2, 29], ['c', 4, 0]])))
     const toggle = screen.getByRole('button', { name: '최근 30일' })
     await act(async () => {
       fireEvent.click(toggle)
     })
-    expect(toggle).toHaveAttribute('aria-pressed', 'true')
-    expect(mockedGet).toHaveBeenCalledExactlyOnceWith('saves/leaderboard', { top: 1000, days: 30 })
-    expect(names()).toEqual(['a', 'b', 'c'])
-    expect(places()).toEqual(['1', '1', '3'])
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    expect(names()).toEqual(['old', 'a', 'b', 'c'])
+    expect(places()).toEqual(['1', '2', '2', '4'])
   })
 
   it('keeps a search when the board switches', async () => {

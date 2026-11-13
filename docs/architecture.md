@@ -255,9 +255,10 @@ the second in the sub --- so one `Leaderboard` draws both with the same search,
 filters and sorts. A save knows only the RPCN id, so the online name is joined
 in from the score board, and a player missing there shows their id. Players who
 stand equal share a place (1, 2, 2, 4), so pass `rank` through. **최근 30일**
-asks the backend for `?days=30`, which filters and re-ranks there; the request
-is made only while the option is on, and one `Leaderboard` serves every board so
-a search survives a switch.
+asks the backend for `?days=30`, which filters and re-ranks there. The tab opens
+with it on, and the choice is not remembered; the request is made only while the
+option is on, and one `Leaderboard` serves every board so a search survives a
+switch.
 
 **Every other place and rank comes from the current-rank board.** App and
 `app/AppRoutes` hand `currentRankData?.entries` to the home page, rooms, the
