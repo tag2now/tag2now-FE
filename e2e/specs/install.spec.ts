@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { mockAllApis, skipPatchNotes } from '../helpers/mock-api'
+import { dismissPatchNotes, mockAllApis, skipPatchNotes } from '../helpers/mock-api'
 
 const IPHONE_SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
 
@@ -65,12 +65,17 @@ test.describe('App install sheet', () => {
   })
 })
 
-test('waits out a visit that opens on the patch notes', async ({ page }) => {
+/** The X writes nothing, so a banner that waited for a load without the patch
+ * notes would never reach a visitor who always closes them that way. */
+test('shows once the patch notes are closed with the X', async ({ page }) => {
   await mockAllApis(page)
   await page.goto('/')
   await expect(page.locator('[aria-labelledby="patch-notes-title"]')).toBeVisible()
 
   await offerInstall(page)
-
   await expect(sheet(page)).toHaveCount(0)
+
+  await dismissPatchNotes(page)
+
+  await expect(sheet(page)).toBeVisible()
 })

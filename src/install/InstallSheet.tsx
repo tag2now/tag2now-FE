@@ -2,7 +2,7 @@ import { Share } from 'lucide-react'
 import useInstallSheet from './useInstallSheet'
 
 /** Offers tag2now as an app: the browser's install where it has one, the iOS
- * share-sheet route where it does not. A strip, not a dialog — nothing behind
+ * share-sheet route where it does not. A banner, not a dialog — nothing behind
  * it is blocked. */
 export default function InstallSheet() {
   const { kind, install, dismiss } = useInstallSheet()
@@ -11,7 +11,7 @@ export default function InstallSheet() {
   return (
     <aside
       aria-label="앱 설치 안내"
-      className="install-sheet flex items-center gap-3 p-3 bg-bg-panel border border-border-light rounded-lg shadow-lg"
+      className="install-sheet flex items-center gap-3 p-3 bg-bg-panel border border-primary rounded-lg shadow-lg"
     >
       <img src="/icon-192.png" alt="" className="size-10 shrink-0 rounded-md" />
       <div className="min-w-0 flex-1">

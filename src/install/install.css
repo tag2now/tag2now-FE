@@ -1,20 +1,24 @@
-/* A card in the bottom-right corner on a desktop, clear of the chat launcher
-   on the left. Where the chat is docked as the right-hand column instead, the
-   corner is the chat's composer on a short screen, and the left one is free:
-   the sidebar ends well above it. On a phone, a strip above the bottom tab
-   bar: 80px clears it, the same offset chat.css gives the chat launcher, which
-   the strip covers until it is closed. The 760px boundary is the tab bar's,
-   from responsive.css, not Tailwind's md. */
+/* A banner just under the sticky header, where a first look lands: in the
+   bottom corner it shared space with the chat launcher and went unnoticed.
+   `top` is the header's height plus 8px --- 56px on a desktop (shell.css),
+   68px below the tab bar's 760px boundary (responsive.css). Move one, move
+   both. Centred with auto margins rather than a transform, which the entrance
+   animation owns. */
 .install-sheet {
-  position: fixed; right: 16px; bottom: 16px; z-index: 56;
-  width: min(360px, calc(100% - 32px));
+  position: fixed; top: 64px; left: 0; right: 0; z-index: 56;
+  width: min(520px, calc(100% - 32px)); margin-inline: auto;
+  animation: install-sheet-drop .32s ease-out;
 }
 
-.app-shell:has(.chat-docked) .install-sheet { right: auto; left: 16px; }
+@keyframes install-sheet-drop {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .install-sheet { animation: none; }
+}
 
 @media (max-width: 760px) {
-  .install-sheet {
-    left: 8px; right: 8px; width: auto;
-    bottom: calc(80px + env(safe-area-inset-bottom));
-  }
+  .install-sheet { top: 76px; width: calc(100% - 16px); }
 }

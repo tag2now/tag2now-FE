@@ -3,7 +3,6 @@ import Header from '@/shared/components/Header'
 import Footer from '@/shared/components/Footer'
 import StartupDialogs from '@/app/StartupDialogs'
 import { LoginDialog } from '@/auth/component'
-import InstallSheet from '@/install/InstallSheet'
 
 interface AppLayoutProps {
   sidebar: ReactNode
@@ -30,7 +29,6 @@ export default function AppLayout({ sidebar, chat, children }: AppLayoutProps) {
         {chat}
       </div>
       <Footer />
-      <InstallSheet />
     </div>
   )
 }

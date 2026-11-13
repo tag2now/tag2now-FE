@@ -1,5 +1,4 @@
 import { useState, useSyncExternalStore } from 'react'
-import { hasUnseenPatchNotes } from '@/shared/components/PatchNotes'
 import { STORAGE_KEYS, readItem, writeItem } from '@/shared/util/storage'
 import { canAddToIosHomeScreen } from './iosHomeScreen'
 import { pendingInstallPrompt, promptInstall, subscribeInstallPrompt } from './installPrompt'
@@ -14,14 +13,13 @@ export interface InstallSheetState {
   dismiss: () => void
 }
 
-/** Decides whether the install sheet shows, and which one. It waits out a visit
- * that opened on the patch notes, so a first look never has two overlays to
- * close, and once closed or used it stays closed. */
+/** Decides whether the install sheet shows, and which one. Once closed or used
+ * it stays closed. */
 export default function useInstallSheet(): InstallSheetState {
   const offer = useSyncExternalStore(subscribeInstallPrompt, pendingInstallPrompt, () => null)
   const [ios] = useState(() => canAddToIosHomeScreen(navigator))
   const [suppressed, setSuppressed] = useState(
-    () => hasUnseenPatchNotes() || readItem(STORAGE_KEYS.installSheetDismissed) !== null,
+    () => readItem(STORAGE_KEYS.installSheetDismissed) !== null,
   )
 
   const dismiss = () => {

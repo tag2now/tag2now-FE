@@ -1,8 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import InstallSheet from './InstallSheet'
 import type { BeforeInstallPromptEvent } from './installPrompt'
-import { LATEST_PATCH_VERSION } from '@/config/patchNotes'
-import { STORAGE_KEYS } from '@/shared/util/storage'
 
 const IPHONE_SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
 
@@ -18,10 +16,6 @@ function offerInstall(): BeforeInstallPromptEvent {
 function onIphone() {
   vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(IPHONE_SAFARI)
 }
-
-beforeEach(() => {
-  localStorage.setItem(STORAGE_KEYS.seenPatchVersion, LATEST_PATCH_VERSION)
-})
 
 afterEach(() => {
   act(() => { window.dispatchEvent(new Event('appinstalled')) })
@@ -73,15 +67,6 @@ describe('InstallSheet', () => {
 
     render(<InstallSheet />)
     offerInstall()
-
-    expect(screen.queryByRole('complementary', { name: '앱 설치 안내' })).not.toBeInTheDocument()
-  })
-
-  it('waits out a visit that opens on the patch notes', () => {
-    localStorage.removeItem(STORAGE_KEYS.seenPatchVersion)
-    onIphone()
-
-    render(<InstallSheet />)
 
     expect(screen.queryByRole('complementary', { name: '앱 설치 안내' })).not.toBeInTheDocument()
   })

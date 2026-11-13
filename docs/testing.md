@@ -41,9 +41,9 @@ silently stop suppressing the dialog.
 for every later `goto` and `reload` in that test. Do not repeat it per
 navigation. `dismissPatchNotes` clicks the dialog's X instead, and the X writes
 nothing — so it has to run again after every navigation, and a spec that
-forgets leaves the modal covering whatever it asserts next. It is now used only
-by `e2e/specs/patch-notes.spec.ts`, which is the one place the dialog itself is
-under test; nothing else should reach for it.
+forgets leaves the modal covering whatever it asserts next. Use it only where
+closing the dialog is under test: `e2e/specs/patch-notes.spec.ts`, and the
+install banner's wait for it in `e2e/specs/install.spec.ts`.
 
 **Do not wait out a poll in real time.** Install `page.clock` before the first
 navigation and use `fastForward`, not `runFor`: `runFor` replays every timer

@@ -575,9 +575,8 @@ In E2E, `mockAllApis` answers an empty list unless a spec passes `popups`.
 ## Install sheet
 
 `public/manifest.webmanifest` makes the site installable, and
-`install/InstallSheet` offers it: a strip, not a dialog, bottom-right on a
-desktop (bottom-left while the chat is docked, whose composer owns that corner
-on a short screen) and above the tab bar on a phone. Two routes:
+`install/InstallSheet` offers it: a banner, not a dialog, just under the sticky
+header at every width, where a first look lands. Two routes:
 
 - **Chromium** fires `beforeinstallprompt` when it would install the site.
   `install/installPrompt.ts` catches it at module load, outside React, because
@@ -588,10 +587,11 @@ on a short screen) and above the tab bar on a phone. Two routes:
   Safari or Chrome, not an in-app browser, not already launched from the home
   screen — and the sheet explains 공유 → 홈 화면에 추가 instead.
 
-It never shows on a load that opened on the patch notes (`hasUnseenPatchNotes`,
-read once at mount), so a first visit has one overlay to close, not two. Closing
-it, or pressing 설치 whatever the dialog's answer, sets
-`installSheetDismissed` and it does not return.
+`app/StartupDialogs` mounts it only once the patch notes have closed, by any
+route, so the two never stack. It cannot wait for a load without the patch
+notes instead: their X writes nothing, so a visitor who closes them that way
+sees them on every load. Closing the banner, or pressing 설치 whatever the
+dialog's answer, sets `installSheetDismissed` and it does not return.
 
 A test runner is not install-eligible, so E2E dispatches a synthetic
 `beforeinstallprompt`. For the real dialog, open the dev server in the Android
