@@ -84,11 +84,14 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
   const viewing = trail[trail.length - 1]
   const cameFrom = trail.length > 1 ? trail[trail.length - 2] : null
 
-  // The entry for whoever is on screen. The prop covers the player the caller
-  // opened; anyone reached from inside is looked up on the board.
-  const entry = viewing === npid
+  // The prop covers the player the caller opened; anyone reached from inside
+  // is looked up on the board.
+  const entryOf = (player: string) => player === npid
     ? leaderboardEntry
-    : leaderboardEntries?.find((e) => e.np_id === viewing)
+    : leaderboardEntries?.find((e) => e.np_id === player)
+  // Only the board knows a player's online name; off it, the npid is all there is.
+  const nameOf = (player: string) => entryOf(player)?.online_name || player
+  const entry = entryOf(viewing)
 
   useEffect(() => {
     let cancelled = false
@@ -123,7 +126,7 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
             <span className="history-title-icon" aria-hidden="true"><UserRound size={18} /></span>
             <div>
               <p className="history-eyebrow">PLAYER INSIGHTS</p>
-              <h2 id="history-title">{viewing}</h2>
+              <h2 id="history-title">{nameOf(viewing)}</h2>
               <p>플레이 기록과 활동 패턴을 한눈에 확인하세요.</p>
             </div>
           </div>
@@ -138,7 +141,7 @@ export default function PlayerHistoryPanel({ npid, leaderboardEntry, leaderboard
                 onClick={() => setTrail((t) => t.slice(0, -1))}
               >
                 <ArrowLeft size={14} aria-hidden="true" />
-                <span>{cameFrom}</span>
+                <span>{nameOf(cameFrom)}</span>
               </button>
             )}
             <button type="button" onClick={onClose} className="modal-close" aria-label="플레이어 기록 닫기">

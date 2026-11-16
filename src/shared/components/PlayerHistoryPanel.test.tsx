@@ -91,6 +91,17 @@ describe('PlayerHistoryPanel tabs', () => {
     expect(await screen.findByRole('heading', { name: 'p1' })).toBeInTheDocument()
   })
 
+  it('names a player on the board by their online name, and anyone else by their npid', async () => {
+    const board = [{ np_id: 'p1', rank: 1, online_name: 'P1 Online' }]
+    render(<PlayerHistoryPanel npid="p1" leaderboardEntry={board[0]} leaderboardEntries={board} onClose={() => {}} />)
+    expect(screen.getByRole('heading', { name: 'P1 Online' })).toBeInTheDocument()
+
+    fireEvent.click(tab('전적'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Rival 기록 보기' }))
+    expect(await screen.findByRole('heading', { name: 'p2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'P1 Online' })).toBeInTheDocument()
+  })
+
   it('starts on the play history again when the caller opens another player', async () => {
     const { rerender } = render(<PlayerHistoryPanel npid="p1" onClose={() => {}} />)
     fireEvent.click(tab('캐릭터별 계급'))

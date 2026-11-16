@@ -137,18 +137,18 @@ test.describe('Leaderboard', () => {
   test('a partner in the history panel opens that player, and back returns', async ({ page }) => {
     await page.getByRole('button', { name: 'TTT2_Master' }).first().click()
     const title = page.locator('#history-title')
-    await expect(title).toHaveText('np_001')
+    await expect(title).toHaveText('TTT2_Master')
 
     await page.locator('.history-partner-row').first().click()
-    await expect(title).toHaveText('np_002')
+    await expect(title).toHaveText('KingOfIronFist')
     // The partner is looked up on the board the caller handed down, so they
     // arrive with their rank rather than as a bare npid.
     await expect(page.locator('.history-rank-summary')).toBeVisible()
 
     // The way back names who it returns to, so it cannot be mistaken for close.
-    const back = page.getByRole('button', { name: /np_001/ })
+    const back = page.getByRole('dialog').getByRole('button', { name: 'TTT2_Master', exact: true })
     await back.click()
-    await expect(title).toHaveText('np_001')
+    await expect(title).toHaveText('TTT2_Master')
   })
 })
 

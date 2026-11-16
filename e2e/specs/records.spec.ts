@@ -63,12 +63,12 @@ test.describe('Records', () => {
     await expect(records.getByRole('listitem').first().locator('.record-vs')).toHaveText('WINVSLOSE')
 
     await records.getByRole('button', { name: 'KingOfIronFist 기록 보기' }).first().click()
-    await expect(page.getByRole('heading', { name: 'np_002' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'KingOfIronFist' })).toBeVisible()
     await expect(profileTab(page, '전적')).toHaveAttribute('aria-selected', 'true')
     await expect(records.getByRole('listitem')).toHaveCount(4)
 
-    await page.getByRole('button', { name: 'np_001' }).click()
-    await expect(page.getByRole('heading', { name: 'np_001' })).toBeVisible()
+    await page.getByRole('dialog').getByRole('button', { name: 'TTT2_Master', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'TTT2_Master' })).toBeVisible()
   })
 
   // The profile is one component on every screen; the leaderboard is another way in.
