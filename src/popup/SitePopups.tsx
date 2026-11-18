@@ -52,12 +52,12 @@ function PopupDialog({ popup, onClose }: { popup: Popup, onClose: () => void }) 
           <X size={18} aria-hidden="true" />
         </button>
 
-        <h2 id={titleId} className="font-display text-lg font-bold text-secondary m-0 mb-4 pr-8 tracking-wide">
+        <h2 id={titleId} className="font-display text-lg md:text-xl font-bold text-secondary m-0 mb-4 pr-8 tracking-wide">
           {popup.title}
         </h2>
 
         <div className="-mr-3 min-h-0 flex-1 overflow-y-auto pr-3">
-          {popup.body && <p className="whitespace-pre-wrap text-txt text-sm m-0">{popup.body}</p>}
+          {popup.body && <p className="whitespace-pre-wrap text-txt text-base md:text-md m-0">{popup.body}</p>}
           {popup.image_path && (
             <img
               src={apiUrl(popup.image_path)}
