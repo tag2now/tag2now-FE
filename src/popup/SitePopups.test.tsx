@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import SitePopups from '@/popup/SitePopups'
 import { getActivePopups } from '@/popup/popupApi'
@@ -21,9 +21,17 @@ const show = (...popups: Popup[]) => {
   return render(<SitePopups />)
 }
 
+const waitOutCloseLock = () => act(() => { vi.advanceTimersByTime(4000) })
+
 describe('SitePopups', () => {
-  beforeEach(() => localStorage.clear())
-  afterEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.clearAllMocks()
+  })
 
   it('opens with the title and the body as written', async () => {
     show(popup())
@@ -62,12 +70,36 @@ describe('SitePopups', () => {
     show(popup(flags))
 
     await screen.findByRole('dialog')
-    expect(screen.getAllByRole('button').map((button) => button.textContent).filter(Boolean)).toEqual(labels)
+    expect(screen.queryAllByRole('button', { name: /보지 않기/ }).map((button) => button.textContent)).toEqual(labels)
+  })
+
+  it('keeps every way out shut for the first 4 seconds, counting down', async () => {
+    show(popup())
+    const dialog = await screen.findByRole('dialog')
+    const close = screen.getByRole('button', { name: 'Close' })
+
+    expect(close).toHaveTextContent('4')
+    expect(close).toBeDisabled()
+    expect(screen.getByRole('button', { name: '다시 보지 않기' })).toBeDisabled()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    fireEvent.click(dialog.parentElement!)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    act(() => { vi.advanceTimersByTime(3000) })
+    expect(close).toHaveTextContent('1')
+    expect(close).toBeDisabled()
+
+    act(() => { vi.advanceTimersByTime(1000) })
+    expect(close).toBeEnabled()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it.each(['하루 동안 보지 않기', '다시 보지 않기'])('stays shut on the next load after %s', async (label) => {
     const { unmount } = show(popup())
-    fireEvent.click(await screen.findByRole('button', { name: label }))
+    const button = await screen.findByRole('button', { name: label })
+    waitOutCloseLock()
+    fireEvent.click(button)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     unmount()
 
@@ -79,7 +111,9 @@ describe('SitePopups', () => {
 
   it('comes back on the next load when only closed', async () => {
     const { unmount } = show(popup())
-    fireEvent.click(await screen.findByRole('button', { name: 'Close' }))
+    const close = await screen.findByRole('button', { name: 'Close' })
+    waitOutCloseLock()
+    fireEvent.click(close)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     unmount()
 
@@ -92,9 +126,11 @@ describe('SitePopups', () => {
     show(popup({ id: 2, title: '둘째' }), popup({ id: 1, title: '첫째' }))
 
     expect(await screen.findByRole('dialog', { name: '둘째' })).toBeInTheDocument()
+    waitOutCloseLock()
     fireEvent.click(screen.getByRole('button', { name: '다시 보지 않기' }))
 
     expect(screen.getByRole('dialog', { name: '첫째' })).toBeInTheDocument()
+    waitOutCloseLock()
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

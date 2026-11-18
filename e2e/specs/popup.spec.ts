@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Locator, type Page } from '@playwright/test'
 import { mockAllApis, signInAs, skipPatchNotes, type ApiPopup } from '../helpers/mock-api'
 
 const popup =(overrides: Partial<ApiPopup> = {}): ApiPopup => ({
@@ -15,9 +15,16 @@ const popup =(overrides: Partial<ApiPopup> = {}): ApiPopup => ({
   ...overrides,
 })
 
+/** Skips the popup's close lock on the page clock instead of waiting it out. */
+async function waitOutCloseLock(page: Page, dialog: Locator) {
+  await expect(dialog).toBeVisible()
+  await page.clock.fastForward(4000)
+}
+
 test.describe('Site popups', () => {
   test.beforeEach(async ({ page }) => {
     await skipPatchNotes(page)
+    await page.clock.install()
   })
 
   test('opens on arrival with its image, and stays shut after 다시 보지 않기', async ({ page }) => {
@@ -28,6 +35,7 @@ test.describe('Site popups', () => {
     await expect(dialog.getByText('이번 주말에 랭크 이벤트가 열립니다')).toBeVisible()
     await expect(dialog.getByRole('img', { name: '이벤트 안내' })).toBeVisible()
 
+    await waitOutCloseLock(page, dialog)
     await dialog.getByRole('button', { name: '다시 보지 않기' }).click()
     await expect(dialog).toBeHidden()
 
@@ -37,11 +45,12 @@ test.describe('Site popups', () => {
   })
 
   test('stays shut for a day after 하루 동안 보지 않기, and returns after it', async ({ page }) => {
-    await page.clock.install({ time: new Date('2026-10-31T12:00:00+09:00') })
+    await page.clock.setSystemTime(new Date('2026-10-31T12:00:00+09:00'))
     await mockAllApis(page, { popups: [popup()] })
     await page.goto('/')
 
     const dialog = page.getByRole('dialog', { name: '이벤트 안내' })
+    await waitOutCloseLock(page, dialog)
     await dialog.getByRole('button', { name: '하루 동안 보지 않기' }).click()
     await expect(dialog).toBeHidden()
 
@@ -55,12 +64,30 @@ test.describe('Site popups', () => {
     await expect(dialog).toBeVisible()
   })
 
+  test('cannot be closed for its first 4 seconds', async ({ page }) => {
+    await mockAllApis(page, { popups: [popup()] })
+    await page.goto('/')
+
+    const dialog = page.getByRole('dialog', { name: '이벤트 안내' })
+    const close = dialog.getByRole('button', { name: 'Close' })
+    await expect(close).toBeDisabled()
+    await expect(close).toHaveText('4')
+    await page.keyboard.press('Escape')
+    await page.mouse.click(5, 5)
+    await expect(dialog).toBeVisible()
+
+    await page.clock.fastForward(4000)
+    await page.mouse.click(5, 5)
+    await expect(dialog).toBeHidden()
+  })
+
   test('comes back on the next load when only closed', async ({ page }) => {
     await mockAllApis(page, { popups: [popup({ allow_dismiss_forever: false, allow_dismiss_day: false })] })
     await page.goto('/')
 
     const dialog = page.getByRole('dialog', { name: '이벤트 안내' })
     await expect(dialog.getByRole('button', { name: /보지 않기/ })).toHaveCount(0)
+    await waitOutCloseLock(page, dialog)
     await dialog.getByRole('button', { name: 'Close' }).click()
     await expect(dialog).toBeHidden()
 
@@ -107,7 +134,9 @@ test.describe('Site popups', () => {
     await mockAllApis(page, { popups: [popup({ allow_dismiss_day: false })] })
     await signInAs(page, 'root', '운영자', true)
     await page.goto('/admin/popups')
-    await page.getByRole('dialog', { name: '이벤트 안내' }).getByRole('button', { name: '다시 보지 않기' }).click()
+    const dialog = page.getByRole('dialog', { name: '이벤트 안내' })
+    await waitOutCloseLock(page, dialog)
+    await dialog.getByRole('button', { name: '다시 보지 않기' }).click()
 
     // The list's long second line must not widen the page on a phone.
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0)

@@ -6,6 +6,20 @@ import { getActivePopups } from '@/popup/popupApi'
 import { dismissPopup, isDismissed, type DismissSpan } from '@/popup/popupDismissal'
 import type { Popup } from '@/popup/types'
 
+// Every way out stays shut this long, so a notice is seen before it is closed.
+const CLOSE_DELAY_SECONDS = 4
+
+function useCountdown(seconds: number) {
+  const [endsAt] = useState(() => Date.now() + seconds * 1000)
+  const [left, setLeft] = useState(seconds)
+  // Read from the deadline, not counted per tick, so a clock that jumps ahead releases it at once.
+  useEffect(() => {
+    const timer = setInterval(() => setLeft(Math.max(Math.ceil((endsAt - Date.now()) / 1000), 0)), 250)
+    return () => clearInterval(timer)
+  }, [endsAt])
+  return left
+}
+
 /** The popups this browser has not dismissed, one at a time. A failed read shows
  * nothing: a notice must never stand between a visitor and the site. */
 export default function SitePopups() {
@@ -25,7 +39,10 @@ export default function SitePopups() {
 }
 
 function PopupDialog({ popup, onClose }: { popup: Popup, onClose: () => void }) {
-  const dialogRef = useModalDialog<HTMLDivElement>(onClose)
+  const secondsLeft = useCountdown(CLOSE_DELAY_SECONDS)
+  const locked = secondsLeft > 0
+  const close = () => { if (!locked) onClose() }
+  const dialogRef = useModalDialog<HTMLDivElement>(close)
   const titleId = `popup-title-${popup.id}`
 
   function dismiss(span: DismissSpan) {
@@ -34,7 +51,7 @@ function PopupDialog({ popup, onClose }: { popup: Popup, onClose: () => void }) 
   }
 
   return (
-    <div className="modal-backdrop items-center justify-center" onClick={onClose} role="presentation">
+    <div className="modal-backdrop items-center justify-center" onClick={close} role="presentation">
       <div
         ref={dialogRef}
         role="dialog"
@@ -46,10 +63,11 @@ function PopupDialog({ popup, onClose }: { popup: Popup, onClose: () => void }) 
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 bg-transparent border-none text-txt-dim hover:text-txt text-4xl cursor-pointer leading-none p-2"
+          disabled={locked}
+          className="absolute top-3 right-3 grid place-items-center size-[34px] bg-transparent border-none text-txt-dim hover:text-txt disabled:hover:text-txt-dim text-base font-bold tabular-nums cursor-pointer disabled:cursor-default leading-none p-2"
           aria-label="Close"
         >
-          <X size={18} aria-hidden="true" />
+          {locked ? <span aria-hidden="true">{secondsLeft}</span> : <X size={18} aria-hidden="true" />}
         </button>
 
         <h2 id={titleId} className="font-display text-lg md:text-xl font-bold text-secondary m-0 mb-4 pr-8 tracking-wide">
@@ -70,10 +88,10 @@ function PopupDialog({ popup, onClose }: { popup: Popup, onClose: () => void }) 
         {(popup.allow_dismiss_day || popup.allow_dismiss_forever) && (
           <div className="flex gap-2 mt-4 shrink-0">
             {popup.allow_dismiss_day && (
-              <button onClick={() => dismiss('day')} className="btn-ghost flex-1">하루 동안 보지 않기</button>
+              <button onClick={() => dismiss('day')} disabled={locked} className="btn-ghost flex-1">하루 동안 보지 않기</button>
             )}
             {popup.allow_dismiss_forever && (
-              <button onClick={() => dismiss('forever')} className="btn-ghost flex-1">다시 보지 않기</button>
+              <button onClick={() => dismiss('forever')} disabled={locked} className="btn-ghost flex-1">다시 보지 않기</button>
             )}
           </div>
         )}
